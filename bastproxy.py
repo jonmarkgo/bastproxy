@@ -54,7 +54,7 @@ class Listener(asyncore.dispatcher):
     client_connection, source_addr = self.accept()
 
     print "Accepted connection from", source_addr[0], ':', source_addr[1]
-    ProxyClient(client_connection, self.proxy, source_addr[0], source_addr[1])
+    ProxyClient(client_connection, source_addr[0], source_addr[1])
 
 def main(listen_port, server_address, server_port):
   proxy = Listener(listen_port, server_address, server_port)
@@ -102,7 +102,6 @@ if __name__ == "__main__":
       sys.exit(1)
 
   mode = 'proxy'
-
   listen_port = guard(lambda:exported.config.getint("proxy", "listen_port"),
     "listen_port is a required field")
   server_address = guard(lambda:exported.config.get("proxy", "server_address"),
