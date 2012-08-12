@@ -38,7 +38,8 @@ class Proxy(Telnet):
 
   def addclient(self, client):
     self.clients.append(client)
-    if not self.connected:
+
+  def connectmud(self):
       self.doconnect()
       exported.processevent('connect_event', {})
 

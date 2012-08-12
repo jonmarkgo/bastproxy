@@ -61,7 +61,7 @@ class EventMgr:
           self.events[eventname][i].remove(func)
 
   def processevent(self, eventname, args):
-    #print('processevent', eventname, args)
+    exported.debug('processevent', eventname, args)
     nargs = args.copy()
     if eventname in self.events:
       keys = self.events[eventname].keys()
