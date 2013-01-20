@@ -1,9 +1,9 @@
 
-from telnetlib import Telnet
-from mccp import MCCP2_RECEIVE
-from gmcp import GMCP_RECEIVE
+from libs.net.telnetlib import Telnet
 from libs import exported
 from libs.color import strip_ansi
+from libs.net.options import optionMgr
+
 
 class Proxy(Telnet):
   def __init__(self, host, port):
@@ -16,8 +16,7 @@ class Proxy(Telnet):
     self.clients = []
     self.ttype = 'Server'
     exported.registerevent('to_mud_event', self.addtooutbuffer, 99)
-    MCCP2_RECEIVE(self)
-    GMCP_RECEIVE(self)
+    optionMgr.addtoserver(self)
 
   def handle_read(self):
     Telnet.handle_read(self)
@@ -40,19 +39,28 @@ class Proxy(Telnet):
     self.clients.append(client)
 
   def connectmud(self):
-      self.doconnect()
-      exported.processevent('connect_event', {})
+    exported.debug('connectmud')
+    self.doconnect()
+    exported.processevent('mudconnect', {})
 
   def handle_close(self):
     exported.debug('Server Disconnected')
     exported.processevent('to_user_event', {'todata':'The mud closed the connection', 'dtype':'fromproxy'})
-    for i in self.option_handlers:
-      self.option_handlers[i].reset()
+    optionMgr.resetoptions(self, True)
     Telnet.handle_close(self)
+    exported.processevent('muddisconnect', {})  
 
   def removeclient(self, client):
     if client in self.clients:
       self.clients.remove(client)
 
-  def addtooutbuffer(self, args):
-    Telnet.addtooutbuffer(self, args['data'])
+  def addtooutbuffer(self, args, raw=False):
+    data = ''
+    if isinstance(args, dict):
+      data = args['data']
+      if 'raw' in args:
+        raw = args['raw']
+    else:
+      data = args
+
+    Telnet.addtooutbuffer(self, data, raw)

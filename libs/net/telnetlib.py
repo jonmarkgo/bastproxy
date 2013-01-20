@@ -7,6 +7,7 @@ J. Reynolds
 """
 
 from __future__ import print_function
+from libs import exported
 # Imported modules
 import asyncore
 import ConfigParser
@@ -23,7 +24,7 @@ __all__ = ["Telnet"]
 # 1 = a lot of debug
 # ..
 # 5 = less
-DEBUGLEVEL = 5
+DEBUGLEVEL = 3
 
 if sys.platform == "linux2":
   try:
@@ -174,7 +175,6 @@ def addcode(code, codestr):
   CODES[code] = codestr
 
 class Telnet(asyncore.dispatcher):
-
     """Telnet interface class.
 
     read_sb_data()
@@ -188,7 +188,6 @@ class Telnet(asyncore.dispatcher):
         No other action is done afterwards by telnetlib.
 
     """
-
     def __init__(self, host=None, port=0, sock=None):
         """Constructor.
 
@@ -212,10 +211,11 @@ class Telnet(asyncore.dispatcher):
         self.sbdataq = ''
         self.outbuffer = ''
         self.options = {}
-        self.connected = False
-        self.ttype = 'Unknown'
         self.option_callback = self.handleopt
         self.option_handlers = {}
+        self.connected = False
+        exported.connected = False
+        self.ttype = 'Unknown'
         self.debug_types = []
 
     def handleopt(self, command, option):
@@ -276,7 +276,7 @@ class Telnet(asyncore.dispatcher):
         if 'mtype' in kwargs:
           mtype = kwargs['mtype']
         if kwargs['level'] >= self.debuglevel or mtype in self.debug_types:
-          print('Telnet(%-15s - %-5s %-7s %-5s): ' % (self.host, self.port, self.ttype, mtype), *args)
+          exported.debug('Telnet(%-15s - %-5s %-7s %-5s): ' % (self.host, self.port, self.ttype, mtype), *args)
 
     def set_debuglevel(self, debuglevel):
         """Set the debug level.
@@ -287,9 +287,12 @@ class Telnet(asyncore.dispatcher):
         self.debuglevel = debuglevel
 
     def doconnect(self):
+      self.msg('doconnect')
       self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+      self.set_reuse_addr()
       self.connect((self.host, self.port))
       self.connected = True
+      exported.connected = True
       for i in self.option_handlers:
         self.option_handlers[i].onconnect()
 
@@ -308,20 +311,20 @@ class Telnet(asyncore.dispatcher):
       sent = self.send(self.outbuffer)
       self.outbuffer = self.outbuffer[sent:]
 
-    def addtooutbuffer(self, outbuffer):
+    def addtooutbuffer(self, outbuffer, raw=False):
         """Write a string to the socket, doubling any IAC characters.
 
         Can block if the connection is blocked.  May raise
         socket.error if the connection is closed.
 
         """
-        self.msg('adding to buffer', outbuffer)
-        if IAC in outbuffer:
+        self.msg('adding to buffer', raw, outbuffer)
+        if not raw and IAC in outbuffer:
             outbuffer = outbuffer.replace(IAC, IAC+IAC)
 
         outbuffer = self.convert_outdata(outbuffer)
 
-        self.outbuffer = self.outbuffer + outbuffer
+        self.outbuffer = self.outbuffer + outbuffer     
 
     def convert_outdata(self, outbuffer):
         return outbuffer
@@ -488,5 +491,3 @@ class Telnet(asyncore.dispatcher):
         self.rawq = self.rawq + buf
         self.msg('rawq', self.rawq)
 
-if __name__ == '__main__':
-    test()

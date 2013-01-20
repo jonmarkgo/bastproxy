@@ -1,7 +1,7 @@
 
 from libs.net.telnetlib import Telnet, IAC, WILL, DO, SE, SB, DONT
-from libs.net.mccp import MCCP2_SEND
 from libs import exported
+from libs.net.options import optionMgr
 import zlib
 
 PASSWORD = 0
@@ -13,29 +13,34 @@ class ProxyClient(Telnet):
     self.host = host
     self.port = port
     self.ttype = 'Client'
+    self.supports = {}
     if sock:
       self.connected = True
-    exported.registerevent('to_user_event', self.addtooutbuffer, 99)
-    MCCP2_SEND(self)
+    exported.registerevent('to_user_event', self.addtooutbufferevent, 99)
+    optionMgr.addtoclient(self)
     exported.proxy.addclient(self)
     self.state = PASSWORD
-    self.addtooutbuffer({'todata':'Please enter the proxy password:', 'dtype':'passwd'})
+    self.addtooutbufferevent({'todata':exported.color('Please enter the proxy password:', 'red', bold=True), 'dtype':'passwd'})
 
-  def addtooutbuffer(self, args):
+  def addtooutbufferevent(self, args):  
     outbuffer = args['todata']
     dtype = None
+    raw = False
     if 'dtype' in args:
       dtype = args['dtype']
     if not dtype:
       dtype = 'fromproxy'
+    if 'raw' in args:
+      raw = args['raw']
     if outbuffer != None:
       if (dtype == 'fromproxy' or dtype == 'frommud') and self.state == CONNECTED:
         outbuffer = outbuffer + '\r\n'
-        Telnet.addtooutbuffer(self, outbuffer)
+        Telnet.addtooutbuffer(self, outbuffer, raw)
+      elif len(dtype) == 1 and ord(dtype) in self.options and self.state == CONNECTED:
+        Telnet.addtooutbuffer(self, outbuffer, raw)
       elif dtype == 'passwd' and self.state == PASSWORD:
         outbuffer = outbuffer + '\r\n'
-        Telnet.addtooutbuffer(self, outbuffer)
-
+        Telnet.addtooutbuffer(self, outbuffer, raw)
 
   def handle_read(self):
     if self.connected == False:
@@ -55,7 +60,11 @@ class ProxyClient(Telnet):
         if 'fromdata' in newdata:
           data = newdata['fromdata']
 
-        exported.processevent('to_mud_event', {'data':data})
+        if data[0:4] == '#bp.':
+          print('got a command:', data.strip())
+        else:
+          exported.processevent('to_mud_event', {'data':data})
+                
       elif self.state == PASSWORD:
         data = data.strip()
         if data ==  exported.config.get("proxy", "password"):
@@ -63,9 +72,10 @@ class ProxyClient(Telnet):
           self.state = CONNECTED
           if not exported.proxy.connected:
             exported.proxy.connectmud()
+          else:
+            self.addtooutbufferevent({'todata':exported.color('The proxy is already connected to the mud', 'green', bold=True)})
         else:
-          self.addtooutbuffer({'todata':'Please try again! Proxy Password:', 'dtype':'passwd'})
-
+          self.addtooutbufferevent({'todata':'Please try again! Proxy Password:', 'dtype':'passwd'})
 
   def handle_close(self):
     print "Client Disconnected"
