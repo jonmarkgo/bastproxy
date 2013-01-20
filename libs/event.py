@@ -11,6 +11,7 @@ class Event:
   def execute(self):
     self.func()
 
+
 class TimerEvent(Event):
   def __init__(self, name, func, seconds, onetime):
     self.name = name
@@ -23,7 +24,6 @@ class TimerEvent(Event):
   def execute(self):
    exported.debug('timer %s fired' % self.name)
    Event.execute(self)
-
 
 
 class EventMgr:
@@ -136,3 +136,4 @@ class EventMgr:
   def disabletimer(self, name):
     if name in self.timerlookup:
       self.timerlookup[name].enabled = False
+

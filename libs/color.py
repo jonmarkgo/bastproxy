@@ -53,6 +53,7 @@ STYLEMAP = {
              "b white": "47"
            }
 
+
 def color(data, fc=37, bc=40, bold=False):
   if fc in STYLEMAP:
     fc = STYLEMAP[fc]
@@ -63,6 +64,7 @@ def color(data, fc=37, bc=40, bold=False):
     return "%c[1;%s;%sm%s%c[0m" % (chr(27), str(fc), str(bc), data, chr(27))
   else:
     return "%c[%s;%sm%s%c[0m" % (chr(27), str(fc), str(bc), data, chr(27))
+
 
 def strip_ansi(text):
   """
