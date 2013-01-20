@@ -1,4 +1,6 @@
-
+"""
+$Id$
+"""
 class TelnetOption(object):
   def __init__(self, telnetobj, option):
     self.telnetobj = telnetobj

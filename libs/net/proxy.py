@@ -1,4 +1,6 @@
-
+"""
+$Id$
+"""
 from libs.net.telnetlib import Telnet
 from libs import exported
 from libs.color import strip_ansi

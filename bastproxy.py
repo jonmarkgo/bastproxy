@@ -1,6 +1,7 @@
 #!/usr/bin/env python
-
 """
+$Id$
+
 This is the beginnings of a Mud Proxy that can have triggers, aliases, gags
 
 TODO:

@@ -1,3 +1,7 @@
+"""
+$Id$
+"""
+
 import glob, os, sys
 
 from libs import exported

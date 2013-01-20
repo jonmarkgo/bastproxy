@@ -1,4 +1,6 @@
-
+"""
+$Id$
+"""
 from libs.net.options._option import TelnetOption
 from libs.net.telnetlib import WILL, DO, IAC, SE, SB, DONT
 import zlib

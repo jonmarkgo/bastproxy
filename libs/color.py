@@ -1,3 +1,6 @@
+"""
+$Id$
+"""
 import re
 
 # for finding ANSI color sequences

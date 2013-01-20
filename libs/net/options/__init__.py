@@ -1,4 +1,6 @@
 """
+$Id$
+
 This will manage options
 """
 

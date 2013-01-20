@@ -1,3 +1,6 @@
+"""
+$Id$
+"""
 from libs import exported
 
 name = 'Test Plugin'
