@@ -1,5 +1,7 @@
 """
 $Id$
+
+This file holds the class that connects to the mud
 """
 from libs.net.telnetlib import Telnet
 from libs import exported
@@ -8,7 +10,17 @@ from libs.net.options import optionMgr
 
 
 class Proxy(Telnet):
+  """
+  This class is for the proxy that connects to the server
+  """
   def __init__(self, host, port):
+    """
+    init the class
+    
+    required:
+      host - the host to connect to
+      port - the port to connect to
+    """
     Telnet.__init__(self, host, port)
     self.clients = []
 
@@ -21,6 +33,9 @@ class Proxy(Telnet):
     optionMgr.addtoserver(self)
 
   def handle_read(self):
+    """
+    handle a read
+    """
     Telnet.handle_read(self)
 
     data = self.getdata()
@@ -35,28 +50,56 @@ class Proxy(Telnet):
       ndatal = alldata.split('\n')
       self.lastmsg = ndatal[-1]
       for i in ndatal[:-1]:
-        exported.processevent('to_user_event', {'todata':i, 'dtype':'frommud', 'noansidata':strip_ansi(i)})
+        exported.processevent('to_client_event', {'todata':i, 'dtype':'frommud', 'noansidata':strip_ansi(i)})
 
   def addclient(self, client):
+    """
+    add a client
+    
+    required:
+      client - the client to add
+    """
     self.clients.append(client)
 
   def connectmud(self):
+    """
+    connect to the mud
+    """
     exported.debug('connectmud')
     self.doconnect()
     exported.processevent('mudconnect', {})
 
   def handle_close(self):
+    """
+    hand closing the connection
+    """
     exported.debug('Server Disconnected')
-    exported.processevent('to_user_event', {'todata':'The mud closed the connection', 'dtype':'fromproxy'})
+    exported.processevent('to_client_event', {'todata':'The mud closed the connection', 'dtype':'fromproxy'})
     optionMgr.resetoptions(self, True)
     Telnet.handle_close(self)
     exported.processevent('muddisconnect', {})  
 
   def removeclient(self, client):
+    """
+    remove a client
+    
+    required:
+      client - the client to remove
+    """
     if client in self.clients:
       self.clients.remove(client)
 
   def addtooutbuffer(self, args, raw=False):
+    """
+    add to the outbuffer
+    
+    required:
+      args - a string 
+             or a dictionary that contains a data key and a raw key
+    
+    optional:
+      raw - set a raw flag, which means IAC will not be doubled
+    """
     data = ''
     if isinstance(args, dict):
       data = args['data']
