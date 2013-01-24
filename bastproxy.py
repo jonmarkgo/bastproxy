@@ -10,6 +10,7 @@ TODO:
     - save state (pickle?, sqlitedb?, configparser?)
 -- command parser
 -- make options drop in so client/server auto uses them, make them single file
+-- support xterm 256
 
 """
 import asyncore
@@ -31,7 +32,18 @@ exported.pluginMgr = PluginMgr()
 
 
 class Listener(asyncore.dispatcher):
+  """
+  This is the class that listens for new clients
+  """
   def __init__(self, listen_port, server_address, server_port):
+    """
+    init the class
+    
+    required:
+      listen_port - the port to listen on
+      server_address - the address of the server
+      server_port - the port on the server to connect to
+    """
     asyncore.dispatcher.__init__(self)
     self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
     self.set_reuse_addr()
@@ -43,9 +55,15 @@ class Listener(asyncore.dispatcher):
     exported.debug("Forwarder bound on", listen_port)
 
   def handle_error(self):
+    """
+    show the traceback for an error in the listener
+    """
     exported.debug("Forwarder error:", traceback.format_exc())
 
   def handle_accept(self):
+    """
+    accept a new client
+    """
     if not self.proxy:
       # do proxy stuff here
       self.proxy = Proxy(self.server_address, self.server_port)
@@ -57,6 +75,11 @@ class Listener(asyncore.dispatcher):
 
 
 def main(listen_port, server_address, server_port):
+  """
+  start the proxy
+  
+  we do a single asyncore.loop then we check timers
+  """
   proxy = Listener(listen_port, server_address, server_port)
   try:
     while True:
