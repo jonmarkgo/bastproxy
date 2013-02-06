@@ -28,39 +28,6 @@ __all__ = ["Telnet"]
 # 5 = less
 DEBUGLEVEL = 3
 
-if sys.platform == "linux2":
-  try:
-    socket.SO_ORIGINAL_DST
-  except AttributeError:
-    # There is a missing const in the socket module... So we will add it now
-    socket.SO_ORIGINAL_DST = 80
-
-  def get_original_dest(sock):
-    '''Gets the original destination address for connection that has been
-    redirected by netfilter.'''
-    # struct sockaddr_in {
-    #     short            sin_family;   // e.g. AF_INET
-    #     unsigned short   sin_port;     // e.g. htons(3490)
-    #     struct in_addr   sin_addr;     // see struct in_addr, below
-    #     char             sin_zero[8];  // zero this if you want to
-    # };
-    # struct in_addr {
-    #     unsigned long s_addr;  // load with inet_aton()
-    # };
-    # getsockopt(fd, SOL_IP, SO_ORIGINAL_DST, (struct sockaddr_in *)&dstaddr, &dstlen);
-
-    data = sock.getsockopt(socket.SOL_IP, socket.SO_ORIGINAL_DST, 16)
-    _, port, a1, a2, a3, a4 = struct.unpack("!HHBBBBxxxxxxxx", data)
-    address = "%d.%d.%d.%d" % (a1, a2, a3, a4)
-    return address, port
-
-
-elif sys.platform == "darwin":
-  def get_original_dest(sock):
-    '''Gets the original destination address for connection that has been
-    redirected by ipfw.'''
-    return sock.getsockname()
-
 # Telnet protocol defaults
 TELNET_PORT = 23
 
@@ -173,8 +140,10 @@ CODES = {255: "IAC",
          39:  "<NewENV>",
         }
 
+
 def addcode(code, codestr):
   CODES[code] = codestr
+
 
 class Telnet(asyncore.dispatcher):
     """Telnet interface class.
@@ -191,34 +160,34 @@ class Telnet(asyncore.dispatcher):
 
     """
     def __init__(self, host=None, port=0, sock=None):
-        """Constructor.
+      """Constructor.
 
-        When called without arguments, create an unconnected instance.
-        With a hostname argument, it connects the instance; port number
-        and timeout are optional.
-        """
-        if sock:
-          asyncore.dispatcher.__init__(self, sock)
-        else:
-          asyncore.dispatcher.__init__(self)
-        self.debuglevel = DEBUGLEVEL
-        self.host = host
-        self.port = port
-        self.rawq = ''
-        self.irawq = 0
-        self.cookedq = ''
-        self.eof = 0
-        self.iacseq = '' # Buffer for IAC sequence.
-        self.sb = 0 # flag for SB and SE sequence.
-        self.sbdataq = ''
-        self.outbuffer = ''
-        self.options = {}
-        self.option_callback = self.handleopt
-        self.option_handlers = {}
-        self.connected = False
-        exported.connected = False
-        self.ttype = 'Unknown'
-        self.debug_types = []
+      When called without arguments, create an unconnected instance.
+      With a hostname argument, it connects the instance; port number
+      and timeout are optional.
+      """
+      if sock:
+        asyncore.dispatcher.__init__(self, sock)
+      else:
+        asyncore.dispatcher.__init__(self)
+      self.debuglevel = DEBUGLEVEL
+      self.host = host
+      self.port = port
+      self.rawq = ''
+      self.irawq = 0
+      self.cookedq = ''
+      self.eof = 0
+      self.iacseq = '' # Buffer for IAC sequence.
+      self.sb = 0 # flag for SB and SE sequence.
+      self.sbdataq = ''
+      self.outbuffer = ''
+      self.options = {}
+      self.option_callback = self.handleopt
+      self.option_handlers = {}
+      self.connected = False
+      exported.connected = False
+      self.ttype = 'Unknown'
+      self.debug_types = []
 
     def handleopt(self, command, option):
       self.msg('Command:', ord(command), 'with option', ord(option), level=2)
@@ -262,31 +231,31 @@ class Telnet(asyncore.dispatcher):
       return buf
 
     def __del__(self):
-        """Destructor -- close the connection."""
-        self.close()
+      """Destructor -- close the connection."""
+      self.close()
 
     def msg(self, *args, **kwargs):
-        """Print a debug message, when the debug level is > 0.
+      """Print a debug message, when the debug level is > 0.
 
-        If extra arguments are present, they are substituted in the
-        message using the standard string formatting operator.
+      If extra arguments are present, they are substituted in the
+      message using the standard string formatting operator.
 
-        """
-        mtype = ''
-        if not('level' in kwargs):
-          kwargs['level'] = 1
-        if 'mtype' in kwargs:
-          mtype = kwargs['mtype']
-        if kwargs['level'] >= self.debuglevel or mtype in self.debug_types:
-          exported.debug('Telnet(%-15s - %-5s %-7s %-5s): ' % (self.host, self.port, self.ttype, mtype), *args)
+      """
+      mtype = ''
+      if not('level' in kwargs):
+        kwargs['level'] = 1
+      if 'mtype' in kwargs:
+        mtype = kwargs['mtype']
+      if kwargs['level'] >= self.debuglevel or mtype in self.debug_types:
+        exported.debug('Telnet(%-15s - %-5s %-7s %-5s): ' % (self.host, self.port, self.ttype, mtype), *args)
 
     def set_debuglevel(self, debuglevel):
-        """Set the debug level.
+      """Set the debug level.
 
-        The higher it is, the more debug output you get (on sys.stdout).
+      The higher it is, the more debug output you get (on sys.stdout).
 
-        """
-        self.debuglevel = debuglevel
+      """
+      self.debuglevel = debuglevel
 
     def doconnect(self):
       self.msg('doconnect')
@@ -299,14 +268,14 @@ class Telnet(asyncore.dispatcher):
         self.option_handlers[i].onconnect()
 
     def handle_close(self):
-        """Close the connection."""
-        self.msg('closing connection')
-        self.connected = False
-        self.close()
-        self.options = {}
-        self.eof = 1
-        self.iacseq = ''
-        self.sb = 0
+      """Close the connection."""
+      self.msg('closing connection')
+      self.connected = False
+      self.close()
+      self.options = {}
+      self.eof = 1
+      self.iacseq = ''
+      self.sb = 0
 
     def handle_write(self):
       self.msg('Handle_write', self.outbuffer)
@@ -314,22 +283,22 @@ class Telnet(asyncore.dispatcher):
       self.outbuffer = self.outbuffer[sent:]
 
     def addtooutbuffer(self, outbuffer, raw=False):
-        """Write a string to the socket, doubling any IAC characters.
+      """Write a string to the socket, doubling any IAC characters.
 
-        Can block if the connection is blocked.  May raise
-        socket.error if the connection is closed.
+      Can block if the connection is blocked.  May raise
+      socket.error if the connection is closed.
 
-        """
-        self.msg('adding to buffer', raw, outbuffer)
-        if not raw and IAC in outbuffer:
-            outbuffer = outbuffer.replace(IAC, IAC+IAC)
+      """
+      self.msg('adding to buffer', raw, outbuffer)
+      if not raw and IAC in outbuffer:
+          outbuffer = outbuffer.replace(IAC, IAC+IAC)
 
-        outbuffer = self.convert_outdata(outbuffer)
+      outbuffer = self.convert_outdata(outbuffer)
 
-        self.outbuffer = self.outbuffer + outbuffer     
+      self.outbuffer = self.outbuffer + outbuffer     
 
     def convert_outdata(self, outbuffer):
-        return outbuffer
+      return outbuffer
 
     def writable(self):
       #self.msg( 'writable', self.ttype, len(self.outbuffer) > 0)
@@ -339,157 +308,157 @@ class Telnet(asyncore.dispatcher):
       print("Telnet error:", self.ttype, traceback.format_exc(), file=sys.stderr)
 
     def handle_read(self):
-        """Read readily available data.
+      """Read readily available data.
 
-        Raise EOFError if connection closed and no cooked data
-        available.  Return '' if no cooked data available otherwise.
-        Don't block unless in the midst of an IAC sequence.
+      Raise EOFError if connection closed and no cooked data
+      available.  Return '' if no cooked data available otherwise.
+      Don't block unless in the midst of an IAC sequence.
 
-        """
-        self.process_rawq()
-        self.fill_rawq()
-        self.process_rawq()
+      """
+      self.process_rawq()
+      self.fill_rawq()
+      self.process_rawq()
 
     def getdata(self):
-        """Return any data available in the cooked queue.
+      """Return any data available in the cooked queue.
 
-        Raise EOFError if connection closed and no data available.
-        Return '' if no cooked data available otherwise.  Don't block.
+      Raise EOFError if connection closed and no data available.
+      Return '' if no cooked data available otherwise.  Don't block.
 
-        """
-        if not self.connected:
-          return None
-        buf = self.cookedq
-        self.cookedq = ''
-        return buf
+      """
+      if not self.connected:
+        return None
+      buf = self.cookedq
+      self.cookedq = ''
+      return buf
 
     def read_sb_data(self):
-        """Return any data available in the SB ... SE queue.
+      """Return any data available in the SB ... SE queue.
 
-        Return '' if no SB ... SE available. Should only be called
-        after seeing a SB or SE command. When a new SB command is
-        found, old unread SB data will be discarded. Don't block.
+      Return '' if no SB ... SE available. Should only be called
+      after seeing a SB or SE command. When a new SB command is
+      found, old unread SB data will be discarded. Don't block.
 
-        """
-        buf = self.sbdataq
-        self.sbdataq = ''
-        return buf
+      """
+      buf = self.sbdataq
+      self.sbdataq = ''
+      return buf
 
     def set_option_negotiation_callback(self, callback):
-        """Provide a callback function called after each receipt of a telnet option."""
-        self.option_callback = callback
+      """Provide a callback function called after each receipt of a telnet option."""
+      self.option_callback = callback
 
     def process_rawq(self):
-        """Transfer from raw queue to cooked queue.
+      """Transfer from raw queue to cooked queue.
 
-        Set self.eof when connection is closed.  Don't block unless in
-        the midst of an IAC sequence.
+      Set self.eof when connection is closed.  Don't block unless in
+      the midst of an IAC sequence.
 
-        """
-        buf = ['', '']
-        try:
-            while self.rawq:
-                c = self.rawq_getchar()
-                if not self.iacseq:
-                    if c == theNULL:
-                        continue
-                    if c == "\021":
-                        continue
-                    if c != IAC:
-                        buf[self.sb] = buf[self.sb] + c
-                        continue
-                    else:
-                        self.iacseq += c
-                elif len(self.iacseq) == 1:
-                    # 'IAC: IAC CMD [OPTION only for WILL/WONT/DO/DONT]'
-                    if c in (DO, DONT, WILL, WONT):
-                        self.iacseq += c
-                        continue
+      """
+      buf = ['', '']
+      try:
+          while self.rawq:
+              c = self.rawq_getchar()
+              if not self.iacseq:
+                  if c == theNULL:
+                      continue
+                  if c == "\021":
+                      continue
+                  if c != IAC:
+                      buf[self.sb] = buf[self.sb] + c
+                      continue
+                  else:
+                      self.iacseq += c
+              elif len(self.iacseq) == 1:
+                  # 'IAC: IAC CMD [OPTION only for WILL/WONT/DO/DONT]'
+                  if c in (DO, DONT, WILL, WONT):
+                      self.iacseq += c
+                      continue
 
-                    self.iacseq = ''
-                    if c == IAC:
-                        buf[self.sb] = buf[self.sb] + c
-                    else:
-                        if c == SB: # SB ... SE start.
-                            self.sb = 1
-                            self.sbdataq = ''
-                        elif c == SE:
-                            self.sb = 0
-                            self.sbdataq = self.sbdataq + buf[1]
-                            buf[1] = ''
-                            if len(self.sbdataq) == 1:
-                              self.msg('proccess_rawq: got an SE', ord(self.sbdataq), level=2)
-                            else:
-                              self.msg('proccess_rawq: got an SE (2)', self.sbdataq, level=2)
-                        if self.option_callback:
-                            # Callback is supposed to look into
-                            # the sbdataq
-                            self.option_callback(c, NOOPT)
-                        else:
-                            # We can't offer automatic processing of
-                            # suboptions. Alas, we should not get any
-                            # unless we did a WILL/DO before.
-                            self.msg('IAC %d not recognized' % ord(c))
-                elif len(self.iacseq) == 2:
-                    cmd = self.iacseq[1]
-                    self.iacseq = ''
-                    opt = c
-                    if cmd in (DO, DONT):
-                        self.msg('IAC %s %d' %
-                            (cmd == DO and 'DO' or 'DONT', ord(opt)))
-                        if self.option_callback:
-                            self.option_callback(cmd, opt)
-                        else:
-                            self.msg('Sending IAC WONT %s' % ord(opt), level=2)
-                            self.send(IAC + WONT + opt)
-                    elif cmd in (WILL, WONT):
-                        self.msg('IAC %s %d' %
-                            (cmd == WILL and 'WILL' or 'WONT', ord(opt)))
-                        if self.option_callback:
-                            self.option_callback(cmd, opt)
-                        else:
-                            self.msg('Sending IAC DONT %s' % ord(opt))
-                            self.send(IAC + DONT + opt)
-        except EOFError: # raised by self.rawq_getchar()
-            self.iacseq = '' # Reset on EOF
-            self.sb = 0
-            pass
-        self.cookedq = self.cookedq + buf[0]
-        self.sbdataq = self.sbdataq + buf[1]
+                  self.iacseq = ''
+                  if c == IAC:
+                      buf[self.sb] = buf[self.sb] + c
+                  else:
+                      if c == SB: # SB ... SE start.
+                          self.sb = 1
+                          self.sbdataq = ''
+                      elif c == SE:
+                          self.sb = 0
+                          self.sbdataq = self.sbdataq + buf[1]
+                          buf[1] = ''
+                          if len(self.sbdataq) == 1:
+                            self.msg('proccess_rawq: got an SE', ord(self.sbdataq), level=2)
+                          else:
+                            self.msg('proccess_rawq: got an SE (2)', self.sbdataq, level=2)
+                      if self.option_callback:
+                          # Callback is supposed to look into
+                          # the sbdataq
+                          self.option_callback(c, NOOPT)
+                      else:
+                          # We can't offer automatic processing of
+                          # suboptions. Alas, we should not get any
+                          # unless we did a WILL/DO before.
+                          self.msg('IAC %d not recognized' % ord(c))
+              elif len(self.iacseq) == 2:
+                  cmd = self.iacseq[1]
+                  self.iacseq = ''
+                  opt = c
+                  if cmd in (DO, DONT):
+                      self.msg('IAC %s %d' %
+                          (cmd == DO and 'DO' or 'DONT', ord(opt)))
+                      if self.option_callback:
+                          self.option_callback(cmd, opt)
+                      else:
+                          self.msg('Sending IAC WONT %s' % ord(opt), level=2)
+                          self.send(IAC + WONT + opt)
+                  elif cmd in (WILL, WONT):
+                      self.msg('IAC %s %d' %
+                          (cmd == WILL and 'WILL' or 'WONT', ord(opt)))
+                      if self.option_callback:
+                          self.option_callback(cmd, opt)
+                      else:
+                          self.msg('Sending IAC DONT %s' % ord(opt))
+                          self.send(IAC + DONT + opt)
+      except EOFError: # raised by self.rawq_getchar()
+          self.iacseq = '' # Reset on EOF
+          self.sb = 0
+          pass
+      self.cookedq = self.cookedq + buf[0]
+      self.sbdataq = self.sbdataq + buf[1]
 
     def rawq_getchar(self):
-        """Get next char from raw queue.
+      """Get next char from raw queue.
 
-        Block if no data is immediately available.  Raise EOFError
-        when connection is closed.
+      Block if no data is immediately available.  Raise EOFError
+      when connection is closed.
 
-        """
-        if not self.rawq:
-            self.fill_rawq()
-            if self.eof:
-                raise EOFError
-        c = self.rawq[self.irawq]
-        self.irawq = self.irawq + 1
-        if self.irawq >= len(self.rawq):
-            self.rawq = ''
-            self.irawq = 0
-        return c
+      """
+      if not self.rawq:
+          self.fill_rawq()
+          if self.eof:
+              raise EOFError
+      c = self.rawq[self.irawq]
+      self.irawq = self.irawq + 1
+      if self.irawq >= len(self.rawq):
+          self.rawq = ''
+          self.irawq = 0
+      return c
 
     def fill_rawq(self):
-        """Fill raw queue from exactly one recv() system call.
+      """Fill raw queue from exactly one recv() system call.
 
-        Block if no data is immediately available.  Set self.eof when
-        connection is closed.
+      Block if no data is immediately available.  Set self.eof when
+      connection is closed.
 
-        """
-        if self.irawq >= len(self.rawq):
-            self.rawq = ''
-            self.irawq = 0
-        # The buffer size should be fairly small so as to avoid quadratic
-        # behavior in process_rawq() above
-        buf = self.readdatafromsocket()
-        #print 'fill_rawq', self.ttype, self.host, self.port, 'received', buf
-        self.eof = (not buf)
-        self.rawq = self.rawq + buf
-        self.msg('rawq', self.rawq)
+      """
+      if self.irawq >= len(self.rawq):
+          self.rawq = ''
+          self.irawq = 0
+      # The buffer size should be fairly small so as to avoid quadratic
+      # behavior in process_rawq() above
+      buf = self.readdatafromsocket()
+      #print 'fill_rawq', self.ttype, self.host, self.port, 'received', buf
+      self.eof = (not buf)
+      self.rawq = self.rawq + buf
+      self.msg('rawq', self.rawq)
 
