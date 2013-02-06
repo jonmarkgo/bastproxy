@@ -3,7 +3,8 @@ $Id$
 """
 from libs.net.telnetlib import Telnet, IAC, WILL, DO, SE, SB, DONT
 from libs import exported
-from libs.net.options import optionMgr
+from libs.net.options import toptionMgr
+from libs.color import convertcodes
 import zlib
 
 PASSWORD = 0
@@ -19,10 +20,10 @@ class ProxyClient(Telnet):
     if sock:
       self.connected = True
     exported.registerevent('to_client_event', self.addtooutbufferevent, 99)
-    optionMgr.addtoclient(self)
+    toptionMgr.addtoclient(self)
     exported.proxy.addclient(self)
     self.state = PASSWORD
-    self.addtooutbufferevent({'todata':exported.color('Please enter the proxy password:', 'red', bold=True), 'dtype':'passwd'})
+    self.addtooutbufferevent({'todata':exported.colors('#BP: Please enter the proxy password:', 'red', bold=True), 'dtype':'passwd'})
 
   def addtooutbufferevent(self, args):  
     outbuffer = args['todata']
@@ -70,14 +71,14 @@ class ProxyClient(Telnet):
       elif self.state == PASSWORD:
         data = data.strip()
         if data ==  exported.config.get("proxy", "password"):
-          exported.debug('Successful password from %s:%s' % (self.host, str(self.port)))
+          exported.debug('Successful password from %s:%s' % (self.host, self.port))
           self.state = CONNECTED
           if not exported.proxy.connected:
             exported.proxy.connectmud()
           else:
-            self.addtooutbufferevent({'todata':exported.color('The proxy is already connected to the mud', 'green', bold=True)})
+            self.addtooutbufferevent({'todata':exported.colors('#BP: The proxy is already connected to the mud', 'green', bold=True)})
         else:
-          self.addtooutbufferevent({'todata':'Please try again! Proxy Password:', 'dtype':'passwd'})
+          self.addtooutbufferevent({'todata':'#BP: Please try again! Proxy Password:', 'dtype':'passwd'})
 
   def handle_close(self):
     print "Client Disconnected"
