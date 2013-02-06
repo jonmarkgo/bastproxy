@@ -101,7 +101,7 @@ def fixstring(tstr):
   return tstr
 
 
-def convertcodes(tstr):
+def convertcolors(tstr):
   if '@' in tstr:
     if tstr[-2:] != '@w':
       tstr = tstr + '@w'
