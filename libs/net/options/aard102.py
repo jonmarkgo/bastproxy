@@ -27,13 +27,16 @@ To get A102 data:
 from libs.net.options._option import TelnetOption
 from libs.net.telnetlib import WILL, DO, IAC, SE, SB
 from libs import exported
+from plugins import BasePlugin
+
+name = 'A102'
+sname = 'A102'
+canreload = True
 
 ON = chr(1)
 OFF = chr(2)
 
 A102 = chr(102)
-A102MAN = None
-canreload = True
 
 class dotdict(dict):
     def __getattr__(self, attr):
@@ -51,7 +54,7 @@ def a102sendpacket(what):
 class SERVER(TelnetOption):
   def __init__(self, telnetobj):
     TelnetOption.__init__(self, telnetobj, A102)
-    self.telnetobj.debug_types.append('A102')
+    #self.telnetobj.debug_types.append('A102')
 
   def handleopt(self, command, sbdata):
     self.telnetobj.msg('A102:', ord(command), '- in handleopt', level=2, mtype='A102')
@@ -87,16 +90,16 @@ class CLIENT(TelnetOption):
       exported.processevent('A102_from_client', {'data': sbdata, 'client':self.telnetobj})
       
       
-# Manager
-class A102_MANAGER:
-  def __init__(self):
+# Plugin
+class Plugin(BasePlugin):
+  def __init__(self, name, sname, filename, directory, importloc):
     """
     Iniitilaize the class
     
     self.optionsstates - the current counter for what options have been enabled
     self.a102optionqueue - the queue of a102 options that were enabled by the client before connected to the server
     """
-    self.name = 'A102'
+    BasePlugin.__init__(self, 'A102', sname, filename, directory, importloc)    
 
     self.optionstates = {}
     self.a102optionqueue = []   
@@ -181,12 +184,4 @@ class A102_MANAGER:
     exported.unregisterevent('mudconnect', self.a102request)
     exported.unregisterevent('muddisconnect', self.disconnect)
     export.a102 = None  
-  
-    
-def load():
-  A102MAN = A102_MANAGER()
-  A102MAN.load()
 
-
-def unload():
-  A102MAN.unload()
