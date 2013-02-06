@@ -32,10 +32,14 @@ To get GMCP data:
 from libs.net.options._option import TelnetOption
 from libs.net.telnetlib import WILL, DO, IAC, SE, SB
 from libs import exported
+from plugins import BasePlugin
 
 GMCP = chr(201)
-GMCPMAN = None
+
 canreload = True
+
+name = 'GMCP'
+sname = 'GMCP'
 
 class dotdict(dict):
     def __getattr__(self, attr):
@@ -53,7 +57,7 @@ def gmcpsendpacket(what):
 class SERVER(TelnetOption):
   def __init__(self, telnetobj):
     TelnetOption.__init__(self, telnetobj, GMCP)
-    self.telnetobj.debug_types.append('GMCP')
+    #self.telnetobj.debug_types.append('GMCP')
 
   def handleopt(self, command, sbdata):
     self.telnetobj.msg('GMCP:', ord(command), '- in handleopt', level=2, mtype='GMCP')
@@ -81,6 +85,7 @@ class SERVER(TelnetOption):
 class CLIENT(TelnetOption):
   def __init__(self, telnetobj):
     TelnetOption.__init__(self, telnetobj, GMCP)
+    #self.telnetobj.debug_types.append('GMCP')    
     self.telnetobj.msg('GMCP: sending IAC WILL GMCP', mtype='GMCP')    
     self.telnetobj.addtooutbuffer(IAC + WILL + GMCP, True)
     self.cmdqueue = []
@@ -94,18 +99,18 @@ class CLIENT(TelnetOption):
       exported.processevent('GMCP_from_client', {'data': sbdata, 'client':self.telnetobj})
       
       
-# Manager
-class GMCP_MANAGER:
-  def __init__(self):
+# Plugin
+class Plugin(BasePlugin):
+  def __init__(self, name, sname, filename, directory, importloc):
     """
-    Iniitilaize the class
+    Iniitialize the class
     
     self.gmcpcache - the cache of values for different GMCP modules
     self.modstates - the current counter for what modules have been enabled
     self.gmcpqueue - the queue of gmcp commands that the client sent before connected to the server
     self.gmcpmodqueue - the queue of gmcp modules that were enabled by the client before connected to the server
     """
-    self.name = 'GMCP'
+    BasePlugin.__init__(self, name, sname, filename, directory, importloc)
 
     self.gmcpcache = {}
     self.modstates = {}
@@ -179,7 +184,6 @@ class GMCP_MANAGER:
     exported.processevent('GMCP:%s' % mods[0], args)
     
   def gmcprequest(self, args):
-    exported.debug('cleaning gmcp queues')
     if not self.reconnecting:
       for i in self.gmcpmodqueue:
         self.gmcptogglemodule(i['modname'],i['toggle'])
@@ -224,7 +228,7 @@ class GMCP_MANAGER:
     exported.registerevent('mudconnect', self.gmcprequest)
     exported.registerevent('muddisconnect', self.disconnect)
     exported.gmcp = dotdict()
-    exported.gmcp['get'] = self.gmcpget
+    exported.gmcp['getv'] = self.gmcpget
     exported.gmcp['sendpacket'] = gmcpsendpacket
     exported.gmcp['togglemodule'] = self.gmcptogglemodule    
     
@@ -233,13 +237,5 @@ class GMCP_MANAGER:
     exported.unregisterevent('GMCP_from_client', self.gmcpfromclient)
     exported.unregisterevent('mudconnect', self.gmcprequest)
     exported.unregisterevent('muddisconnect', self.disconnect)
-    export.gmcp = None  
+    exported.gmcp = None  
   
-    
-def load():
-  GMCPMAN = GMCP_MANAGER()
-  GMCPMAN.load()
-
-
-def unload():
-  GMCPMAN.unload()
