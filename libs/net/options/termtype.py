@@ -2,7 +2,7 @@
 $Id$
 """
 from libs.net.options._option import TelnetOption
-from libs.net.telnetlib import WILL, DO, IAC, SE, SB, DONT
+from libs.net.telnetlib import WILL, DO, IAC, SE, SB, DONT, NOOPT
 
 
 TTYPE = chr(24)  # Terminal Type
@@ -18,8 +18,8 @@ class SERVER(TelnetOption):
   def handleopt(self, command, sbdata):
     self.telnetobj.msg('TTYPE:', ord(command), '- in handleopt', mtype='TTYPE')
     if command == DO:
-      self.telnetobj.msg('TTYPE: sending IAC SB TTYPE NOOP MUSHclient-Aard IAC SE', mtype='TTYPE')
-      self.telnetobj.send(IAC + SB + TTYPE + chr(0) + self.telnetobj.ttype + IAC + SE)
+      self.telnetobj.msg('TTYPE: sending IAC SB TTYPE NOOPT MUSHclient-Aard IAC SE', mtype='TTYPE')
+      self.telnetobj.send(IAC + SB + TTYPE + NOOPT + self.telnetobj.ttype + IAC + SE)
 
 
 class CLIENT(TelnetOption):
