@@ -31,6 +31,10 @@ from plugins import BasePlugin
 
 name = 'A102'
 sname = 'A102'
+purpose = 'Aardwolf 102 telnet options'
+author = 'Bast'
+version = 1
+autoload = True
 canreload = True
 
 ON = chr(1)
@@ -61,9 +65,15 @@ class SERVER(TelnetOption):
     if command == WILL:
       self.telnetobj.msg('A102: sending IAC DO A102', level=2, mtype='A102')
       self.telnetobj.send(IAC + DO + A102)
+      self.telnetobj.options[ord(A102)] = True
+      exported.processevent('A102:server-enabled', {})
       
     elif command == SE:
-      self.telnetobj.options[ord(A102)] = True
+      if not self.telnetobj.options[ord(A102)]:
+        print '##BUG: Enabling A102, missed negotiation'
+        self.telnetobj.options[ord(A102)] = True        
+        exported.processevent('A102:server-enabled', {})
+        
       tdata = {}
       tdata['option'] = ord(sbdata[0])
       tdata['flag'] = ord(sbdata[1])
@@ -172,7 +182,7 @@ class Plugin(BasePlugin):
   def load(self):
     exported.registerevent('A102_from_server', self.a102fromserver)
     exported.registerevent('A102_from_client', self.a102fromclient)
-    exported.registerevent('mudconnect', self.a102request)
+    exported.registerevent('A102:server-enabled', self.a102request)
     exported.registerevent('muddisconnect', self.disconnect)
     exported.a102 = dotdict()
     exported.a102['sendpacket'] = a102sendpacket
@@ -181,7 +191,7 @@ class Plugin(BasePlugin):
   def unload(self):
     exported.unregisterevent('A102_from_server', self.a102fromserver)
     exported.unregisterevent('A102_from_client', self.a102fromclient)
-    exported.unregisterevent('mudconnect', self.a102request)
+    exported.unregisterevent('A102:server-enabled', self.a102request)
     exported.unregisterevent('muddisconnect', self.disconnect)
     export.a102 = None  
 
