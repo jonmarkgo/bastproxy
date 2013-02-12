@@ -76,9 +76,12 @@ class EventMgr:
         keys.sort()
         for k in keys:
           for i in self.events[eventname][k]:
-            tnargs = i(nargs)
-            if tnargs:
-              nargs = tnargs
+            try:
+              tnargs = i(nargs)
+              if tnargs:
+                nargs = tnargs
+            except:
+              exported.write_traceback("error when calling function for event %s" % eventname)
     else:
       pass
       #exported.debug('nothing to process for %s' % eventname)
@@ -108,12 +111,15 @@ class EventMgr:
     return tevent
 
   def deletetimer(self, name):
-    tevent = self.timerlookup[name]
-    if tevent:
-      ttime = tevent.nextcall
-      if tevent in self.timerevents[ttime]:
-        self.timerevents[ttime].remove(tevent)
-      del self.timerlookup[name]
+    try:
+      tevent = self.timerlookup[name]
+      if tevent:
+        ttime = tevent.nextcall
+        if tevent in self.timerevents[ttime]:
+          self.timerevents[ttime].remove(tevent)
+        del self.timerlookup[name]
+    except KeyError:
+      print('Timer: %s does not exist' % name)
 
   def _addtimer(self, timer):
     nexttime = timer.nextcall
@@ -131,7 +137,10 @@ class EventMgr:
       if i in self.timerevents and len(self.timerevents[i]) > 0:
         for timer in self.timerevents[i]:
           if timer.enabled:
-            timer.execute()
+            try:
+              timer.execute()
+            except:
+              exported.write_traceback('A timer had an error')
           self.timerevents[i].remove(timer)
           if not timer.onetime:
             timer.nextcall = timer.nextcall + timer.seconds
