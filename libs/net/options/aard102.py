@@ -35,7 +35,6 @@ purpose = 'Aardwolf 102 telnet options'
 author = 'Bast'
 version = 1
 autoload = True
-canreload = True
 
 ON = chr(1)
 OFF = chr(2)
@@ -110,7 +109,8 @@ class Plugin(BasePlugin):
     self.a102optionqueue - the queue of a102 options that were enabled by the client before connected to the server
     """
     BasePlugin.__init__(self, 'A102', sname, filename, directory, importloc)    
-
+    self.canreload = False
+    
     self.optionstates = {}
     self.a102optionqueue = []   
     
