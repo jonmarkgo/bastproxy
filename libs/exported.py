@@ -48,6 +48,7 @@ def write_traceback(message=""):
 
 def write_error(text):
   text = str(text)
+  sendtouser(text)
   print('Error:', text, file=sys.stderr)
 
 
@@ -59,6 +60,8 @@ def sendtouser(text, raw=False):
       test.append(color.convertcolors('@R#BP@w: ' + i))
     text = '\n'.join(test)
   eventMgr.processevent('to_client_event', {'todata':text, 'raw':raw, 'dtype':'fromproxy'})
+
+write_message = sendtouser
 
 
 def addtimer(name, func, seconds, onetime=False):
