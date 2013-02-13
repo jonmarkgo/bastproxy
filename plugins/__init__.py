@@ -195,7 +195,7 @@ class PluginMgr:
 ---------------------------------------------------------------"""       
     if args[0] and args[0] in self.plugins:
       if self.plugins[args[0]].canreload:
-        tret = self.reload_module(args[0])
+        tret = self.reload_module(args[0], True)
         if tret and tret != True:
           exported.sendtouser("Reload complete: %s" % self.plugins[tret].fullimploc)
           return True
@@ -222,10 +222,10 @@ class PluginMgr:
       # it die every time.
       self.load_module(fullname, basepath)
 
-  def load_module(self, fullname, basepath, fromcmd=False):
+  def load_module(self, fullname, basepath, force=False):
     imploc, modname = get_module_name(basepath, fullname)
     
-    if modname.startswith("_") and not fromcmd:
+    if modname.startswith("_") and not force:
       return False
 
     try:
@@ -238,7 +238,7 @@ class PluginMgr:
       _module = sys.modules[fullimploc]
       load = True
 
-      if _module.__dict__.has_key("autoload") and not fromcmd:
+      if _module.__dict__.has_key("autoload") and not force:
         if not _module.autoload:          
           load = False
       
@@ -288,7 +288,7 @@ class PluginMgr:
       
     return True
 
-  def reload_module(self, modname):
+  def reload_module(self, modname, force=False):
     if modname in self.plugins:
       plugin = self.plugins[modname]  
       fullimploc = plugin.fullimploc
@@ -299,7 +299,7 @@ class PluginMgr:
         return False
 
       if fullname and basepath:
-        return self.load_module(fullname, basepath)
+        return self.load_module(fullname, basepath, force)
 
     else:
       return False
