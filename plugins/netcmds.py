@@ -2,13 +2,13 @@
 $Id$
 """
 from libs import exported
-from libs import color
 from plugins import BasePlugin
+from datetime import timedelta
 
 #these 5 are required
-name = 'Simple Substitute'
-sname = 'ssub'
-purpose = 'simple substitution of strings'
+name = 'Net Commands'
+sname = 'net'
+purpose = 'get information about connections'
 author = 'Bast'
 version = 1
 
@@ -19,22 +19,9 @@ autoload = True
 class Plugin(BasePlugin):
   def __init__(self, name, sname, filename, directory, importloc):
     BasePlugin.__init__(self, name, sname, filename, directory, importloc)
-    self._substitutes = {}
-    self.cmds['add'] = {'func':self.cmd_add, 'shelp':'Add a substitute'}
-    self.cmds['remove'] = {'func':self.cmd_remove, 'shelp':'Remove a substitute'}
-    self.cmds['list'] = {'func':self.cmd_list, 'shelp':'List substitutes'}
-    self.defaultcmd = 'list'
-    self.events.append({'event':'to_client_event', 'func':self.findsub})
-        
-        
-  def findsub(self, args):
-    data = args['todata']
-    dtype = args['dtype']
-    if dtype != 'fromproxy':
-      for mem in self._substitutes.keys():
-        data = data.replace(mem, color.convertcolors(self._substitutes[mem]['sub']))
-      args['todata'] = data
-      return args
+    self.cmds['list'] = {'func':self.cmd_list, 'shelp':'list clients that are connected'}
+    #self.cmds['remove'] = {'func':self.cmd_remove, 'shelp':'Remove a substitute'}
+    #self.cmds['list'] = {'func':self.cmd_list, 'shelp':'List substitutes'}
 
   def cmd_add(self, args):
     """---------------------------------------------------------------
@@ -69,27 +56,19 @@ class Plugin(BasePlugin):
   def cmd_list(self, args):
     """---------------------------------------------------------------
 @G%(name)s@w - @B%(cmdname)s@w
-  List substitutes
+  List connections
   @CUsage@w: list
 ---------------------------------------------------------------"""
-    if len(args) >= 1:
-      return False
+    tmsg = ['']
+    if exported.proxy:
+      for i in exported.proxy.clients:
+        tmsg.append('%s : %s - %s - Connected' % (i.host, i.port, i.ttype))
     else:
-      self.listsubs()
-      return True
+      tmsg.append('the proxy has not connected to the mud')
+      
+    tmsg.append('')
+    exported.sendtouser('\n'.join(tmsg))
+    return True
 
-  def addsub(self, item, sub):
-    self._substitutes[item] = {'sub':sub}
 
-  def removesub(self, item):
-    if item in self._substitutes:
-      del self._substitutes[item]
-
-  def listsubs(self):    
-    tstr = 'Substitutes:\n\r'
-    tstr = tstr + '-' * 75 + '\n\r'
-    for item in self._substitutes:
-      tstr = tstr + "%-35s : %s@w\n\r" % (item, self._substitutes[item]['sub'])
-    tstr = tstr + '-' * 75
-    exported.sendtouser(tstr)  
 

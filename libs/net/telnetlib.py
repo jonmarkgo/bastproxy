@@ -247,7 +247,7 @@ class Telnet(asyncore.dispatcher):
       if 'mtype' in kwargs:
         mtype = kwargs['mtype']
       if kwargs['level'] >= self.debuglevel or mtype in self.debug_types:
-        exported.debug('Telnet(%-15s - %-5s %-7s %-5s): ' % (self.host, self.port, self.ttype, mtype), *args)
+        exported.debug('Telnet(%-15s - %-5s %-7s %-5s): ' % (self.host, self.port, self.ttype, mtype), mtype)
 
     def set_debuglevel(self, debuglevel):
       """Set the debug level.

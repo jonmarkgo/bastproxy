@@ -16,6 +16,9 @@ Magenta    @m        @M
 Cyan       @c        @C
 White      @w        @W
 Reset      @k        @D
+
+
+# TODO: get closest color client does not support 256 colors
 """
 import re
 

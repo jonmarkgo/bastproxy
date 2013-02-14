@@ -3,6 +3,7 @@ $Id$
 
 This file holds the class that connects to the mud
 """
+import time
 from libs.net.telnetlib import Telnet
 from libs import exported
 from libs.color import strip_ansi, convertcolors
@@ -29,6 +30,7 @@ class Proxy(Telnet):
     self.lastmsg = ''
     self.clients = []
     self.ttype = 'Server'
+    self.banned = {}
     exported.registerevent('to_mud_event', self.addtooutbuffer, 99)
     toptionMgr.addtoserver(self)
 
@@ -55,25 +57,7 @@ class Proxy(Telnet):
       client - the client to add
     """
     self.clients.append(client)
-
-  def connectmud(self):
-    """
-    connect to the mud
-    """
-    exported.debug('connectmud')
-    self.doconnect()
-    exported.processevent('mudconnect', {})
-
-  def handle_close(self):
-    """
-    hand closing the connection
-    """
-    exported.debug('Server Disconnected')
-    exported.processevent('to_client_event', {'todata':convertcolors('@R#BP@w: The mud closed the connection'), 'dtype':'fromproxy'})
-    toptionMgr.resetoptions(self, True)
-    Telnet.handle_close(self)
-    exported.processevent('muddisconnect', {})  
-
+    
   def removeclient(self, client):
     """
     remove a client
@@ -83,6 +67,44 @@ class Proxy(Telnet):
     """
     if client in self.clients:
       self.clients.remove(client)
+      
+  def addbanned(self, clientip):
+    """
+    add a banned client
+    
+    required
+      clientip - the client ip to ban
+    """
+    self.banned[clientip] = time.time()
+
+  def checkbanned(self, clientip):
+    """
+    check if a client is banned
+    
+    required
+      clientip - the client ip to check
+    """
+    if clientip in self.banned:
+      return True
+    return False
+
+  def connectmud(self):
+    """
+    connect to the mud
+    """
+    exported.debug('Connecting to mud', 'net')
+    self.doconnect()
+    exported.processevent('mudconnect', {})
+
+  def handle_close(self):
+    """
+    hand closing the connection
+    """
+    exported.debug('Disconnected from mud', 'net')
+    exported.processevent('to_client_event', {'todata':convertcolors('@R#BP@w: The mud closed the connection'), 'dtype':'fromproxy'})
+    toptionMgr.resetoptions(self, True)
+    Telnet.handle_close(self)
+    exported.processevent('muddisconnect', {})  
 
   def addtooutbuffer(self, args, raw=False):
     """

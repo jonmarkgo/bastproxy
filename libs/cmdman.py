@@ -121,4 +121,7 @@ class CmdMgr:
     if sname in self.cmds:
       del self.cmds[sname]
       
-      
+  def load(self):
+    exported.registerevent('from_client_event', self.chkCmd, 1)
+    
+    

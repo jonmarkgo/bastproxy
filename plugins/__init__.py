@@ -34,6 +34,7 @@ class BasePlugin:
     self.variables = {}
     self.events = []
     self.timers = {}
+    exported.logger.adddtype(self.sname)
     
   def load(self):
     # load all commands
@@ -71,6 +72,9 @@ class BasePlugin:
     
   def setDefaultCmd(self, name):
     exported.cmdMgr.setDefault(self.sname, name)
+    
+  def debug(self, msg):
+    exported.debug(msg, self.sname)
   
 
 class PluginMgr:
@@ -78,13 +82,10 @@ class PluginMgr:
     self.plugins = {}
     self.pluginl = {}
     self.pluginm = {}
-    self.load_modules("*.py")
-    exported.cmdMgr.addCmd('plugins', 'Plugin Manager', 'list', self.cmd_list, 'List plugins')
-    exported.cmdMgr.addCmd('plugins', 'Plugin Manager', 'load', self.cmd_load, 'Load a plugin')
-    exported.cmdMgr.addCmd('plugins', 'Plugin Manager', 'unload', self.cmd_unload, 'Unload a plugin')
-    exported.cmdMgr.addCmd('plugins', 'Plugin Manager', 'reload', self.cmd_reload, 'Reload a plugin')
-    exported.cmdMgr.addCmd('plugins', 'Plugin Manager', 'exported', self.cmd_exported, 'Examine the exported module')
-    exported.cmdMgr.setDefault('plugins', 'list')
+    self.sname = 'plugins'
+    self.lname = 'Plugins'
+    exported.logger.adddtype(self.sname)
+    exported.logger.cmd_console([self.sname])    
 
   def cmd_exported(self, args):
     """---------------------------------------------------------------
@@ -125,14 +126,15 @@ class PluginMgr:
   List plugins
   @CUsage@w: list
 ---------------------------------------------------------------"""
-    tstr = 'Plugins:\n\r'
-    tstr = tstr + "%-10s : %-20s %-10s %-5s %s@w\n\r" % ('Short Name', 'Name', 'Author', 'Vers', 'Purpose')    
-    tstr = tstr + '-' * 75 + '\n\r'    
+    msg = ['', 'Plugins:']
+    msg.append("%-10s : %-20s %-10s %-5s %s@w" % ('Short Name', 'Name', 'Author', 'Vers', 'Purpose'))
+    msg.append('-' * 75)
     for plugin in self.plugins:
       tpl = self.plugins[plugin]
-      tstr = tstr + "%-10s : %-20s %-10s %-5s %s@w\n\r" % (plugin, tpl.name, tpl.author, tpl.version, tpl.purpose)
-    tstr = tstr + '-' * 75
-    exported.sendtouser(tstr)
+      msg.append("%-10s : %-20s %-10s %-5s %s@w" % (plugin, tpl.name, tpl.author, tpl.version, tpl.purpose))
+    msg.append('-' * 75)
+    msg.append('')
+    exported.sendtouser('\n'.join(msg))
     return True
     
   def cmd_load(self, args):
@@ -233,7 +235,7 @@ class PluginMgr:
         fullimploc = "plugins" + imploc + modname          
       else:
         fullimploc = "plugins" + imploc + '.' + modname
-      print 'loading', fullimploc
+      exported.debug('loading %s' % fullimploc, self.sname)
       _module = __import__(fullimploc)
       _module = sys.modules[fullimploc]
       load = True
@@ -247,14 +249,14 @@ class PluginMgr:
           self.add_plugin(_module, fullname, basepath, fullimploc)
 
         else:
-          print('Module %s has no Plugin class', _module.name)
+          exported.debug('Module %s has no Plugin class', _module.name, self.sname)
 
         _module.__dict__["proxy_import"] = 1
         exported.write_message("load: loaded %s" % fullimploc)
         
         return _module.sname
       else:
-        print('Not loading %s (%s) because autoload is False' % (_module.name, fullimploc)) 
+        exported.debug('Not loading %s (%s) because autoload is False' % (_module.name, fullimploc), self.sname) 
       return True
     except:
       exported.write_traceback("Module '%s' refuses to load." % fullimploc)
@@ -336,4 +338,12 @@ class PluginMgr:
     else:
       return False
 
-      
+  def load(self):
+    self.load_modules("*.py")
+    exported.cmdMgr.addCmd(self.sname, 'Plugin Manager', 'list', self.cmd_list, 'List plugins')
+    exported.cmdMgr.addCmd(self.sname, 'Plugin Manager', 'load', self.cmd_load, 'Load a plugin')
+    exported.cmdMgr.addCmd(self.sname, 'Plugin Manager', 'unload', self.cmd_unload, 'Unload a plugin')
+    exported.cmdMgr.addCmd(self.sname, 'Plugin Manager', 'reload', self.cmd_reload, 'Reload a plugin')
+    exported.cmdMgr.addCmd(self.sname, 'Plugin Manager', 'exported', self.cmd_exported, 'Examine the exported module')
+    exported.cmdMgr.setDefault(self.sname, 'list')
+    

@@ -15,6 +15,8 @@ TODO:
      - on startup, plugins and other things register types
      - command to enable/disable output of types
      - can go to clients, logs, or both
+-- general logging manager
+-- add variables for plugins
 
 """
 import asyncore
@@ -23,7 +25,19 @@ import os
 import sys
 import traceback
 import socket
+
 from libs import exported
+
+index = __file__.rfind(os.sep)
+if index == -1:
+  exported.basepath = "." + os.sep
+else:
+  exported.basepath = __file__[:index]
+
+print 'setting basepath to', exported.basepath
+
+from libs.logger import logger
+exported.logger = logger()
 
 from libs.event import EventMgr
 exported.eventMgr = EventMgr()
@@ -34,10 +48,16 @@ exported.cmdMgr = CmdMgr()
 from plugins import PluginMgr
 exported.pluginMgr = PluginMgr()
 
+exported.logger.load()
+exported.cmdMgr.load()
+exported.pluginMgr.load()
+exported.eventMgr.load()
+
+exported.logger.adddtype('net')
+exported.logger.cmd_console(['net'])
+
 from libs.net.proxy import Proxy
 from libs.net.client import ProxyClient
-
-
 
 class Listener(asyncore.dispatcher):
   """
@@ -78,8 +98,19 @@ class Listener(asyncore.dispatcher):
       exported.proxy = self.proxy
     client_connection, source_addr = self.accept()
 
-    print "Accepted connection from", source_addr[0], ':', source_addr[1]
-    ProxyClient(client_connection, source_addr[0], source_addr[1])
+    try:
+      ip = source_addr[0]
+      if self.proxy.checkbanned(ip):
+        exported.debug("HOST: %s is banned" % ip, 'net')
+        client_connection.close()
+      elif len(self.proxy.clients) == 5:
+        exported.debug("Only 5 clients can be connected at the same time", 'net')
+        client_connection.close()
+      else:
+        exported.debug("Accepted connection from %s : %s" % (source_addr[0], source_addr[1]), 'net')
+        test = ProxyClient(client_connection, source_addr[0], source_addr[1])
+    except:
+       exported.write_traceback('Error handling client')
 
 
 def main(listen_port, server_address, server_port):
@@ -94,7 +125,6 @@ def main(listen_port, server_address, server_port):
 
       asyncore.loop(timeout=.5,count=1)
      # check our timer event
-     # timer events can have attributes, run_forever, and how_often
       exported.eventMgr.checktimerevents()
 
   except KeyboardInterrupt:

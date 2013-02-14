@@ -53,6 +53,8 @@ class dotdict(dict):
     
 #IAC SB GMCP <atcp message text> IAC SE
 def gmcpsendpacket(what):
+  """send a gmcp packet
+only argument is what to send"""
   exported.processevent('to_mud_event', {'data':'%s%s%s%s%s%s' % (IAC, SB, GMCP, what.replace(IAC, IAC+IAC), IAC, SE), 'raw':True, 'dtype':GMCP})  
     
     
@@ -73,7 +75,7 @@ class SERVER(TelnetOption):
     elif command == SE:
       if not self.telnetobj.options[ord(GMCP)]:
         # somehow we missed negotiation
-        print '##BUG: Enabling GMCP, missed negotiation'
+        exported.debug('##BUG: Enabling GMCP, missed negotiation', gmcp)
         self.telnetobj.options[ord(GMCP)] = True        
         exported.processevent('GMCP:server-enabled', {})
         
@@ -134,7 +136,10 @@ class Plugin(BasePlugin):
     exported.debug('setting reconnect to true')
     self.reconnecting = True    
 
-  def gmcptogglemodule(self, modname, mstate):     
+  def gmcptogglemodule(self, modname, mstate):
+    """toggle a gmcp module
+argument 1: module name
+argument 2: state (boolean)"""
     if not (modname in self.modstates):
       self.modstates[modname] = 0
     
@@ -153,6 +158,8 @@ class Plugin(BasePlugin):
         gmcpsendpacket(cmd)       
     
   def gmcpget(self, module):
+    """Get a gmcp module from the cache
+argument 1: module name (such as char.status)"""
     mods = module.split('.')  
     mods = [x.lower() for x in mods]
     tlen = len(mods)

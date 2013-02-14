@@ -7,19 +7,20 @@ from __future__ import print_function
 import sys, traceback
 from libs import color
 
+basepath = ''
 cmdMgr = None
 eventMgr = None
 pluginMgr = None
 config = None
 proxy = None
+logger = None
+
 connected = False
 
-debugf = True
-
-def debug(*args):
-  if debugf:
-    print(*args, file=sys.stderr)
-
+def debug(msg, dtype='default'):
+  if logger:
+    logger.debug({'msg':msg, 'dtype':dtype})
+   
 def addtriggerevent(name, regex):
   eventMgr.addtriggerevent(name, regex)
 
@@ -48,12 +49,18 @@ def write_traceback(message=""):
 
 def write_error(text):
   text = str(text)
-  sendtouser(text)
-  print('Error:', text, file=sys.stderr)
+  test = []
+  for i in text.split('\n'):
+    test.append(color.convertcolors('@x136%s@w' % i))
+  msg = '\n'.join(test)
+  logger.debug({'msg':msg, 'dtype':'error'})
 
 
 def sendtouser(text, raw=False):
-  # parse colors here
+  """send text to the clients converting color codes
+argument 1: the text to send
+argument 2: (optional) if this argument is True, do
+             not convert color codes"""
   if not raw:
     test = []
     for i in text.split('\n'):

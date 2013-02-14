@@ -26,7 +26,7 @@ class TimerEvent(Event):
     self.enabled = True
 
   def execute(self):
-   exported.debug('timer %s fired' % self.name)
+   #exported.debug('timer %s fired' % self.name)
    Event.execute(self)
 
 
@@ -119,7 +119,7 @@ class EventMgr:
           self.timerevents[ttime].remove(tevent)
         del self.timerlookup[name]
     except KeyError:
-      print('Timer: %s does not exist' % name)
+      exported.debug('%s does not exist' % name, 'timer')
 
   def _addtimer(self, timer):
     nexttime = timer.nextcall
@@ -148,7 +148,7 @@ class EventMgr:
           else:
             self.deletetimer(timer.name)
           if len(self.timerevents[i]) == 0:
-            exported.debug('deleting', i)
+            #exported.debug('deleting', i)
             del self.timerevents[i]
 
     self.lasttime = ntime
@@ -161,3 +161,6 @@ class EventMgr:
     if name in self.timerlookup:
       self.timerlookup[name].enabled = False
 
+  def load(self):
+    exported.logger.adddtype('timer')
+  
