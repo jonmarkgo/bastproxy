@@ -31,6 +31,7 @@ class Proxy(Telnet):
     self.clients = []
     self.ttype = 'Server'
     self.banned = {}
+    self.connectedtime = None
     exported.registerevent('to_mud_event', self.addtooutbuffer, 99)
     toptionMgr.addtoserver(self)
 
@@ -92,15 +93,16 @@ class Proxy(Telnet):
     """
     connect to the mud
     """
-    exported.debug('Connecting to mud', 'net')
     self.doconnect()
+    self.connectedtime = time.mktime(time.localtime())
+    exported.msg('Connected to mud', 'net')    
     exported.processevent('mudconnect', {})
 
   def handle_close(self):
     """
     hand closing the connection
     """
-    exported.debug('Disconnected from mud', 'net')
+    exported.msg('Disconnected from mud', 'net')
     exported.processevent('to_client_event', {'todata':convertcolors('@R#BP@w: The mud closed the connection'), 'dtype':'fromproxy'})
     toptionMgr.resetoptions(self, True)
     Telnet.handle_close(self)

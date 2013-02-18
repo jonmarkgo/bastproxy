@@ -20,9 +20,9 @@ class Plugin(BasePlugin):
     self.events.append({'event':'A102:101', 'func':self.test101})    
     
   def test(self, args):
-    exported.sendtouser(exported.colors('Got A102: %s' % args, 'red',bold=True))
+    exported.sendtoclient('@RGot A102: %s' % args)
 
   def test101(self, args):
-    exported.sendtouser(exported.colors('Got A102:101: %s' % args, 'red',bold=True))
+    exported.sendtoclient('@RGot A102:101: %s' % args)
 
   

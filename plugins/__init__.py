@@ -5,7 +5,7 @@ $Id$
 import glob, os, sys
 
 from libs import exported
-from libs.fileutils import find_files
+from libs.utils import find_files
 import inspect
 
 
@@ -73,8 +73,8 @@ class BasePlugin:
   def setDefaultCmd(self, name):
     exported.cmdMgr.setDefault(self.sname, name)
     
-  def debug(self, msg):
-    exported.debug(msg, self.sname)
+  def msg(self, msg):
+    exported.msg(msg, self.sname)
   
 
 class PluginMgr:
@@ -94,31 +94,33 @@ class PluginMgr:
   useful for finding out what can be gotten for scripting
   @CUsage@w: exported
 ---------------------------------------------------------------"""
+    tmsg = []
     if len(args) == 0:
-      exported.sendtouser('Items available in exported')
+      tmsg.append('Items available in exported')
       for i in dir(exported):
         if not (i in ['sys', 'traceback', '__builtins__', '__doc__', '__file__', '__name__', '__package__',]):
           if inspect.isfunction(exported.__dict__[i]):
-            exported.sendtouser('Function: %s' % i)
+            tmsg.append('Function: %s' % i)
           elif isinstance(exported.__dict__[i], dict):
             for t in exported.__dict__[i]:
-              exported.sendtouser('Function: %s.%s' % (i,t))
+              tmsg.append('Function: %s.%s' % (i,t))
     else:
       i = args[0]
       if i in dir(exported):
         if inspect.isfunction(exported.__dict__[i]):
-          self.printexported(i, exported.__dict__[i])
+          tmsg = self.printexported(i, exported.__dict__[i])
         elif isinstance(exported.__dict__[i], dict):
           for t in exported.__dict__[i]:
-            self.printexported('%s.%s' % (i,t), exported.__dict__[i][t])
-    return True
+            tmsg = self.printexported('%s.%s' % (i,t), exported.__dict__[i][t])
+    return True, tmsg
     
   def printexported(self, item, tfunction):
-    exported.sendtouser('Function: %s' % (item))
+    tmsg = []
+    tmsg.append('Function: %s' % (item))
     if tfunction.__doc__:
       tlist = tfunction.__doc__.split('\n')
       for i in tlist:
-        exported.sendtouser('  %s' % i)    
+        tmsg.append('  %s' % i)    
     
   def cmd_list(self, args):
     """---------------------------------------------------------------
@@ -134,8 +136,7 @@ class PluginMgr:
       msg.append("%-10s : %-20s %-10s %-5s %s@w" % (plugin, tpl.name, tpl.author, tpl.version, tpl.purpose))
     msg.append('-' * 75)
     msg.append('')
-    exported.sendtouser('\n'.join(msg))
-    return True
+    return True, msg
     
   def cmd_load(self, args):
     """---------------------------------------------------------------
@@ -144,7 +145,8 @@ class PluginMgr:
   @CUsage@w: load @Yplugin@w
     @Yplugin@w    = the name of the plugin to load
                use the name without the .py    
----------------------------------------------------------------"""      
+---------------------------------------------------------------"""
+    tmsg = []
     if len(args) == 1:
       basepath = ''
       index = __file__.rfind(os.sep)
@@ -156,18 +158,18 @@ class PluginMgr:
       _module_list = find_files( basepath, args[0] + ".py")
       
       if len(_module_list) > 1:
-        exported.sendtouser('There is more than one module that matches: %s' % args[0])
+        tmsg.append('There is more than one module that matches: %s' % args[0])
       elif len(_module_list) == 0:
-        exported.sendtouser('There are no modules that match: %s' % args[0])        
+        tmsg.append('There are no modules that match: %s' % args[0])        
       else:
         sname = self.load_module(_module_list[0], basepath, True)
         if sname:
-          exported.sendtouser('Load complete: %s - %s' % (sname, self.plugins[sname].name))
+          tmsg.append('Load complete: %s - %s' % (sname, self.plugins[sname].name))
         else:
-          exported.sendtouser('Could not load: %s' % args[0])
-      return True
+          tmsg.append('Could not load: %s' % args[0])
+      return True, tmsg
     else:
-      return False
+      return False, tmsg
 
   def cmd_unload(self, args):
     """---------------------------------------------------------------
@@ -176,15 +178,16 @@ class PluginMgr:
   @CUsage@w: unload @Yplugin@w
     @Yplugin@w    = the shortname of the plugin to load
 ---------------------------------------------------------------"""    
+    tmsg = []
     if len(args) == 1 and args[0] in self.plugins:
       if self.plugins[args[0]].canreload:
         if self.unload_module(self.plugins[args[0]].fullimploc):
-          exported.sendtouser("Unloaded: %s" % args[0])
+          tmsg.append("Unloaded: %s" % args[0])
         else:
-          exported.sendtouser("Could not unload:: %s" % args[0])
+          tmsg.append("Could not unload:: %s" % args[0])
       else:
-        exported.sendotouser("That plugin can not be unloaded")
-      return True
+        tmsg.append("That plugin can not be unloaded")
+      return True, tmsg
       
     return False
 
@@ -194,19 +197,20 @@ class PluginMgr:
   reload a plugin
   @CUsage@w: reload @Yplugin@w
     @Yplugin@w    = the shortname of the plugin to reload
----------------------------------------------------------------"""       
+---------------------------------------------------------------""" 
+    tmsg = []
     if args[0] and args[0] in self.plugins:
       if self.plugins[args[0]].canreload:
         tret = self.reload_module(args[0], True)
         if tret and tret != True:
-          exported.sendtouser("Reload complete: %s" % self.plugins[tret].fullimploc)
+          tmsg.append("Reload complete: %s" % self.plugins[tret].fullimploc)
           return True
       else:
-        exported.sendtouser("That plugin cannot be reloaded")
+        tmsg.append("That plugin cannot be reloaded")
         return True
     else:
-      exported.sendtouser("That plugin does not exist")
-      return True
+      tmsg.append("That plugin does not exist")
+      return True, tmsg
 
   def load_modules(self, filter):
     index = __file__.rfind(os.sep)
@@ -235,7 +239,7 @@ class PluginMgr:
         fullimploc = "plugins" + imploc + modname          
       else:
         fullimploc = "plugins" + imploc + '.' + modname
-      exported.debug('loading %s' % fullimploc, self.sname)
+      exported.msg('loading %s' % fullimploc, self.sname)
       _module = __import__(fullimploc)
       _module = sys.modules[fullimploc]
       load = True
@@ -249,14 +253,14 @@ class PluginMgr:
           self.add_plugin(_module, fullname, basepath, fullimploc)
 
         else:
-          exported.debug('Module %s has no Plugin class', _module.name, self.sname)
+          exported.msg('Module %s has no Plugin class', _module.name, self.sname)
 
         _module.__dict__["proxy_import"] = 1
         exported.write_message("load: loaded %s" % fullimploc)
         
         return _module.sname
       else:
-        exported.debug('Not loading %s (%s) because autoload is False' % (_module.name, fullimploc), self.sname) 
+        exported.msg('Not loading %s (%s) because autoload is False' % (_module.name, fullimploc), self.sname) 
       return True
     except:
       exported.write_traceback("Module '%s' refuses to load." % fullimploc)

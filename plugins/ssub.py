@@ -23,10 +23,10 @@ class Plugin(BasePlugin):
     self.cmds['add'] = {'func':self.cmd_add, 'shelp':'Add a substitute'}
     self.cmds['remove'] = {'func':self.cmd_remove, 'shelp':'Remove a substitute'}
     self.cmds['list'] = {'func':self.cmd_list, 'shelp':'List substitutes'}
+    self.cmds['clear'] = {'func':self.cmd_clear, 'shelp':'Clear all substitutes'}
     self.defaultcmd = 'list'
     self.events.append({'event':'to_client_event', 'func':self.findsub})
-        
-        
+
   def findsub(self, args):
     data = args['todata']
     dtype = args['dtype']
@@ -44,13 +44,14 @@ class Plugin(BasePlugin):
     @Yoriginalstring@w    = The original string to be replaced
     @Mreplacementstring@w = The new string
 ---------------------------------------------------------------"""  
+    tmsg = []
     if len(args) == 2 and args[0] and args[1]:
-      exported.sendtouser("@GAdding substitute@w : '%s' will be replaced by '%s'" % (args[0], args[1]))
+      tmsg.append("@GAdding substitute@w : '%s' will be replaced by '%s'" % (args[0], args[1]))
       self.addsub(args[0], args[1])
-      return True
+      return True, tmsg
     else:
-      exported.sendtouser("@RWrong number of arguments")
-      return False
+      tmsg.append("@RWrong number of arguments")
+      return False, tmsg
 
   def cmd_remove(self, args):
     """---------------------------------------------------------------
@@ -59,12 +60,13 @@ class Plugin(BasePlugin):
   @CUsage@w: rem @Y<originalstring>@w
     @Yoriginalstring@w    = The original string
 ---------------------------------------------------------------"""    
+    tmsg = []
     if len(args) > 0 and args[0]:
-      exported.sendtouser("@GRemoving substitute@w : '%s'" % (args[0]))
+      tmsg.append("@GRemoving substitute@w : '%s'" % (args[0]))
       self.removesub(args[0])
-      return True
+      return True, tmsg
     else:
-      return False
+      return False, tmsg
 
   def cmd_list(self, args):
     """---------------------------------------------------------------
@@ -73,11 +75,20 @@ class Plugin(BasePlugin):
   @CUsage@w: list
 ---------------------------------------------------------------"""
     if len(args) >= 1:
-      return False
+      return False, []
     else:
-      self.listsubs()
-      return True
+      tmsg = self.listsubs()
+      return True, tmsg
 
+  def cmd_clear(self, args):
+    """---------------------------------------------------------------
+@G%(name)s@w - @B%(cmdname)s@w
+  List substitutes
+  @CUsage@w: list
+---------------------------------------------------------------"""
+    self.clearsubs()
+    return True, ['Substitutes cleared']
+    
   def addsub(self, item, sub):
     self._substitutes[item] = {'sub':sub}
 
@@ -85,11 +96,14 @@ class Plugin(BasePlugin):
     if item in self._substitutes:
       del self._substitutes[item]
 
-  def listsubs(self):    
-    tstr = 'Substitutes:\n\r'
-    tstr = tstr + '-' * 75 + '\n\r'
+  def listsubs(self):
+    tmsg = []    
     for item in self._substitutes:
-      tstr = tstr + "%-35s : %s@w\n\r" % (item, self._substitutes[item]['sub'])
-    tstr = tstr + '-' * 75
-    exported.sendtouser(tstr)  
+      tmsg.append("%-35s : %s@w" % (item, self._substitutes[item]['sub']))
+    if len(tmsg) == 0:
+      tmsg = ['None']
+    return tmsg  
 
+  def clearsubs(self):
+    self._substitutes = {}
+    

@@ -75,14 +75,17 @@ class SERVER(TelnetOption):
     elif command == SE:
       if not self.telnetobj.options[ord(GMCP)]:
         # somehow we missed negotiation
-        exported.debug('##BUG: Enabling GMCP, missed negotiation', gmcp)
+        self.telnetobj.msg('##BUG: Enabling GMCP, missed negotiation', level=2, mtype='GMCP')
         self.telnetobj.options[ord(GMCP)] = True        
         exported.processevent('GMCP:server-enabled', {})
         
       data = sbdata
       modname, data = data.split(" ", 1)
-      import json
-      newdata = json.loads(data)
+      try:
+        import json
+        newdata = json.loads(data)
+      except UnicodeDecodeError:
+        exported.write_traceback('Could not decode: %s' % data)
       self.telnetobj.msg(modname, data, level=2, mtype='GMCP')
       self.telnetobj.msg(type(newdata), newdata, level=2, mtype='GMCP')
       tdata = {}
@@ -133,7 +136,7 @@ class Plugin(BasePlugin):
     self.reconnecting = False   
 
   def disconnect(self, args):
-    exported.debug('setting reconnect to true')
+    self.msg('setting reconnect to true')
     self.reconnecting = True    
 
   def gmcptogglemodule(self, modname, mstate):
@@ -145,7 +148,7 @@ argument 2: state (boolean)"""
     
     if mstate:
       if self.modstates[modname] == 0:
-        exported.debug('Enabling GMCP module', modname)
+        self.msg('Enabling GMCP module: %s' % modname)
         cmd = 'Core.Supports.Set [ "%s %s" ]' % (modname, 1)
         gmcpsendpacket(cmd)
       self.modstates[modname] = self.modstates[modname] + 1
@@ -153,7 +156,7 @@ argument 2: state (boolean)"""
     else:
       self.modstates[modname] = self.modstates[modname] - 1
       if self.modstates[modname] == 0:
-        exported.debug('Disabling GMCP module', modname)
+        self.msg('Disabling GMCP module', modname)
         cmd = 'Core.Supports.Set [ "%s %s" ]' % (modname, 0)
         gmcpsendpacket(cmd)       
     
@@ -219,7 +222,7 @@ argument 1: module name (such as char.status)"""
       for i in self.modstates:
         v = self.modstates[i]
         if v > 0:
-          exported.debug('Re-Enabling GMCP module',i)
+          self.msg('Re-Enabling GMCP module %s' % i)
           cmd = 'Core.Supports.Set [ "%s %s" ]' % (i, 1)
           gmcpsendpacket(cmd)        
         

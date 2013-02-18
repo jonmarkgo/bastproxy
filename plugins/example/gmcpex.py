@@ -30,13 +30,13 @@ class Plugin(BasePlugin):
     @Ygmcpmod@w    = The gmcp module to print, such as char.status
 ---------------------------------------------------------------"""    
     if len(args) > 0:
-      exported.sendtouser('%s' % exported.gmcp.getv(args[0]))
+      exported.sendtoclient('%s' % exported.gmcp.getv(args[0]))
       return True
     
     return False
 
   def test(self, args):
-    exported.sendtouser('@x52@z192 Event @w- @GGMCP@w: @B%s@w : %s' % (args['module'], args['data']))
+    exported.sendtoclient('@x52@z192 Event @w- @GGMCP@w: @B%s@w : %s' % (args['module'], args['data']))
 
   def testchar(self, args):
     print('testchar --------------------------')
@@ -58,9 +58,9 @@ class Plugin(BasePlugin):
     print('getting a variable that doesn\'t exist')
     print(exported.gmcp.getv('char.status.test'))
     
-    exported.sendtouser('@CEvent@w - @GGMCP:char@w: %s' % args['module'])
+    exported.sendtoclient('@CEvent@w - @GGMCP:char@w: %s' % args['module'])
 
   def testcharstatus(self, args):
-    exported.sendtouser('@CEvent@w - @GGMCP:char.status@w')
+    exported.sendtoclient('@CEvent@w - @GGMCP:char.status@w')
 
   

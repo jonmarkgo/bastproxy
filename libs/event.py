@@ -26,7 +26,7 @@ class TimerEvent(Event):
     self.enabled = True
 
   def execute(self):
-   #exported.debug('timer %s fired' % self.name)
+   #exported.msg('timer %s fired' % self.name)
    Event.execute(self)
 
 
@@ -38,7 +38,7 @@ class EventMgr:
     self.timerevents = {}
     self.timerlookup = {}
     self.lasttime = int(time.time())
-    exported.debug('lasttime', self.lasttime)
+    exported.msg('lasttime:  %s' % self.lasttime, 'timer')
     self.registerevent('to_client_event', self.touser)
     self.registerevent('from_client_event', self.fromuser)
     self.registerevent('to_server_event', self.toserver)
@@ -67,7 +67,7 @@ class EventMgr:
           self.events[eventname][i].remove(func)
 
   def processevent(self, eventname, args):
-    #exported.debug('processevent', eventname, args)
+    #exported.msg('processevent', eventname, args)
     nargs = args.copy()
     nargs['eventname'] = eventname
     if eventname in self.events:
@@ -84,29 +84,29 @@ class EventMgr:
               exported.write_traceback("error when calling function for event %s" % eventname)
     else:
       pass
-      #exported.debug('nothing to process for %s' % eventname)
-    #exported.debug('returning', nargs)
+      #exported.msg('nothing to process for %s' % eventname)
+    #exported.msg('returning', nargs)
     return nargs
 
   def touser(self, args):
-    #exported.debug('touser got', args['todata'].strip())
+    #exported.msg('touser got', args['todata'].strip())
     pass
 
   def fromuser(self, args):
-    #exported.debug('fromuser got', args['fromdata'].strip())
+    #exported.msg('fromuser got', args['fromdata'].strip())
     pass
 
   def toserver(self, args):
-    #exported.debug('touser got', args['todata'].strip())
+    #exported.msg('touser got', args['todata'].strip())
     pass
 
   def fromserver(self, args):
-    #exported.debug('fromuser got', args['fromdata'].strip())
+    #exported.msg('fromuser got', args['fromdata'].strip())
     pass
 
   def addtimer(self, name, func, seconds, onetime):
     tevent = TimerEvent(name, func, seconds, onetime)
-    #exported.debug('adding', tevent)
+    #exported.msg('adding', tevent)
     self._addtimer(tevent)
     return tevent
 
@@ -119,7 +119,7 @@ class EventMgr:
           self.timerevents[ttime].remove(tevent)
         del self.timerlookup[name]
     except KeyError:
-      exported.debug('%s does not exist' % name, 'timer')
+      exported.msg('%s does not exist' % name, 'timer')
 
   def _addtimer(self, timer):
     nexttime = timer.nextcall
@@ -131,8 +131,8 @@ class EventMgr:
   def checktimerevents(self):
     ntime = int(time.time())
     if ntime - self.lasttime > 1:
-      exported.debug('timer had to check multiple seconds')
-    #exported.debug('checking timers', self.lasttime, ntime)
+      exported.msg('timer had to check multiple seconds', 'timer')
+    #exported.msg('checking timers', self.lasttime, ntime)
     for i in range(self.lasttime + 1, ntime + 1):
       if i in self.timerevents and len(self.timerevents[i]) > 0:
         for timer in self.timerevents[i]:
@@ -148,7 +148,7 @@ class EventMgr:
           else:
             self.deletetimer(timer.name)
           if len(self.timerevents[i]) == 0:
-            #exported.debug('deleting', i)
+            #exported.msg('deleting', i)
             del self.timerevents[i]
 
     self.lasttime = ntime

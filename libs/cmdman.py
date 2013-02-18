@@ -56,13 +56,29 @@ class CmdMgr:
             except ValueError:
               pass
             if not stcmd:
-              exported.sendtouser("@R%s.%s@W is not a command" % (sname, scmd))
+              exported.sendtoclient("@R%s.%s@W is not a command" % (sname, scmd))
             else:
-              retval = self.cmds[sname][stcmd]['func'](targs)
-              if not retval:
+              retvalue = self.cmds[sname][stcmd]['func'](targs)
+                
+              if isinstance(retvalue, tuple):
+                retval = retvalue[0]
+                msg = retvalue[1]
+              else:
+                retval = retvalue
+                msg = []
+                
+              if retval:
+                if msg and isinstance(msg, list):
+                  msg.insert(0, '')
+                  msg.insert(1, '#bp.%s.%s' % (sname, stcmd))
+                  msg.insert(2, '@G' + '-' * 60 + '@w')
+                  msg.append('@G' + '-' * 60 + '@w')                  
+                  msg.append('')
+                  exported.sendtoclient('\n'.join(msg))
+              else:
                 self.listCmds([sname, scmd])              
           else:  
-            exported.sendtouser("@R%s.%s@W is not a command." % (sname, scmd))
+            exported.sendtoclient("@R%s.%s@W is not a command." % (sname, scmd))
         else:
           try:
             del targs[targs.index(None)]
@@ -91,6 +107,7 @@ class CmdMgr:
       self.cmds[sname]['default'] = self.cmds[sname][cmd]
     
   def listCmds(self, args):
+    tmsg = []
     if len(args) > 0 and args[0]:
       sname = args[0]
       try:
@@ -104,18 +121,19 @@ class CmdMgr:
             thelp = self.cmds[sname][cmd]['func'].__doc__ % {'name':self.cmds[sname][cmd]['lname'], 'cmdname':cmd}
           elif self.cmds[sname][cmd]['shelp']:
             thelp = self.cmds[sname][cmd]['shelp']
-          exported.sendtouser(thelp)
+          tmsg.append(thelp)
         else:
-          exported.sendtouser('Commands in category: %s' % sname)
+          tmsg.append('Commands in category: %s' % sname)
           for i in self.cmds[sname]:
             if i != 'default':
-              exported.sendtouser('  %-10s : %s' % (i, self.cmds[sname][i]['shelp']))
+              tmsg.append('  %-10s : %s' % (i, self.cmds[sname][i]['shelp']))
       else:
-        exported.sendtouser('There is no category named %s' % sname)
+        tmsg.append('There is no category named %s' % sname)
     else:
-      exported.sendtouser('Command Categories:')
+      tmsg.append('Command Categories:')
       for i in self.cmds:
-        exported.sendtouser('  %s' % i)
+        tmsg.append('  %s' % i)
+    return True, tmsg
             
   def resetPluginCmds(self, sname):
     if sname in self.cmds:

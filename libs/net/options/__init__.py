@@ -72,10 +72,8 @@ class TelnetOptionMgr:
         print 'Did not add option to server:', i
   
   def resetoptions(self, server, onclose=False):
-    print('resetoptions')
     for i in server.option_handlers:
       if i in server.options:
-        print('resetting option', i)
         server.option_handlers[i].reset(onclose)          
       
         

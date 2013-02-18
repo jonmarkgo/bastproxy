@@ -19,9 +19,9 @@ class Plugin(BasePlugin):
     self.timers['test_touser_timer'] = {'func':self.test_to_user, 'seconds':10, 'onetime':True}
     
   def test(self):
-    exported.sendtouser('@RHere is the timer that fires every 30 seconds!')
+    exported.sendtoclient('@RHere is the timer that fires every 30 seconds!')
 
   def test_to_user(self):
-    exported.sendtouser('@RA onetime timer just fired.')
+    exported.sendtoclient('@RA onetime timer just fired.')
     
     

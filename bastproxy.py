@@ -6,24 +6,22 @@ This is the beginnings of a Mud Proxy that can have triggers, aliases, gags
 
 TODO:
 -- plugins
-    - each plugin is a class, look at lyntin
+    - add variables
     - save state (pickle?, sqlitedb?, configparser?)
--- command parser
--- add manager for managers
 -- debug manager
      - every debug message has a type
      - on startup, plugins and other things register types
      - command to enable/disable output of types
      - can go to clients, logs, or both
 -- general logging manager
--- add variables for plugins
+-- triggers
+     - need to also be able to check colors
 
 """
 import asyncore
 import ConfigParser
 import os
 import sys
-import traceback
 import socket
 
 from libs import exported
@@ -80,13 +78,13 @@ class Listener(asyncore.dispatcher):
     self.proxy = None
     self.server_address = server_address
     self.server_port = server_port
-    exported.debug("Forwarder bound on", listen_port)
+    exported.msg("Forwarder bound on", listen_port)
 
   def handle_error(self):
     """
     show the traceback for an error in the listener
     """
-    exported.debug("Forwarder error:", traceback.format_exc())
+    exported.write_traceback("Forwarder error:")
 
   def handle_accept(self):
     """
@@ -101,13 +99,13 @@ class Listener(asyncore.dispatcher):
     try:
       ip = source_addr[0]
       if self.proxy.checkbanned(ip):
-        exported.debug("HOST: %s is banned" % ip, 'net')
+        exported.msg("HOST: %s is banned" % ip, 'net')
         client_connection.close()
       elif len(self.proxy.clients) == 5:
-        exported.debug("Only 5 clients can be connected at the same time", 'net')
+        exported.msg("Only 5 clients can be connected at the same time", 'net')
         client_connection.close()
       else:
-        exported.debug("Accepted connection from %s : %s" % (source_addr[0], source_addr[1]), 'net')
+        exported.msg("Accepted connection from %s : %s" % (source_addr[0], source_addr[1]), 'net')
         test = ProxyClient(client_connection, source_addr[0], source_addr[1])
     except:
        exported.write_traceback('Error handling client')
@@ -130,7 +128,7 @@ def main(listen_port, server_address, server_port):
   except KeyboardInterrupt:
        pass
 
-  exported.debug("Shutting down...")
+  exported.msg("Shutting down...")
 
 
 if __name__ == "__main__":

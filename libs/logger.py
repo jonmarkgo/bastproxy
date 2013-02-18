@@ -10,9 +10,6 @@ import time
 
 from libs import exported
 
-def formatmsg(msg, dtype, withdate=False):
-  pass
-
 class logger:
   def __init__(self):
     self.dtypes = {}
@@ -34,7 +31,7 @@ class logger:
     self.sendtofile[dtype] = False
     self.sendtoconsole[dtype] = False    
     
-  def debug(self, args, dtype='default'):
+  def msg(self, args, dtype='default'):
     if 'dtype' in args:
       dtype = args['dtype']
       
@@ -47,7 +44,7 @@ class logger:
     msg = ''.join(tmsg)
     
     if dtype in self.sendtoclient and self.sendtoclient[dtype]:
-      exported.sendtouser(msg)
+      exported.sendtoclient(msg)
       
     if dtype in self.sendtofile and self.sendtofile[dtype]:
       # log it here
@@ -65,16 +62,18 @@ class logger:
   toggle a message type to show to clients
   @CUsage@w: show @Y<datatype>@w
     @Ydatatype@w  = the type to toggle, can be multiple
----------------------------------------------------------------""" 
+---------------------------------------------------------------"""
+    tmsg = []
     if len(args) > 0:
       for i in args:
         if i in self.sendtoclient:
           self.sendtoclient[i] = not self.sendtoclient[i]
+          tmsg.append('sending %s to client' % i)
         else:
-          exported.sendtouser('Type %s does not exist' % i)
-      return True
+          tmsg.append('Type %s does not exist' % i)
+      return True, tmsg
     else:
-      return False
+      return False, tmsg
 
   def cmd_console(self, args):
     """---------------------------------------------------------------
@@ -83,15 +82,17 @@ class logger:
   @CUsage@w: show @Y<datatype>@w
     @Ydatatype@w  = the type to toggle, can be multiple
 ---------------------------------------------------------------""" 
+    tmsg = []
     if len(args) > 0:
       for i in args:
         if i in self.sendtoconsole:
           self.sendtoconsole[i] = not self.sendtoconsole[i]
+          tmsg.append('sending %s to console' % i)          
         else:
-          exported.sendtouser('Type %s does not exist' % i)
-      return True
+          tmsg.append('Type %s does not exist' % i)
+      return True, tmsg
     else:
-      return False
+      return False, tmsg
 
   def cmd_file(self, args):
     """---------------------------------------------------------------
@@ -100,15 +101,17 @@ class logger:
   @CUsage@w: show @Y<datatype>@w
     @Ydatatype@w  = the type to toggle, can be multiple
 ---------------------------------------------------------------""" 
+    tmsg = []
     if len(args) > 0:
       for i in args:
         if i in self.sendtofile:
           self.sendtofile[i] = not self.sendtofile[i]
+          tmsg.append('sending %s to file' % i)          
         else:
-          exported.sendtouser('Type %s does not exist' % i)
-      return True
+          tmsg.append('Type %s does not exist' % i)
+      return True, tmsg
     else:
-      return False
+      return False, tmsg
    
   def cmd_types(self, args):
     """---------------------------------------------------------------
@@ -116,14 +119,12 @@ class logger:
   show data types
   @CUsage@w: types
 ---------------------------------------------------------------""" 
-    msg = ['']
-    msg.append('Data Types')
-    msg.append('-' *  30)
+    tmsg = []
+    tmsg.append('Data Types')
+    tmsg.append('-' *  30)
     for i in self.dtypes:
-      msg.append(i)
-    msg.append('')
-    exported.sendtouser('\n'.join(msg))
-    return True
+      tmsg.append(i)
+    return True, tmsg
    
   def load(self):
     #exported.cmdMgr.addCmd('log', 'Logger', 'logtofile', self.cmd_logtofile, 'Log debug types to a file')

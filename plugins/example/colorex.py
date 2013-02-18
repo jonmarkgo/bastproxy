@@ -6,7 +6,7 @@ from plugins import BasePlugin
 
 #these 5 are required
 name = 'Color Example'
-sname = 'color'
+sname = 'colorex'
 purpose = 'show colors'
 author = 'Bast'
 version = 1
@@ -71,8 +71,7 @@ class Plugin(BasePlugin):
     
     msg.append('')
     
-    exported.sendtouser('\n'.join(msg) )
-    return True
+    return True, msg
 
 
   def example(self, args):
@@ -86,6 +85,5 @@ class Plugin(BasePlugin):
     msg.append('Color : @z255@x0color 0 text with color 255 Background@w')
     msg.append('Note: see the show command to show the table of colors')
     msg.append('')
-    exported.sendtouser('\n'.join(msg))
-    return True
+    return True, msg
     
