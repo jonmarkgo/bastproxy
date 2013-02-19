@@ -9,6 +9,7 @@ def find_files(directory, filematch):
         matches.append(os.path.join(root, filename))
         
   return matches
+
   
 def timedeltatostring(stime, etime):
     delay = datetime.timedelta(seconds=abs(etime - stime))
@@ -34,4 +35,30 @@ def timedeltatostring(stime, etime):
       
     out   = ":".join(tmsg)
     return out
+
+  
+def verify_bool(val):
+  if val == 0 or val == '0':
+    return False
+  elif val == 1 or val == '1':
+    return True
+  elif isinstance(val, basestring):
+    val = val.lower()
+    if val  == 'false':
+      return False
+    elif val == 'true':
+      return True
+  
+  return bool(val)
+
+  
+def verify(val, vtype):
+  vtab = {}
+  vtab[bool] = verify_bool
+  
+  if vtype in vtab:
+    return vtab[vtype](val)
+  else:
+    return vtype(val)
+  
   

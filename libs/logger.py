@@ -7,8 +7,10 @@ else to name it
 from __future__ import print_function
 import sys
 import time
+import os
 
 from libs import exported
+from libs.color import strip_ansi
 
 class logger:
   def __init__(self):
@@ -16,13 +18,14 @@ class logger:
     self.sendtoclient = {}
     self.sendtofile = {}
     self.sendtoconsole = {}
+    self.openlogs = {}
     self.colors = {}
+    self.defaultlogfile = os.path.join(exported.basepath, 'data', 'logs', 'default.log')
     self.adddtype('default')
     self.sendtoconsole['default'] = True
     self.adddtype('error')
     self.sendtoconsole['error'] = True
     self.sendtoclient['error'] = True
-    self.sendtofile['error'] = True
     self.colors['error'] = '@x136'    
   
   def adddtype(self, dtype):
@@ -52,17 +55,21 @@ class logger:
     
     if dtype in self.sendtoconsole and self.sendtoconsole[dtype]:
       print(msg, file=sys.stderr)
+      
+    self.logtofile(msg, self.defaultlogfile)
     
   def logtofile(self, msg, tfile):
-    pass
+    if not (tfile in self.openlogs):
+      self.openlogs[tfile] = open(tfile, 'a')
+    #print('logging to %s' % tfile)
+    self.openlogs[tfile].write(strip_ansi(msg) + '\n')
+    self.openlogs[tfile].flush()
    
   def cmd_client(self, args):
-    """---------------------------------------------------------------
-@G%(name)s@w - @B%(cmdname)s@w
+    """@G%(name)s@w - @B%(cmdname)s@w
   toggle a message type to show to clients
   @CUsage@w: show @Y<datatype>@w
-    @Ydatatype@w  = the type to toggle, can be multiple
----------------------------------------------------------------"""
+    @Ydatatype@w  = the type to toggle, can be multiple"""
     tmsg = []
     if len(args) > 0:
       for i in args:
@@ -76,12 +83,10 @@ class logger:
       return False, tmsg
 
   def cmd_console(self, args):
-    """---------------------------------------------------------------
-@G%(name)s@w - @B%(cmdname)s@w
+    """@G%(name)s@w - @B%(cmdname)s@w
   toggle a message type to show in the console
   @CUsage@w: show @Y<datatype>@w
-    @Ydatatype@w  = the type to toggle, can be multiple
----------------------------------------------------------------""" 
+    @Ydatatype@w  = the type to toggle, can be multiple""" 
     tmsg = []
     if len(args) > 0:
       for i in args:
@@ -95,12 +100,10 @@ class logger:
       return False, tmsg
 
   def cmd_file(self, args):
-    """---------------------------------------------------------------
-@G%(name)s@w - @B%(cmdname)s@w
+    """@G%(name)s@w - @B%(cmdname)s@w
   toggle a message type to show to file
   @CUsage@w: show @Y<datatype>@w
-    @Ydatatype@w  = the type to toggle, can be multiple
----------------------------------------------------------------""" 
+    @Ydatatype@w  = the type to toggle, can be multiple""" 
     tmsg = []
     if len(args) > 0:
       for i in args:
@@ -114,11 +117,9 @@ class logger:
       return False, tmsg
    
   def cmd_types(self, args):
-    """---------------------------------------------------------------
-@G%(name)s@w - @B%(cmdname)s@w
+    """@G%(name)s@w - @B%(cmdname)s@w
   show data types
-  @CUsage@w: types
----------------------------------------------------------------""" 
+  @CUsage@w: types""" 
     tmsg = []
     tmsg.append('Data Types')
     tmsg.append('-' *  30)

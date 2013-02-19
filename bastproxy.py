@@ -5,9 +5,6 @@ $Id$
 This is the beginnings of a Mud Proxy that can have triggers, aliases, gags
 
 TODO:
--- plugins
-    - add variables
-    - save state (pickle?, sqlitedb?, configparser?)
 -- debug manager
      - every debug message has a type
      - on startup, plugins and other things register types
@@ -56,6 +53,7 @@ exported.logger.cmd_console(['net'])
 
 from libs.net.proxy import Proxy
 from libs.net.client import ProxyClient
+
 
 class Listener(asyncore.dispatcher):
   """
@@ -170,6 +168,7 @@ if __name__ == "__main__":
     try:
       main(listen_port, server_address, server_port)
     except KeyboardInterrupt:
+      exported.processevent('savestate', {})
       pass
   else:
     os.close(0)

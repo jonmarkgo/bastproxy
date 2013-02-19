@@ -69,7 +69,7 @@ class TelnetOptionMgr:
       try:
         self.optionsmod[i].SERVER(server)
       except AttributeError:
-        print 'Did not add option to server:', i
+        exported.msg('Did not add option to server: %s' % i, 'telopt')
   
   def resetoptions(self, server, onclose=False):
     for i in server.option_handlers:
@@ -78,3 +78,4 @@ class TelnetOptionMgr:
       
         
 toptionMgr = TelnetOptionMgr()
+exported.logger.adddtype('telopt')

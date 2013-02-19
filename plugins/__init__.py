@@ -5,9 +5,9 @@ $Id$
 import glob, os, sys
 
 from libs import exported
-from libs.utils import find_files
+from libs.utils import find_files, verify
+from libs.persistentdict import PersistentDict
 import inspect
-
 
 def get_module_name(path, filename):
   filename = filename.replace(path, "")
@@ -25,16 +25,20 @@ class BasePlugin:
     self.name = name
     self.sname = sname
     self.canreload = True
+    self.savefile = os.path.join(exported.basepath, 'data', 'plugins', self.sname + '.txt')
     self.fullname = fullname
     self.basepath = basepath
     self.fullimploc = fullimploc
     
     self.cmds = {}
     self.defaultcmd = ''
-    self.variables = {}
+    self.variables = PersistentDict(self.savefile, 'c', format='json')
+    self.settings = {}
     self.events = []
     self.timers = {}
+    
     exported.logger.adddtype(self.sname)
+    self.cmds['var'] = {'func':self.cmd_var, 'shelp':'Show/Set Variables'}
     
   def load(self):
     # load all commands
@@ -53,6 +57,7 @@ class BasePlugin:
     for i in self.timers:
       tim = self.timers[i]
       exported.addtimer(i, tim['func'], tim['seconds'], tim['onetime'])
+    
   
   def unload(self):
     'clear all commands for this plugin from cmdMgr'
@@ -65,7 +70,9 @@ class BasePlugin:
     # delete all timers
     for i in self.timers:
       exported.deletetimer(i)
-
+      
+    #save the state
+    self.savestate()
 
   def addCmd(self, cmd, tfunc, shelp=None):
     exported.cmdMgr.addCmd(self.sname, self.name, cmd, tfunc, shelp)
@@ -75,7 +82,63 @@ class BasePlugin:
     
   def msg(self, msg):
     exported.msg(msg, self.sname)
+    
+  def savestate(self):
+    self.variables.sync()
   
+  def cmd_var(self, args):
+    """@G%(name)s@w - @B%(cmdname)s@w
+  List or set vars
+  @CUsage@w: var @Y<varname>@w @Y<varvalue>@w
+    @Yvarname@w    = The variable to set
+    @Yvarvalue@w   = The value to set it to
+    if there are no arguments or 'list' is the first argument then
+    it will list the variables for the plugin"""
+    if len(args) == 0 or args[0] == 'list':
+      return True, self.listvars()
+    elif len(args) == 2:
+      var = args[0]
+      val = args[1]
+      if var in self.settings:
+        try:
+          self.variables[var] =  verify(val, self.settings[var]['stype'])
+          self.variables.sync()
+          return True, ['set %s to %s' % (var, self.variables[var])]
+        except ValueError:
+          msg = ['Cannot convert %s to %s' % (val, self.settings[var]['stype'])]        
+          return True, msg
+    return False, {}
+      
+  def listvars(self):
+    tmsg = []
+    if len(self.variables) == 0:
+      tmsg.append('There are no variables defined')
+    else:
+      tform = '%-15s : %-15s - %s'
+      for i in self.variables:
+        tmsg.append(tform % (i, self.variables[i], self.settings[i]['help']))
+    return tmsg
+  
+  def addsetting(self, name, default, stype, help):
+    if not (name in self.variables):
+      self.variables[name] = default
+    self.settings[name] = {'default':default, 'help':help, 'stype':stype}
+    
+  def cmd_reset(self):
+    """---------------------------------------------------------------
+@G%(name)s@w - @B%(cmdname)s@w
+  reset the plugin
+  @CUsage@w: reset
+---------------------------------------------------------------"""     
+    self.reset()
+    return True, ['Plugin reset']
+  
+  def reset(self):
+    self.variables.clear()
+    for i in self.settings:
+      self.variables[i] = self.settings[i]['default']
+    self.variables.sync()
+    
 
 class PluginMgr:
   def __init__(self):
@@ -342,6 +405,10 @@ class PluginMgr:
     else:
       return False
 
+  def savestate(self):
+    for i in self.plugins:
+      self.plugins[i].savestate()
+
   def load(self):
     self.load_modules("*.py")
     exported.cmdMgr.addCmd(self.sname, 'Plugin Manager', 'list', self.cmd_list, 'List plugins')
@@ -350,4 +417,5 @@ class PluginMgr:
     exported.cmdMgr.addCmd(self.sname, 'Plugin Manager', 'reload', self.cmd_reload, 'Reload a plugin')
     exported.cmdMgr.addCmd(self.sname, 'Plugin Manager', 'exported', self.cmd_exported, 'Examine the exported module')
     exported.cmdMgr.setDefault(self.sname, 'list')
+    exported.registerevent('savestate', self.savestate)
     

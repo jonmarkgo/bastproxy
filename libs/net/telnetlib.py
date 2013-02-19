@@ -291,6 +291,7 @@ class Telnet(asyncore.dispatcher):
       """
       self.msg('adding to buffer', raw, outbuffer)
       if not raw and IAC in outbuffer:
+      #if not raw and outbuffer.find(IAC) >= 0:      
           outbuffer = outbuffer.replace(IAC, IAC+IAC)
 
       outbuffer = self.convert_outdata(outbuffer)

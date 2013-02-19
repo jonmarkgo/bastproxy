@@ -22,12 +22,10 @@ class Plugin(BasePlugin):
     self.cmds['example'] = {'func':self.example, 'shelp':'Show colors'}
     
   def show(self, args):
-    """---------------------------------------------------------------
-@G%(name)s@w - @B%(cmdname)s@w
+    """@G%(name)s@w - @B%(cmdname)s@w
   Show xterm colors
-  @CUsage@w: show "compact"
-  optional "compact" argument shows a compat table with no numbers
----------------------------------------------------------------"""  
+  @CUsage@w: show @Y"compact"@w
+    @Y"compact"@w    = The original string to be replaced"""  
     msg = ['']
     lmsg = []
     compact = False
@@ -75,6 +73,9 @@ class Plugin(BasePlugin):
 
 
   def example(self, args):
+    """@G%(name)s@w - @B%(cmdname)s@w
+  Show examples of how to use colors
+  @CUsage@w: example"""      
     msg = ['']
     msg.append('Examples')
     msg.append('Raw   : @@z165Regular text with color 165 Background@@w')

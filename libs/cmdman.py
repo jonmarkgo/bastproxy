@@ -11,6 +11,33 @@ class CmdMgr:
     self.addCmd('help', 'Help', 'default', self.listCmds)
     exported.registerevent('from_client_event', self.chkCmd, 1)
 
+  def formatretmsg(self, msg, sname, stcmd):
+    msg.insert(0, '')
+    msg.insert(1, '#bp.%s.%s' % (sname, stcmd))
+    msg.insert(2, '@G' + '-' * 60 + '@w')
+    msg.append('@G' + '-' * 60 + '@w')                  
+    msg.append('')
+    return msg
+
+  def runCmd(self, tfunction, targs, sname, stcmd, scmd):
+    retvalue = tfunction(targs)
+      
+    if isinstance(retvalue, tuple):
+      retval = retvalue[0]
+      msg = retvalue[1]
+    else:
+      retval = retvalue
+      msg = []
+      
+    if retval:
+      if msg and isinstance(msg, list):
+        exported.sendtoclient('\n'.join(self.formatretmsg(msg, sname, stcmd)))    
+        return True
+    else:
+      retval2, msg = self.listCmds([sname, scmd])    
+      exported.sendtoclient('\n'.join(self.formatretmsg(msg, 'plugins', 'help'))) 
+    return retval
+
   def chkCmd(self, data):
     tdat = data['fromdata']
     if tdat[0:3] == '#bp':
@@ -27,7 +54,10 @@ class CmdMgr:
           scmd = tst[2].strip()        
         except IndexError:
           scmd = None
-        targs.insert(0, scmd)
+        if scmd:
+          targs.insert(0, scmd)
+        elif len(targs) > 0:
+          scmd = targs[0]
         targs.insert(0, sname)
         if 'help' in targs:
           hindex = targs.index('help')
@@ -39,7 +69,8 @@ class CmdMgr:
             del targs[targs.index('help')]            
           except ValueError:
             pass
-          self.listCmds(targs)
+          retval2, msg = self.listCmds(targs)    
+          exported.sendtoclient('\n'.join(self.formatretmsg(msg, 'plugins', 'help'))) 
         elif sname and scmd:
           if sname in self.cmds:
             stcmd = None
@@ -58,25 +89,7 @@ class CmdMgr:
             if not stcmd:
               exported.sendtoclient("@R%s.%s@W is not a command" % (sname, scmd))
             else:
-              retvalue = self.cmds[sname][stcmd]['func'](targs)
-                
-              if isinstance(retvalue, tuple):
-                retval = retvalue[0]
-                msg = retvalue[1]
-              else:
-                retval = retvalue
-                msg = []
-                
-              if retval:
-                if msg and isinstance(msg, list):
-                  msg.insert(0, '')
-                  msg.insert(1, '#bp.%s.%s' % (sname, stcmd))
-                  msg.insert(2, '@G' + '-' * 60 + '@w')
-                  msg.append('@G' + '-' * 60 + '@w')                  
-                  msg.append('')
-                  exported.sendtoclient('\n'.join(msg))
-              else:
-                self.listCmds([sname, scmd])              
+              self.runCmd(self.cmds[sname][stcmd]['func'], targs, sname, stcmd, scmd)
           else:  
             exported.sendtoclient("@R%s.%s@W is not a command." % (sname, scmd))
         else:
@@ -88,7 +101,9 @@ class CmdMgr:
             del targs[targs.index('help')]            
           except ValueError:
             pass
-          self.listCmds(targs)
+          retval2, msg = self.listCmds(targs)    
+          exported.sendtoclient('\n'.join(self.formatretmsg(msg, 'plugins', 'help'))) 
+          
         return {'fromdata':''}
     else:
       return data
