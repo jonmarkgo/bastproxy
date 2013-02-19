@@ -117,7 +117,7 @@ class Plugin(BasePlugin):
     self.reconnecting = False   
 
   def disconnect(self, args):
-    exported.msg('setting reconnect to true')
+    self.msg('setting reconnect to true')
     self.reconnecting = True    
 
   def a102toggleoption(self, aoption, mstate):
@@ -130,7 +130,7 @@ class Plugin(BasePlugin):
     if mstate:
       mstate = 1
       if self.optionstates[aoption] == 0:
-        exported.msg('Enabling A102 option', aoption)
+        self.msg('Enabling A102 option: %s' % aoption)
         cmd = '%s,%s' % (aoption, mstate)
         a102sendpacket(cmd)
       self.optionstates[aoption] = self.optionstates[aoption] + 1
@@ -139,7 +139,7 @@ class Plugin(BasePlugin):
       mstate = 2
       self.optionstates[aoption] = self.optionstates[aoption] - 1
       if self.optionstates[aoption] == 0:
-        exported.msg('Disabling A102 option', aoption)
+        self.msg('Disabling A102 option: %s' % aoption)
         cmd = '%s,%s' % (aoption, mstate)
         a102sendpacket(cmd)
         
@@ -148,7 +148,7 @@ class Plugin(BasePlugin):
     exported.processevent('A102:%s' % args['option'], args)
         
   def a102request(self, args):
-    exported.msg('cleaning a102 queues')
+    self.msg('cleaning a102 queues')
     if not self.reconnecting:
       for i in self.a102optionqueue:
         self.a102toggleoption(i['option'],i['toggle'])
@@ -157,11 +157,11 @@ class Plugin(BasePlugin):
       for i in self.optionstates:
         v = self.optionstates[i]
         if v > 0:
-          exported.msg('Re-Enabling A102 option',i)
+          self.msg('Re-Enabling A102 option: %s' % i)
           cmd = '%s,%s' % (i, 1)
           a102sendpacket(cmd) 
         else:
-          exported.msg('Re-Disabling A102 option', i)
+          self.msg('Re-Disabling A102 option: %s' % i)
           cmd = '%s,%s' % (i, 2)
           a102sendpacket(cmd) 
           
