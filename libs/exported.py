@@ -129,6 +129,8 @@ argument 1: the cmd to execute
   It will first be checked to see if it is an internal command
   and then sent to the mud if not"""
   data = None
+  if cmd[-1] != '\n':
+    cmd = cmd + '\n'
   newdata = raiseevent('from_client_event', {'fromdata':cmd})
 
   if 'fromdata' in newdata:
