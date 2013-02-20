@@ -69,13 +69,13 @@ class ProxyClient(Telnet):
             exported.proxy.connectmud()
           newdata = {}
           if len(data) > 0:
-            newdata = exported.processevent('from_client_event', {'fromdata':data})
+            newdata = exported.raiseevent('from_client_event', {'fromdata':data})
 
           if 'fromdata' in newdata:
             data = newdata['fromdata']
 
           if data:
-            exported.processevent('to_mud_event', {'data':data, 'dtype':'fromclient'})
+            exported.raiseevent('to_mud_event', {'data':data, 'dtype':'fromclient'})
                 
       elif self.state == PASSWORD:
         data = data.strip()
@@ -92,7 +92,7 @@ class ProxyClient(Telnet):
           exported.msg('Successful password from %s : %s' % (self.host, self.port), 'net')
           self.state = CONNECTED        
           self.viewonly = False
-          exported.processevent('client_connected', {'client':self})
+          exported.raiseevent('client_connected', {'client':self})
           if not exported.proxy.connected:
             exported.proxy.connectmud()
           else:
@@ -102,7 +102,7 @@ class ProxyClient(Telnet):
           self.state = CONNECTED
           self.viewonly = True
           self.addtooutbufferevent({'todata':convertcolors('@R#BP@W: @GYou are connected in view mode@w')})          
-          exported.processevent('client_connected for viewing', {'client':self})         
+          exported.raiseevent('client_connected for viewing', {'client':self})         
         else:
           self.pwtries += 1
           if self.pwtries == 5:

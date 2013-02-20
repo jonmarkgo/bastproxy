@@ -47,11 +47,11 @@ argument 2: the function to call"""
   eventMgr.unregisterevent(name, func)
 
 
-def processevent(name, args):
+def raiseevent(name, args):
   """process an event and call all functions associated with ht
 argument 1: the name of the event
 argument 2: the argument list"""
-  return eventMgr.processevent(name, args)
+  return eventMgr.raiseevent(name, args)
 
 
 def write_traceback(message=""):
@@ -91,7 +91,7 @@ argument 2: (optional) if this argument is True, do
       test.append(color.convertcolors('@R#BP@w: ' + i))
     text = test
  
-  eventMgr.processevent('to_client_event', {'todata':'\n'.join(text), 'raw':raw, 'dtype':'fromproxy'})
+  eventMgr.raiseevent('to_client_event', {'todata':'\n'.join(text), 'raw':raw, 'dtype':'fromproxy'})
 
 write_message = sendtoclient
 
@@ -128,5 +128,5 @@ def execute(cmd):
 argument 1: the cmd to execute
   It will first be checked to see if it is an internal command
   and then sent to the mud if not"""
-  self.cmdMgr.chkCmd(cmd)
+  exported.raiseevent('to_mud_event', {'data':cmd, 'dtype':'fromclient'})
   

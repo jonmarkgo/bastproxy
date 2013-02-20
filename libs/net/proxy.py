@@ -48,7 +48,7 @@ class Proxy(Telnet):
       ndatal = alldata.split('\n')
       self.lastmsg = ndatal[-1]
       for i in ndatal[:-1]:
-        exported.processevent('to_client_event', {'todata':i, 'dtype':'frommud', 'noansidata':strip_ansi(i)})
+        exported.raiseevent('to_client_event', {'todata':i, 'dtype':'frommud', 'noansidata':strip_ansi(i)})
 
   def addclient(self, client):
     """
@@ -96,17 +96,17 @@ class Proxy(Telnet):
     self.doconnect()
     self.connectedtime = time.mktime(time.localtime())
     exported.msg('Connected to mud', 'net')    
-    exported.processevent('mudconnect', {})
+    exported.raiseevent('mudconnect', {})
 
   def handle_close(self):
     """
     hand closing the connection
     """
     exported.msg('Disconnected from mud', 'net')
-    exported.processevent('to_client_event', {'todata':convertcolors('@R#BP@w: The mud closed the connection'), 'dtype':'fromproxy'})
+    exported.raiseevent('to_client_event', {'todata':convertcolors('@R#BP@w: The mud closed the connection'), 'dtype':'fromproxy'})
     toptionMgr.resetoptions(self, True)
     Telnet.handle_close(self)
-    exported.processevent('muddisconnect', {})  
+    exported.raiseevent('muddisconnect', {})  
 
   def addtooutbuffer(self, args, raw=False):
     """

@@ -168,7 +168,7 @@ if __name__ == "__main__":
     try:
       main(listen_port, server_address, server_port)
     except KeyboardInterrupt:
-      exported.processevent('savestate', {})
+      exported.raiseevent('savestate', {})
       pass
   else:
     os.close(0)

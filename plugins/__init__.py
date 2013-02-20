@@ -380,10 +380,10 @@ class PluginMgr:
     plugin.purpose = module.purpose
     plugin.version = module.version    
     if plugin.name in self.pluginl:
-      print('Plugin %s already exists' % plugin.name)
+      exported.msg('Plugin %s already exists' % plugin.name, self.sname)
       return False
     if plugin.sname in self.plugins:
-      print('Plugin %s already exists' % plugin.sname)
+      exported.msg('Plugin %s already exists' % plugin.sname, self.sname)
       return False
     
     plugin.load()

@@ -50,7 +50,7 @@ class dotdict(dict):
     
 #IAC SB A102 <atcp message text> IAC SE
 def a102sendpacket(what):
-  exported.processevent('to_mud_event', {'data':'%s%s%s%s%s%s' % (IAC, SB, A102, what.replace(IAC, IAC+IAC), IAC, SE), 'raw':True, 'dtype':A102})  
+  exported.raiseevent('to_mud_event', {'data':'%s%s%s%s%s%s' % (IAC, SB, A102, what.replace(IAC, IAC+IAC), IAC, SE), 'raw':True, 'dtype':A102})  
     
     
 # Server
@@ -65,21 +65,21 @@ class SERVER(TelnetOption):
       self.telnetobj.msg('A102: sending IAC DO A102', level=2, mtype='A102')
       self.telnetobj.send(IAC + DO + A102)
       self.telnetobj.options[ord(A102)] = True
-      exported.processevent('A102:server-enabled', {})
+      exported.raiseevent('A102:server-enabled', {})
       
     elif command == SE:
       if not self.telnetobj.options[ord(A102)]:
         print '##BUG: Enabling A102, missed negotiation'
         self.telnetobj.options[ord(A102)] = True        
-        exported.processevent('A102:server-enabled', {})
+        exported.raiseevent('A102:server-enabled', {})
         
       tdata = {}
       tdata['option'] = ord(sbdata[0])
       tdata['flag'] = ord(sbdata[1])
       tdata['server'] = self.telnetobj
       self.telnetobj.msg('A102: got %s,%s from server' % (tdata['option'], tdata['flag']), level=2, mtype='A102')
-      exported.processevent('to_client_event', {'todata':'%s%s%s%s%s%s' % (IAC, SB, A102, sbdata.replace(IAC, IAC+IAC), IAC, SE), 'raw':True, 'dtype':A102})      
-      exported.processevent('A102_from_server', tdata)
+      exported.raiseevent('to_client_event', {'todata':'%s%s%s%s%s%s' % (IAC, SB, A102, sbdata.replace(IAC, IAC+IAC), IAC, SE), 'raw':True, 'dtype':A102})      
+      exported.raiseevent('A102_from_server', tdata)
 
 
 # Client
@@ -96,7 +96,7 @@ class CLIENT(TelnetOption):
       self.telnetobj.msg('A102:setting options[A102] to True', mtype='A102')    
       self.telnetobj.options[ord(A102)] = True        
     elif command == SE:
-      exported.processevent('A102_from_client', {'data': sbdata, 'client':self.telnetobj})
+      exported.raiseevent('A102_from_client', {'data': sbdata, 'client':self.telnetobj})
       
       
 # Plugin
@@ -144,8 +144,8 @@ class Plugin(BasePlugin):
         a102sendpacket(cmd)
         
   def a102fromserver(self, args):    
-    exported.processevent('A102', args)
-    exported.processevent('A102:%s' % args['option'], args)
+    exported.raiseevent('A102', args)
+    exported.raiseevent('A102:%s' % args['option'], args)
         
   def a102request(self, args):
     self.msg('cleaning a102 queues')

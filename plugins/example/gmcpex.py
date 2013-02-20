@@ -30,8 +30,8 @@ class Plugin(BasePlugin):
     @Ygmcpmod@w    = The gmcp module to print, such as char.status
 ---------------------------------------------------------------"""    
     if len(args) > 0:
-      exported.sendtoclient('%s' % exported.gmcp.getv(args[0]))
-      return True
+      exported.sendtoclient()
+      return True, ['%s' % exported.gmcp.getv(args[0])]
     
     return False
 
@@ -39,24 +39,26 @@ class Plugin(BasePlugin):
     exported.sendtoclient('@x52@z192 Event @w- @GGMCP@w: @B%s@w : %s' % (args['module'], args['data']))
 
   def testchar(self, args):
-    print('testchar --------------------------')
+    msg = []
+    msg.append('testchar --------------------------')
     tchar = exported.gmcp.getv('char')
-    print(tchar)
+    msg.append(tchar)
     if tchar and tchar.status:
-      print('char.status.state from tchar')
-      print(tchar.status.state)
+      msg.append('char.status.state from tchar')
+      msg.append(tchar.status.state)
     else:
-      print('Do not have status')
-    print('char.status.state with getting full')
+      msg.append('Do not have status')
+    msg.append('char.status.state with getting full')
     cstate = exported.gmcp.getv('char.status.state')
     if cstate:
-      print('Got state: %s' % cstate)
+      msg.append('Got state: %s' % cstate)
     else:
-      print('did not get state')
-    print('getting a module that doesn\'t exist')
-    print(exported.gmcp.getv('char.test'))
-    print('getting a variable that doesn\'t exist')
-    print(exported.gmcp.getv('char.status.test'))
+      msg.append('did not get state')
+    msg.append('getting a module that doesn\'t exist')
+    msg.append(exported.gmcp.getv('char.test'))
+    msg.append('getting a variable that doesn\'t exist')
+    msg.append(exported.gmcp.getv('char.status.test'))
+    self.msg('\n'.join(msg))
     
     exported.sendtoclient('@CEvent@w - @GGMCP:char@w: %s' % args['module'])
 

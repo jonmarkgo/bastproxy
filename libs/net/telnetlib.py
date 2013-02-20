@@ -306,7 +306,7 @@ class Telnet(asyncore.dispatcher):
       return len(self.outbuffer) > 0
 
     def handle_error(self):
-      print("Telnet error:", self.ttype, traceback.format_exc(), file=sys.stderr)
+      exported.write_traceback("Telnet error: %s" % self.ttype)
 
     def handle_read(self):
       """Read readily available data.

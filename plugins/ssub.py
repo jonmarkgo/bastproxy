@@ -88,7 +88,6 @@ class Plugin(BasePlugin):
     
   def addsub(self, item, sub):
     self._substitutes[item] = {'sub':sub}
-    print 'substitutes after add', self._substitutes
     self._substitutes.sync()
 
   def removesub(self, item):

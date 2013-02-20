@@ -55,14 +55,14 @@ class TelnetOptionMgr:
         exported.write_traceback("Option module '%s' refuses to load." % name)
         
   def reloadmod(self, mod):
-    exported.processevent('OPTRELOAD', {'option':mod})
+    exported.raiseevent('OPTRELOAD', {'option':mod})
   
   def addtoclient(self, client):
     for i in self.options:
       try:
         self.optionsmod[i].CLIENT(client)
       except AttributeError:
-        print 'Did not add option to client:', i
+        exported.msg('Did not add option to client: %s' % i, 'telopt')
         
   def addtoserver(self, server):
     for i in self.options:

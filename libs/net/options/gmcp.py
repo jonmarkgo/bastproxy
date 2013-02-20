@@ -55,7 +55,7 @@ class dotdict(dict):
 def gmcpsendpacket(what):
   """send a gmcp packet
 only argument is what to send"""
-  exported.processevent('to_mud_event', {'data':'%s%s%s%s%s%s' % (IAC, SB, GMCP, what.replace(IAC, IAC+IAC), IAC, SE), 'raw':True, 'dtype':GMCP})  
+  exported.raiseevent('to_mud_event', {'data':'%s%s%s%s%s%s' % (IAC, SB, GMCP, what.replace(IAC, IAC+IAC), IAC, SE), 'raw':True, 'dtype':GMCP})  
     
     
 # Server
@@ -70,14 +70,14 @@ class SERVER(TelnetOption):
       self.telnetobj.msg('GMCP: sending IAC DO GMCP', level=2, mtype='GMCP')
       self.telnetobj.send(IAC + DO + GMCP)
       self.telnetobj.options[ord(GMCP)] = True
-      exported.processevent('GMCP:server-enabled', {})
+      exported.raiseevent('GMCP:server-enabled', {})
       
     elif command == SE:
       if not self.telnetobj.options[ord(GMCP)]:
         # somehow we missed negotiation
         self.telnetobj.msg('##BUG: Enabling GMCP, missed negotiation', level=2, mtype='GMCP')
         self.telnetobj.options[ord(GMCP)] = True        
-        exported.processevent('GMCP:server-enabled', {})
+        exported.raiseevent('GMCP:server-enabled', {})
         
       data = sbdata
       modname, data = data.split(" ", 1)
@@ -92,8 +92,8 @@ class SERVER(TelnetOption):
       tdata['data'] = newdata
       tdata['module'] = modname
       tdata['server'] = self.telnetobj
-      exported.processevent('to_client_event', {'todata':'%s%s%s%s%s%s' % (IAC, SB, GMCP, sbdata.replace(IAC, IAC+IAC), IAC, SE), 'raw':True, 'dtype':GMCP})      
-      exported.processevent('GMCP_raw', tdata)
+      exported.raiseevent('to_client_event', {'todata':'%s%s%s%s%s%s' % (IAC, SB, GMCP, sbdata.replace(IAC, IAC+IAC), IAC, SE), 'raw':True, 'dtype':GMCP})      
+      exported.raiseevent('GMCP_raw', tdata)
 
 
 # Client
@@ -111,7 +111,7 @@ class CLIENT(TelnetOption):
       self.telnetobj.msg('GMCP:setting options["GMCP"] to True', mtype='GMCP')    
       self.telnetobj.options[ord(GMCP)] = True        
     elif command == SE:
-      exported.processevent('GMCP_from_client', {'data': sbdata, 'client':self.telnetobj})
+      exported.raiseevent('GMCP_from_client', {'data': sbdata, 'client':self.telnetobj})
       
       
 # Plugin
@@ -202,16 +202,18 @@ argument 1: module name (such as char.status)"""
         try:
           datatable[i] = args['data'][i]
         except TypeError:
-          print "TypeError: string indices must be integers"
-          print 'i', i
-          print 'datatable', datatable
-          print 'args', args
-          print 'args[data]', args['data']
+          msg = []
+          msg.append("TypeError: string indices must be integers")
+          msg.append('i: %s' % i) 
+          msg.append('datatable: %s' % datatable)
+          msg.append('args: %s' % args)
+          msg.append('args[data]: %s' % args['data'])
+          exported.write_traceback('\n'.join(msg))
 
     
-    exported.processevent('GMCP', args)
-    exported.processevent('GMCP:%s' % modname, args)
-    exported.processevent('GMCP:%s' % mods[0], args)
+    exported.raiseevent('GMCP', args)
+    exported.raiseevent('GMCP:%s' % modname, args)
+    exported.raiseevent('GMCP:%s' % mods[0], args)
     
   def gmcprequest(self, args):
     if not self.reconnecting:

@@ -66,8 +66,8 @@ class EventMgr:
         if self.events[eventname][i].count(func) == 1:
           self.events[eventname][i].remove(func)
 
-  def processevent(self, eventname, args):
-    #exported.msg('processevent', eventname, args)
+  def raiseevent(self, eventname, args):
+    #exported.msg('raiseevent', eventname, args)
     nargs = args.copy()
     nargs['eventname'] = eventname
     if eventname in self.events:
