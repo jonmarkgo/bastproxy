@@ -1,5 +1,7 @@
 """
 $Id$
+
+#TODO: change load to be able to use example.timerex
 """
 
 import glob, os, sys

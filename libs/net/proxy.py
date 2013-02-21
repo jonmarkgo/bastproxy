@@ -54,7 +54,7 @@ class Proxy(Telnet):
         if 'fromdata' in newdata:
           tosend = newdata['fromdata']
 
-        if tosend:
+        if tosend != None:
           #data cannot be transformed here
           exported.raiseevent('to_client_event', {'todata':tosend, 'dtype':'frommud', 'noansidata':strip_ansi(tosend)})        
 

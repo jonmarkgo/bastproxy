@@ -33,7 +33,7 @@ class ProxyClient(Telnet):
     self.state = PASSWORD
     self.addtooutbufferevent({'todata':convertcolors('@R#BP@w: @RPlease enter the proxy password:@w'), 'dtype':'passwd'})
 
-  def addtooutbufferevent(self, args):  
+  def addtooutbufferevent(self, args):
     outbuffer = args['todata']
     dtype = None
     raw = False
