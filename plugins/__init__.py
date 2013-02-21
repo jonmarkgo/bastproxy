@@ -34,8 +34,9 @@ class BasePlugin:
     self.defaultcmd = ''
     self.variables = PersistentDict(self.savefile, 'c', format='json')
     self.settings = {}
-    self.events = []
+    self.events = {}
     self.timers = {}
+    self.triggers = {}
     
     exported.logger.adddtype(self.sname)
     self.cmds['var'] = {'func':self.cmd_var, 'shelp':'Show/Set Variables'}
@@ -43,7 +44,8 @@ class BasePlugin:
   def load(self):
     # load all commands
     for i in self.cmds:
-      self.addCmd(i, self.cmds[i]['func'], self.cmds[i]['shelp'])
+      cmd = self.cmds[i]
+      self.addCmd(i, cmd['func'], cmd['shelp'])
       
     # if there is a default command, then set it
     if self.defaultcmd:
@@ -51,12 +53,17 @@ class BasePlugin:
       
     # register all events
     for i in self.events:
-      exported.registerevent(i['event'], i['func'])
+      event = self.events[i]
+      exported.registerevent(i, event['func'])
       
     # register all timers
     for i in self.timers:
       tim = self.timers[i]
       exported.addtimer(i, tim['func'], tim['seconds'], tim['onetime'])
+      
+    for i in self.triggers:
+      trig = self.triggers[i]
+      exported.addtrigger(i, trig['regex'])
     
   
   def unload(self):
@@ -65,11 +72,14 @@ class BasePlugin:
 
     # unregister all events
     for i in self.events:
-      exported.unregisterevent(i['event'], i['func'])
+      exported.unregisterevent(i, self.events[i]['func'])
 
     # delete all timers
     for i in self.timers:
       exported.deletetimer(i)
+
+    for i in self.triggers:
+      exported.deletetrigger(i)
       
     #save the state
     self.savestate()
@@ -151,12 +161,10 @@ class PluginMgr:
     exported.logger.cmd_console([self.sname])    
 
   def cmd_exported(self, args):
-    """---------------------------------------------------------------
-@G%(name)s@w - @B%(cmdname)s@w
+    """@G%(name)s@w - @B%(cmdname)s@w
   see what functions are available to the exported module
   useful for finding out what can be gotten for scripting
-  @CUsage@w: exported
----------------------------------------------------------------"""
+  @CUsage@w: exported"""
     tmsg = []
     if len(args) == 0:
       tmsg.append('Items available in exported')
@@ -186,11 +194,9 @@ class PluginMgr:
         tmsg.append('  %s' % i)    
     
   def cmd_list(self, args):
-    """---------------------------------------------------------------
-@G%(name)s@w - @B%(cmdname)s@w
+    """@G%(name)s@w - @B%(cmdname)s@w
   List plugins
-  @CUsage@w: list
----------------------------------------------------------------"""
+  @CUsage@w: list"""
     msg = ['', 'Plugins:']
     msg.append("%-10s : %-20s %-10s %-5s %s@w" % ('Short Name', 'Name', 'Author', 'Vers', 'Purpose'))
     msg.append('-' * 75)
@@ -202,13 +208,11 @@ class PluginMgr:
     return True, msg
     
   def cmd_load(self, args):
-    """---------------------------------------------------------------
-@G%(name)s@w - @B%(cmdname)s@w
+    """@G%(name)s@w - @B%(cmdname)s@w
   Load a plugin
   @CUsage@w: load @Yplugin@w
     @Yplugin@w    = the name of the plugin to load
-               use the name without the .py    
----------------------------------------------------------------"""
+               use the name without the .py"""
     tmsg = []
     if len(args) == 1:
       basepath = ''
@@ -235,12 +239,10 @@ class PluginMgr:
       return False, tmsg
 
   def cmd_unload(self, args):
-    """---------------------------------------------------------------
-@G%(name)s@w - @B%(cmdname)s@w
+    """@G%(name)s@w - @B%(cmdname)s@w
   unload a plugin
   @CUsage@w: unload @Yplugin@w
-    @Yplugin@w    = the shortname of the plugin to load
----------------------------------------------------------------"""    
+    @Yplugin@w    = the shortname of the plugin to load"""    
     tmsg = []
     if len(args) == 1 and args[0] in self.plugins:
       if self.plugins[args[0]].canreload:
@@ -255,12 +257,10 @@ class PluginMgr:
     return False
 
   def cmd_reload(self, args):
-    """---------------------------------------------------------------
-@G%(name)s@w - @B%(cmdname)s@w
+    """@G%(name)s@w - @B%(cmdname)s@w
   reload a plugin
   @CUsage@w: reload @Yplugin@w
-    @Yplugin@w    = the shortname of the plugin to reload
----------------------------------------------------------------""" 
+    @Yplugin@w    = the shortname of the plugin to reload""" 
     tmsg = []
     if args[0] and args[0] in self.plugins:
       if self.plugins[args[0]].canreload:
