@@ -67,6 +67,8 @@ class EventMgr:
           args['line'] = data
           args['triggername'] = i
           self.raiseevent('trigger_' + i, args)
+          
+    return args
         
   def registerevent(self, eventname, func, prio=50):
     if not (eventname in self.events):
