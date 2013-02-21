@@ -6,6 +6,7 @@ from __future__ import print_function
 
 import sys
 import time
+import re
 from libs import exported
 
 class Event:
@@ -38,12 +39,35 @@ class EventMgr:
     self.timerevents = {}
     self.timerlookup = {}
     self.lasttime = int(time.time())
+    self.registerevent('from_mud_event', self.checktrigger, 1)
     exported.msg('lasttime:  %s' % self.lasttime, 'timer')
     
   def addtrigger(self, triggername, regex):
-    self.trigger[triggername] = regex
-    self.regexlookup[regex] = triggername
+    try:
+      self.triggers[triggername] = {'regex':regex, 'compiled':re.compile(regex)} 
+      self.regexlookup[regex] = triggername
+    except:
+      exported.write_traceback('Could not compile regex for trigger: %s : %s' % (triggername, regex))
+      
+  def deletetrigger(self, triggername):
+    if triggername in self.triggers:
+      del self.regexlookup[self.triggers[triggername]['regex']]
+      del self.triggers[triggername]
 
+  def checktrigger(self, args):
+    data = args['nocolordata']
+    if data == '':
+      self.raiseevent('trigger_emptyline', {'line':'', 'triggername':'emptyline'})      
+    else:
+      for i in self.triggers:
+        trigre = self.triggers[i]['compiled']
+        m = trigre.match(data)
+        if m:
+          args = m.groupdict()
+          args['line'] = data
+          args['triggername'] = i
+          self.raiseevent('trigger_' + i, args)
+        
   def registerevent(self, eventname, func, prio=50):
     if not (eventname in self.events):
       self.events[eventname] = {}

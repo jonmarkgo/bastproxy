@@ -50,7 +50,7 @@ class Proxy(Telnet):
       for i in ndatal[:-1]:
         if len(i) > 0:
           #data can be transformed here
-          newdata = exported.raiseevent('from_mud_event', {'fromdata':i, 'dtype':'frommud', 'noansidata':strip_ansi(i)})
+          newdata = exported.raiseevent('from_mud_event', {'fromdata':i, 'dtype':'frommud', 'nocolordata':strip_ansi(i)})
 
         if 'fromdata' in newdata:
           ndata = newdata['fromdata']

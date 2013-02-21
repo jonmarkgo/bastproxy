@@ -25,11 +25,17 @@ argument 2: (optional) the data type, the default is 'default"""
     logger.msg({'msg':msg}, dtype)
    
    
-def addtriggerevent(name, regex):
+def addtrigger(name, regex):
   """add a trigger
 argument 1: the name of the trigger
 argument 2: the regex for the trigger"""
-  eventMgr.addtriggerevent(name, regex)
+  eventMgr.addtrigger(name, regex)
+
+
+def deletetrigger(name):
+  """delete a trigger
+argument 1: the name of the trigger"""
+  eventMgr.deletetrigger(name)
 
 
 def registerevent(name, func, prio=50):
