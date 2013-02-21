@@ -32,6 +32,7 @@ To get GMCP data:
 from libs.net.options._option import TelnetOption
 from libs.net.telnetlib import WILL, DO, IAC, SE, SB
 from libs import exported
+from libs.utils import convert
 from plugins import BasePlugin
 
 GMCP = chr(201)
@@ -83,7 +84,7 @@ class SERVER(TelnetOption):
       modname, data = data.split(" ", 1)
       try:
         import json
-        newdata = json.loads(data)
+        newdata = json.loads(data, object_hook=convert)
       except UnicodeDecodeError:
         exported.write_traceback('Could not decode: %s' % data)
       self.telnetobj.msg(modname, data, level=2, mtype='GMCP')
