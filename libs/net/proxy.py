@@ -48,6 +48,7 @@ class Proxy(Telnet):
       ndatal = alldata.split('\n')
       self.lastmsg = ndatal[-1]
       for i in ndatal[:-1]:
+        newdata = {}
         if len(i) > 0:
           #data can be transformed here
           newdata = exported.raiseevent('from_mud_event', {'fromdata':i, 'dtype':'frommud', 'nocolordata':strip_ansi(i)})
