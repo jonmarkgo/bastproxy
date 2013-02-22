@@ -29,10 +29,11 @@ class logger:
     self.colors['error'] = '@x136'    
   
   def adddtype(self, dtype):
-    self.dtypes[dtype] = True
-    self.sendtoclient[dtype] = False
-    self.sendtofile[dtype] = False
-    self.sendtoconsole[dtype] = False    
+    if not (dtype in self.dtypes):
+      self.dtypes[dtype] = True
+      self.sendtoclient[dtype] = False
+      self.sendtofile[dtype] = False
+      self.sendtoconsole[dtype] = False    
     
   def msg(self, args, dtype='default'):
     if 'dtype' in args:
@@ -69,7 +70,8 @@ class logger:
     """@G%(name)s@w - @B%(cmdname)s@w
   toggle a message type to show to clients
   @CUsage@w: show @Y<datatype>@w
-    @Ydatatype@w  = the type to toggle, can be multiple"""
+    @Ydatatype@w  = the type to toggle, can be multiple
+    if no arguments, list types that are sent to client"""     
     tmsg = []
     if len(args) > 0:
       for i in args:
@@ -80,13 +82,17 @@ class logger:
           tmsg.append('Type %s does not exist' % i)
       return True, tmsg
     else:
-      return False, tmsg
+      tmsg.append('Current types going to client')
+      for i in self.sendtoclient:
+        tmsg.append(i)
+      return True, tmsg
 
   def cmd_console(self, args):
     """@G%(name)s@w - @B%(cmdname)s@w
   toggle a message type to show in the console
   @CUsage@w: show @Y<datatype>@w
-    @Ydatatype@w  = the type to toggle, can be multiple""" 
+    @Ydatatype@w  = the type to toggle, can be multiple
+    if no arguments, list types that are sent to console""" 
     tmsg = []
     if len(args) > 0:
       for i in args:
@@ -97,13 +103,17 @@ class logger:
           tmsg.append('Type %s does not exist' % i)
       return True, tmsg
     else:
-      return False, tmsg
+      tmsg.append('Current types going to console')
+      for i in self.sendtoclient:
+        tmsg.append(i)
+      return True, tmsg
 
   def cmd_file(self, args):
     """@G%(name)s@w - @B%(cmdname)s@w
   toggle a message type to show to file
   @CUsage@w: show @Y<datatype>@w
-    @Ydatatype@w  = the type to toggle, can be multiple""" 
+    @Ydatatype@w  = the type to toggle, can be multiple
+    if no arguments, list types that are sent to file"""     
     tmsg = []
     if len(args) > 0:
       for i in args:
@@ -114,7 +124,10 @@ class logger:
           tmsg.append('Type %s does not exist' % i)
       return True, tmsg
     else:
-      return False, tmsg
+      tmsg.append('Current types going to file')
+      for i in self.sendtoclient:
+        tmsg.append(i)
+      return True, tmsg
    
   def cmd_types(self, args):
     """@G%(name)s@w - @B%(cmdname)s@w
