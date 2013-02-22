@@ -84,7 +84,8 @@ class logger:
     else:
       tmsg.append('Current types going to client')
       for i in self.sendtoclient:
-        tmsg.append(i)
+        if self.sendtoclient[i]:
+          tmsg.append(i)
       return True, tmsg
 
   def cmd_console(self, args):
@@ -104,8 +105,9 @@ class logger:
       return True, tmsg
     else:
       tmsg.append('Current types going to console')
-      for i in self.sendtoclient:
-        tmsg.append(i)
+      for i in self.sendtoconsole:
+        if self.sendtoconsole[i]:
+          tmsg.append(i)
       return True, tmsg
 
   def cmd_file(self, args):
@@ -125,8 +127,9 @@ class logger:
       return True, tmsg
     else:
       tmsg.append('Current types going to file')
-      for i in self.sendtoclient:
-        tmsg.append(i)
+      for i in self.sendtofile:
+        if self.sendtofile[i]:
+          tmsg.append(i)
       return True, tmsg
    
   def cmd_types(self, args):
