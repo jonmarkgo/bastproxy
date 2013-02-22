@@ -2,6 +2,7 @@
 $Id$
 
 #TODO: change load to be able to use example.timerex
+#TODO: reload plugins that were loaded, but have autoload set to False, on next start
 """
 
 import glob, os, sys
@@ -200,11 +201,11 @@ class PluginMgr:
   List plugins
   @CUsage@w: list"""
     msg = ['', 'Plugins:']
-    msg.append("%-10s : %-20s %-10s %-5s %s@w" % ('Short Name', 'Name', 'Author', 'Vers', 'Purpose'))
+    msg.append("%-10s : %-25s %-10s %-5s %s@w" % ('Short Name', 'Name', 'Author', 'Vers', 'Purpose'))
     msg.append('-' * 75)
     for plugin in self.plugins:
       tpl = self.plugins[plugin]
-      msg.append("%-10s : %-20s %-10s %-5s %s@w" % (plugin, tpl.name, tpl.author, tpl.version, tpl.purpose))
+      msg.append("%-10s : %-25s %-10s %-5s %s@w" % (plugin, tpl.name, tpl.author, tpl.version, tpl.purpose))
     msg.append('-' * 75)
     msg.append('')
     return True, msg
