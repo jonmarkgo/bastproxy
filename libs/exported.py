@@ -91,10 +91,12 @@ argument 2: (optional) if this argument is True, do
   if isinstance(text, basestring):
     text = text.split('\n')
   
-  if (not raw) and preamble:
+  if not raw:
     test = []
     for i in text:
-      test.append(color.convertcolors('@R#BP@w: ' + i))
+      if preamble:
+        i = '@R#BP@w: ' + i
+      test.append(color.convertcolors(i))
     text = test
  
   eventMgr.raiseevent('to_client_event', {'todata':'\n'.join(text), 'raw':raw, 'dtype':'fromproxy'})
