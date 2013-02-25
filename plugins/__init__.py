@@ -1,8 +1,7 @@
 """
 $Id$
 
-#TODO: change load to be able to use example.timerex
-#TODO: reload plugins that were loaded, but have autoload set to False, on next start
+#TODO: change load to be able to use example.timere
 """
 
 import glob, os, sys
@@ -158,6 +157,8 @@ class PluginMgr:
     self.plugins = {}
     self.pluginl = {}
     self.pluginm = {}
+    self.savefile = os.path.join(exported.basepath, 'data', 'plugins', 'loadedplugins.txt')    
+    self.loadedplugins = PersistentDict(self.savefile, 'c', format='json')    
     self.sname = 'plugins'
     self.lname = 'Plugins'
     exported.logger.adddtype(self.sname)
@@ -289,10 +290,10 @@ class PluginMgr:
     _module_list.sort()
 
     for fullname in _module_list:
-      # we skip over all files that start with a _
-      # this allows hackers to be working on a module and not have
-      # it die every time.
-      self.load_module(fullname, basepath)
+      force = False
+      if fullname in self.loadedplugins:
+        force = True
+      self.load_module(fullname, basepath, force)
 
   def load_module(self, fullname, basepath, force=False):
     imploc, modname = get_module_name(basepath, fullname)
@@ -393,6 +394,8 @@ class PluginMgr:
     self.pluginl[plugin.name] = plugin
     self.plugins[plugin.sname] = plugin
     self.pluginm[plugin.name] = module
+    self.loadedplugins[fullname] = True
+    self.loadedplugins.sync()
     return True
 
   def remove_plugin(self, pluginname):
@@ -403,6 +406,8 @@ class PluginMgr:
       del self.plugins[plugin.sname]
       del self.pluginl[plugin.name]
       del self.pluginm[plugin.name]      
+      del self.loadedplugins[plugin.fullname]
+      self.loadedplugins.sync()
       plugin = None      
       return True
     else:
