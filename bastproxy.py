@@ -13,7 +13,7 @@ TODO:
 -- general logging manager
 -- triggers
      - need to also be able to check colors
-
+  
 """
 import asyncore
 import ConfigParser
@@ -30,6 +30,11 @@ else:
   exported.basepath = __file__[:index]
 
 print 'setting basepath to', exported.basepath
+
+try:
+  os.makedirs(os.path.join(exported.basepath, 'data', 'logs'))
+except OSError:
+  pass
 
 from libs.logger import logger
 exported.logger = logger()

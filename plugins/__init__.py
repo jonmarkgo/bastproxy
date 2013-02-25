@@ -27,7 +27,12 @@ class BasePlugin:
     self.name = name
     self.sname = sname
     self.canreload = True
-    self.savefile = os.path.join(exported.basepath, 'data', 'plugins', self.sname + '.txt')
+    self.savedir = os.path.join(exported.basepath, 'data', 'plugins', self.sname)
+    try:
+      os.makedirs(self.savedir)
+    except OSError:
+      pass
+    self.savefile = os.path.join(exported.basepath, 'data', 'plugins', self.sname, 'variables.txt')
     self.fullname = fullname
     self.basepath = basepath
     self.fullimploc = fullimploc

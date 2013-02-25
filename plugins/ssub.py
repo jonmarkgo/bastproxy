@@ -21,7 +21,7 @@ autoload = True
 class Plugin(BasePlugin):
   def __init__(self, name, sname, filename, directory, importloc):
     BasePlugin.__init__(self, name, sname, filename, directory, importloc)
-    self.savesubfile = os.path.join(exported.basepath, 'data', 'plugins', self.sname + '-subs.txt')
+    self.savesubfile = os.path.join(self.savedir, 'subs.txt')
     self._substitutes = PersistentDict(self.savesubfile, 'c', format='json')
     self.cmds['add'] = {'func':self.cmd_add, 'shelp':'Add a substitute'}
     self.cmds['remove'] = {'func':self.cmd_remove, 'shelp':'Remove a substitute'}

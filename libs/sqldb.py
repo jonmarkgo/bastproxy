@@ -21,9 +21,9 @@ def fixsql(s, like=False):
   
 
 class sqldb:
-  def __init__(self, dbname=None):
+  def __init__(self, dbname=None, dbdir=None):
     self.dbname = dbname or "\\sqlite.sqlite"
-    self.dbdir = os.path.join(exported.basepath, 'data', 'db')
+    self.dbdir = dbdir or os.path.join(exported.basepath, 'data', 'db')
     self.dbfile = os.path.join(self.dbdir, self.dbname)
     self.db = sqlite3.connect(self.dbfile)
     self.db.row_factory = sqlite3.Row
@@ -34,7 +34,7 @@ class sqldb:
     self.tableids = {}
     self.tables = {}
 
-  def postinit(self):
+  def postinit(self):  
     self.checkversion()
     
     for i in self.tables:
