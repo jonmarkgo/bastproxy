@@ -84,7 +84,7 @@ class SERVER(TelnetOption):
       modname, data = data.split(" ", 1)
       try:
         import json
-        newdata = json.loads(data, object_hook=convert)
+        newdata = json.loads(data.decode('utf-8','ignore'), object_hook=convert)
       except UnicodeDecodeError:
         exported.write_traceback('Could not decode: %s' % data)
       self.telnetobj.msg(modname, data, level=2, mtype='GMCP')
