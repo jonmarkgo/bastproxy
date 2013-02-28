@@ -108,7 +108,11 @@ class logger:
       for i in args:
         if i in self.sendtoclient and i != 'frommud':
           self.sendtoclient[i] = not self.sendtoclient[i]
-          tmsg.append('sending %s to client' % i)
+          if self.sendtoclient[i]:
+            tmsg.append('sending %s to client' % i)
+          else:
+            tmsg.append('no longer sending %s to client' % i)
+            
         elif i != 'frommud':
           tmsg.append('Type %s does not exist' % i)
       self.sendtoclient.sync()
@@ -131,7 +135,11 @@ class logger:
       for i in args:
         if i in self.sendtoconsole and i != 'frommud':
           self.sendtoconsole[i] = not self.sendtoconsole[i]
-          tmsg.append('sending %s to console' % i)          
+          if self.sendtoconsole[i]:
+            tmsg.append('sending %s to console' % i)
+          else:
+            tmsg.append('no longer sending %s to console' % i)
+      
         elif i != 'frommud':
           tmsg.append('Type %s does not exist' % i)
       self.sendtoconsole.sync()
