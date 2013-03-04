@@ -74,7 +74,7 @@ class Plugin(BasePlugin):
       self.queststuff['double'] = questi['double']
       self.queststuff['totqp'] = questi['totqp']
       self.queststuff['gold'] = questi['gold']
-      exported.event.eraise('aard_quest_comp', copy.copydeep(self.queststuff))
+      exported.event.eraise('aard_quest_comp', copy.deepcopy(self.queststuff))
     elif questi['action'] == 'failed':
       exported.event.eraise('aard_quest_failed', {})
     elif questi['action'] == 'status':
