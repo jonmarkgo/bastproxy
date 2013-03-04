@@ -12,7 +12,7 @@ from libs import exported
 #these 5 are required
 NAME = 'Mail'
 SNAME = 'mail'
-PURPOSE = 'hold mail settings and provide functions to send mail'
+PURPOSE = 'setup and send mail'
 AUTHOR = 'Bast'
 VERSION = 1
 

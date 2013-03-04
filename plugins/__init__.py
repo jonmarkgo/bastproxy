@@ -406,7 +406,7 @@ class PluginMgr:
       load = True
 
       if _module.__dict__.has_key("AUTOLOAD") and not force:
-        if not _module.AUTOLOAD:          
+        if not _module.AUTOLOAD: 
           load = False
       
       if load:
@@ -422,6 +422,8 @@ class PluginMgr:
         
         return _module.SNAME, 'Loaded'
       else:
+        if fullimploc in sys.modules:
+          del sys.modules[fullimploc]
         exported.msg('Not loading %s (%s) because autoload is False' % \
                                     (_module.NAME, fullimploc), self.sname) 
       return True, 'not autoloaded'
