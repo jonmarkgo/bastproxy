@@ -136,9 +136,7 @@ class EventMgr:
     check input from the client and see if we are watching for it
     """
     tdat = data['fromdata'].strip()
-    print 'checking %s' % tdat
     for i in self.watchcmds:
-      print 'watch', i, self.watchcmds[i]['regex']
       cmdre = self.watchcmds[i]['compiled']
       mat = cmdre.match(tdat)
       if mat:          

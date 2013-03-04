@@ -54,13 +54,13 @@ class Plugin(BasePlugin):
     msg.append('. It took @w%s@x172.' % \
          utils.timedeltatostring(args['starttime'], args['finishtime']))
     self.msgs['quest'] = ''.join(msg)
-    exported.addtimer('msgtimer', self.showmessages, 1, True)
+    exported.timer.add('msgtimer', {'func':self.showmessages, 'seconds':1, 'onetime':True})
 
   def compcp(self, args):
     self.msg('compcp: %s' % args)
     msg = []
     msg.append('@x172StatMonitor: CP finished for ')    
-    msg.append('@w%s@x' % args['qp'])
+    msg.append('@w%s@x172qp@w' % args['qp'])
     if args['tp'] > 0:
       msg.append(' @w%s@x172TP' % args['tp'])    
     if args['trains'] > 0:
@@ -71,9 +71,9 @@ class Plugin(BasePlugin):
          utils.timedeltatostring(args['starttime'], args['finishtime']))      
       
     self.msgs['cp'] = ''.join(msg)
-    exported.addtimer('msgtimer', self.showmessages, 1, True)
+    exported.timer.add('msgtimer', {'func':self.showmessages, 'seconds':1, 'onetime':True})
     
-  def showmessages(self, args):
+  def showmessages(self, args=None):
     """
     show a message
     """
