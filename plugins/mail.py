@@ -36,9 +36,9 @@ class Plugin(BasePlugin):
     self.exported['send'] = {'func':self.send}
     self.addsetting('server', '', str, 'the smtp server to send mail through')
     self.addsetting('port', '', int, 'the port to use when sending mail')
-    self.addsetting('username', '', str, 'the username to connect as')
-    self.addsetting('to', '', str, 'the address to send mail to')
-    self.addsetting('from', '', str, 'the address to send mail from')
+    self.addsetting('username', '', str, 'the username to connect as', nocolor=True)
+    self.addsetting('to', '', str, 'the address to send mail to', nocolor=True)
+    self.addsetting('from', '', str, 'the address to send mail from', nocolor=True)
     self.addsetting('ssl', '', bool, 
                           'set this to True if the connection will use ssl')
     
@@ -56,7 +56,7 @@ class Plugin(BasePlugin):
     
     return True
     
-  def send(self, subject, msg):
+  def send(self, subject, msg, mailto=None):
     """
     send an email
       argument 1: the name of the event
@@ -64,13 +64,15 @@ class Plugin(BasePlugin):
     """    
     if self.check():
       senddate = datetime.strftime(datetime.now(), '%Y-%m-%d')
+      if not mailto:
+        mailto = self.variables['to']
       mhead = """Date: %s
 From: %s
 To: %s
 Subject: %s
 X-Mailer: My-Mail
 %s""" % (senddate, 
-          self.variables['from'], self.variables['to'], subject, msg)
+          self.variables['from'], mailto, subject, msg)
       try:
         pid = os.fork()
         if pid == 0:
@@ -80,7 +82,7 @@ X-Mailer: My-Mail
           if 'ssl' in self.variables and self.variables['ssl']:
             server.starttls()
           server.login(self.variables['username'], self.password)
-          server.sendmail(self.variables['from'], self.variables['to'], mhead)
+          server.sendmail(self.variables['from'], mailto, mhead)
           server.quit()
           os._exit(0)
       except:
@@ -89,7 +91,7 @@ X-Mailer: My-Mail
         if 'ssl' in self.variables and self.variables['ssl']:
           server.starttls()
         server.login(self.variables['username'], self.password)
-        server.sendmail(self.variables['from'], self.variables['to'], mhead)
+        server.sendmail(self.variables['from'], mailto, mhead)
         server.quit()
       
   def checkpassword(self, args):
