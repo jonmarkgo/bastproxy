@@ -264,7 +264,6 @@ class PluginMgr:
     """
     check the dependencies for a plugin
     """
-    print 'checking dependencies for %s' % pluginname
     load = []
     if pluginname in self.plugins:
       for i in self.plugins[pluginname].dependencies:
@@ -274,7 +273,7 @@ class PluginMgr:
           load.append(i)
                     
     for i in load:
-      print '%s: loading depencency %s' % (pluginname, i)
+      exported.msg('%s: loading depencency %s' % (pluginname, i), self.sname)      
       name, path = findplugin(i)
       if name:
         self.load_module(name, path, force=True)
