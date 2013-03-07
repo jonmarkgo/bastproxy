@@ -2,8 +2,6 @@
 $Id$
 
 #TODO: change load to be able to use example.timerex
-#TODO: add a function to see if a plugin is loaded
-#TODO: add plugin dependencies
 """
 
 import glob, os, sys
@@ -23,6 +21,23 @@ def get_module_name(path, filename):
   path = '.'.join(tpath)
   return path, os.path.splitext(filename)[0]
 
+def findplugin(name):
+  """
+  find a plugin file
+  """
+  basepath = ''
+  index = __file__.rfind(os.sep)
+  if index == -1:
+    basepath = "." + os.sep
+  else:
+    basepath = __file__[:index]     
+  
+  _module_list = find_files( basepath, name + ".py")
+  
+  if len(_module_list) == 1:
+    return _module_list[0], basepath
+  
+  return False, ''
 
 class BasePlugin:
   """
@@ -62,7 +77,7 @@ class BasePlugin:
     self.cmdwatch = {}
     
     exported.LOGGER.adddtype(self.sname)
-    self.cmds['var'] = {'func':self.cmd_var, 'shelp':'Show/Set Variables'}
+    self.cmds['set'] = {'func':self.cmd_var, 'shelp':'Show/Set Variables'}
     
   def load(self):
     """
@@ -156,11 +171,14 @@ class BasePlugin:
       val = args[1]
       if var in self.settings:
         try:
-          self.variables[var] =  verify(val, self.settings[var]['stype'])
+          val = verify(val, self.settings[var]['stype'])
+          self.variables[var] = val
           self.variables.sync()
           tvar = self.variables[var]
           if self.settings[var]['nocolor']:
             tvar = tvar.replace('@', '@@')
+          elif self.settings[var]['stype'] == 'color':
+            tvar = '%s%s@w' % (val, val.replace('@', '@@'))            
           return True, ['set %s to %s' % (var, tvar)]
         except ValueError:
           msg = ['Cannot convert %s to %s' % \
@@ -177,10 +195,12 @@ class BasePlugin:
       tmsg.append('There are no variables defined')
     else:
       tform = '%-15s : %-15s - %s'
-      for i in self.variables:
+      for i in self.settings:
         val = self.variables[i]
         if 'nocolor' in self.settings[i] and self.settings[i]['nocolor']:
           val = val.replace('@', '@@')
+        elif self.settings[i]['stype'] == 'color':
+          val = '%s%s@w' % (val, val.replace('@', '@@'))
         tmsg.append(tform % (i, val, self.settings[i]['help']))
     return tmsg
   
@@ -190,7 +210,8 @@ class BasePlugin:
     """
     if not (name in self.variables):
       self.variables[name] = default
-    self.settings[name] = {'default':default, 'help':shelp, 'stype':stype, 'nocolor':nocolor}
+    self.settings[name] = {'default':default, 'help':shelp, 
+                  'stype':stype, 'nocolor':nocolor}
     
   def cmd_reset(self):
     """
@@ -243,14 +264,20 @@ class PluginMgr:
     """
     check the dependencies for a plugin
     """
+    print 'checking dependencies for %s' % pluginname
+    load = []
     if pluginname in self.plugins:
       for i in self.plugins[pluginname].dependencies:
         if i in self.plugins or i in self.pluginl:
           pass
         else:
-          name, path = self._findplugin(i)
-          if name:
-            self.load_module(name, path, force=True)
+          load.append(i)
+                    
+    for i in load:
+      print '%s: loading depencency %s' % (pluginname, i)
+      name, path = findplugin(i)
+      if name:
+        self.load_module(name, path, force=True)
 
   def cmd_exported(self, args):
     """
@@ -303,32 +330,18 @@ class PluginMgr:
       @CUsage@w: list
     """
     msg = ['Plugins:']
-    msg.append("%-10s : %-25s %-10s %-5s %s@w" % \
-                        ('Short Name', 'Name', 'Author', 'Vers', 'Purpose'))
-    msg.append('-' * 75)
-    for plugin in self.plugins:
-      tpl = self.plugins[plugin]
-      msg.append("%-10s : %-25s %-10s %-5s %s@w" % \
-                  (plugin, tpl.name, tpl.author, tpl.version, tpl.purpose))
-    return True, msg
-    
-  def _findplugin(self, name):
-    """
-    find a plugin file
-    """
-    basepath = ''
-    index = __file__.rfind(os.sep)
-    if index == -1:
-      basepath = "." + os.sep
+    if len(args) > 0:
+      #TODO: check for the name here
+      pass
     else:
-      basepath = __file__[:index]     
-    
-    _module_list = find_files( basepath, name + ".py")
-    
-    if len(_module_list) == 1:
-      return _module_list[0], basepath
-    
-    return False, ''
+      msg.append("%-10s : %-25s %-10s %-5s %s@w" % \
+                          ('Short Name', 'Name', 'Author', 'Vers', 'Purpose'))
+      msg.append('-' * 75)
+      for plugin in self.plugins:
+        tpl = self.plugins[plugin]
+        msg.append("%-10s : %-25s %-10s %-5s %s@w" % \
+                    (plugin, tpl.name, tpl.author, tpl.version, tpl.purpose))
+    return True, msg
     
   def cmd_load(self, args):
     """
@@ -360,6 +373,7 @@ class PluginMgr:
           if reason == 'already':
             tmsg.append('Module %s is already loaded' % sname)
           else:
+            self.checkdependency(sname)
             tmsg.append('Load complete: %s - %s' % \
                                           (sname, self.plugins[sname].name))
         else:
@@ -396,15 +410,19 @@ class PluginMgr:
         @Yplugin@w    = the shortname of the plugin to reload
     """ 
     tmsg = []
+    if len(args) == 0:
+      return True, ['Please specify a plugin']
+    
     if args[0] and args[0] in self.plugins:
       if self.plugins[args[0]].canreload:
-        tret, reason = self.reload_module(args[0], True)
+        tret, _ = self.reload_module(args[0], True)
         if tret and tret != True:
+          self.checkdependency(tret)          
           tmsg.append("Reload complete: %s" % self.plugins[tret].fullimploc)
-          return True
+          return True, tmsg
       else:
         tmsg.append("That plugin cannot be reloaded")
-        return True
+        return True, tmsg
     else:
       tmsg.append("That plugin does not exist")
       return True, tmsg
@@ -588,7 +606,7 @@ class PluginMgr:
     load various things
     """
     self.load_modules("*.py")
-    for i in self.plugins:
+    for i in self.plugins.keys():
       self.checkdependency(i)
     exported.cmd.add(self.sname, 'list', {'lname':'Plugin Manager', 
                           'func':self.cmd_list, 'shelp':'List plugins'})

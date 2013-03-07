@@ -28,7 +28,7 @@ class Plugin(BasePlugin):
     self.cmds['list'] = {'func':self.cmd_list, 
                             'shelp':'list clients that are connected'}
 
-  def cmd_list(self, args):
+  def cmd_list(self, _):
     """
     @G%(name)s@w - @B%(cmdname)s@w
     List connections

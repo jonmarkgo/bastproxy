@@ -76,7 +76,7 @@ class Plugin(BasePlugin):
     
     exported.sendtoclient('@CEvent@w - @GGMCP:char@w: %s' % args['module'])
 
-  def testcharstatus(self, args):
+  def testcharstatus(self, _=None):
     """
     show the gmcp char.status event
     """

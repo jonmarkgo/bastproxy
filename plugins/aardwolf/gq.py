@@ -24,7 +24,8 @@ class Plugin(BasePlugin):
     BasePlugin.__init__(self, name, sname, filename, directory, importloc) 
     self.dependencies.append('aardu')    
     self.triggers['gqdeclared'] = {
-      'regex':"^Global Quest: Global quest \# (?P<gqnum>.*) has been declared for levels (?P<lowlev>.*) to (?P<highlev>.*)\.$"}
+      'regex':"^Global Quest: Global quest \# (?P<gqnum>.*) has been " \
+                  "declared for levels (?P<lowlev>.*) to (?P<highlev>.*)\.$"}
     self.events['trigger_gqdeclared'] = {'func':self._gqdeclared}
     
   def _gqdeclared(self, args):

@@ -3,6 +3,7 @@ $Id$
 """
 from libs import exported
 from plugins import BasePlugin
+import math
 
 NAME = 'Aardwolf Utils'
 SNAME = 'aardu'
@@ -42,11 +43,11 @@ def convertlevel(level):
   alevel = level % 201
   if alevel == 0:
     alevel = 201
-  end
+
   redos = 0
   if tier > 9:
-        redos = tier - 9
-        tier = 9
+    redos = tier - 9
+    tier = 9
   return {'tier':tier, 'redos':redos, 'remort':remort, 'level':alevel}
 
 

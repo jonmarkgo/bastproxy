@@ -172,7 +172,7 @@ class Plugin(BasePlugin):
     
     self.reconnecting = False   
 
-  def disconnect(self, args):
+  def disconnect(self, _=None):
     """
     disconnect
     """
@@ -262,7 +262,7 @@ class Plugin(BasePlugin):
     exported.event.eraise('GMCP:%s' % modname, args)
     exported.event.eraise('GMCP:%s' % mods[0], args)
     
-  def gmcprequest(self, args):
+  def gmcprequest(self, _=None):
     """
     handle a gmcp request
     """

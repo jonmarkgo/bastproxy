@@ -17,8 +17,9 @@ $Id$
     u'action': u'comp', u'tierqp': 1, u'wait': 30}, 'module': 'comm.quest', 
     'server': <libs.net.proxy.Proxy connected aardmud.org:4000 at 0xb689f530>}
 """
-import time, copy
+import time, copy, os
 from libs import exported
+from libs.persistentdict import PersistentDict
 from plugins import BasePlugin
 
 NAME = 'Aardwolf Quest Events'
@@ -38,9 +39,10 @@ class Plugin(BasePlugin):
     initialize the instance
     """
     BasePlugin.__init__(self, name, sname, filename, directory, importloc) 
+    self.savequestfile = os.path.join(self.savedir, 'quest.txt')
+    self.queststuff = PersistentDict(self.savequestfile, 'c', format='json')    
     self.dependencies.append('aardu')    
     self.events['GMCP:comm.quest'] = {'func':self.quest}
-    self.queststuff = {}
     
   def quest(self, args):
     """
@@ -49,22 +51,22 @@ class Plugin(BasePlugin):
     questi = args['data']
     self.msg('quest: %s' % questi)
     if questi['action'] == 'ready':
+      self.queststuff.clear()
       exported.event.eraise('aard_quest_ready', {})
-      self.queststuff = {}
     elif questi['action'] == 'start':
       self.queststuff['mob'] = questi['targ']
       self.queststuff['area'] = questi['area']
       self.queststuff['room'] = questi['room']
       self.queststuff['stimer'] = questi['timer']
-      self.queststuff['level'] = exported.aardu.getactuallevel(exported.GMCP.getv('char.status.level'))
-      self.queststuff['starttime'] = time.mktime(time.localtime())
+      self.queststuff['level'] = exported.aardu.getactuallevel(
+                            exported.GMCP.getv('char.status.level'))
+      self.queststuff['starttime'] = time.time()
       exported.event.eraise('aard_quest_start', self.queststuff)
     elif questi['action'] == 'killed':
-      self.queststuff['killedtime'] = time.mktime(time.localtime())
+      self.queststuff['killedtime'] = time.time()
       exported.event.eraise('aard_quest_killed', self.queststuff)
     elif questi['action'] == 'comp':
-      print 'completed quest'
-      self.queststuff['finishtime'] = time.mktime(time.localtime())
+      self.queststuff['finishtime'] = time.time()
       self.queststuff['qp'] = questi['qp']
       self.queststuff['tierqp'] = questi['tierqp']
       self.queststuff['pracs'] = questi['pracs']
@@ -78,6 +80,7 @@ class Plugin(BasePlugin):
       self.queststuff['gold'] = questi['gold']
       exported.event.eraise('aard_quest_comp', copy.deepcopy(self.queststuff))
     elif questi['action'] == 'failed':
+      self.queststuff['finishtime'] = time.time()      
       exported.event.eraise('aard_quest_failed', {})
     elif questi['action'] == 'status':
       exported.event.eraise('aard_quest_status', questi)
@@ -86,5 +89,13 @@ class Plugin(BasePlugin):
       #when_required = os.time() + (stuff.timer * 60)
       #update_timer()
       exported.event.eraise('aard_quest_reset', {})
+    self.queststuff.sync()
+    
+  def savestate(self):
+    """
+    save states
+    """
+    BasePlugin.savestate(self)
+    self.queststuff.sync()    
       
 

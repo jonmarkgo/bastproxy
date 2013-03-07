@@ -173,6 +173,8 @@ class EventMgr:
       args['group'] = None
     if not ('omit' in args):
       args['omit'] = False
+    if not ('argtypes' in args):
+      args['argtypes'] = {}
     try:
       self.triggers[triggername] = args
       self.triggers[triggername]['compiled'] = re.compile(args['regex'])
@@ -243,6 +245,10 @@ class EventMgr:
           mat = trigre.match(data)
           if mat:
             targs = mat.groupdict()
+            if 'argtypes' in self.triggers[i]:
+              for arg in self.triggers[i]['argtypes']:
+                if arg in targs:
+                  targs[arg] = self.triggers[i]['argtypes'][arg](targs[arg])
             targs['line'] = data
             targs['triggername'] = i
             self.raiseevent('trigger_' + i, targs)

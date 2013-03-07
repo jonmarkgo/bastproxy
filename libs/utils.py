@@ -4,6 +4,7 @@ $Id$
 import fnmatch
 import os
 import datetime
+from libs.color import iscolor
 
 
 class DotDict(dict):
@@ -31,7 +32,7 @@ def find_files(directory, filematch):
   return matches
 
   
-def timedeltatostring(stime, etime):
+def timedeltatostring(stime, etime, fmin=False, colorn='', colors=''):
   """
   take two times and return a string of the difference
   in the form ##d:##h:##m:##s
@@ -49,13 +50,13 @@ def timedeltatostring(stime, etime):
   days, hours = False, False
   if outar[0] != 0:
     days = True
-    tmsg.append('%02dd' % outar[0])
+    tmsg.append('%s%02d%sd' % (colorn, outar[0], colors))
   if outar[1] != 0 or days:
     hours = True
-    tmsg.append('%02dh' % outar[1])
-  if outar[2] != 0 or days or hours:
-    tmsg.append('%02dm' % outar[2])
-  tmsg.append('%02ds' % outar[3])
+    tmsg.append('%s%02d%sh' % (colorn, outar[1], colors))
+  if outar[2] != 0 or days or hours or fmin:
+    tmsg.append('%s%02d%sm' % (colorn, outar[2], colors))
+  tmsg.append('%s%02d%ss' % (colorn, outar[3], colors))
     
   out   = ":".join(tmsg)
   return out
@@ -78,6 +79,15 @@ def verify_bool(val):
   
   return bool(val)
 
+def verify_color(val):
+  """
+  verify an @ color
+  """
+  if iscolor(val):
+    return val
+  
+  raise ValueError
+
   
 def verify(val, vtype):
   """
@@ -85,15 +95,17 @@ def verify(val, vtype):
   """
   vtab = {}
   vtab[bool] = verify_bool
+  vtab['color'] = verify_color
   
   if vtype in vtab:
     return vtab[vtype](val)
   else:
     return vtype(val)
   
+  
 def convert(tinput):
   """
-  converts input to ascii
+  converts input to ascii (utf-8)
   """  
   if isinstance(tinput, dict):
     return {convert(key): convert(value) for key, value in tinput.iteritems()}

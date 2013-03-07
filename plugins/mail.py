@@ -36,9 +36,12 @@ class Plugin(BasePlugin):
     self.exported['send'] = {'func':self.send}
     self.addsetting('server', '', str, 'the smtp server to send mail through')
     self.addsetting('port', '', int, 'the port to use when sending mail')
-    self.addsetting('username', '', str, 'the username to connect as', nocolor=True)
-    self.addsetting('to', '', str, 'the address to send mail to', nocolor=True)
-    self.addsetting('from', '', str, 'the address to send mail from', nocolor=True)
+    self.addsetting('username', '', str, 'the username to connect as', 
+                  nocolor=True)
+    self.addsetting('to', '', str, 'the address to send mail to', 
+                  nocolor=True)
+    self.addsetting('from', '', str, 'the address to send mail from', 
+                  nocolor=True)
     self.addsetting('ssl', '', bool, 
                           'set this to True if the connection will use ssl')
     
@@ -71,6 +74,7 @@ From: %s
 To: %s
 Subject: %s
 X-Mailer: My-Mail
+
 %s""" % (senddate, 
           self.variables['from'], mailto, subject, msg)
       try:
@@ -94,7 +98,7 @@ X-Mailer: My-Mail
         server.sendmail(self.variables['from'], mailto, mhead)
         server.quit()
       
-  def checkpassword(self, args):
+  def checkpassword(self, _):
     """
     check the password
     """
@@ -102,7 +106,7 @@ X-Mailer: My-Mail
       if not self.password:
         exported.sendtoclient(
                         'Please set the email password for account: %s' \
-                                      % self.variables['username'])
+                             % self.variables['username'].replace('@', '@@'))
         
   def cmd_pw(self, args):
     """

@@ -2,7 +2,7 @@
 $Id$
 """
 import time, os, copy
-from libs import exported, utils
+from libs import exported
 from libs.persistentdict import PersistentDict
 from plugins import BasePlugin
 
@@ -36,22 +36,28 @@ class Plugin(BasePlugin):
     self.triggers['lvlpup'] = {
       'regex':"^Congratulations, hero. You have increased your powers!$"}
     self.triggers['lvllevel'] = {
-      'regex':"^You raise a level! You are now level (?P<level>.*).$"}
+      'regex':"^You raise a level! You are now level (?P<level>\d*).$",
+      'argtypes':{'level':int}}
     self.triggers['lvlbless'] = {
-      'regex':"^You gain a level - you are now level (?P<level>.*).$"}
+      'regex':"^You gain a level - you are now level (?P<level>\d*).$",
+      'argtypes':{'level':int}}
     self.triggers['lvlgains'] = {
       'regex':"^You gain (?P<hp>\d*) hit points, (?P<mn>\d*) mana, "\
-            "(?P<mv>\d*) moves, (?P<pr>\d*) practices and (?P<tr>\d*) trains.$", 
-            'enabled':False, 'group':'linfo'}    
+          "(?P<mv>\d*) moves, (?P<pr>\d*) practices and (?P<tr>\d*) trains.$", 
+            'enabled':False, 'group':'linfo',
+            'argtypes':{'hp':int, 'mn':int, 'mv':int, 'pr':int, 'tr':int}}    
     self.triggers['lvlblesstrain'] = {
       'regex':"^You gain (?P<tr>\d*) extra trains? daily blessing bonus.$",
-      'enabled':False, 'group':'linfo'}
+      'enabled':False, 'group':'linfo',
+      'argtypes':{'tr':int}}
     self.triggers['lvlpupgains'] = {
       'regex':"^You gain (?P<tr>\d*) trains.$", 
-      'enabled':False, 'group':'linfo'}
+      'enabled':False, 'group':'linfo',
+      'argtypes':{'tr':int}}
     self.triggers['lvlbonustrains'] = {
       'regex':"^Lucky! You gain an extra (?P<tr>\d*) training sessions?!$", 
-      'enabled':False, 'group':'linfo'}
+      'enabled':False, 'group':'linfo',
+      'argtypes':{'tr':int}}      
     self.triggers['lvlbonusstat'] = {
       'regex':"^You gain a bonus (?P<stat>.*) point!$", 
       'enabled':False, 'group':'linfo'}
@@ -67,7 +73,15 @@ class Plugin(BasePlugin):
     
     
   def resetlevel(self):
-    self.levelinfo = {}
+    """
+    reset the level info, use the finishtime of the last level as
+    the starttime of the next level
+    """
+    if 'finishtime' in self.levelinfo and self.levelinfo['finishtime'] > 0:
+      starttime = self.levelinfo['finishtime']
+    else:
+      starttime = time.time()
+    self.levelinfo.clear()
     self.levelinfo['type'] = ""
     self.levelinfo['level'] = -1
     self.levelinfo['str'] = 0
@@ -76,7 +90,7 @@ class Plugin(BasePlugin):
     self.levelinfo['dex'] = 0
     self.levelinfo['con'] = 0
     self.levelinfo['luc'] = 0
-    self.levelinfo['starttime'] = -1
+    self.levelinfo['starttime'] = starttime
     self.levelinfo['hp'] = 0
     self.levelinfo['mp'] = 0
     self.levelinfo['mv'] = 0
@@ -87,6 +101,9 @@ class Plugin(BasePlugin):
     self.levelinfo['totallevels'] = 0
     
   def _lvl(self, args=None):
+    """
+    trigger for leveling
+    """
     exported.sendtoclient('_lvl')    
     if not args:
       return
@@ -98,29 +115,42 @@ class Plugin(BasePlugin):
       self.levelinfo['type'] = 'pup'
     else:
       self.levelinfo['level'] = args['level']
-      self.levelinfo['totallevels'] = exported.aardu.getactuallevel(args['level'])        
+      self.levelinfo['totallevels'] = exported.aardu.getactuallevel(
+                                                            args['level'])
       self.levelinfo['type'] = 'level'
       if self.levelinfo['level'] == 200:
         exported.trigger.eraise('aard_level_hero', {})
       elif self.levelinfo['level'] == 201:
         exported.trigger.eraise('aard_level_superhero', {})
         
-    self.levelinfo['starttime'] = time.mktime(time.localtime())      
+    self.levelinfo['finishtime'] = time.time()     
    
     exported.trigger.togglegroup('linfo', True)  
     exported.event.register('trigger_emptyline', self._finish)    
     
     
   def _lvlblesstrains(self, args):
+    """
+    trigger for blessing trains
+    """
     self.levelinfo['blessingtrains'] = args['tr']
     
   def _lvlbonustrains(self, args):
+    """
+    trigger for bonus trains
+    """
     self.levelinfo['bonustrains'] = args['tr']
     
   def _lvlbonusstat(self, args):
-    self.levelinfo[args['stat'][:3]] = 1
+    """
+    trigger for bonus stats
+    """
+    self.levelinfo[args['stat'][:3].lower()] = 1
   
   def _lvlgains(self, args):
+    """
+    trigger for level gains
+    """
     exported.sendtoclient('_lvlgains')
     self.levelinfo['trains'] = args['tr']
     
@@ -129,8 +159,13 @@ class Plugin(BasePlugin):
       self.levelinfo['mn'] = args['mn']
       self.levelinfo['mv'] = args['mv']
       self.levelinfo['pracs'] = args['pr']
-    
-  def _finish(self, args):
+          
+  def _finish(self, _):
+    """
+    finish up and raise the level event
+    """
+    self.levelinfo.sync()
+
     exported.sendtoclient('_finish')
     exported.trigger.togglegroup('linfo', False)     
     exported.event.unregister('trigger_emptyline', self._finish)    

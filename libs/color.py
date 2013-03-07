@@ -24,6 +24,7 @@ import re
 
 # for finding ANSI color sequences
 ANSI_COLOR_REGEXP = re.compile(chr(27) + '\[[0-9;]*[m]')
+XTERM_COLOR_REGEXP = re.compile('^@[xz](?P<num>[\d]{1,3})$')
 
 CONVERTCOLORS = {
   'k' : '0;30',
@@ -75,6 +76,20 @@ def fixstring(tstr):
   tstr = re.sub("@[^xzcmyrgbwCMYRGBWD]", "", tstr)    
   return tstr
 
+def iscolor(color):
+  """
+  check if a string is a @ color, either xterm or ansi
+  """
+  if re.match('^@[cmyrgbwCMYRGBWD]$', color):
+    return True
+  else:
+    mat = XTERM_COLOR_REGEXP.match( color)
+    if mat:
+      num = mat.groupdict()['num']
+      if num > 0 and num < 257:
+        return True
+        
+  return False
 
 def convertcolors(tstr):
   """

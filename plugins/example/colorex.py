@@ -79,7 +79,7 @@ class Plugin(BasePlugin):
     return True, msg
 
 
-  def example(self, args):
+  def example(self, _=None):
     """
     @G%(name)s@w - @B%(cmdname)s@w
       Show examples of how to use colors

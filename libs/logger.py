@@ -221,7 +221,7 @@ class Logger:
              (i, self.sendtofile[i]['file'], self.sendtofile[i]['timestamp']))
       return True, tmsg
    
-  def cmd_types(self, args):
+  def cmd_types(self, _=None):
     """@G%(name)s@w - @B%(cmdname)s@w
   show data types
   @CUsage@w: types""" 

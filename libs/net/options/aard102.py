@@ -152,7 +152,7 @@ class Plugin(BasePlugin):
     
     self.reconnecting = False   
 
-  def disconnect(self, args):
+  def disconnect(self, _=None):
     """
     this function is registered with the muddisconnect hook
     """
@@ -192,7 +192,7 @@ class Plugin(BasePlugin):
     exported.event.eraise('A102', args)
     exported.event.eraise('A102:%s' % args['option'], args)
         
-  def a102request(self, args):
+  def a102request(self, _=None):
     """
     this function is called when the a102 option is enabled
     """

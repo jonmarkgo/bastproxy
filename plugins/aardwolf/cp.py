@@ -40,47 +40,62 @@ class Plugin(BasePlugin):
     }
     exported.watch.add('cp_check', {
       'regex':'^(cp|campa|campai|campaig|campaign) (c|ch|che|chec|check)$'})
-    self.events['cmd_cp_check'] = {'func':self._cpcheckcmd}
     self.triggers['cpnew'] = {
       'regex':"^Commander Barcett tells you " \
                         "'Type 'campaign info' to see what you must kill.'$"}
     self.triggers['cpnone'] = {
       'regex':"^You are not currently on a campaign.$", 
-      'enabled':False, 'group':'cpcheck'}
+      'enabled':False, 
+      'group':'cpcheck'}
     self.triggers['cptime'] = {
       'regex':"^You have (?P<time>.*) to finish this campaign.$", 
-      'enabled':False, 'group':'cpcheck'}
+      'enabled':False, 
+      'group':'cpcheck'}
     self.triggers['cpmob'] = {
       'regex':"^You still have to kill \* (?P<mob>.*) " \
             "\((?P<location>.*?)(?P<dead> - Dead|)\)$", 
-            'enabled':False, 'group':'cpcheck'}    
+      'enabled':False, 
+      'group':'cpcheck'}    
     self.triggers['cpneedtolevel'] = {
       'regex':"^You will have to level before you" \
-      " can go on another campaign.$", 'enabled':False, 'group':'cpin'}
+                " can go on another campaign.$", 
+      'enabled':False, 
+      'group':'cpin'}
     self.triggers['cpcantake'] = {
       'regex':"^You may take a campaign at this level.$", 
-      'enabled':False, 'group':'cpin'}
+      'enabled':False, 
+      'group':'cpin'}
     self.triggers['cpshnext'] = {
       'regex':"^You cannot take another campaign for (?P<time>.*).$", 
-      'enabled':False, 'group':'cpin'}
+      'enabled':False, 
+      'group':'cpin'}
     self.triggers['cpmobdead'] = {
       'regex':"^Congratulations, that was one of your CAMPAIGN mobs!$", 
-      'enabled':False, 'group':'cpin'}
+      'enabled':False, 
+      'group':'cpin'}
     self.triggers['cpcomplete'] = {
       'regex':"^CONGRATULATIONS! You have completed your campaign.$", 
-      'enabled':False, 'group':'cpin'}
-    self.triggers['cpclear'] = {'regex':"^Campaign cleared.$", 
-      'enabled':False, 'group':'cpin'}    
+      'enabled':False, 
+      'group':'cpin'}
+    self.triggers['cpclear'] = {
+      'regex':"^Campaign cleared.$", 
+      'enabled':False, 
+      'group':'cpin'}    
     self.triggers['cpreward'] = {
       'regex':"^\s*Reward of (?P<amount>\d+) (?P<type>.+) .+ added.$", 
-      'enabled':False, 'group':'cprew'}
+      'enabled':False, 
+      'group':'cprew',
+      'argtypes':{'amount':int}} 
     self.triggers['cpcompdone'] = {
       'regex':"^--------------------------" \
-         "------------------------------------$", 
-         'enabled':False, 'group':'cpdone'}
+                    "------------------------------------$", 
+      'enabled':False, 
+      'group':'cpdone'}
+      
     self.events['trigger_cpnew'] = {'func':self._cpnew}
     self.events['trigger_cpnone'] = {'func':self._cpnone}
     self.events['trigger_cptime'] = {'func':self._cptime}
+    self.events['cmd_cp_check'] = {'func':self._cpcheckcmd}    
     self.events['trigger_cpmob'] = {'func':self._cpmob}
     self.events['trigger_cpneedtolevel'] = {'func':self._cpneedtolevel}
     self.events['trigger_cpcantake'] = {'func':self._cpcantake}
@@ -103,8 +118,9 @@ class Plugin(BasePlugin):
     self.cp['tp'] = 0
     self.cp['qp'] = 0
     self.cp['failed'] = 0
-    self.cp['level'] = exported.aardu.getactuallevel(exported.GMCP.getv('char.status.level'))
-    self.cp['starttime'] = time.mktime(time.localtime())
+    self.cp['level'] = exported.aardu.getactuallevel(
+                        exported.GMCP.getv('char.status.level'))
+    self.cp['starttime'] = time.time()
     self.cp['finishtime'] = 0
     self.cp['oncp'] = True
     self.cp['cantake'] = False
@@ -118,7 +134,7 @@ class Plugin(BasePlugin):
     exported.sendtoclient('cpnew: %s' % args)
     self._cpreset()
   
-  def _cpnone(self, args=None):
+  def _cpnone(self, _=None):
     """
     handle a none cp
     """
@@ -143,7 +159,7 @@ class Plugin(BasePlugin):
     exported.trigger.togglegroup("cpcheck", False)        
     exported.trigger.togglegroup("cpin", True)      
     
-  def _cpneedtolevel(self, args=None):
+  def _cpneedtolevel(self, _=None):
     """
     handle cpneedtolevel
     """
@@ -151,7 +167,7 @@ class Plugin(BasePlugin):
     self.cp['cantake'] = False
     self.savestate()
     
-  def _cpcantake(self, args=None):
+  def _cpcantake(self, _=None):
     """
     handle cpcantake
     """
@@ -188,20 +204,20 @@ class Plugin(BasePlugin):
       self.mobsleft.append({'name':name, 
             'location':location, 'mobdead':mobdead})
 
-  def _cpmobdead(self, args=None):
+  def _cpmobdead(self, _=None):
     """
     handle cpmobdead
     """
     exported.sendtoclient('cpmobdead')
     exported.execute("cp check")    
     
-  def _cpcomplete(self, args=None):
+  def _cpcomplete(self, _=None):
     """
     handle cpcomplete
     """
     exported.sendtoclient('cpcomplete')
     exported.trigger.togglegroup('cprew', True)     
-    self.cp['finishtime'] = time.mktime(time.localtime())
+    self.cp['finishtime'] = time.time()
     self.cp['oncp'] = False
     self.savestate()
 
@@ -216,7 +232,7 @@ class Plugin(BasePlugin):
     self.savestate()
     exported.trigger.togglegroup('cpdone', True) 
     
-  def _cpcompdone(self, args=None):
+  def _cpcompdone(self, _=None):
     """
     handle cpcompdone
     """
@@ -224,7 +240,7 @@ class Plugin(BasePlugin):
     exported.event.eraise('aard_cp_comp', copy.deepcopy(self.cp))
     #self._cpnone()    
     
-  def _cpclear(self, args=None):
+  def _cpclear(self, _=None):
     """
     handle cpclear
     """
