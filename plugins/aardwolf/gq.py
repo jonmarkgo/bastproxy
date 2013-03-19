@@ -1,8 +1,9 @@
 """
 $Id$
 """
-import time, copy
+import os, time, copy
 from libs import exported
+from libs.persistentdict import PersistentDict
 from plugins import BasePlugin
 
 NAME = 'Aardwolf GQ Events'
@@ -22,14 +23,283 @@ class Plugin(BasePlugin):
     initialize the instance
     """
     BasePlugin.__init__(self, name, sname, filename, directory, importloc) 
-    self.dependencies.append('aardu')    
+    self.dependencies.append('aardu')
+    self.savegqfile = os.path.join(self.savedir, 'gq.txt')
+    self.gqinfo = PersistentDict(self.savegqfile, 'c', format='json')      
+    self.addsetting('declared', False, bool, 'flag for a gq being declared')  
+    self.addsetting('started', False, bool, 'flag for a gq started') 
+    self.addsetting('joined', False, bool, 'flag for a gq joined') 
+    self.mobsleft = {}
+    self.nextdeath = False
+    exported.watch.add('gq_check', {
+      'regex':'^(gq|gqu|gque|gques|gquest) (c|ch|che|chec|check)$'})    
     self.triggers['gqdeclared'] = {
       'regex':"^Global Quest: Global quest \# (?P<gqnum>.*) has been " \
                   "declared for levels (?P<lowlev>.*) to (?P<highlev>.*)\.$"}
+    self.triggers['gqjoin'] = {
+      'regex':"^You have now joined the quest. See 'help gquest'" \
+                  "for available commands\.$"}                  
+    self.triggers['gqstart'] = {
+      'regex':"^Global Quest: The global quest for levels " \
+                  "(.*) to (.*) has now started.$"}     
+    self.triggers['gqnone'] = {
+      'regex':"^You are not on a global quest.$", 
+      'enabled':False, 'group':'gqcheck'} 
+    self.triggers['gqmob'] = {
+      'regex':"^You still have to kill (?P<num>[\d]*) \* " \
+              "(?P<name>.*?) \((?P<location>.*?)\)(|\.)$", 
+      'enabled':False, 'group':'gqcheck'}       
+    self.triggers['gqnotstarted'] = {
+      'regex':"^The global quest has not yet started.$", 
+      'enabled':False, 'group':'gqcheck'} 
+    self.triggers['gqreward'] = {
+      'regex':"^\s*Reward of (?P<amount>\d+) (?P<type>.+) .+ added\.$", 
+      'enabled':False, 'group':'gqrew'} 
+    self.triggers['gqmobdead'] = {
+      'regex':"^Congratulations, that was one of the GLOBAL QUEST mobs!$", 
+      'enabled':False, 'group':'gqin'} 
+    self.triggers['gqwon'] = {
+      'regex':"^You were the first to complete this quest!$", 
+      'enabled':False, 'group':'gqin'} 
+    self.triggers['gqwon2'] = {
+      'regex':"^CONGRATULATIONS! You were the first to " \
+              "complete this quest!$", 
+      'enabled':False, 'group':'gqin'}       
+    self.triggers['gqdone'] = {
+      'regex':"^Global Quest: The global quest has been won " \
+              "by (.*) - (.*) win.$", 
+      'enabled':False, 'group':'gqdone'} 
+    self.triggers['gqquit'] = {
+      'regex':"^You are no longer part of the current quest.$", 
+      'enabled':False, 'group':'gqdone'}       
+    self.triggers['gqextover'] = {
+      'regex':"^Global Quest: The extended global quest is now over.$", 
+      'enabled':False, 'group':'gqext'}       
+    self.triggers['gqextover2'] = {
+      'regex':"^Global Quest: No active players remaining, " \
+              "global quest is now over.$", 
+      'enabled':False, 'group':'gqext'}       
+    self.triggers['gqextfin'] = {
+      'regex':"^You have finished this global quest.$", 
+      'enabled':False, 'group':'gqext'}       
     self.events['trigger_gqdeclared'] = {'func':self._gqdeclared}
     
+  def _gqnew(self):
+    """
+    reset the gq info
+    """
+    self.gqinfo.clear()
+    self.gqinfo['mobs'] = {}
+    self.gqinfo['trains'] = 0
+    self.gqinfo['pracs'] = 0
+    self.gqinfo['gold'] = 0
+    self.gqinfo['tp'] = 0
+    self.gqinfo['qp'] = 0
+    self.gqinfo['qpmobs'] = 0
+    self.gqinfo['level'] =  exported.aardu.getactuallevel(
+                        exported.GMCP.getv('char.status.level'))
+    self.gqinfo['starttime'] = 0
+    self.gqinfo['finishtime'] = 0
+    self.gqinfo['length'] = 0
+    self.gqinfo['won'] = 0
+    self.gqinfo['completed'] = 0
+    self.savestate()
+
   def _gqdeclared(self, args):
     """
     do something when a gq is declared
     """
+    exported.trigger.togglegroup('gqdone', True)     
+    exported.trigger.togglegroup('gq_start', True)     
+    self.variables['declared'] = True
     exported.event.eraise('aard_gq_declared', args)
+
+  def _gqjoined(self, args):
+    """
+    do something when a gq is joined
+    """
+    exported.trigger.togglegroup('gqdone', True)     
+    exported.trigger.togglegroup('gq_start', True)     
+    self.variables['joined'] = True
+    self.mobsleft = {}
+    self._gqnew()
+    if self.variables['started'] or not self.variables['declared']:
+      self._gqstart()
+    exported.event.eraise('aard_gq_joined', args)
+    
+  def _gqstart(self, args=None):
+    """
+    do something when a gq starts
+    """
+    if not args:
+      args = {}
+    self.variables['started'] = True
+    if self.variables['joined']:
+      self.gqinfo['starttime'] = time.time()
+      exported.trigger.togglegroup("gqin", True)
+      exported.event.register('aard_mobkill', self._mobkillevent)    
+      exported.execute("gq check")
+      
+  def _gqitem(self, args):
+    """
+    do something with a gq item
+    """
+    name = args['mob']
+    num = args['num']
+    location = args['location']
+    if not name or not location or not num:
+      exported.sendtoclient("error parsing line: %s" % args['line'])
+    else:
+      self.mobsleft.append({'name':name, 
+            'location':location, 'num':int(num)})    
+   
+  def _notstarted(self, args=None):
+    """
+    this will be called when a gq check returns the not started message
+    """
+    exported.trigger.togglegroup('gqcheck', False)
+    exported.trigger.togglegroup('gqin', False)
+    exported.event.unregister('emptyline', self._emptyline)    
+   
+  def _emptyline(self, args=None):
+    """
+    this will be enabled when gq check is enabled
+    """
+    if not self.gqinfo['mobs']:
+      self.gqinfo['mobs'] = self.mobsleft[:]
+      self.savestate()
+      
+    exported.trigger.togglegroup('gqcheck', False)
+    exported.event.unregister('emptyline', self._emptyline)
+    exported.event.eraise('aard_gq_mobsleft', copy.deepcopy(self.mobsleft))    
+    
+  def _gqmobdead(self, args):
+    """
+    called when a gq mob is killed
+    """
+    self.nextdeath = True
+    
+  def _mobkillevent(self, args):
+    """
+    this will be registered to the mobkill hook
+    """
+    if self.nextdeath:
+      self.nextdeath = False
+      exported.msg('checking kill %s' % args['name'], 'gq')
+ 
+      found = False
+      removeitem = None
+      for i in range(len(self.mobsleft)):
+        tmob = self.mobsleft[i]
+        if tmob['name'] == args['name']:
+          found = True
+          if tmob['num'] == 1:
+            removeitem = i
+          else:
+            tmob['num'] = tmob['num'] - 1
+      
+      if removeitem:
+        del(self.mobsleft[removeitem])
+        
+      if found:
+        exported.event.eraise('aard_gq_mobsleft', 
+                          copy.deepcopy(self.mobsleft))
+      else:
+        exported.msg("GQ: could not find mob: %s" % args['name'], 'gq')
+        exported.execute("gq check")   
+
+  def _gqwon(self, args=None):
+    """
+    the gquest was won
+    """
+    self.gqinfo['won'] = 1
+    exported.trigger.togglegroup("gqrew", True)    
+
+  def _gqdone(self, args=None):
+    """
+    do something on the done line
+    """
+    if self.gqinfo['won'] == 1:
+      #print('I won, so no extra!')
+      self._raisegq('aard_gq_won')
+    else:
+      #need to check for extended time
+      exported.event.register('trigger_all', self._triggerall)
+
+  def _triggerall(self, args=None):
+    """
+    do something when we see the next line after done
+    """
+    exported.event.unregister('trigger_all', self._triggerall)
+    if 'extended time for 3 more minutes' in args['data']:
+      exported.trigger.togglegroup("gqext", True)
+    else:
+      self._raisegq('aard_gq_done')
+
+  def _gqreward(self, args=None):
+    """
+    handle cpreward
+    """
+    rtype = args['type']
+    ramount = args['amount']
+    rewardt = exported.aardu.rewardtable()
+    self.gqinfo['won'] = 1
+    self.gqinfo[rewardt[rtype]] = ramount
+    self.savestate()
+    exported.trigger.togglegroup('gqdone', True) 
+
+  def _gqcheckcmd(self, args=None):
+    """
+    do something after we see a gq check
+    """
+    self.mobsleft = []
+    exported.trigger.togglegroup('gqcheck', True)   
+    exported.event.register('emptyline', self._emptyline)    
+    return args
+  
+  def _gqquit(self, args=None):
+    """
+    quit the gq
+    """
+    self.variables['started'] = False
+    self.variables['joined'] = False
+    exported.event.eraise('aard_gq_quit', {}) 
+
+  def _gqextfin(self, args=None):
+    """
+    the character finished the extended gq
+    """
+    self.gqinfo['completed'] = 1
+    self._raisegq('aard_gq_completed')
+    
+  def _raisegq(self, event):
+    """
+    raise a gq event
+    """
+    self.gqinfo['finishtime'] = time.time()
+    self.savestate()
+    exported.event.eraise(event, copy.deepcopy(self.gqinfo))
+    self._gqreset()
+
+  def _gqreset(self, args=None):
+    """
+    reset gq triggers
+    """
+    exported.trigger.togglegroup("gqcheck", False)
+    exported.trigger.togglegroup("gqin", False)
+    exported.trigger.togglegroup("gqrew", False)
+    exported.trigger.togglegroup("gqdone", False)
+    exported.trigger.togglegroup("gqext", False)
+    exported.event.unregister('aard_mobkill', self._mobkillevent)       
+    self.variables['joined'] = False
+    self.variables['started'] = False
+    self.variables['declared'] = False
+    self.savestate()
+
+  def savestate(self):
+    """
+    save states
+    """
+    BasePlugin.savestate(self)
+    self.gqinfo.sync()
+    

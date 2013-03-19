@@ -26,12 +26,12 @@ class Plugin(BasePlugin):
     self.addsetting('email', '', str, 'the email to send the alerts', 
               nocolor=True)    
     self.events['aard_gq_declared'] = {'func':self._gqdeclared}
+    self.events['aard_quest_ready'] = {'func':self._quest}
     
   def _gqdeclared(self, args):
     """
     do something when a gq is declared
     """
-    self.msg('sending email for gquest')
     msg = '%s:%s - A GQuest has been declared for levels %s to %s.' % (
               exported.PROXY.host, exported.PROXY.port, 
               args['lowlev'], args['highlev'])
@@ -41,3 +41,14 @@ class Plugin(BasePlugin):
     else:
       exported.mail.send('New GQuest', msg)
       
+  def _quest(self, args):
+    """
+    do something when you can quest
+    """
+    msg = '%s:%s - Time to quest!' % (
+              exported.PROXY.host, exported.PROXY.port)
+    if self.variables['email']:
+      exported.mail.send('Quest Time', msg, 
+              self.variables['email'])
+    else:
+      exported.mail.send('Quest Time', msg)

@@ -42,9 +42,9 @@ class Plugin(BasePlugin):
     if args['mccp'] > 0:
       msg.append('%s+%s%s' % (self.variables['infocolor'], 
             self.variables['statcolor'], args['mccp']))
-    if args['tierqp'] > 0:
+    if args['tier'] > 0:
       msg.append('%s+%s%s' % (self.variables['infocolor'], 
-            self.variables['statcolor'], args['tierqp']))
+            self.variables['statcolor'], args['tier']))
     if args['daily'] == 1:
       msg.append('%s+%s%s' % (self.variables['infocolor'], 
             self.variables['statcolor'], 'E'))

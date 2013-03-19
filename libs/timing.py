@@ -16,9 +16,10 @@ def timeit(func):
     the wrapper to time a function
     """
     time1 = time.time()
+    exported.msg('%s: started' % func.func_name, 'timing')
     res = func(*arg)
     time2 = time.time()
-    exported.msg('%s took %0.3f ms' % \
+    exported.msg('%s: %0.3f ms' % \
               (func.func_name, (time2-time1)*1000.0), 'timing')
     return res
   return wrapper

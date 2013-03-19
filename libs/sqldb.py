@@ -10,7 +10,12 @@ exported.LOGGER.adddtype('sqlite')
 exported.LOGGER.cmd_file(['sqlite'])
 exported.LOGGER.cmd_console(['sqlite'])
 
-
+def dict_factory(cursor, row):
+    d = {}
+    for idx,col in enumerate(cursor.description):
+        d[col[0]] = row[idx]
+    return d
+  
 def fixsql(tstr, like=False):
   """
   Fix quotes in a item that will be passed into a sql statement
@@ -34,11 +39,16 @@ class Sqldb:
     """
     self.dbname = dbname or "\\sqlite.sqlite"
     self.dbdir = dbdir or os.path.join(exported.BASEPATH, 'data', 'db')
+    try:
+      os.makedirs(self.dbdir)
+    except OSError:
+      pass
     self.dbfile = os.path.join(self.dbdir, self.dbname)
     self.dbconn = sqlite3.connect(self.dbfile)
-    self.dbconn.row_factory = sqlite3.Row
+    self.dbconn.row_factory = dict_factory
     # only return byte strings so is easier to send to a client or the mud
-    self.dbconn.text_factory = str 
+    self.dbconn.text_factory = str
+    self.turnonpragmas()    
     self.conns = 0
     self.version = 0
     self.versionfuncs = {}
@@ -67,10 +77,10 @@ class Sqldb:
     if args == None:
       args = {}
     
-    if not ('prefunc' in args):
-      args['prefunc'] = None
-    if not ('postfunc' in args):
-      args['postfunc'] = None
+    if not ('precreate' in args):
+      args['precreate'] = None
+    if not ('postcreate' in args):
+      args['postcreate'] = None
     if not ('keyfield' in args):
       args['keyfield'] = None
       
@@ -117,7 +127,18 @@ class Sqldb:
                                                     'NULL')
     return execstr
 
-  def converttoupdate(self, tablename, wherekey='', nokey=False):
+
+  def checkcolumnexists(self, table, columnname):
+    """
+    check if a column exists
+    """
+    if table in self.tables:
+      if columnname in self.tables[table]['columnsbykeys']:
+        return True
+      
+    return False
+  
+  def converttoupdate(self, tablename, wherekey='', nokey={}):
     """
     create an update statement based on the columns of a table
     """
@@ -126,7 +147,7 @@ class Sqldb:
       cols = self.tables[tablename]['columns']
       sqlstr = []
       for i in cols:
-        if i == wherekey or (nokey and nokey[i]):
+        if i == wherekey or (nokey and i in nokey):
           pass
         else:
           sqlstr.append(i + ' = :' + i)
@@ -242,20 +263,23 @@ class Sqldb:
     cur.close()
     return result
 
-  def getlastrowid(self, tablename):
-    """
-    get the last rowid of a table
-    """
-    colid = self.tables[tablename].keyfield
-    lastid = 0
-    try:
-      res = self.runselect("SELECT MAX('%s') AS MAX FROM %s" % \
-                    (colid, tablename))
-      lastid = res[0]['MAX']
-    except:
-      exported.write_traceback('could not get last row id for : %s' % \
-                    tablename)      
-    return lastid   
+  #def getlastrowid(self, tablename):
+    #"""
+    #get the last rowid of a table
+    #"""
+    #print 'getlastrowid'
+    #colid = self.tables[tablename].keyfield
+    #lastid = 0
+    #try:
+      #res = self.runselect("SELECT MAX('%s') AS MAX FROM %s" % \
+                    #(colid, tablename))
+      #print 'getlastrowid', res
+      #lastid = res[0]['MAX']
+    #except:
+      #exported.write_traceback('could not get last row id for : %s' % \
+                    #tablename)      
+    #print 'lastid', lastid
+    #return lastid   
   
   def getlast(self, tablename, num, where=''):
     """
@@ -275,6 +299,18 @@ class Sqldb:
       items[row[colid]] = row
     return items
       
+  def getlastrowid(self, ttable):
+    """
+    return the id of the last row in a table
+    """
+    last = -1
+    colid = self.tables[ttable]['keyfield']
+    rows = self.runselect("SELECT MAX(%s) AS MAX FROM %s" % (colid, ttable))
+    if len(rows) > 0:
+      last = rows[0]['MAX']
+    
+    return last
+
   def backupdb(self, name):
     """
     backup the database
@@ -290,6 +326,10 @@ class Sqldb:
       exported.msg('Integrity check failed, aborting backup', 'sqlite')
       return
     self.dbconn.close()
+    try:
+      os.makedev(os.path.join(self.dbdir, 'backup'))
+    except OSError:
+      pass
     backupfile = os.path.join(self.dbdir, 'backup', self.dbname + '.' + name)
     try:
       shutil.copy(self.dbfile, backupfile)

@@ -13,6 +13,28 @@ VERSION = 1
 
 AUTOLOAD = False
 
+CLASSABB = {
+  'mag':'mage',
+  'thi':'thief',
+  'pal':'paladin',
+  'war':'warrior',
+  'psi':'psionicist',
+  'cle':'cleric',
+  'ran':'ranger',
+  }
+
+CLASSABBREV = {}
+for i in CLASSABB:
+  CLASSABBREV[CLASSABB[i]] = i
+
+REWARDTABLE = {
+        'quest':'qp',
+        'training':'trains',
+        'gold':'gold',
+        'trivia':'tp',
+        'practice':'pracs',
+    }
+    
 def getactuallevel(level=None, remort=None, tier=None, redos=None):
   """
   get an actual level
@@ -23,7 +45,7 @@ def getactuallevel(level=None, remort=None, tier=None, redos=None):
   level = level or exported.GMCP.getv('char.status.level') or 0
   remort = remort or exported.GMCP.getv('char.base.remorts') or 0
   tier = tier or exported.GMCP.getv('char.base.tier') or 0
-  redos = redos or int(exported.GMCP.getv('char.base.redos')) or 0
+  redos = int(redos or exported.GMCP.getv('char.base.redos') or 0)
   if redos == 0:
     return (tier * 7 * 201) + ((remort - 1) * 201) + level
   else:
@@ -51,6 +73,21 @@ def convertlevel(level):
   return {'tier':tier, 'redos':redos, 'remort':remort, 'level':alevel}
 
 
+def classabb(rev=False):
+  """
+  return the class abbreviations
+  """
+  if rev:
+    return CLASSABB
+  else:
+    return CLASSABBREV
+
+def rewardtable():
+  """
+  return the reward tables
+  """
+  return REWARDTABLE
+  
 class Plugin(BasePlugin):
   """
   a plugin to handle aardwolf cp events
@@ -58,4 +95,5 @@ class Plugin(BasePlugin):
   def __init__(self, name, sname, filename, directory, importloc):
     BasePlugin.__init__(self, name, sname, filename, directory, importloc)
     self.exported['getactuallevel'] = {'func':getactuallevel}
+    self.exported['classabb'] = {'func':classabb}
 

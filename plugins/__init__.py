@@ -451,7 +451,7 @@ class PluginMgr:
     """
     imploc, modname = get_module_name(basepath, fullname)
     
-    if modname.startswith("_") and not force:
+    if modname.startswith("_"):
       return False, 'dev'
 
     try:

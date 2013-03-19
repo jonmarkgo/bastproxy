@@ -254,6 +254,11 @@ class EventMgr:
             self.raiseevent('trigger_' + i, targs)
             if self.triggers[i]['omit']:
               args['fromdata'] = ''
+
+    self.raiseevent('trigger_all', 
+                        {'line':data, 'triggername':'all'})      
+       
+       
           
     return args
         

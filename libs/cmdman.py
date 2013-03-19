@@ -15,6 +15,7 @@ class CmdMgr:
     self.cmds = {}
     self.nomultiplecmds = {}
     self.regexlookup = {}
+    self.lastcmd = ''
     self.addcmd('help', 'list', {'lname':'Help', 'func':self.listcmds})
     self.addcmd('help', 'default', {'lname':'Help', 'func':self.listcmds})
     
@@ -135,8 +136,10 @@ class CmdMgr:
         
       return {'fromdata':''}
     else:
-      if tdat in self.nomultiplecmds:
-        return {'fromdata':''}
+      if tdat.strip() == self.lastcmd:
+        if tdat in self.nomultiplecmds:
+          data['fromdata'] = ''
+      self.lastcmd = tdat.strip()
 
       return data
     

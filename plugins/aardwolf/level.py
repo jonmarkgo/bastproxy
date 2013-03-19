@@ -103,8 +103,7 @@ class Plugin(BasePlugin):
   def _lvl(self, args=None):
     """
     trigger for leveling
-    """
-    exported.sendtoclient('_lvl')    
+    """   
     if not args:
       return
     
@@ -151,7 +150,6 @@ class Plugin(BasePlugin):
     """
     trigger for level gains
     """
-    exported.sendtoclient('_lvlgains')
     self.levelinfo['trains'] = args['tr']
     
     if args['triggername'] == "lvlgains":
@@ -165,8 +163,6 @@ class Plugin(BasePlugin):
     finish up and raise the level event
     """
     self.levelinfo.sync()
-
-    exported.sendtoclient('_finish')
     exported.trigger.togglegroup('linfo', False)     
     exported.event.unregister('trigger_emptyline', self._finish)    
     exported.event.eraise('aard_level_gain', copy.deepcopy(self.levelinfo))

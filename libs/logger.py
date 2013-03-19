@@ -95,8 +95,9 @@ class Logger:
     
     if dtype in self.sendtoconsole and self.sendtoconsole[dtype]:
       print(timestampmsg, file=sys.stderr)
-      
-    self.logtofile(timestampmsg, 'default')
+    
+    if 'default' in self.sendtofile:
+      self.logtofile(timestampmsg, 'default')
     
   def logtofile(self, msg, dtype):
     """
@@ -204,14 +205,19 @@ class Logger:
         timestamp = utils.verify(args[1], bool)
       except IndexError:
         pass
-      tfile = '%a-%b-%d-%Y.log'
       
-      self.sendtofile[dtype] = {'file':tfile, 
-                                 'logdir':os.path.join(self.logdir, dtype),
-                                 'timestamp':timestamp}
-      tmsg.append('setting %s to log to %s' % \
-                      (dtype, self.sendtofile[dtype]['file']))
-      self.sendtofile.sync()
+      if dtype in self.sendtofile:
+        del self.sendtofile[dtype]
+        tmsg.append('removing %s from logging' % dtype)
+      else:
+        tfile = '%a-%b-%d-%Y.log'
+        
+        self.sendtofile[dtype] = {'file':tfile, 
+                                  'logdir':os.path.join(self.logdir, dtype),
+                                  'timestamp':timestamp}
+        tmsg.append('setting %s to log to %s' % \
+                        (dtype, self.sendtofile[dtype]['file']))
+        self.sendtofile.sync()
       return True, tmsg
     else:
       tmsg.append('Current types going to file')

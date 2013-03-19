@@ -31,13 +31,6 @@ class Plugin(BasePlugin):
     self.dependencies.append('aardu')    
     self.mobsleft = []
     self.cptimer = {}
-    self.rewardtable = {
-        'quest':'qp',
-        'training':'trains',
-        'gold':'gold',
-        'trivia':'tp',
-        'practice':'pracs',
-    }
     exported.watch.add('cp_check', {
       'regex':'^(cp|campa|campai|campaig|campaign) (c|ch|che|chec|check)$'})
     self.triggers['cpnew'] = {
@@ -152,7 +145,6 @@ class Plugin(BasePlugin):
     """
     handle cp time
     """
-    exported.sendtoclient('cptime: %s' % args)
     if not self.cp['mobs']:
       self.cp['mobs'] = self.mobsleft[:]
       self.savestate()
@@ -163,7 +155,6 @@ class Plugin(BasePlugin):
     """
     handle cpneedtolevel
     """
-    exported.sendtoclient('cpneedlevel')
     self.cp['cantake'] = False
     self.savestate()
     
@@ -171,7 +162,6 @@ class Plugin(BasePlugin):
     """
     handle cpcantake
     """
-    exported.sendtoclient('cpcantake')
     self.cp['cantake'] = True    
     self.savestate()
     
@@ -179,7 +169,6 @@ class Plugin(BasePlugin):
     """
     handle cpshnext
     """
-    exported.sendtoclient('cpshnext: %s' % args)
     self.cp['shtime'] = args['time']    
     self.savestate()
     
@@ -187,7 +176,6 @@ class Plugin(BasePlugin):
     """
     handle cpmob
     """
-    exported.sendtoclient('cpmob: %s' % args)
     name = args['mob']
     mobdead = utils.verify(args['dead'], bool)
     location = args['location']
@@ -208,14 +196,12 @@ class Plugin(BasePlugin):
     """
     handle cpmobdead
     """
-    exported.sendtoclient('cpmobdead')
     exported.execute("cp check")    
     
   def _cpcomplete(self, _=None):
     """
     handle cpcomplete
     """
-    exported.sendtoclient('cpcomplete')
     exported.trigger.togglegroup('cprew', True)     
     self.cp['finishtime'] = time.time()
     self.cp['oncp'] = False
@@ -225,10 +211,10 @@ class Plugin(BasePlugin):
     """
     handle cpreward
     """
-    exported.sendtoclient('cpreward: %s' % args)
     rtype = args['type']
     ramount = args['amount']
-    self.cp[self.rewardtable[rtype]] = ramount
+    rewardt = exported.aardu.rewardtable()
+    self.cp[rewardt[rtype]] = ramount
     self.savestate()
     exported.trigger.togglegroup('cpdone', True) 
     
@@ -236,7 +222,6 @@ class Plugin(BasePlugin):
     """
     handle cpcompdone
     """
-    exported.sendtoclient('cpcompdone')
     exported.event.eraise('aard_cp_comp', copy.deepcopy(self.cp))
     #self._cpnone()    
     
@@ -244,16 +229,14 @@ class Plugin(BasePlugin):
     """
     handle cpclear
     """
-    exported.sendtoclient('cpclear')
     self.cp['failed'] = 1
-    #phelper:broadcast(4, var.cp_info)
+    exported.event.eraise('aard_cp_failed', copy.deepcopy(self.cp))
     self._cpnone()    
     
   def _cpcheckcmd(self, args=None):
     """
     handle when we get a cp check
     """
-    exported.sendtoclient('got a cpcheck')
     self.mobsleft = []
     self.cptimer = {}
     exported.trigger.togglegroup('cpcheck', True)    
