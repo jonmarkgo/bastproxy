@@ -95,5 +95,7 @@ class Plugin(BasePlugin):
   def __init__(self, name, sname, filename, directory, importloc):
     BasePlugin.__init__(self, name, sname, filename, directory, importloc)
     self.exported['getactuallevel'] = {'func':getactuallevel}
+    self.exported['convertlevel'] = {'func':convertlevel}
     self.exported['classabb'] = {'func':classabb}
-
+    self.exported['rewardtable'] = {'func':rewardtable}
+    

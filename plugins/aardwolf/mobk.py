@@ -95,7 +95,6 @@ class Plugin(BasePlugin):
     self.kill_info.clear()
     self.kill_info['name'] = ''
     self.kill_info['room_id'] = -1
-    self.kill_info['level'] = exported.aardu.getactuallevel()
     self.kill_info['tp'] = 0
     self.kill_info['vorpal'] = 0
     self.kill_info['assassinate'] = 0
@@ -200,9 +199,9 @@ class Plugin(BasePlugin):
     self.kill_info['tp'] = 1
     
   def raise_kill(self):
-    print 'raise_kill', self.kill_info
     self.kill_info['finishtime'] = time.time()
     self.kill_info['room_id'] = exported.GMCP.getv('room.info.num')  
+    self.kill_info['level'] = exported.aardu.getactuallevel()    
     self.kill_info['time'] = time.time()    
     if not self.kill_info['raised']:
       if not self.kill_info['name']:

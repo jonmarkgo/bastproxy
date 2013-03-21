@@ -381,9 +381,10 @@ class Statdb(Sqldb):
   def savegq(self, gqinfo):
     """
     save gq information
-    """  
-    self.addtostat('questpoints', int(gqinfo['qp']) + int(gqinfo['gpmobs']))
-    self.addtostat('qpearned', int(gqinfo['qp']) + int(gqinfo['gpmobs']))
+    """
+    exported.sendtoclient(gqinfo)
+    self.addtostat('questpoints', int(gqinfo['qp']) + int(gqinfo['qpmobs']))
+    self.addtostat('qpearned', int(gqinfo['qp']) + int(gqinfo['qpmobs']))
     self.addtostat('triviapoints', gqinfo['tp'])
     self.addtostat('totaltrivia', gqinfo['tp'])
     if gqinfo['won'] == 1:
@@ -475,9 +476,9 @@ class Plugin(BasePlugin):
     self.events['aard_whois'] = {'func':self.whoisevent}
     self.events['aard_level_gain'] = {'func':self.levelevent}
     self.events['aard_mobkill'] = {'func':self.mobkillevent}
-    #self.events['aard_gq_completed'] = {'func':self.gqevent}
-    #self.events['aard_gq_done'] = {'func':self.gqevent}
-    #self.events['aard_gq_won'] = {'func':self.gqevent}    
+    self.events['aard_gq_completed'] = {'func':self.gqevent}
+    self.events['aard_gq_done'] = {'func':self.gqevent}
+    self.events['aard_gq_won'] = {'func':self.gqevent}    
     self.statdb = None
     
   def questevent(self, args):

@@ -36,16 +36,16 @@ class Plugin(BasePlugin):
     self.triggers['gqdeclared'] = {
       'regex':"^Global Quest: Global quest \# (?P<gqnum>.*) has been " \
                   "declared for levels (?P<lowlev>.*) to (?P<highlev>.*)\.$"}
-    self.triggers['gqjoin'] = {
-      'regex':"^You have now joined the quest. See 'help gquest'" \
-                  "for available commands\.$"}                  
-    self.triggers['gqstart'] = {
+    self.triggers['gqjoined'] = {
+      'regex':"^You have now joined the quest. See 'help gquest' " \
+                  "for available commands.$"}                  
+    self.triggers['gqstarted'] = {
       'regex':"^Global Quest: The global quest for levels " \
                   "(.*) to (.*) has now started.$"}     
     self.triggers['gqnone'] = {
       'regex':"^You are not on a global quest.$", 
       'enabled':False, 'group':'gqcheck'} 
-    self.triggers['gqmob'] = {
+    self.triggers['gqitem'] = {
       'regex':"^You still have to kill (?P<num>[\d]*) \* " \
               "(?P<name>.*?) \((?P<location>.*?)\)(|\.)$", 
       'enabled':False, 'group':'gqcheck'}       
@@ -82,7 +82,23 @@ class Plugin(BasePlugin):
     self.triggers['gqextfin'] = {
       'regex':"^You have finished this global quest.$", 
       'enabled':False, 'group':'gqext'}       
+    
     self.events['trigger_gqdeclared'] = {'func':self._gqdeclared}
+    self.events['trigger_gqjoined'] = {'func':self._gqjoined}
+    self.events['trigger_gqstarted'] = {'func':self._gqstarted}
+    self.events['trigger_gqnone'] = {'func':self._notstarted}
+    self.events['trigger_gqitem'] = {'func':self._gqitem}
+    self.events['trigger_gqnotstarted'] = {'func':self._notstarted}
+    self.events['trigger_gqreward'] = {'func':self._gqreward}
+    self.events['trigger_gqmobdead'] = {'func':self._gqmobdead}
+    self.events['trigger_gqwon'] = {'func':self._gqwon}
+    self.events['trigger_gqwon2'] = {'func':self._gqwon}
+    self.events['trigger_gqdone'] = {'func':self._gqdone}
+    self.events['trigger_gqquit'] = {'func':self._gqquit}
+    self.events['trigger_gqextover'] = {'func':self._gqextover}
+    self.events['trigger_gqextover2'] = {'func':self._gqextover}
+    self.events['trigger_gqextfin'] = {'func':self._gqextfin}
+
     
   def _gqnew(self):
     """
@@ -118,16 +134,17 @@ class Plugin(BasePlugin):
     """
     do something when a gq is joined
     """
+    exported.sendtoclient('#bp.gq: gqjoined')
     exported.trigger.togglegroup('gqdone', True)     
     exported.trigger.togglegroup('gq_start', True)     
     self.variables['joined'] = True
     self.mobsleft = {}
     self._gqnew()
     if self.variables['started'] or not self.variables['declared']:
-      self._gqstart()
+      self._gqstarted()
     exported.event.eraise('aard_gq_joined', args)
     
-  def _gqstart(self, args=None):
+  def _gqstarted(self, args=None):
     """
     do something when a gq starts
     """
@@ -166,6 +183,7 @@ class Plugin(BasePlugin):
     this will be enabled when gq check is enabled
     """
     if not self.gqinfo['mobs']:
+      exported.sendtoclient('copying mobs')
       self.gqinfo['mobs'] = self.mobsleft[:]
       self.savestate()
       
@@ -177,6 +195,7 @@ class Plugin(BasePlugin):
     """
     called when a gq mob is killed
     """
+    self.gqinfo['qpmobs'] = self.gqinfo['qpmobs'] + 3
     self.nextdeath = True
     
   def _mobkillevent(self, args):
@@ -271,6 +290,12 @@ class Plugin(BasePlugin):
     """
     self.gqinfo['completed'] = 1
     self._raisegq('aard_gq_completed')
+
+  def _gqextover(self, args=None):
+    """
+    the character finished the extended gq
+    """
+    self._raisegq('aard_gq_done')
     
   def _raisegq(self, event):
     """

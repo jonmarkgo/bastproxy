@@ -24,6 +24,9 @@ class Plugin(BasePlugin):
     self.events['aard_quest_comp'] = {'func':self.compquest}
     self.events['aard_cp_comp'] = {'func':self.compcp}
     self.events['aard_level_gain'] = {'func':self.levelgain}
+    self.events['aard_gq_won'] = {'func':self.compgq}
+    self.events['aard_gq_done'] = {'func':self.compgq}
+    self.events['aard_gq_completed'] = {'func':self.compgq}
     self.addsetting('statcolor', '@W', 'color', 'the stat color')
     self.addsetting('infocolor', '@x172', 'color', 'the info color')
     self.msgs = {}
@@ -101,6 +104,38 @@ class Plugin(BasePlugin):
     self.msgs['cp'] = ''.join(msg)
     exported.timer.add('msgtimer', 
                     {'func':self.showmessages, 'seconds':1, 'onetime':True})
+    
+  def compgq(self, args):
+    """
+    handle a gq completion
+    """
+    self.msg('compgq: %s' % args)
+    msg = []
+    msg.append('%sStatMonitor: GQ finished for ' % \
+                  self.variables['infocolor'])    
+    msg.append('%s%s%s' % (self.variables['statcolor'], args['qp'],
+                  self.variables['infocolor']))
+    msg.append('+%s%s%sqp' % (self.variables['statcolor'], args['qpmobs'],
+                  self.variables['infocolor']))
+    if args['tp'] > 0:
+      msg.append(' %s%s%sTP' % (self.variables['statcolor'], 
+            args['tp'], self.variables['infocolor']))   
+    if args['trains'] > 0:
+      msg.append(' %s%s%str' % (self.variables['statcolor'], 
+            args['trains'], self.variables['infocolor']))
+    if args['pracs'] > 0:
+      msg.append(' %s%s%spr' % (self.variables['statcolor'], 
+            args['pracs'], self.variables['infocolor']))  
+    msg.append('.')
+    msg.append(' %sIt took %s.' % (
+         self.variables['infocolor'],
+         utils.timedeltatostring(args['starttime'], args['finishtime'], 
+         fmin=True, colorn=self.variables['statcolor'], 
+         colors=self.variables['infocolor'])))      
+      
+    self.msgs['cp'] = ''.join(msg)
+    exported.timer.add('msgtimer', 
+                    {'func':self.showmessages, 'seconds':1, 'onetime':True})    
     
   def levelgain(self, args):
     """
