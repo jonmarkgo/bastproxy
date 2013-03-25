@@ -474,6 +474,8 @@ class Plugin(BasePlugin):
     """
     BasePlugin.__init__(self, name, sname, filename, directory, importloc) 
     self.dependencies.append('aardu')    
+    self.cmds['backup'] = {'func':self.cmd_backup, 
+              'shelp':'backup the database'}    
     self.events['aard_quest_comp'] = {'func':self.questevent}
     self.events['aard_quest_failed'] = {'func':self.questevent}
     self.events['aard_cp_comp'] = {'func':self.cpevent}
@@ -548,3 +550,19 @@ class Plugin(BasePlugin):
     
     return None
       
+  def cmd_backup(self, args):
+    """
+    backup the database
+    """
+    msg = []
+    if args:
+      name = args[0]
+    else:
+      name = 'test'
+    if self.statdb:
+      msg.append('backup up statdb with suffix %s' % name)
+      self.statdb.backupdb(name)
+     
+    return True, msg
+  
+  

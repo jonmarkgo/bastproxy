@@ -18,6 +18,7 @@ def dict_factory(cursor, row):
   for idx, col in enumerate(cursor.description):
     tdict[col[0]] = row[idx]
   return tdict
+
   
 def fixsql(tstr, like=False):
   """
@@ -323,18 +324,19 @@ class Sqldb:
     backup the database
     """
     exported.msg('backing up database', 'sqlite')
-    cur = self.dbconn.cursor()
     integrity = True
-    for row in cur.execute('PRAGMA integrity_check'):
-      if row['integrity_check'] != 'ok':
-        integrity = False
+    cur = self.dbconn.cursor()
+    cur.execute('PRAGMA integrity_check')
+    ret = cur.fetchone()
+    if ret['integrity_check'] != 'ok':
+      integrity = False
         
     if not integrity:
       exported.msg('Integrity check failed, aborting backup', 'sqlite')
       return
     self.dbconn.close()
     try:
-      os.makedev(os.path.join(self.dbdir, 'backup'))
+      os.makedirs(os.path.join(self.dbdir, 'backup'))
     except OSError:
       pass
     backupfile = os.path.join(self.dbdir, 'backup', self.dbname + '.' + name)
