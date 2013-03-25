@@ -1,7 +1,7 @@
 """
 $Id$
 """
-import time, sqlite3
+import time, sqlite3, copy
 from plugins import BasePlugin
 from libs.sqldb import Sqldb
 from libs.timing import timeit
@@ -24,6 +24,8 @@ class Statdb(Sqldb):
     initialize the class
     """
     Sqldb.__init__(self, 'chardb.sqlite')
+
+    self.version = 12
 
     self.addtable('stats', """CREATE TABLE stats(
           stat_id INTEGER NOT NULL PRIMARY KEY autoincrement,
@@ -107,6 +109,7 @@ class Statdb(Sqldb):
           starttime INT default 0,
           finishtime INT default 0,
           qp INT default 0,
+          bonusqp INT default 0,
           gold INT default 0,
           tp INT default 0,
           trains INT default 0,
@@ -478,7 +481,8 @@ class Plugin(BasePlugin):
     self.events['aard_mobkill'] = {'func':self.mobkillevent}
     self.events['aard_gq_completed'] = {'func':self.gqevent}
     self.events['aard_gq_done'] = {'func':self.gqevent}
-    self.events['aard_gq_won'] = {'func':self.gqevent}    
+    self.events['aard_gq_won'] = {'func':self.gqevent}
+    self.exported['runselect'] = {'func':self.runselect}
     self.statdb = None
     
   def questevent(self, args):
@@ -509,7 +513,8 @@ class Plugin(BasePlugin):
     """
     handle a level
     """
-    self.statdb.savelevel(args)
+    levelinfo = copy.deepcopy(args)    
+    self.statdb.savelevel(levelinfo)
     
   def mobkillevent(self, args):
     """
@@ -522,7 +527,7 @@ class Plugin(BasePlugin):
     load the plugin
     """
     BasePlugin.load(self)
-    self.statdb = Statdb()    
+    self.statdb = Statdb()
     
   def unload(self):
     """
@@ -532,4 +537,12 @@ class Plugin(BasePlugin):
     self.statdb.dbconn.close()
     self.statdb = None
     
+  def runselect(self, select):
+    """
+    run a select stmt against the char db
+    """
+    if self.statdb:
+      return self.statdb.runselect(select)
     
+    return None
+      
