@@ -22,7 +22,7 @@ class Statdb(Sqldb):
     """
     initialize the class
     """
-    Sqldb.__init__(self, 'chardb.sqlite')
+    Sqldb.__init__(self, 'statdb.sqlite')
 
     self.version = 12
 
