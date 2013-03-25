@@ -29,6 +29,8 @@ class Plugin(BasePlugin):
     self.events['aard_gq_completed'] = {'func':self.compgq}
     self.addsetting('statcolor', '@W', 'color', 'the stat color')
     self.addsetting('infocolor', '@x172', 'color', 'the info color')
+    self.addsetting('exppermin', 20, int, 
+                'the threshhold for showing exp per minute')
     self.msgs = {}
     
   def compquest(self, args):
@@ -72,6 +74,20 @@ class Plugin(BasePlugin):
          fmin=True, colorn=self.variables['statcolor'],
          colors=self.variables['infocolor']),
          self.variables['infocolor']))
+         
+    if exported.plugins.isinstalled('statdb'):
+      stmt = "SELECT COUNT(*) as COUNT, AVG(totqp) as AVEQP " \
+              "FROM quests where failed = 0"
+      tst = exported.statdb.runselect(stmt)              
+      quest_total = tst[0]['COUNT']
+      quest_avg = tst[0]['AVEQP']
+      if quest_total > 1:
+        msg.append(" %sAvg: %s%02.02f %sqp/quest over %s%s%s quests." % \
+          (self.variables['infocolor'], self.variables['statcolor'],
+           quest_avg, self.variables['infocolor'],
+           self.variables['statcolor'], quest_total,
+           self.variables['infocolor']))
+           
     self.msgs['quest'] = ''.join(msg)
     exported.timer.add('msgtimer',
                   {'func':self.showmessages, 'seconds':1, 'onetime':True})
@@ -189,6 +205,27 @@ class Plugin(BasePlugin):
               args['finishtime'], fmin=True, 
               colorn=self.variables['statcolor'], 
               colors=self.variables['infocolor']))
+    
+    if exported.plugins.isinstalled('statdb'):
+      stmt = "SELECT count(*) as count, AVG(xp + bonusxp) as average FROM " \
+            "mobkills where time > %d and time < %d and xp > 0" % \
+             (args['starttime'], args['finishtime'])
+      tst = exported.statdb.runselect(stmt)
+      count = tst[0]['count']
+      ave = tst[0]['average']
+      if count > 0 and ave > 0:
+        length = args['finishtime'] - args['starttime']
+        msg.append(' %s%s %smobs killed' % (self.variables['statcolor'],
+          count, self.variables['infocolor']))
+        msg.append(' (%s%02.02f%sxp/mob' % (self.variables['statcolor'],
+          ave, self.variables['infocolor']))
+        if length:
+          expmin = exported.GMCP.getv('char.base.perlevel')/(length/60)
+          if int(expmin) > self.variables['exppermin']:
+            msg.append(' %s%02d%sxp/min' % (self.variables['statcolor'],
+              expmin, self.variables['infocolor']))  
+        msg.append(')')
+              
     self.msgs['level'] = ''.join(msg)
     exported.timer.add('msgtimer',
                 {'func':self.showmessages, 'seconds':1, 'onetime':True})    
