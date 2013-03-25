@@ -170,7 +170,7 @@ class Plugin(BasePlugin):
       self.mobsleft.append({'name':name, 
             'location':location, 'num':int(num)})    
    
-  def _notstarted(self, args=None):
+  def _notstarted(self, _=None):
     """
     this will be called when a gq check returns the not started message
     """
@@ -178,7 +178,7 @@ class Plugin(BasePlugin):
     exported.trigger.togglegroup('gqin', False)
     exported.event.unregister('emptyline', self._emptyline)    
    
-  def _emptyline(self, args=None):
+  def _emptyline(self, _=None):
     """
     this will be enabled when gq check is enabled
     """
@@ -191,7 +191,7 @@ class Plugin(BasePlugin):
     exported.event.unregister('emptyline', self._emptyline)
     exported.event.eraise('aard_gq_mobsleft', copy.deepcopy(self.mobsleft))    
     
-  def _gqmobdead(self, args):
+  def _gqmobdead(self, _=None):
     """
     called when a gq mob is killed
     """
@@ -227,14 +227,14 @@ class Plugin(BasePlugin):
         exported.msg("GQ: could not find mob: %s" % args['name'], 'gq')
         exported.execute("gq check")   
 
-  def _gqwon(self, args=None):
+  def _gqwon(self, _=None):
     """
     the gquest was won
     """
     self.gqinfo['won'] = 1
     exported.trigger.togglegroup("gqrew", True)    
 
-  def _gqdone(self, args=None):
+  def _gqdone(self, _=None):
     """
     do something on the done line
     """
@@ -276,7 +276,7 @@ class Plugin(BasePlugin):
     exported.event.register('emptyline', self._emptyline)    
     return args
   
-  def _gqquit(self, args=None):
+  def _gqquit(self, _=None):
     """
     quit the gq
     """
@@ -284,14 +284,14 @@ class Plugin(BasePlugin):
     self.variables['joined'] = False
     exported.event.eraise('aard_gq_quit', {}) 
 
-  def _gqextfin(self, args=None):
+  def _gqextfin(self, _=None):
     """
     the character finished the extended gq
     """
     self.gqinfo['completed'] = 1
     self._raisegq('aard_gq_completed')
 
-  def _gqextover(self, args=None):
+  def _gqextover(self, _=None):
     """
     the character finished the extended gq
     """
@@ -306,7 +306,7 @@ class Plugin(BasePlugin):
     exported.event.eraise(event, copy.deepcopy(self.gqinfo))
     self._gqreset()
 
-  def _gqreset(self, args=None):
+  def _gqreset(self, _=None):
     """
     reset gq triggers
     """

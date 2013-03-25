@@ -1,10 +1,9 @@
 """
 $Id$
 """
-import time, os, copy
-from libs import exported, utils
+import os, copy
+from libs import exported
 from libs.persistentdict import PersistentDict
-from libs.timing import timeit
 from plugins import BasePlugin
 
 
@@ -74,13 +73,18 @@ class Plugin(BasePlugin):
     self.events['trigger_whoisend'] = {'func':self._whoisend}
     
   def _whois(self, args=None):
+    """
+    reset the whois info when a "whois" command is sent
+    """
     self.whois.clear()
     exported.trigger.togglegroup('whois', True)    
     return args
 
-  @timeit
   def _whoisstats(self, args=None):
-    for i in range(1,4):
+    """
+    parse a whois line
+    """
+    for i in range(1, 4):
       akey = 'name%s' % i
       aval = 'val%s' % i
       
@@ -96,8 +100,10 @@ class Plugin(BasePlugin):
     if 'pval2' in args:
       self.whois['powerupsmort'] = args['pval2']
         
-  @timeit
   def _whoisheader(self, args=None):
+    """
+    do stuff when we see the whois header
+    """
     self.whois["name"] = exported.GMCP.getv('char.base.name')
     self.whois['level'] = exported.GMCP.getv('char.status.level')
     self.whois['tiers'] = exported.GMCP.getv('char.base.tier')
@@ -117,8 +123,10 @@ class Plugin(BasePlugin):
                                       
     exported.trigger.toggle('whoisend', True)
   
-  @timeit
   def _whoisclasses(self, args):
+    """
+    add classes
+    """
     classabs = exported.aardu.classabb()
     tlist = args['classes'].split("/")
     remorts = len(tlist)
@@ -130,8 +138,10 @@ class Plugin(BasePlugin):
 
     self.whois['remorts'] = remorts
     
-  @timeit
-  def _whoisend(self, args):
+  def _whoisend(self, _=None):
+    """
+    send a whois
+    """
     self.whois['totallevels'] = exported.aardu.getactuallevel(
                       self.whois['level'], self.whois['remorts'], 
                       self.whois['tiers'], self.whois['redos'])    

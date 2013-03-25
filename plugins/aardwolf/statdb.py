@@ -1,10 +1,9 @@
 """
 $Id$
 """
-import time, sqlite3, copy
+import copy, time
 from plugins import BasePlugin
 from libs.sqldb import Sqldb
-from libs.timing import timeit
 from libs import exported
 
 NAME = 'StatDB'
@@ -318,8 +317,8 @@ class Statdb(Sqldb):
     classes = []
     tclasses = self.runselect('SELECT * FROM classes ORDER by remort ASC')
     for i in tclasses:
-      if tclasses['remort'] != -1:
-        classes.append(tclasses['class'])
+      if i['remort'] != -1:
+        classes.append(i['class'])
       
     return classes
    
@@ -410,6 +409,9 @@ class Statdb(Sqldb):
     cur.close()  
   
   def savelevel(self, levelinfo, first=False):
+    """
+    save a level
+    """
     rowid = -1
     if not first:
       if levelinfo['type'] == 'level':
@@ -424,7 +426,7 @@ class Statdb(Sqldb):
       if levelinfo['totallevels'] and levelinfo['totallevels'] > 0:
         levelinfo['level'] = levelinfo['totallevels']
       else:
-        levelinfo['level'] = db.getstat('totallevels')
+        levelinfo['level'] = self.getstat('totallevels')
       
     levelinfo['finishtime'] = -1
     cur = self.dbconn.cursor()

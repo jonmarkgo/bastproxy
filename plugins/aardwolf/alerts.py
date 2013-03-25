@@ -41,7 +41,7 @@ class Plugin(BasePlugin):
     else:
       exported.mail.send('New GQuest', msg)
       
-  def _quest(self, args):
+  def _quest(self, _=None):
     """
     do something when you can quest
     """

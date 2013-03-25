@@ -273,7 +273,7 @@ class PluginMgr:
           load.append(i)
                     
     for i in load:
-      exported.msg('%s: loading depencency %s' % (pluginname, i), self.sname)      
+      exported.msg('%s: loading depencency %s' % (pluginname, i), self.sname)
       name, path = findplugin(i)
       if name:
         self.load_module(name, path, force=True)

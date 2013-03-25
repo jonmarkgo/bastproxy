@@ -1,9 +1,8 @@
 """
 $Id$
 """
-import time, os, copy
+import time, copy
 from libs import exported
-from libs.persistentdict import PersistentDict
 from libs.color import strip_ansi
 from plugins import BasePlugin
 
@@ -92,6 +91,9 @@ class Plugin(BasePlugin):
     self.events['trigger_mobbanish'] = {'func':self.mobbanish}    
     
   def reset_kill(self):
+    """
+    reset a kill
+    """
     self.kill_info.clear()
     self.kill_info['name'] = ''
     self.kill_info['room_id'] = -1
@@ -112,11 +114,14 @@ class Plugin(BasePlugin):
     self.kill_info['wielded_weapon'] = ''
     self.kill_info['second_weapon'] = ''
     self.kill_info['raised'] = True
-    self.kill_info['room_id']
+    self.kill_info['room_id'] = -1
     self.kill_info['damage'] = {}
     self.kill_info['immunities'] = {}
 
-  def mobnone(self, args=None):
+  def mobnone(self, _=None):
+    """
+    reset the mob name
+    """
     self.kill_info['name'] = ""
     #self.reset_damage()
     
@@ -129,17 +134,29 @@ class Plugin(BasePlugin):
     if args['triggername'] == 'mobsac':
       self.raise_kill()
 
-  def mobxpptless(self, args):
+  def mobxpptless(self, _=None):
+    """
+    set xp to 0 when a pointless kill is seen
+    """
     self.kill_info['xp'] = 0
     self.kill_info['raised'] = False
     
   def mobblessxp(self, args):
+    """
+    add blessing xp
+    """
     self.kill_info['blessingxp'] = int(args['blessxp'])
     
   def mobbonusxp(self, args):
+    """
+    add bonus xp
+    """
     self.kill_info['bonusxp'] = int(args['bonxp'])
 
   def mobxp(self, args):
+    """
+    add regular xp
+    """
     mxp = args['xp']
     if '+' in mxp:
       newxp = 0
@@ -153,18 +170,30 @@ class Plugin(BasePlugin):
     self.kill_info['raised'] = False
     
   def mobswitch(self, args):
+    """
+    switch mobs
+    """
     self.kill_info['name'] = strip_ansi(args['name'])
     #self.reset_damage()
 
-  def mobvorpal(self, args):
+  def mobvorpal(self, _=None):
+    """
+    vopaled a mob
+    """
     self.kill_info['vorpal'] = 1
     #TODO: set primary and secondary weapons
 
   def mobassassin(self, args):
+    """
+    assassinated mob
+    """
     self.kill_info['name'] = strip_ansi(args['name'])
     self.kill_info['assassinate'] = 1
 
   def mobslit(self, args):
+    """
+    slitted a mob
+    """
     self.kill_info['name'] = strip_ansi(args['name'])
     self.kill_info['slit'] = 1
     self.kill_info['raised'] = False
@@ -172,6 +201,9 @@ class Plugin(BasePlugin):
     self.raise_kill()
 
   def mobdisintegrate(self, args):
+    """
+    disintegrated a mob
+    """
     self.kill_info['name'] = strip_ansi(args['name'])
     self.kill_info['disintegrate'] = 1
     self.kill_info['raised'] = False
@@ -179,6 +211,9 @@ class Plugin(BasePlugin):
     self.raise_kill()
     
   def mobbanish(self, args):
+    """
+    banished a mob
+    """
     self.kill_info['name'] = strip_ansi(args['name'])
     self.kill_info['banishment'] = 1
     self.kill_info['raised'] = False
@@ -186,19 +221,31 @@ class Plugin(BasePlugin):
     self.raise_kill()
     
   def mobdeathblow(self, args):
+    """
+    deathblowed a mob
+    """
     self.kill_info['name'] = strip_ansi(args['name'])
     self.kill_info['deathblow'] = 1  
     
   def mobgold(self, args):
+    """
+    get gold from the mobkill
+    """
     gold = args['gold'].replace(',', '')
     self.kill_info['gold'] = int(gold)
     if not self.kill_info['name']:
       self.kill_info['name'] = strip_ansi(args['name'])
       
-  def mobtrivia(self, args):
+  def mobtrivia(self, _=None):
+    """
+    a trivia mob
+    """
     self.kill_info['tp'] = 1
     
   def raise_kill(self):
+    """
+    raise a kill
+    """
     self.kill_info['finishtime'] = time.time()
     self.kill_info['room_id'] = exported.GMCP.getv('room.info.num')  
     self.kill_info['level'] = exported.aardu.getactuallevel()    

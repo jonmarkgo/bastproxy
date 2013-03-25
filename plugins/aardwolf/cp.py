@@ -27,10 +27,10 @@ class Plugin(BasePlugin):
     """
     BasePlugin.__init__(self, name, sname, filename, directory, importloc)
     self.savecpfile = os.path.join(self.savedir, 'cp.txt')
-    self.cp = PersistentDict(self.savecpfile, 'c', format='json')    
+    self.cpinfo = PersistentDict(self.savecpfile, 'c', format='json')    
     self.dependencies.append('aardu')    
     self.mobsleft = []
-    self.cptimer = {}
+    self.cpinfotimer = {}
     exported.watch.add('cp_check', {
       'regex':'^(cp|campa|campai|campaig|campaign) (c|ch|che|chec|check)$'})
     self.triggers['cpnew'] = {
@@ -103,22 +103,22 @@ class Plugin(BasePlugin):
     """
     reset the cp
     """
-    self.cp.clear()
-    self.cp['mobs'] = {}
-    self.cp['trains'] = 0
-    self.cp['pracs'] = 0
-    self.cp['gold'] = 0
-    self.cp['tp'] = 0
-    self.cp['qp'] = 0
-    self.cp['bonusqp'] = 0
-    self.cp['failed'] = 0
-    self.cp['level'] = exported.aardu.getactuallevel(
+    self.cpinfo.clear()
+    self.cpinfo['mobs'] = {}
+    self.cpinfo['trains'] = 0
+    self.cpinfo['pracs'] = 0
+    self.cpinfo['gold'] = 0
+    self.cpinfo['tp'] = 0
+    self.cpinfo['qp'] = 0
+    self.cpinfo['bonusqp'] = 0
+    self.cpinfo['failed'] = 0
+    self.cpinfo['level'] = exported.aardu.getactuallevel(
                         exported.GMCP.getv('char.status.level'))
-    self.cp['starttime'] = time.time()
-    self.cp['finishtime'] = 0
-    self.cp['oncp'] = True
-    self.cp['cantake'] = False
-    self.cp['shtime'] = None
+    self.cpinfo['starttime'] = time.time()
+    self.cpinfo['finishtime'] = 0
+    self.cpinfo['oncp'] = True
+    self.cpinfo['cantake'] = False
+    self.cpinfo['shtime'] = None
     self.savestate()
     
   def _cpnew(self, args=None):
@@ -132,22 +132,22 @@ class Plugin(BasePlugin):
     """
     handle a none cp
     """
-    self.cp['oncp'] = False
+    self.cpinfo['oncp'] = False
     self.savestate()
     exported.trigger.togglegroup('cpcheck', False) 
     exported.trigger.togglegroup('cpin', False) 
     exported.trigger.togglegroup('cprew', False) 
     exported.trigger.togglegroup('cpdone', False)     
     #check(EnableTimer("cp_timer", false))
-    self.cptimer = {}    
+    self.cpinfotimer = {}    
     exported.sendtoclient('cpnone')
 
-  def _cptime(self, args=None):
+  def _cptime(self, _=None):
     """
     handle cp time
     """
-    if not self.cp['mobs']:
-      self.cp['mobs'] = self.mobsleft[:]
+    if not self.cpinfo['mobs']:
+      self.cpinfo['mobs'] = self.mobsleft[:]
       self.savestate()
     exported.trigger.togglegroup("cpcheck", False)        
     exported.trigger.togglegroup("cpin", True)      
@@ -156,21 +156,21 @@ class Plugin(BasePlugin):
     """
     handle cpneedtolevel
     """
-    self.cp['cantake'] = False
+    self.cpinfo['cantake'] = False
     self.savestate()
     
   def _cpcantake(self, _=None):
     """
     handle cpcantake
     """
-    self.cp['cantake'] = True    
+    self.cpinfo['cantake'] = True    
     self.savestate()
     
   def _cpshnext(self, args=None):
     """
     handle cpshnext
     """
-    self.cp['shtime'] = args['time']    
+    self.cpinfo['shtime'] = args['time']    
     self.savestate()
     
   def _cpmob(self, args=None):
@@ -204,8 +204,8 @@ class Plugin(BasePlugin):
     handle cpcomplete
     """
     exported.trigger.togglegroup('cprew', True)     
-    self.cp['finishtime'] = time.time()
-    self.cp['oncp'] = False
+    self.cpinfo['finishtime'] = time.time()
+    self.cpinfo['oncp'] = False
     self.savestate()
 
   def _cpreward(self, args=None):
@@ -215,7 +215,7 @@ class Plugin(BasePlugin):
     rtype = args['type']
     ramount = args['amount']
     rewardt = exported.aardu.rewardtable()
-    self.cp[rewardt[rtype]] = ramount
+    self.cpinfo[rewardt[rtype]] = ramount
     self.savestate()
     exported.trigger.togglegroup('cpdone', True) 
     
@@ -233,15 +233,15 @@ class Plugin(BasePlugin):
     if 'first campaign completed today' in args['data']:
       mat = re.match('^You receive (?P<bonus>\d*) quest points bonus " \
                   "for your first campaign completed today.$', args['data'])
-      self.cp['bonusqp'] = int(mat.groupdict()['bonus'])
-    exported.event.eraise('aard_cp_comp', copy.deepcopy(self.cp))
+      self.cpinfo['bonusqp'] = int(mat.groupdict()['bonus'])
+    exported.event.eraise('aard_cp_comp', copy.deepcopy(self.cpinfo))
   
   def _cpclear(self, _=None):
     """
     handle cpclear
     """
-    self.cp['failed'] = 1
-    exported.event.eraise('aard_cp_failed', copy.deepcopy(self.cp))
+    self.cpinfo['failed'] = 1
+    exported.event.eraise('aard_cp_failed', copy.deepcopy(self.cpinfo))
     self._cpnone()    
     
   def _cpcheckcmd(self, args=None):
@@ -249,7 +249,7 @@ class Plugin(BasePlugin):
     handle when we get a cp check
     """
     self.mobsleft = []
-    self.cptimer = {}
+    self.cpinfotimer = {}
     exported.trigger.togglegroup('cpcheck', True)    
     return args
   
@@ -258,5 +258,5 @@ class Plugin(BasePlugin):
     save states
     """
     BasePlugin.savestate(self)
-    self.cp.sync()
+    self.cpinfo.sync()
     

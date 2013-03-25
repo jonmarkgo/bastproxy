@@ -11,10 +11,13 @@ exported.LOGGER.cmd_file(['sqlite'])
 exported.LOGGER.cmd_console(['sqlite'])
 
 def dict_factory(cursor, row):
-    d = {}
-    for idx,col in enumerate(cursor.description):
-        d[col[0]] = row[idx]
-    return d
+  """
+  create a dictionary for a sql row
+  """
+  tdict = {}
+  for idx, col in enumerate(cursor.description):
+    tdict[col[0]] = row[idx]
+  return tdict
   
 def fixsql(tstr, like=False):
   """
@@ -138,10 +141,12 @@ class Sqldb:
       
     return False
   
-  def converttoupdate(self, tablename, wherekey='', nokey={}):
+  def converttoupdate(self, tablename, wherekey='', nokey=None):
     """
     create an update statement based on the columns of a table
     """
+    if nokey == None:
+      nokey = {}
     execstr = ''
     if self.tables[tablename]:
       cols = self.tables[tablename]['columns']

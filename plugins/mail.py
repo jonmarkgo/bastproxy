@@ -33,7 +33,8 @@ class Plugin(BasePlugin):
     self.events['client_connected'] = {'func':self.checkpassword}
     self.cmds['password'] = {'func':self.cmd_pw, 'shelp':'set the password'}
     self.cmds['test'] = {'func':self.cmd_test, 'shelp':'send a test email'}
-    self.cmds['check'] = {'func':self.cmd_check, 'shelp':'check to make sure all settings are applied'}
+    self.cmds['check'] = {'func':self.cmd_check,
+                    'shelp':'check to make sure all settings are applied'}
     self.exported['send'] = {'func':self.send}
     self.addsetting('server', '', str, 'the smtp server to send mail through')
     self.addsetting('port', '', int, 'the port to use when sending mail')

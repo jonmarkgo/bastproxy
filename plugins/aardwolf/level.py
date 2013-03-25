@@ -123,7 +123,6 @@ class Plugin(BasePlugin):
         exported.trigger.eraise('aard_level_superhero', {})
         
     self.levelinfo['finishtime'] = time.time()     
-   
     exported.trigger.togglegroup('linfo', True)  
     exported.event.register('trigger_emptyline', self._finish)    
     
