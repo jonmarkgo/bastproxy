@@ -250,7 +250,7 @@ class Plugin(BasePlugin):
     do something when we see the next line after done
     """
     exported.event.unregister('trigger_all', self._triggerall)
-    if 'extended time for 3 more minutes' in args['data']:
+    if 'extended time for 3 more minutes' in args['line']:
       exported.trigger.togglegroup("gqext", True)
     else:
       self._raisegq('aard_gq_done')
