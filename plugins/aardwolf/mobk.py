@@ -46,7 +46,7 @@ class Plugin(BasePlugin):
     self.triggers['mobbonusxp'] = {
       'regex':"^You receive (?P<bonxp>\d+) bonus experience points.*$"}
     self.triggers['mobgold'] = {
-      'regex':"^You get (?P<gold>\d+) gold coins .+ corpse of (?P<name>.+)\.$"}
+      'regex':"^You get (?P<gold>.+) gold coins from .+ corpse of (?P<name>.+)\.$"}
     self.triggers['mobname'] = {
       'regex':"^You get .+ corpse of (?P<name>.+)\.$"}
     self.triggers['mobsac'] = {
