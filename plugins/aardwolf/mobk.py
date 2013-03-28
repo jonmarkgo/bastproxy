@@ -36,7 +36,7 @@ class Plugin(BasePlugin):
     self.triggers['mobxpptless'] = {
       'regex':"^That was a pointless no experience kill!$"}    
     self.triggers['mobswitch'] = {
-      'regex':"^You switch targets and direct your attacks at (.*).\.$"}    
+      'regex':"^You switch targets and direct your attacks at (?P<name>.*).\.$"}    
     self.triggers['mobflee'] = {
       'regex':"^You flee from combat!$"}    
     self.triggers['mobretreat'] = {
