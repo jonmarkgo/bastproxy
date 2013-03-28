@@ -1,6 +1,8 @@
 """
 $Id$
-#TODO: move the watch stuff from cmdmgr
+
+TODO: add the ability to specify a specific time for a timer
+          Ex: goes off at 0000 or 1600 or 930
 """
 import time
 import re

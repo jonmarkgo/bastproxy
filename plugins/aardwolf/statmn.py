@@ -99,8 +99,15 @@ class Plugin(BasePlugin):
     self.msg('compcp: %s' % args)
     msg = []
     msg.append('%sStatMonitor: CP finished for ' % \
-                  self.variables['infocolor'])    
-    msg.append('%s%s%sqp' % (self.variables['statcolor'], args['qp'],
+                  self.variables['infocolor'])
+    if args['bonusqp'] > 0:
+      totalqp = args['bonusqp'] + args['qp']
+      msg.append('%s%s%s+%s%sB%s=%s%sqp' % (self.variables['statcolor'], args['qp'],
+                  self.variables['infocolor'], self.variables['statcolor'],
+                  args['bonusqp'], self.variables['infocolor'], 
+                  self.variables['statcolor'], totalqp))
+    else:
+      msg.append('%s%s%sqp' % (self.variables['statcolor'], args['qp'],
                   self.variables['infocolor']))
     if args['tp'] > 0:
       msg.append(' %s%s%sTP' % (self.variables['statcolor'], 

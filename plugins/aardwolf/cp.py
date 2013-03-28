@@ -31,6 +31,7 @@ class Plugin(BasePlugin):
     self.dependencies.append('aardu')    
     self.mobsleft = []
     self.cpinfotimer = {}
+    self.linecount = 0
     exported.watch.add('cp_check', {
       'regex':'^(cp|campa|campai|campaig|campaign) (c|ch|che|chec|check)$'})
     self.triggers['cpnew'] = {
@@ -213,7 +214,7 @@ class Plugin(BasePlugin):
     handle cpreward
     """
     rtype = args['type']
-    ramount = args['amount']
+    ramount = int(args['amount'])
     rewardt = exported.aardu.rewardtable()
     self.cpinfo[rewardt[rtype]] = ramount
     self.savestate()
@@ -223,18 +224,22 @@ class Plugin(BasePlugin):
     """
     handle cpcompdone
     """
+    self.linecount = 0
     exported.event.register('trigger_all', self._triggerall)    
   
   def _triggerall(self, args=None):
     """
     check to see if we have the bonus qp message
     """
-    exported.event.unregister('trigger_all', self._triggerall)
-    if 'first campaign completed today' in args['data']:
-      mat = re.match('^You receive (?P<bonus>\d*) quest points bonus " \
-                  "for your first campaign completed today.$', args['data'])
+    self.linecount = self.linecount + 1
+    if 'first campaign completed today' in args['line']:
+      mat = re.match('^You receive (?P<bonus>\d*) quest points bonus ' \
+                  'for your first campaign completed today.$', args['line'])
       self.cpinfo['bonusqp'] = int(mat.groupdict()['bonus'])
-    exported.event.eraise('aard_cp_comp', copy.deepcopy(self.cpinfo))
+    if self.linecount > 3:
+      exported.event.unregister('trigger_all', self._triggerall)
+    if self.linecount == 3:
+      exported.event.eraise('aard_cp_comp', copy.deepcopy(self.cpinfo))
   
   def _cpclear(self, _=None):
     """

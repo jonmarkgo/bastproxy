@@ -1,5 +1,6 @@
 """
 $Id$
+#TODO: get weapon for vorpals
 """
 import time, copy
 from libs import exported

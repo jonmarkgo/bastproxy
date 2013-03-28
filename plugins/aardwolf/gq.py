@@ -28,9 +28,11 @@ class Plugin(BasePlugin):
     self.gqinfo = PersistentDict(self.savegqfile, 'c', format='json')      
     self.addsetting('declared', False, bool, 'flag for a gq being declared')  
     self.addsetting('started', False, bool, 'flag for a gq started') 
-    self.addsetting('joined', False, bool, 'flag for a gq joined') 
+    self.addsetting('joined', False, bool, 'flag for a gq joined')
+    self.addsetting('extended', False, bool, 'flag for extended')
     self.mobsleft = {}
     self.nextdeath = False
+    self.linecount = 0
     exported.watch.add('gq_check', {
       'regex':'^(gq|gqu|gque|gques|gquest) (c|ch|che|chec|check)$'})    
     self.triggers['gqdeclared'] = {
@@ -243,16 +245,25 @@ class Plugin(BasePlugin):
       self._raisegq('aard_gq_won')
     else:
       #need to check for extended time
+      self.linecount = 0      
       exported.event.register('trigger_all', self._triggerall)
 
   def _triggerall(self, args=None):
     """
     do something when we see the next line after done
     """
-    exported.event.unregister('trigger_all', self._triggerall)
+    self.linecount = self.linecount + 1
+    
     if 'extended time for 3 more minutes' in args['line']:
       exported.trigger.togglegroup("gqext", True)
-    else:
+      self.variables['extended'] = True
+
+    if self.linecount < 3:
+      return
+    
+    exported.event.unregister('trigger_all', self._triggerall)
+
+    if not self.variables['extended']:
       self._raisegq('aard_gq_done')
 
   def _gqreward(self, args=None):
@@ -319,6 +330,7 @@ class Plugin(BasePlugin):
     self.variables['joined'] = False
     self.variables['started'] = False
     self.variables['declared'] = False
+    self.variables['extended'] = False
     self.savestate()
 
   def savestate(self):

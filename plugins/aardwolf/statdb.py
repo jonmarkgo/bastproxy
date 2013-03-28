@@ -388,7 +388,6 @@ class Statdb(Sqldb):
     """
     save gq information
     """
-    exported.sendtoclient(gqinfo)
     self.addtostat('questpoints', int(gqinfo['qp']) + int(gqinfo['qpmobs']))
     self.addtostat('qpearned', int(gqinfo['qp']) + int(gqinfo['qpmobs']))
     self.addtostat('triviapoints', gqinfo['tp'])
