@@ -464,8 +464,8 @@ class Statdb(Sqldb):
     rowid = self.getlastrowid('mobkills')
     cur.close()
     exported.msg('inserted mobkill: %s' % rowid)
-      
 
+  
 class Plugin(BasePlugin):
   """
   a plugin to monitor aardwolf events
@@ -504,10 +504,14 @@ class Plugin(BasePlugin):
     
     return lstr
     
-  def cmd_quests(self, args):
+  def cmd_quests(self, args=None):
     """
     show quest stats
     """
+    
+    if not args:
+      args = {}
+    
     tqrow = self.statdb.runselect(
         """SELECT AVG(finishtime - starttime) as avetime,
                       SUM(qp) as qp,
@@ -577,10 +581,39 @@ class Plugin(BasePlugin):
     msg.append(self._format_row("Trains", stats['trains'],
         "%.3f/quest" % (stats['trainsave'] or 0)))
     msg.append(self._format_row("Pracs", stats['pracs'],
-        "%.3f/quest" % (stats['pracsave'] or 0)))        
+        "%.3f/quest" % (stats['pracsave'] or 0)))     
+      
+    if len(args) > 0 and int(args[0]) > 0:
+      lastitems = self.statdb.getlast('quests', int(args[0]))
+      if len(lastitems) > 0:
+        msg.append('')   
+        msg.append("@G%-6s %-2s %-2s %-2s %-2s %-3s" \
+                        " %-2s %-2s %-2s %-2s %-4s %-3s   %s" % ("ID", "QP",
+                        "MC", "TR", "LK", "DBL", "TL", "TP", "TN",
+                        "PR", "Gold", "Lvl",  "Time"))
+        msg.append('@G----------------------------------------------------')    
+        
+        for item in lastitems:
+          dbl = ''
+          if int(item['double']) == 1:
+            dbl = dbl + 'D'
+          if int(item['daily']) == 1:
+            dbl = dbl + 'E'
+            
+          leveld = exported.aardu.convertlevel(item['level'])
+            
+          ttime = format_time(item['finishtime'] - item['starttime'])
+          if int(item['failed']) == 1:
+            ttime = 'Failed'
+          msg.append("%-6s %2s %2s %2s %2s %3s" \
+                        " %2s %2s %2s %2s %4s %3s %8s" % (
+                        item['quest_id'], item['qp'],
+                        item['mccp'], item['tier'], item['lucky'], 
+                        dbl, item['totqp'], item['tp'], 
+                        item['trains'], item['pracs'], item['gold'], 
+                        leveld['level'],  ttime))
+        
     return True, msg
-    
-    
     
   def questevent(self, args):
     """
