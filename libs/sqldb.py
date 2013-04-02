@@ -271,42 +271,26 @@ class Sqldb:
     cur.close()
     return result
 
-  #def getlastrowid(self, tablename):
-    #"""
-    #get the last rowid of a table
-    #"""
-    #print 'getlastrowid'
-    #colid = self.tables[tablename].keyfield
-    #lastid = 0
-    #try:
-      #res = self.runselect("SELECT MAX('%s') AS MAX FROM %s" % \
-                    #(colid, tablename))
-      #print 'getlastrowid', res
-      #lastid = res[0]['MAX']
-    #except:
-      #exported.write_traceback('could not get last row id for : %s' % \
-                    #tablename)      
-    #print 'lastid', lastid
-    #return lastid   
-  
-  def getlast(self, tablename, num, where=''):
+  def getlast(self, ttable, num, where=''):
     """
-    get the last x items from the table
+    get the last num items from a table
     """
-    colid = self.tables[tablename].keyfield
-    execstr = ''
+    results = {}
+    if not (ttable in self.tables):
+      exported.msg('table %s does not exist in getlast' % ttable)
+      return
+    
+    colid = self.tables[ttable]['keyfield']
+    tstring = ''
     if where:
-      execstr = "SELECT * FROM %s WHERE %s ORDER by %s desc limit %d;" % \
-                           (tablename, where, colid, num)
+      tstring = "SELECT * FROM %s WHERE %s ORDER by %s desc limit %d" % (ttable, where, colid, num)
     else:
-      execstr = "SELECT * FROM %s ORDER by %s desc limit %d;" % \
-                           (tablename, colid, num)
-    res = self.runselect(execstr)
-    items = {}
-    for row in res:
-      items[row[colid]] = row
-    return items
+      tstring = "SELECT * FROM %s ORDER by %s desc limit %d" % (ttable, colid, num)
       
+    results = self.runselect(tstring)
+    
+    return results
+  
   def getlastrowid(self, ttable):
     """
     return the id of the last row in a table
