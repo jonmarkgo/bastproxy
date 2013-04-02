@@ -125,21 +125,21 @@ def format_time(length, nosec=False):
     if years:
       msg.append(':')
     days = True
-    msg.append('%dd' % (dtime['days'] or 0))
+    msg.append('%02dd' % (dtime['days'] or 0))
   if dtime['hours']:
     if years or days:
       msg.append(':')
     hours = True
-    msg.append('%dh' % (dtime['hours'] or 0))
+    msg.append('%02dh' % (dtime['hours'] or 0))
   if dtime['mins'] > 0:
     if years or days or hours:
       msg.append(':')
     mins = True
-    msg.append('%dm' % (dtime['mins'] or 0))
+    msg.append('%02dm' % (dtime['mins'] or 0))
   if (dtime['secs'] > 0 or len(msg) == 0) and not nosec:
     if years or days or hours or mins:
       msg.append(':')
-    msg.append('%ds' % (dtime['secs'] or 0))
+    msg.append('%02ds' % (dtime['secs'] or 0))
   
   return ''.join(msg)
 
