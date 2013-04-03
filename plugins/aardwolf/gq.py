@@ -127,6 +127,7 @@ class Plugin(BasePlugin):
     """
     do something when a gq is declared
     """
+    self._gqnew()    
     exported.trigger.togglegroup('gqdone', True)     
     exported.trigger.togglegroup('gq_start', True)     
     self.variables['declared'] = True
@@ -141,7 +142,6 @@ class Plugin(BasePlugin):
     exported.trigger.togglegroup('gq_start', True)     
     self.variables['joined'] = True
     self.mobsleft = {}
-    self._gqnew()
     if self.variables['started'] or not self.variables['declared']:
       self._gqstarted()
     exported.event.eraise('aard_gq_joined', args)
@@ -240,6 +240,8 @@ class Plugin(BasePlugin):
     """
     do something on the done line
     """
+    if self.variables['joined'] == 0:
+      return
     if self.gqinfo['won'] == 1:
       #print('I won, so no extra!')
       self._raisegq('aard_gq_won')
