@@ -143,6 +143,7 @@ class Plugin(BasePlugin):
     self.variables['joined'] = True
     self.mobsleft = {}
     if self.variables['started'] or not self.variables['declared']:
+      self._gqnew()
       self._gqstarted()
     exported.event.eraise('aard_gq_joined', args)
     
