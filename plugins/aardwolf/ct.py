@@ -109,14 +109,19 @@ class Plugin(BasePlugin):
     """
     self.msgs.append(msg)
 
-    exported.timer.add('msgtimerct',
-                {'func':self.showmessages, 'seconds':1, 'onetime':True,
-                 'nodupe':True})    
+    exported.event.register('trigger_emptyline', self.showmessages)
+
+    #exported.timer.add('msgtimerct',
+    #            {'func':self.showmessages, 'seconds':1, 'onetime':True,
+    #             'nodupe':True})    
+    
     
   def showmessages(self, _=None):
     """
     show a message
     """
+    
+    exported.event.unregister('trigger_emptyline', self.showmessages)    
     for i in self.msgs:
        exported.sendtoclient(i, preamble=False)
        
