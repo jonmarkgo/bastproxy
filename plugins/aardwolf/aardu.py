@@ -4,6 +4,8 @@ $Id$
 from libs import exported
 from plugins import BasePlugin
 import math
+import copy
+import re
 
 NAME = 'Aardwolf Utils'
 SNAME = 'aardu'
@@ -35,6 +37,104 @@ REWARDTABLE = {
         'practice':'pracs',
     }
     
+DAMAGES = [
+  'misses',
+  'tickles',
+  'bruises',
+  'scratches',
+  'grazes',
+  'nicks',
+  'scars',
+  'hits',
+  'injures',
+  'wounds',
+  'mauls',
+  'maims',
+  'mangles',
+  'mars',
+  'LACERATES',
+  'DECIMATES',
+  'DEVASTATES',
+  'ERADICATES',
+  'OBLITERATES',
+  'EXTIRPATES',
+  'INCINERATES',
+  'MUTILATES',
+  'DISEMBOWELS',
+  'MASSACRES',
+  'DISMEMBERS',
+  'RENDS',
+  '- BLASTS -',
+  '-= DEMOLISHES =-',
+  '** SHREDS **',
+  '**** DESTROYS ****',
+  '***** PULVERIZES *****',
+  '-=- VAPORIZES -=-',
+  '<-==-> ATOMIZES <-==->',
+  '<-:-> ASPHYXIATES <-:->',
+  '<-*-> RAVAGES <-*->',
+  '<>*<> FISSURES <>*<>',
+  '<*><*> LIQUIDATES <*><*>',
+  '<*><*><*> EVAPORATES <*><*><*>',
+  '<-=-> SUNDERS <-=->',
+  '<=-=><=-=> TEARS INTO <=-=><=-=>',
+  '<->*<=> WASTES <=>*<->',
+  '<-+-><-*-> CREMATES <-*-><-+->',
+  '<*><*><*><*> ANNIHILATES <*><*><*><*>',
+  '<--*--><--*--> IMPLODES <--*--><--*-->',
+  '<-><-=-><-> EXTERMINATES <-><-=-><->',
+  '<-==-><-==-> SHATTERS <-==-><-==->',
+  '<*><-:-><*> SLAUGHTERS <*><-:-><*>',
+  '<-*-><-><-*-> RUPTURES <-*-><-><-*->',
+  '<-*-><*><-*-> NUKES <-*-><*><-*->',
+  '-<[=-+-=]<:::<>:::> GLACIATES <:::<>:::>[=-+-=]>-',
+  '<-=-><-:-*-:-><*--*> METEORITES <*--*><-:-*-:-><-=->',
+  '<-:-><-:-*-:-><-*-> SUPERNOVAS <-*-><-:-*-:-><-:->',
+  'does UNSPEAKABLE things to',
+  'does UNTHINKABLE things to',
+  'does UNIMAGINABLE things to',
+  'does UNBELIEVABLE things to',
+  'pimpslaps'
+]      
+ 
+DAMAGESREV = {}
+for i in DAMAGES:
+  DAMAGESREV[i] = DAMAGES.index(i)
+  
+def parsedamageline(line):
+  """
+  parse a combat damage line
+  """
+  ddict = {}
+  tsplit = line.split(' ')
+  ddict['hits'] = 1
+  thits = re.match('^\[(?P<hits>\d*)\]', tsplit[0])
+  if thits:
+    ddict['hits'] = int(thits.groupdict()['hits'])
+    del tsplit[0]
+  
+  if tsplit[0] == 'Your':
+    del tsplit[0]
+
+  ddict['damage'] = 0
+  tdam = re.match('^\[(?P<damage>\d*)\]', tsplit[-1])
+  if tdam:
+    ddict['damage'] = int(tdam.groupdict()['damage'])
+    del tsplit[-1]
+    
+  nline = ' '.join(tsplit)
+  for i in DAMAGES:
+    if i in nline:
+      regex = '^(?P<damtype>.*) (%s) (?P<enemy>.*)[!|\.]$' % re.escape(i)
+      mat = re.match(regex, nline)
+      if mat:
+        ddict['damtype'] = mat.groupdict()['damtype']
+        ddict['damverb'] = i
+        ddict['enemy'] = mat.groupdict()['enemy']
+        break
+
+  return ddict
+  
 def getactuallevel(level=None, remort=None, tier=None, redos=None):
   """
   get an actual level
@@ -98,4 +198,5 @@ class Plugin(BasePlugin):
     self.exported['convertlevel'] = {'func':convertlevel}
     self.exported['classabb'] = {'func':classabb}
     self.exported['rewardtable'] = {'func':rewardtable}
+    self.exported['parsedamageline'] = {'func':parsedamageline}
     
