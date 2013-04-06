@@ -31,6 +31,7 @@ class Event:
     """
     return self.name
 
+
 class TimerEvent(Event):
   """
   a class for a timer event
@@ -329,8 +330,13 @@ class EventMgr:
       exported.msg('timer %s has no function, not adding' % name, 'events')
       return      
       
+    if 'nodupe' in args and args['nodupe']:
+      if name in self.timerlookup:
+        exported.msg('trying to add duplicate timer: %s' % name)
+        return
+      
     tevent = TimerEvent(name, args)
-    #exported.msg('adding', tevent)
+    exported.msg('adding', tevent)
     self._addtimer(tevent)
     return tevent
 
