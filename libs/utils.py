@@ -5,7 +5,7 @@ import fnmatch
 import os
 import datetime
 import math
-from libs.color import iscolor
+from libs.color import iscolor, strip_ansi, convertcolors
 
 
 class DotDict(dict):
@@ -33,7 +33,8 @@ def find_files(directory, filematch):
   return matches
 
   
-def timedeltatostring(stime, etime, fmin=False, colorn='', colors=''):
+def timedeltatostring(stime, etime, fmin=False, colorn='',
+                       colors='', nosec=False):
   """
   take two times and return a string of the difference
   in the form ##d:##h:##m:##s
@@ -57,7 +58,8 @@ def timedeltatostring(stime, etime, fmin=False, colorn='', colors=''):
     tmsg.append('%s%02d%sh' % (colorn, outar[1], colors))
   if outar[2] != 0 or days or hours or fmin:
     tmsg.append('%s%02d%sm' % (colorn, outar[2], colors))
-  tmsg.append('%s%02d%ss' % (colorn, outar[3], colors))
+  if not nosec:
+    tmsg.append('%s%02d%ss' % (colorn, outar[3], colors))
     
   out   = ":".join(tmsg)
   return out
@@ -199,3 +201,24 @@ def convert(tinput):
   else:
     return tinput
   
+  
+def center(tstr, fillerc, length):
+  """
+  center a string with color codes
+  """
+  nocolor = strip_ansi(convertcolors(tstr))
+
+  tlen = len(nocolor) + 4
+  tdiff = length - tlen
+  
+  thalf = tdiff / 2
+  tstr = "{filler}  {lstring}  {filler}".format(
+        filler = fillerc * thalf,
+        lstring = tstr)
+  
+  newl = (thalf * 2) + tlen
+
+  if newl < length:
+    tstr = tstr + '-' * (length - newl)
+    
+  return tstr
