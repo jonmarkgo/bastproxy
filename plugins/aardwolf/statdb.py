@@ -3,6 +3,7 @@ $Id$
 
 TODO: Add commands to show stuff that is in miniwin_stats
 TODO: Add timer for automatic backups
+TODO: fix mobkills lastitems
 """
 import copy, time, math
 from plugins import BasePlugin
@@ -183,7 +184,7 @@ class Statdb(Sqldb):
           num INT,
           name TEXT default "Unknown",
           location TEXT default "Unknown"
-        )""", {'keyfield':'gqmod_id'})
+        )""", {'keyfield':'gqmob_id'})
         
     # Need to do this after adding tables
     self.postinit()
@@ -474,7 +475,7 @@ class Statdb(Sqldb):
     self.dbconn.commit()
     rowid = self.getlastrowid('mobkills')
     cur.close()
-    exported.msg('inserted mobkill: %s' % rowid)
+    exported.msg('inserted mobkill: %s' % rowid, 'statdb')
 
   
 class Plugin(BasePlugin):
