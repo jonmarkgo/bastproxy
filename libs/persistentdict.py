@@ -4,6 +4,7 @@ it saves the dict to a file
 """
 import pickle, json, csv, os, shutil
 from libs.utils import convert
+import exported
 
 class PersistentDict(dict):
   ''' Persistent dictionary with an API compatible with shelve and anydbm.
@@ -27,10 +28,7 @@ class PersistentDict(dict):
     self.mode = mode                    # None or an octal triple like 0644
     self.format = format                # 'csv', 'json', or 'pickle'
     self.filename = filename
-    if flag != 'n' and os.access(filename, os.R_OK):
-      fileobj = open(filename, 'rb' if self.format=='pickle' else 'r')
-      with fileobj:
-        self.load(fileobj)
+    self.pload()
     dict.__init__(self, *args, **kwds)
 
   def sync(self):
@@ -84,11 +82,20 @@ class PersistentDict(dict):
     else:
       raise NotImplementedError('Unknown format: ' + repr(self.format))    
 
+  def pload(self):
+    """
+    load from file
+    """
+    # try formats from most restrictive to least restrictive
+    if self.flag != 'n' and os.access(self.filename, os.R_OK):
+      fileobj = open(self.filename, 'rb' if self.format=='pickle' else 'r')
+      with fileobj:
+        self.load(fileobj)      
+
   def load(self, fileobj):
     """
     load the dictionary
-    """
-    # try formats from most restrictive to least restrictive
+    """  
     for loader in (pickle.load, json.load, csv.reader):
       fileobj.seek(0)
       try:
@@ -97,6 +104,10 @@ class PersistentDict(dict):
         else:
           return self.update(loader(fileobj))
       except Exception:
+        #if not ('log' in self.filename):
+          #exported.write_traceback("Error when loading %s" % loader)
+        #else:
+          #pass
         pass
     raise ValueError('File not in a supported format')
     
