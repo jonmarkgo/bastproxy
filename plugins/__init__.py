@@ -1,5 +1,7 @@
 """
 $Id$
+
+#TODO: sort the plugins list
 """
 
 import glob
@@ -104,6 +106,7 @@ class BasePlugin:
 
     exported.LOGGER.adddtype(self.sname)
     self.cmds['set'] = {'func':self.cmd_set, 'shelp':'Show/Set Variables'}
+    self.cmds['reset'] = {'func':self.cmd_reset, 'shelp':'reset the plugin'}
 
   def load(self):
     """
@@ -241,7 +244,7 @@ class BasePlugin:
     self.settings[name] = {'default':default, 'help':shelp,
                   'stype':stype, 'nocolor':nocolor}
 
-  def cmd_reset(self):
+  def cmd_reset(self, _=None):
     """
     @G%(name)s@w - @B%(cmdname)s@w
       reset the plugin
