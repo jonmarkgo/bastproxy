@@ -1289,7 +1289,6 @@ class Plugin(BasePlugin):
     handle a level
     """
     levelinfo = copy.deepcopy(args)
-    print levelinfo
     self.statdb.savelevel(levelinfo)
 
   def mobkillevent(self, args):
