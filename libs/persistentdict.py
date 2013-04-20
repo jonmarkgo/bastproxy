@@ -8,6 +8,7 @@ import csv
 import os
 import shutil
 from libs.utils import convert
+#from libs import exported
 
 class PersistentDict(dict):
   ''' Persistent dictionary with an API compatible with shelve and anydbm.
@@ -22,7 +23,7 @@ class PersistentDict(dict):
   All three serialization formats are backed by fast C implementations.
 
   '''
-  def __init__(self, filename, flag='c', mode=None, 
+  def __init__(self, filename, flag='c', mode=None,
                                     format='json', *args, **kwds):
     """
     initialize the instance
@@ -83,7 +84,7 @@ class PersistentDict(dict):
     elif self.format == 'pickle':
       pickle.dump(dict(self), fileobj, 2)
     else:
-      raise NotImplementedError('Unknown format: ' + repr(self.format))    
+      raise NotImplementedError('Unknown format: ' + repr(self.format))
 
   def pload(self):
     """
@@ -93,39 +94,42 @@ class PersistentDict(dict):
     if self.flag != 'n' and os.access(self.filename, os.R_OK):
       fileobj = open(self.filename, 'rb' if self.format=='pickle' else 'r')
       with fileobj:
-        self.load(fileobj)      
+        self.load(fileobj)
 
   def load(self, fileobj):
     """
     load the dictionary
-    """  
+    """
     for loader in (pickle.load, json.load, csv.reader):
       fileobj.seek(0)
       try:
-        if loader == json.load:                
+        if loader == json.load:
           return self.update(loader(fileobj, object_hook=convert))
         else:
           return self.update(loader(fileobj))
-      except Exception:
+      except:
         #if not ('log' in self.filename):
           #exported.write_traceback("Error when loading %s" % loader)
         #else:
           #pass
         pass
     raise ValueError('File not in a supported format')
-    
+
   def __setitem__(self, key, val):
     """
     override setitem
     """
-    key = convert(key)
+    try:
+      key = int(key)
+    except ValueError:
+      key = convert(key)
     val = convert(val)
     dict.__setitem__(self, key, val)
-        
+
   def update(self, *args, **kwargs):
     """
     override update
     """
     for k, val in dict(*args, **kwargs).iteritems():
-      self[k] = val    
+      self[k] = val
 
