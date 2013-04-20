@@ -279,6 +279,10 @@ class EventMgr:
     the is called whenever the from_mud_event is raised
     """
     data = args['nocolordata']
+
+    self.raiseevent('trigger_beall',
+                  {'line':data, 'triggername':'all'})
+
     if data == '':
       self.raiseevent('trigger_emptyline',
                           {'line':'', 'triggername':'emptyline'})
@@ -299,9 +303,8 @@ class EventMgr:
             if self.triggers[i]['omit']:
               args['fromdata'] = ''
 
-    self.raiseevent('trigger_all',
+      self.raiseevent('trigger_all',
                         {'line':data, 'triggername':'all'})
-
 
 
     return args
