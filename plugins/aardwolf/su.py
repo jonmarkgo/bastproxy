@@ -3,6 +3,8 @@ $Id$
 
 #TODO: how to figure out when to start spellups after connecting or
           after a reload
+#TODO: add ability to spellup others
+#TODO: add ability to have spell blockers
 """
 import copy
 import time
@@ -276,11 +278,15 @@ class Plugin(BasePlugin):
     spell = exported.skills.gets(sn)
 
     if not spell:
-      msg.append('%s does not exist' % tspell)
+      msg.append('%-20s: does not exist' % tspell)
       return msg
 
     if not override and not exported.skills.isspellup(spell['sn']):
-      msg.append('%s is not a spellup' % spell['name'])
+      msg.append('%-20s: not a spellup' % spell['name'])
+      return msg
+
+    if spell['sn'] in self.spellups['sorder']:
+      msg.append('%-20s: already activated' % spell['name'])
       return msg
 
     self.spellups['self'][spell['sn']] = {'enabled':True}
@@ -300,10 +306,16 @@ class Plugin(BasePlugin):
     #exported.sendtoclient('%s' % args)
     msg = []
     if len(args) < 1:
-      return True, ['Please supply a spell']
+      return False, ['Please supply a spell']
 
     if args[0] == 'all':
-      return True, ['got an all']
+      spellups = exported.skills.getspellups()
+      for spell in spellups:
+        if spell['percent'] > 1:
+          tmsg = self._addselfspell(spell['sn'])
+          msg.extend(tmsg)
+
+      self.nextspell()
 
     elif len(args) == 2 and 'override' in args:
       exported.sendtoclient('got override')
@@ -348,6 +360,7 @@ class Plugin(BasePlugin):
       #P  B  D  NP  NL
       msg.append('%-3s - %-20s : %2s %2s %2s %2s  %-2s  %-2s' % (
               'Num', 'Name', 'A', 'P', 'B', 'D', 'NP', 'NL'))
+      msg.append('@B' + '-'* 60)
       for i in self.spellups['sorder']:
         skill = exported.skills.gets(i)
         msg.append('%-3s - %-20s : %2s %2s %2s %2s  %-2s  %-2s' % (
