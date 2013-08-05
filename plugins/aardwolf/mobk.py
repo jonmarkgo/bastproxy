@@ -327,6 +327,7 @@ class Plugin(BasePlugin):
                                   self.kill_info['bonusxp'] + \
                                   self.kill_info['blessingxp']
 
+      self.msg('raising a mobkill')
       exported.event.eraise('aard_mobkill', copy.deepcopy(self.kill_info))
 
     self.reset_kill()
