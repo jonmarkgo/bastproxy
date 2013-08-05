@@ -26,29 +26,40 @@ class Plugin(BasePlugin):
     initialize the instance
     """
     BasePlugin.__init__(self, *args, **kwargs)
-    self.cmds['list'] = {'func':self.cmd_list, 
+    self.cmds['clients'] = {'func':self.cmd_clients,
                             'shelp':'list clients that are connected'}
 
-  def cmd_list(self, _):
+  def cmd_clients(self, _):
     """
     @G%(name)s@w - @B%(cmdname)s@w
     List connections
       @CUsage@w: list
     """
+    clientformat = '%-6s %-17s %-7s %-17s %-s'
     tmsg = ['']
     if exported.PROXY:
-      for i in exported.PROXY.clients:
-        ttime = utils.timedeltatostring(i.connectedtime, 
-                                          time.mktime(time.localtime()))
-        tmsg.append('%s : %s - %s - Connected for %s' % \
-                                        (i.host, i.port, i.ttype, ttime))
+      if exported.PROXY.connectedtime:
+        tmsg.append('PROXY: connected for %s' %
+                      utils.timedeltatostring(exported.PROXY.connectedtime,
+                                            time.mktime(time.localtime())))
+      else:
+        tmsg.append('PROXY: disconnected')
+
       tmsg.append('')
-      tmsg.append('The proxy has been connected to the mud for %s' %
-                    utils.timedeltatostring(exported.PROXY.connectedtime, 
-                                          time.mktime(time.localtime())))
-      tmsg.append('')        
-    else:
-      tmsg.append('the proxy has not connected to the mud')
-    
+      tmsg.append(clientformat % ('Type', 'Host', 'Port',
+                                            'Client', 'Connected'))
+      tmsg.append('@B' + 60 * '-')
+      for i in exported.PROXY.clients:
+        ttime = utils.timedeltatostring(i.connectedtime,
+                                          time.mktime(time.localtime()))
+
+        tmsg.append(clientformat % ('Active', i.host[:17], i.port,
+                                          i.ttype[:17], ttime))
+      for i in exported.PROXY.vclients:
+        ttime = utils.timedeltatostring(i.connectedtime,
+                                          time.mktime(time.localtime()))
+        tmsg.append(clientformat % ('View', i.host[:17], i.port,
+                                          i.ttype[:17], ttime))
+
     return True, tmsg
 
