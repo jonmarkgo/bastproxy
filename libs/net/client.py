@@ -28,17 +28,16 @@ class ProxyClient(Telnet):
     self.pwtries = 0
     self.banned = False
     self.viewonly = False
-    
+
     if sock:
       self.connected = True
       self.connectedtime = time.mktime(time.localtime())
-      
+
     exported.event.register('to_client_event', self.addtooutbufferevent, 99)
     TELOPTMGR.addtoclient(self)
-    exported.PROXY.addclient(self)    
     self.state = PASSWORD
     self.addtooutbufferevent({'todata':convertcolors(
-                  '@R#BP@w: @RPlease enter the proxy password:@w'), 
+                  '@R#BP@w: @RPlease enter the proxy password:@w'),
                   'dtype':'passwd'})
 
   def addtooutbufferevent(self, args):
@@ -87,7 +86,7 @@ class ProxyClient(Telnet):
           newdata = {}
           if len(data) > 0:
             # can transform data here
-            newdata = exported.event.eraise('from_client_event', 
+            newdata = exported.event.eraise('from_client_event',
                                                 {'fromdata':data})
 
           if 'fromdata' in newdata:
@@ -95,9 +94,9 @@ class ProxyClient(Telnet):
 
           if data:
             # cannot transform data
-            exported.event.eraise('to_mud_event', 
+            exported.event.eraise('to_mud_event',
                                   {'data':data, 'dtype':'fromclient'})
-                
+
       elif self.state == PASSWORD:
         data = data.strip()
         try:
@@ -108,13 +107,16 @@ class ProxyClient(Telnet):
           vpw = exported.CONFIG.get("proxy", "viewpw")
         except NoOptionError:
           vpw = None
-          
-        if dpw and  data ==  dpw:
+
+        if dpw and  data == dpw:
           exported.msg('Successful password from %s : %s' % \
                                             (self.host, self.port), 'net')
-          self.state = CONNECTED        
+          self.state = CONNECTED
           self.viewonly = False
+          exported.PROXY.addclient(self)
           exported.event.eraise('client_connected', {'client':self})
+          exported.sendtoclient("%s - %s: Client Connected" % \
+                                      (self.host, self.port))
           if not exported.PROXY.connected:
             exported.PROXY.connectmud()
           else:
@@ -127,30 +129,34 @@ class ProxyClient(Telnet):
           self.viewonly = True
           self.addtooutbufferevent({'todata':convertcolors(
                             '@R#BP@W: @GYou are connected in view mode@w')})
-          exported.event.eraise('client_connected for viewing', 
-                                          {'client':self})         
+          exported.PROXY.addclient(self)
+          exported.event.eraise('client_connected_view',
+                                          {'client':self})
+          exported.sendtoclient("%s - %s: Client Connected (View Mode)" % \
+                                      (self.host, self.port))
         else:
           self.pwtries += 1
           if self.pwtries == 5:
             self.addtooutbufferevent({'todata':convertcolors(
-                        '@R#BP@w: @RYou have been BANNED for 10 minutes:@w'), 
+                        '@R#BP@w: @RYou have been BANNED for 10 minutes:@w'),
                         'dtype':'passwd'})
             exported.msg('%s has been banned.' % self.host, 'net')
-            exported.PROXY.removeclient(self)              
+            exported.PROXY.removeclient(self)
             exported.PROXY.addbanned(self.host)
             self.close()
           else:
             self.addtooutbufferevent({'todata':convertcolors(
-                    '@R#BP@w: @RPlease try again! Proxy Password:@w'), 
+                    '@R#BP@w: @RPlease try again! Proxy Password:@w'),
                     'dtype':'passwd'})
 
   def handle_close(self):
     """
     handle a close
     """
-    exported.msg("%s - %s: Client Disconnected" % \
-                                (self.host, self.port), 'net')
+    exported.sendtoclient("%s - %s: Client Disconnected" % \
+                                (self.host, self.port))
     exported.PROXY.removeclient(self)
+    exported.event.eraise('client_disconnected', {'client':self})
     exported.event.unregister('to_client_event', self.addtooutbuffer)
     Telnet.handle_close(self)
 
