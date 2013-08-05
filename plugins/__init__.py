@@ -303,6 +303,20 @@ class BasePlugin:
     """
     exported.event.unregister('firstactive', self.firstactive)
 
+  def eventregister(self, eventname, tfunc):
+    """
+    register an event after load
+    """
+    self.events[eventname] = {'func':tfunc}
+    exported.event.register(eventname, tfunc)
+
+  def eventunregister(self, eventname, tfunc):
+    """
+    unregister an event
+    """
+    del self.events[eventname]
+    exported.event.unregister(eventname, tfunc)
+
 
 class PluginMgr:
   """
