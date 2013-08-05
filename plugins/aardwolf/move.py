@@ -40,7 +40,9 @@ class Plugin(BasePlugin):
         for i in self.lastroom['exits']:
           if self.lastroom['exits'][i] == room['num']:
             direction = i
-        exported.sendtoclient('raising moved_room, from: %s, to : %s, dir : %s' % (self.lastroom['num'], room['num'], direction))
+        self.msg('raising moved_room, from: %s, to : %s, dir : %s' % (
+                    self.lastroom['num'], room['num'], direction))
         exported.event.eraise('moved_room', {'from':self.lastroom,
             'to': room, 'direction':direction})
         self.lastroom = copy.deepcopy(dict(room))
+
