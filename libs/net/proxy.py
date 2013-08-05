@@ -17,18 +17,18 @@ class Proxy(Telnet):
   def __init__(self, host, port):
     """
     init the class
-    
+
     required:
       host - the host to connect to
       port - the port to connect to
     """
     Telnet.__init__(self, host, port)
-    self.clients = []
 
     self.username = None
     self.password = None
     self.lastmsg = ''
     self.clients = []
+    self.vclients = []
     self.ttype = 'BastProxy'
     self.banned = {}
     self.connectedtime = None
@@ -49,8 +49,8 @@ class Proxy(Telnet):
       self.lastmsg = ndatal[-1]
       for i in ndatal[:-1]:
         tosend = i
-        newdata = exported.event.eraise('from_mud_event', 
-            {'fromdata':tosend, 'dtype':'frommud', 
+        newdata = exported.event.eraise('from_mud_event',
+            {'fromdata':tosend, 'dtype':'frommud',
                     'nocolordata':strip_ansi(tosend)})
 
         if 'fromdata' in newdata:
@@ -58,33 +58,38 @@ class Proxy(Telnet):
 
         if tosend != None:
           #data cannot be transformed here
-          exported.event.eraise('to_client_event', 
-             {'todata':tosend, 'dtype':'frommud', 
-                'nocolordata':strip_ansi(tosend)})        
+          exported.event.eraise('to_client_event',
+             {'todata':tosend, 'dtype':'frommud',
+                'nocolordata':strip_ansi(tosend)})
 
   def addclient(self, client):
     """
     add a client
-    
+
     required:
       client - the client to add
     """
-    self.clients.append(client)
-    
+    if client.viewonly:
+      self.vclients.append(client)
+    else:
+      self.clients.append(client)
+
   def removeclient(self, client):
     """
     remove a client
-    
+
     required:
       client - the client to remove
     """
     if client in self.clients:
       self.clients.remove(client)
-      
+    elif client in self.vclients:
+      self.vclients.remove(client)
+
   def addbanned(self, clientip):
     """
     add a banned client
-    
+
     required
       clientip - the client ip to ban
     """
@@ -93,7 +98,7 @@ class Proxy(Telnet):
   def checkbanned(self, clientip):
     """
     check if a client is banned
-    
+
     required
       clientip - the client ip to check
     """
@@ -105,10 +110,10 @@ class Proxy(Telnet):
     """
     connect to the mud
     """
-    self.outbuffer = ''    
+    self.outbuffer = ''
     self.doconnect()
     self.connectedtime = time.mktime(time.localtime())
-    exported.msg('Connected to mud', 'net')    
+    exported.msg('Connected to mud', 'net')
     exported.event.eraise('mudconnect', {})
 
   def handle_close(self):
@@ -117,20 +122,21 @@ class Proxy(Telnet):
     """
     exported.msg('Disconnected from mud', 'net')
     exported.event.eraise('to_client_event',
-        {'todata':convertcolors('@R#BP@w: The mud closed the connection'), 
+        {'todata':convertcolors('@R#BP@w: The mud closed the connection'),
         'dtype':'fromproxy'})
-    TELOPTMGR.resetoptions(self, True)    
+    TELOPTMGR.resetoptions(self, True)
     Telnet.handle_close(self)
-    exported.event.eraise('muddisconnect', {})  
+    self.connectedtime = None
+    exported.event.eraise('muddisconnect', {})
 
   def addtooutbuffer(self, args, raw=False):
     """
     add to the outbuffer
-    
+
     required:
-      args - a string 
+      args - a string
              or a dictionary that contains a data key and a raw key
-    
+
     optional:
       raw - set a raw flag, which means IAC will not be doubled
     """
