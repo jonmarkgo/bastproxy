@@ -277,9 +277,6 @@ class Statdb(Sqldb):
       self.addmilestone('start')
 
     self.dbconn.commit()
-    cur.execute('SELECT * FROM stats WHERE milestone = "current"')
-    row = cur.fetchone()
-    exported.sendtoclient('%s' % row)
     cur.close()
     exported.msg('updated stats', 'statdb')
     # add classes here
