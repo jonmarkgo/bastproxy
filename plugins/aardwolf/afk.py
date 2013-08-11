@@ -8,6 +8,7 @@ from libs import utils
 from plugins import BasePlugin
 import time
 import re
+import copy
 
 NAME = 'AFK plugin'
 SNAME = 'afk'
@@ -73,7 +74,7 @@ class Plugin(BasePlugin):
     else:
       msg.append('Tells received while afk')
       for i in self.variables['queue']:
-        msg.append(i['msg'])
+        msg.append('%25s - %s' % (i['timestamp'], i['msg']))
 
     return True, msg
 
@@ -125,7 +126,10 @@ class Plugin(BasePlugin):
     check for tells
     """
     if args['data']['chan'] == 'tell':
-      self.variables['queue'].append(args['data'])
+      tdata = copy.deepcopy(args['data'])
+      tdata['timestamp'] = \
+              time.strftime('%a %b %d %Y %H:%M:%S', time.localtime())
+      self.variables['queue'].append(tdata)
 
   def enableafk(self):
     """
@@ -142,6 +146,7 @@ class Plugin(BasePlugin):
     """
     self.variables['isafk'] = False
     exported.execute('title %s' % self.variables['lasttitle'])
+    self.eventunregister('GMCP:comm.channel', self.checkfortell)
     if len(self.variables['queue']) > 0:
       exported.sendtoclient("@BAFK Queue")
       exported.sendtoclient("@BYou have %s tells in the queue" % \
