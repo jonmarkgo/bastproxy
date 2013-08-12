@@ -87,6 +87,7 @@ class Plugin(BasePlugin):
     msg = []
     msg.append('AFK comm queue cleared')
     self.variables['queue'] = []
+    self.savestate()
     return True, msg
 
   def cmd_toggle(self, _=None):
@@ -130,6 +131,7 @@ class Plugin(BasePlugin):
       tdata['timestamp'] = \
               time.strftime('%a %b %d %Y %H:%M:%S', time.localtime())
       self.variables['queue'].append(tdata)
+      self.savestate()
 
   def enableafk(self):
     """
@@ -146,7 +148,11 @@ class Plugin(BasePlugin):
     """
     self.variables['isafk'] = False
     exported.execute('title %s' % self.variables['lasttitle'])
-    self.eventunregister('GMCP:comm.channel', self.checkfortell)
+    try:
+      self.eventunregister('GMCP:comm.channel', self.checkfortell)
+    except KeyError:
+      pass
+    
     if len(self.variables['queue']) > 0:
       exported.sendtoclient("@BAFK Queue")
       exported.sendtoclient("@BYou have %s tells in the queue" % \
