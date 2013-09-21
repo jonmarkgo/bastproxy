@@ -87,7 +87,7 @@ class Plugin(BasePlugin):
       self.queststuff['totqp'] = questi['totqp']
       self.queststuff['gold'] = questi['gold']
       exported.event.eraise('aard_quest_comp', copy.deepcopy(self.queststuff))
-    elif questi['action'] == 'fail':
+    elif questi['action'] == 'fail' or questi['action'] == 'timeout':
       self.queststuff['finishtime'] = time.time()
       self.queststuff['failed'] = 1
       exported.event.eraise('aard_quest_failed',
