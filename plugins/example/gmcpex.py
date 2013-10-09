@@ -21,24 +21,24 @@ class Plugin(BasePlugin):
     """
     initialize the instance
     """
-    BasePlugin.__init__(self, *args, **kwargs) 
-    self.events['GMCP'] = {'func':self.test}
-    self.events['GMCP:char'] = {'func':self.testchar}
-    self.events['GMCP:char.status'] = {'func':self.testcharstatus}
-    self.cmds['get'] = {'func':self.cmd_get, 
+    BasePlugin.__init__(self, *args, **kwargs)
+    self.event.register('GMCP', self.test)
+    self.event.register('GMCP:char', self.testchar)
+    self.event.register('GMCP:char.status', self.testcharstatus)
+    self.cmds['get'] = {'func':self.cmd_get,
                         'shelp':'print what is in the gmcp cache'}
     self.defaultcmd = 'get'
-    
+
   def cmd_get(self, args):
     """
     @G%(name)s@w - @B%(cmdname)s@w
       print an item from the gmcpcache
       @CUsage@w: rem @Y<gmcpmod>@w
         @Ygmcpmod@w    = The gmcp module to print, such as char.status
-    """    
+    """
     if len(args) > 0:
       return True, ['%s' % exported.gmcp.getv(args[0])]
-    
+
     return False
 
   def test(self, args):
@@ -72,7 +72,7 @@ class Plugin(BasePlugin):
     msg.append('getting a variable that doesn\'t exist')
     msg.append(exported.gmcp.getv('char.status.test'))
     self.msg('\n'.join(msg))
-    
+
     exported.sendtoclient('@CEvent@w - @GGMCP:char@w: %s' % args['module'])
 
   def testcharstatus(self, _=None):
@@ -81,4 +81,4 @@ class Plugin(BasePlugin):
     """
     exported.sendtoclient('@CEvent@w - @GGMCP:char.status@w')
 
-  
+

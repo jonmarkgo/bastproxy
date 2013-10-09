@@ -33,7 +33,8 @@ class ProxyClient(Telnet):
       self.connected = True
       self.connectedtime = time.mktime(time.localtime())
 
-    exported.event.register('to_client_event', self.addtooutbufferevent, 99)
+    exported.event.register('to_client_event', self.addtooutbufferevent,
+                                                      prio=99)
     TELOPTMGR.addtoclient(self)
     self.state = PASSWORD
     self.addtooutbufferevent({'todata':convertcolors(

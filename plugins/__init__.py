@@ -2,6 +2,11 @@
 $Id$
 
 #TODO: sort the plugins list
+#TODO: make initialized events use the same syntax as runtime added events
+  make an addevent function to the plugin baseclass
+  same with commands and all other items that can be added at runtime
+
+make all functions that add things use kwargs instead of a table
 """
 
 import glob
@@ -11,6 +16,7 @@ import sys
 from libs import exported
 from libs.utils import find_files, verify, convert
 from libs.persistentdict import PersistentDict
+from libs.utils import DotDict
 import inspect
 
 class PersistentDictEvent(PersistentDict):
@@ -101,6 +107,9 @@ class BasePlugin:
                             'c', format='json')
     self.settings = {}
     self.events = {}
+    self.event = DotDict()
+    self.event.register = self.eventregister
+    self.event.unregister = self.eventunregister
     self.timers = {}
     self.triggers = {}
     self.exported = {}
@@ -110,7 +119,7 @@ class BasePlugin:
     self.cmds['set'] = {'func':self.cmd_set, 'shelp':'Show/Set Variables'}
     self.cmds['reset'] = {'func':self.cmd_reset, 'shelp':'reset the plugin'}
     self.cmds['save'] = {'func':self.cmd_save, 'shelp':'save plugin state'}
-    exported.event.register('firstactive', self.firstactive)
+    self.event.register('firstactive', self.firstactive)
 
   def load(self):
     """
@@ -127,11 +136,6 @@ class BasePlugin:
     # if there is a default command, then set it
     if self.defaultcmd:
       exported.cmd.setdefault(self.defaultcmd)
-
-    # register all events
-    for i in self.events:
-      event = self.events[i]
-      exported.event.register(i, event['func'])
 
     self.variables.pload()
 
@@ -152,7 +156,7 @@ class BasePlugin:
 
     if exported.PROXY and exported.PROXY.connected:
       if exported.aardu.firstactive():
-        exported.event.unregister('firstactive', self.firstactive)
+        self.event.unregister('firstactive', self.firstactive)
         self.firstactive()
 
   def unload(self):
@@ -162,9 +166,7 @@ class BasePlugin:
     #clear all commands for this plugin
     exported.cmd.reset(self.sname)
 
-    # unregister all events
-    for i in self.events:
-      exported.event.unregister(i, self.events[i]['func'])
+    exported.event.removeplugin(self.sname)
 
     # delete all timers
     for i in self.timers:
@@ -301,21 +303,26 @@ class BasePlugin:
     """
     if we are connected do
     """
-    exported.event.unregister('firstactive', self.firstactive)
+    self.event.unregister('firstactive', self.firstactive,
+                                  plugin=self.sname)
 
   def eventregister(self, eventname, tfunc):
     """
-    register an event after load
+    register an event
     """
-    self.events[eventname] = {'func':tfunc}
-    exported.event.register(eventname, tfunc)
+    #if not (eventname in self.events):
+    #  self.events[eventname] = []
+
+    #self.events[eventname].append(tfunc)
+    exported.event.register(eventname, tfunc, plugin=self.sname)
 
   def eventunregister(self, eventname, tfunc):
     """
     unregister an event
     """
-    del self.events[eventname]
-    exported.event.unregister(eventname, tfunc)
+    #if eventname in self.events and tfunc in self.events[eventname]:
+    #  self.events[eventname].remove(tfunc)
+    exported.event.unregister(eventname, tfunc, plugin=self.sname)
 
 
 class PluginMgr:
@@ -706,5 +713,5 @@ class PluginMgr:
                           'func':self.cmd_exported,
                           'shelp':'Examine the exported module'})
     exported.cmd.setdefault(self.sname, 'list')
-    exported.event.register('savestate', self.savestate)
+    exported.event.register('savestate', self.savestate, plugin=self.sname)
 

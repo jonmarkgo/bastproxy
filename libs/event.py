@@ -5,6 +5,7 @@ $Id$
   number of triggers, aliases, events, etc..
 #TODO: add cmd to show info for specific timers, triggers, etc..
 #TODO: triggers need to also be able to check colors
+#TODO: add onetime flag to registering events
 """
 import time
 import datetime
@@ -121,8 +122,9 @@ class EventMgr:
     self.watchcmds = {}
     self.timerlookup = {}
     self.triggergroups = {}
+    self.pluginlookup = {}
     self.lasttime = int(time.time())
-    self.registerevent('from_mud_event', self.checktrigger, 1)
+    self.registerevent('from_mud_event', self.checktrigger, prio=1)
     self.registerevent('from_client_event', self.checkcmd)
     exported.msg('lasttime:  %s' % self.lasttime, 'events')
 
@@ -319,21 +321,51 @@ class EventMgr:
       origargs['fromdata'] = ''
     return
 
-  def registerevent(self, eventname, func, prio=50):
+  def registerevent(self, eventname, func,  **kwargs):
     """
     register a function with an event
     """
+    if not ('prio' in kwargs):
+      prio = 50
+    else:
+      prio = kwargs['prio']
+    if not ('plugin' in kwargs):
+      plugin = ''
+    else:
+      plugin = kwargs['plugin']
     if not (eventname in self.events):
       self.events[eventname] = {}
     if not (prio in self.events[eventname]):
       self.events[eventname][prio] = []
     if self.events[eventname][prio].count(func) == 0:
       self.events[eventname][prio].append(func)
+    if plugin:
+      if not (plugin in self.pluginlookup):
+        self.pluginlookup[plugin] = {}
+        self.pluginlookup[plugin]['events'] = {}
 
-  def unregisterevent(self, eventname, func):
+      self.pluginlookup[plugin]['events'][func] = \
+                            {'eventname':eventname, 'prio':prio}
+
+  def removeplugin(self, plugin):
+    """
+    remove all events related to a plugin
+    """
+    if plugin and plugin in self.pluginlookup:
+      for i in self.pluginlookup[plugin]['events']:
+        event = self.pluginlookup[plugin]['events'][i]
+        self.unregisterevent(event['eventname'], i, plugin)
+
+      self.pluginlookup[plugin]['events'] = {}
+
+  def unregisterevent(self, eventname, func, **kwargs):
     """
     unregister a function with an event
     """
+    if not ('plugin' in kwargs):
+      plugin = ''
+    else:
+      plugin = kwargs['plugin']
     if not self.events[eventname]:
       return
     keys = self.events[eventname].keys()
@@ -342,6 +374,10 @@ class EventMgr:
       for i in keys:
         if self.events[eventname][i].count(func) == 1:
           self.events[eventname][i].remove(func)
+
+      if plugin and plugin in self.pluginlookup:
+        if func in self.pluginlookup[plugin]['events']:
+          del(self.pluginlookup[plugin]['events'][func])
 
   def raiseevent(self, eventname, args):
     """

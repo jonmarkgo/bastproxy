@@ -172,10 +172,10 @@ class Plugin(BasePlugin):
     BasePlugin.__init__(self, tname, tsname, filename, directory, importloc)
     self.exported['sendpacket'] = {'func':a102sendpacket}
     self.exported['toggle'] = {'func':self.toggle}
-    self.events['A102_from_server'] = {'func':self.a102fromserver}
-    self.events['A102_from_client'] = {'func':self.a102fromclient}
-    self.events['A102:server-enabled'] = {'func':self.a102request}
-    self.events['muddisconnect'] = {'func':self.disconnect}
+    self.event.register('A102_from_server', self.a102fromserver)
+    self.event.register('A102_from_client', self.a102fromclient)
+    self.event.register('A102:server-enabled', self.a102request)
+    self.event.register('muddisconnect', self.disconnect)
     self.canreload = False
 
     self.optionstates = {}

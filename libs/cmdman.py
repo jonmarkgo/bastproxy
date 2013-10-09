@@ -227,7 +227,7 @@ class CmdMgr:
     """
     load external stuff
     """
-    exported.event.register('from_client_event', self.chkcmd, 1)
+    exported.event.register('from_client_event', self.chkcmd, prio=1)
     exported.LOGGER.adddtype('cmds')
     exported.LOGGER.cmd_console(['cmds'])
 

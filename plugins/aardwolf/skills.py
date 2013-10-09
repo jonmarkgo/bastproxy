@@ -112,24 +112,24 @@ class Plugin(BasePlugin):
             {'regex':"^\{sfail\}(?P<sn>\d+),(?P<target>\d+)," \
                       "(?P<reason>\d+),(?P<recovery>-?\d+)$"}
 
-    self.events['trigger_spellh_noprompt'] = {'func':self.skillstart}
-    self.events['trigger_spellh_spellup_noprompt'] = {'func':self.skillstart}
-    self.events['trigger_spellh_affected_noprompt'] = {'func':self.skillstart}
-    self.events['trigger_spellh_spellline'] = {'func':self.skillline}
-    self.events['trigger_spellh_end_noprompt'] = {'func':self.skillend}
-    self.events['trigger_affoff'] = {'func':self.affoff}
-    self.events['trigger_affon'] = {'func':self.affon}
-    self.events['trigger_recov_noprompt'] = {'func':self.recovstart}
-    self.events['trigger_recov_affected_noprompt'] = {'func':self.recovstart}
-    self.events['trigger_spellh_recovline'] = {'func':self.recovline}
-    self.events['trigger_recov_end_noprompt'] = {'func':self.recovend}
-    self.events['trigger_recoff'] = {'func':self.recoff}
-    self.events['trigger_recon'] = {'func':self.recon}
+    self.event.register('trigger_spellh_noprompt', self.skillstart)
+    self.event.register('trigger_spellh_spellup_noprompt', self.skillstart)
+    self.event.register('trigger_spellh_affected_noprompt', self.skillstart)
+    self.event.register('trigger_spellh_spellline', self.skillline)
+    self.event.register('trigger_spellh_end_noprompt', self.skillend)
+    self.event.register('trigger_affoff', self.affoff)
+    self.event.register('trigger_affon', self.affon)
+    self.event.register('trigger_recov_noprompt', self.recovstart)
+    self.event.register('trigger_recov_affected_noprompt', self.recovstart)
+    self.event.register('trigger_spellh_recovline', self.recovline)
+    self.event.register('trigger_recov_end_noprompt', self.recovend)
+    self.event.register('trigger_recoff', self.recoff)
+    self.event.register('trigger_recon', self.recon)
 
-    self.events['trigger_skillgain'] = {'func':self.skillgain}
-    self.events['trigger_skillfail'] = {'func':self.skillfail}
+    self.event.register('trigger_skillgain', self.skillgain)
+    self.event.register('trigger_skillfail', self.skillfail)
 
-    self.events['GMCP:char.status'] = {'func':self.checkskills}
+    self.event.register('GMCP:char.status', self.checkskills)
 
     self.cmds['refresh'] = {'func':self.cmd_refresh,
               'shelp':'refresh skills and spells'}
@@ -209,7 +209,7 @@ class Plugin(BasePlugin):
     state = exported.GMCP.getv('char.status.state')
     if state == 3:
       self.msg('refreshing skills')
-      exported.event.unregister('GMCP:char.status', self.checkskills)
+      self.event.unregister('GMCP:char.status', self.checkskills)
       exported.A102.toggle('SPELLUPTAGS', True)
       exported.A102.toggle('SKILLGAINTAGS', True)
       exported.A102.toggle('QUIETTAGS', False)

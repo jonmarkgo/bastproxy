@@ -22,6 +22,9 @@ AUTOLOAD = True
 titlematch = '^Your title is: (?P<title>.*)\.$'
 titlere = re.compile(titlematch)
 
+titlesetmatch = 'Title now set to: (?P<title>.*)$'
+titleset = re.compile(titlesetmatch)
+
 class Plugin(BasePlugin):
   """
   a plugin to show connection information
@@ -39,8 +42,9 @@ class Plugin(BasePlugin):
     self.addsetting('queue', [], list, 'the tell queue', readonly=True)
     self.addsetting('isafk', False, bool, 'AFK flag', readonly=True)
 
-    self.events['client_connected'] = {'func':self.clientconnected}
-    self.events['client_disconnected'] = {'func':self.clientdisconnected}
+    self.event.register('client_connected', self.clientconnected)
+    self.event.register('client_disconnected', self.clientdisconnected)
+    self.event.register('aardwolf_firstactive', self.afkfirstactive)
 
     self.cmds['show'] = {'func':self.cmd_showqueue,
                                   'shelp':'Show the afk comm queue'}
@@ -49,18 +53,43 @@ class Plugin(BasePlugin):
     self.cmds['toggle'] = {'func':self.cmd_toggle,
                                   'shelp':'toggle afk'}
 
-    exported.watch.add('title', {
-      'regex':'^(tit|titl|title)$'})
+    self.temptitle = ''
 
-    self.events['cmd_title'] = {'func':self._titlecmd}
+    exported.watch.add('titleset', {
+      'regex':'^(tit|titl|title) (?P<title>.*)$'})
 
-  def _titlecmd(self, args):
+    self.event.register('cmd_titleset', self._titlesetcmd)
+
+  def afkfirstactive(self, args):
+    """
+    set the title when we first connect
+    """
+    if self.variables['lasttitle']:
+      exported.execute('title %s' % self.variables['lasttitle'])
+
+  def _titlesetcmd(self, args):
     """
     check for stuff when the title command is seen
     """
-    self.msg('saw title command')
-    self.eventunregister('cmd_title', self._titlecmd)
-    self.eventregister('trigger_all', self.titleline)
+    self.msg('saw title set command %s' % args)
+    self.temptitle = args['title']
+    self.event.register('trigger_all', self.titlesetline)
+
+  def titlesetline(self, args):
+    """
+    get the titleline
+    """
+    line = args['line'].strip()
+    tmatch = titleset.match(line)
+    if line:
+      if tmatch:
+        newtitle = tmatch.groupdict()['title']
+        if newtitle != self.variables['afktitle']:
+          self.variables['lasttitle'] = self.temptitle
+          self.msg('lasttitle is "%s"' % self.variables['lasttitle'])
+      else:
+        self.msg('unregistering trigger_all from titlesetline')
+        self.event.unregister('trigger_all', self.titlesetline)
 
   def cmd_showqueue(self, _=None):
     """
@@ -107,21 +136,6 @@ class Plugin(BasePlugin):
 
     return True, msg
 
-  def titleline(self, args):
-    """
-    get the titleline
-    """
-    line = args['line'].strip()
-    tmatch = titlere.match(line)
-    if line:
-      if tmatch:
-        self.variables['lasttitle'] = tmatch.groupdict()['title']
-        self.msg('lasttitle is "%s"' % self.variables['lasttitle'])
-        exported.execute('title %s' % self.variables['afktitle'])
-      else:
-        self.msg('unregistering trigger_all')
-        self.eventunregister('trigger_all', self.titleline)
-
   def checkfortell(self, args):
     """
     check for tells
@@ -138,9 +152,8 @@ class Plugin(BasePlugin):
     enable afk mode
     """
     self.variables['isafk'] = True
-    self.eventregister('cmd_title', self._titlecmd)
-    self.eventregister('GMCP:comm.channel', self.checkfortell)
-    exported.execute('title')
+    self.event.register('GMCP:comm.channel', self.checkfortell)
+    exported.execute('title %s' % self.variables['afktitle'])
 
   def disableafk(self):
     """
@@ -149,10 +162,10 @@ class Plugin(BasePlugin):
     self.variables['isafk'] = False
     exported.execute('title %s' % self.variables['lasttitle'])
     try:
-      self.eventunregister('GMCP:comm.channel', self.checkfortell)
+      self.event.unregister('GMCP:comm.channel', self.checkfortell)
     except KeyError:
       pass
-    
+
     if len(self.variables['queue']) > 0:
       exported.sendtoclient("@BAFK Queue")
       exported.sendtoclient("@BYou have %s tells in the queue" % \

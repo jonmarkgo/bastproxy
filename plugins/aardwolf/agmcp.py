@@ -1,6 +1,6 @@
 """
 $Id$
-#'client_connected'    
+#'client_connected'
 """
 
 from libs import exported
@@ -22,10 +22,10 @@ class Plugin(BasePlugin):
     """
     initialize the instance
     """
-    BasePlugin.__init__(self, *args, **kwargs) 
-    self.events['GMCP:server-enabled'] = {'func':self.enablemods}
-    self.events['client_connected'] = {'func':self.clientconnected}
-       
+    BasePlugin.__init__(self, *args, **kwargs)
+    self.event.register('GMCP:server-enabled', self.enablemods)
+    self.event.register('client_connected', self.clientconnected)
+
   def enablemods(self, _=None):
     """
     enable modules for aardwolf
@@ -36,7 +36,7 @@ class Plugin(BasePlugin):
     exported.GMCP.togglemodule('Room', True)
     exported.GMCP.togglemodule('Comm', True)
     exported.GMCP.togglemodule('Group', True)
-    exported.GMCP.togglemodule('Core', True)  
+    exported.GMCP.togglemodule('Core', True)
 
   def clientconnected(self, _=None):
     """
@@ -47,5 +47,4 @@ class Plugin(BasePlugin):
       exported.GMCP.sendmodule('comm.quest')
       exported.GMCP.sendmodule('room.info')
 
-      
-      
+

@@ -89,19 +89,19 @@ class Plugin(BasePlugin):
       'enabled':False,
       'group':'cpdone'}
 
-    self.events['trigger_cpnew'] = {'func':self._cpnew}
-    self.events['trigger_cpnone'] = {'func':self._cpnone}
-    self.events['trigger_cptime'] = {'func':self._cptime}
-    self.events['cmd_cp_check'] = {'func':self._cpcheckcmd}
-    self.events['trigger_cpmob'] = {'func':self._cpmob}
-    self.events['trigger_cpneedtolevel'] = {'func':self._cpneedtolevel}
-    self.events['trigger_cpcantake'] = {'func':self._cpcantake}
-    self.events['trigger_cpshnext'] = {'func':self._cpshnext}
-    self.events['trigger_cpmobdead'] = {'func':self._cpmobdead}
-    self.events['trigger_cpcomplete'] = {'func':self._cpcomplete}
-    self.events['trigger_cpclear'] = {'func':self._cpclear}
-    self.events['trigger_cpreward'] = {'func':self._cpreward}
-    self.events['trigger_cpcompdone'] = {'func':self._cpcompdone}
+    self.event.register('trigger_cpnew', self._cpnew)
+    self.event.register('trigger_cpnone', self._cpnone)
+    self.event.register('trigger_cptime', self._cptime)
+    self.event.register('cmd_cp_check', self._cpcheckcmd)
+    self.event.register('trigger_cpmob', self._cpmob)
+    self.event.register('trigger_cpneedtolevel', self._cpneedtolevel)
+    self.event.register('trigger_cpcantake', self._cpcantake)
+    self.event.register('trigger_cpshnext', self._cpshnext)
+    self.event.register('trigger_cpmobdead', self._cpmobdead)
+    self.event.register('trigger_cpcomplete', self._cpcomplete)
+    self.event.register('trigger_cpclear', self._cpclear)
+    self.event.register('trigger_cpreward', self._cpreward)
+    self.event.register('trigger_cpcompdone', self._cpcompdone)
 
   def _cpreset(self):
     """
@@ -204,7 +204,7 @@ class Plugin(BasePlugin):
     """
     handle cpmobdead
     """
-    self.eventregister('aard_mobkill', self._mobkillevent)
+    self.event.register('aard_mobkill', self._mobkillevent)
     #exported.execute("cp check")
 
   def _cpcomplete(self, _=None):
@@ -232,7 +232,7 @@ class Plugin(BasePlugin):
     handle cpcompdone
     """
     self.linecount = 0
-    self.eventregister('trigger_all', self._triggerall)
+    self.event.register('trigger_all', self._triggerall)
 
   def _triggerall(self, args=None):
     """
@@ -244,7 +244,7 @@ class Plugin(BasePlugin):
                   'for your first campaign completed today.$', args['line'])
       self.cpinfo['bonusqp'] = int(mat.groupdict()['bonus'])
     if self.linecount > 3:
-      self.eventunregister('trigger_all', self._triggerall)
+      self.event.unregister('trigger_all', self._triggerall)
     if self.linecount == 3:
       exported.event.eraise('aard_cp_comp', copy.deepcopy(self.cpinfo))
 
@@ -270,7 +270,7 @@ class Plugin(BasePlugin):
     this will be registered to the mobkill hook
     """
     self.msg('checking kill %s' % args['name'])
-    self.eventunregister('aard_mobkill', self._mobkillevent)
+    self.event.unregister('aard_mobkill', self._mobkillevent)
 
     found = False
     removeitem = None

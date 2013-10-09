@@ -92,23 +92,23 @@ class Plugin(BasePlugin):
               "Aardwolf Subj: Lvl (?P<low>.*) to (?P<high>.*) - " \
               "Global quest # (?P<gqnum>.*)$"}
 
-    self.events['trigger_gqdeclared'] = {'func':self._gqdeclared}
-    self.events['trigger_gqjoined'] = {'func':self._gqjoined}
-    self.events['trigger_gqstarted'] = {'func':self._gqstarted}
-    self.events['trigger_gqnone'] = {'func':self._notstarted}
-    self.events['trigger_gqitem'] = {'func':self._gqitem}
-    self.events['trigger_gqnotstarted'] = {'func':self._notstarted}
-    self.events['trigger_gqreward'] = {'func':self._gqreward}
-    self.events['trigger_gqmobdead'] = {'func':self._gqmobdead}
-    self.events['trigger_gqwon'] = {'func':self._gqwon}
-    self.events['trigger_gqwon2'] = {'func':self._gqwon}
-    self.events['trigger_gqdone'] = {'func':self._gqdone}
-    self.events['trigger_gqquit'] = {'func':self._gqquit}
-    self.events['trigger_gqextover'] = {'func':self._gqextover}
-    self.events['trigger_gqextover2'] = {'func':self._gqextover}
-    self.events['trigger_gqextfin'] = {'func':self._gqextfin}
-    self.events['trigger_gqnote'] = {'func':self._gqreset}
-    self.events['cmd_gq_check'] = {'func':self._gqcheckcmd}
+    self.event.register('trigger_gqdeclared', self._gqdeclared)
+    self.event.register('trigger_gqjoined', self._gqjoined)
+    self.event.register('trigger_gqstarted', self._gqstarted)
+    self.event.register('trigger_gqnone', self._notstarted)
+    self.event.register('trigger_gqitem', self._gqitem)
+    self.event.register('trigger_gqnotstarted', self._notstarted)
+    self.event.register('trigger_gqreward', self._gqreward)
+    self.event.register('trigger_gqmobdead', self._gqmobdead)
+    self.event.register('trigger_gqwon', self._gqwon)
+    self.event.register('trigger_gqwon2', self._gqwon)
+    self.event.register('trigger_gqdone', self._gqdone)
+    self.event.register('trigger_gqquit', self._gqquit)
+    self.event.register('trigger_gqextover', self._gqextover)
+    self.event.register('trigger_gqextover2', self._gqextover)
+    self.event.register('trigger_gqextfin', self._gqextfin)
+    self.event.register('trigger_gqnote', self._gqreset)
+    self.event.register('cmd_gq_check', self._gqcheckcmd)
 
 
 
@@ -189,7 +189,7 @@ class Plugin(BasePlugin):
     """
     exported.trigger.togglegroup('gqcheck', False)
     exported.trigger.togglegroup('gqin', False)
-    exported.event.unregister('trigger_emptyline', self._emptyline)
+    self.event.unregister('trigger_emptyline', self._emptyline)
 
   def _emptyline(self, _=None):
     """
@@ -200,7 +200,7 @@ class Plugin(BasePlugin):
       self.savestate()
 
     exported.trigger.togglegroup('gqcheck', False)
-    exported.event.unregister('trigger_emptyline', self._emptyline)
+    self.event.unregister('trigger_emptyline', self._emptyline)
     exported.event.eraise('aard_gq_mobsleft',
                 {'mobsleft':copy.deepcopy(self.mobsleft)})
 
@@ -209,7 +209,7 @@ class Plugin(BasePlugin):
     called when a gq mob is killed
     """
     self.gqinfo['qpmobs'] = self.gqinfo['qpmobs'] + 3
-    self.eventregister('aard_mobkill', self._mobkillevent)
+    self.event.register('aard_mobkill', self._mobkillevent)
     self.nextdeath = True
 
   def _mobkillevent(self, args):
@@ -217,7 +217,7 @@ class Plugin(BasePlugin):
     this will be registered to the mobkill hook
     """
     exported.msg('checking kill %s' % args['name'], 'gq')
-    self.eventregister('aard_mobkill', self._mobkillevent)
+    self.event.register('aard_mobkill', self._mobkillevent)
 
     found = False
     removeitem = None
@@ -260,7 +260,7 @@ class Plugin(BasePlugin):
     else:
       #need to check for extended time
       self.linecount = 0
-      exported.event.register('trigger_all', self._triggerall)
+      self.event.register('trigger_all', self._triggerall)
 
   def _triggerall(self, args=None):
     """
@@ -275,7 +275,7 @@ class Plugin(BasePlugin):
     if self.linecount < 3:
       return
 
-    exported.event.unregister('trigger_all', self._triggerall)
+    self.event.unregister('trigger_all', self._triggerall)
 
     if not self.variables['extended']:
       self._raisegq('aard_gq_done')
@@ -298,7 +298,7 @@ class Plugin(BasePlugin):
     """
     self.mobsleft = []
     exported.trigger.togglegroup('gqcheck', True)
-    exported.event.register('trigger_emptyline', self._emptyline)
+    self.event.register('trigger_emptyline', self._emptyline)
     return args
 
   def _gqquit(self, _=None):
@@ -340,7 +340,7 @@ class Plugin(BasePlugin):
     exported.trigger.togglegroup("gqrew", False)
     exported.trigger.togglegroup("gqdone", False)
     exported.trigger.togglegroup("gqext", False)
-    exported.event.unregister('aard_mobkill', self._mobkillevent)
+    self.event.unregister('aard_mobkill', self._mobkillevent)
     self.variables['joined'] = False
     self.variables['started'] = False
     self.variables['declared'] = False

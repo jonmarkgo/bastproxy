@@ -23,7 +23,7 @@ class Plugin(BasePlugin):
     """
     BasePlugin.__init__(self, *args, **kwargs)
 
-    self.events['GMCP:room.info'] = {'func':self._roominfo}
+    self.event.register('GMCP:room.info', self._roominfo)
     self.lastroom = {}
 
 

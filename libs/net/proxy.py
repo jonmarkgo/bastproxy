@@ -32,7 +32,7 @@ class Proxy(Telnet):
     self.ttype = 'BastProxy'
     self.banned = {}
     self.connectedtime = None
-    exported.event.register('to_mud_event', self.addtooutbuffer, 99)
+    exported.event.register('to_mud_event', self.addtooutbuffer, prio=99)
     TELOPTMGR.addtoserver(self)
 
   def handle_read(self):

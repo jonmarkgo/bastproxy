@@ -28,7 +28,7 @@ class Plugin(BasePlugin):
     self.savequestfile = os.path.join(self.savedir, 'quest.txt')
     self.queststuff = PersistentDict(self.savequestfile, 'c', format='json')
     self.dependencies.append('aardu')
-    self.events['GMCP:comm.quest'] = {'func':self.quest}
+    self.event.register('GMCP:comm.quest', self.quest)
 
   def resetquest(self):
     """

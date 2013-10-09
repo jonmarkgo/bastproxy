@@ -21,10 +21,10 @@ class Plugin(BasePlugin):
     """
     initialize the instance
     """
-    BasePlugin.__init__(self, *args, **kwargs) 
-    self.events.append({'event':'A102', 'func':self.test})
-    self.events.append({'event':'A102:101', 'func':self.test101})    
-    
+    BasePlugin.__init__(self, *args, **kwargs)
+    self.event.register('A102', self.test)
+    self.event.register('A102:101',self.test101)
+
   def test(self, args):
     """
     show we got an a102 event
@@ -37,4 +37,3 @@ class Plugin(BasePlugin):
     """
     exported.sendtoclient('@RGot A102:101: %s' % args)
 
-  

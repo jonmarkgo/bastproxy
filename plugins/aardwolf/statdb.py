@@ -518,25 +518,25 @@ class Plugin(BasePlugin):
       'regex':"^You die.$",
       'enabled':True, 'group':'dead'}
 
-    self.events['aard_quest_comp'] = {'func':self.questevent}
-    self.events['aard_quest_failed'] = {'func':self.questevent}
-    self.events['aard_cp_comp'] = {'func':self.cpevent}
-    self.events['aard_cp_failed'] = {'func':self.cpevent}
-    self.events['aard_whois'] = {'func':self.whoisevent}
-    self.events['aard_level_gain'] = {'func':self.levelevent}
-    self.events['aard_level_hero'] = {'func':self.heroevent}
-    self.events['aard_level_superhero'] = {'func':self.heroevent}
-    self.events['aard_level_remort'] = {'func':self.heroevent}
-    self.events['aard_level_tier'] = {'func':self.heroevent}
-    self.events['aard_mobkill'] = {'func':self.mobkillevent}
-    self.events['aard_gq_completed'] = {'func':self.gqevent}
-    self.events['aard_gq_done'] = {'func':self.gqevent}
-    self.events['aard_gq_won'] = {'func':self.gqevent}
-    self.events['GMCP:char.status'] = {'func':self.checkstats}
-    self.events['statdb_backupstart'] = {'func':self.changetimer}
-    self.events['statdb_backupinternval'] = {'func':self.changetimer}
+    self.event.register('aard_quest_comp', self.questevent)
+    self.event.register('aard_quest_failed', self.questevent)
+    self.event.register('aard_cp_comp', self.cpevent)
+    self.event.register('aard_cp_failed', self.cpevent)
+    self.event.register('aard_whois', self.whoisevent)
+    self.event.register('aard_level_gain', self.levelevent)
+    self.event.register('aard_level_hero', self.heroevent)
+    self.event.register('aard_level_superhero', self.heroevent)
+    self.event.register('aard_level_remort', self.heroevent)
+    self.event.register('aard_level_tier', self.heroevent)
+    self.event.register('aard_mobkill', self.mobkillevent)
+    self.event.register('aard_gq_completed', self.gqevent)
+    self.event.register('aard_gq_done', self.gqevent)
+    self.event.register('aard_gq_won', self.gqevent)
+    self.event.register('GMCP:char.status', self.checkstats)
+    self.event.register('statdb_backupstart', self.changetimer)
+    self.event.register('statdb_backupinternval', self.changetimer)
 
-    self.events['trigger_dead'] = {'func':self.dead}
+    self.event.register('trigger_dead', self.dead)
 
     self.exported['runselect'] = {'func':self.runselect}
 
@@ -575,7 +575,7 @@ class Plugin(BasePlugin):
     """
     state = exported.GMCP.getv('char.status.state')
     if state == 3:
-      exported.event.unregister('GMCP:char.status', self.checkstats)
+      self.event.unregister('GMCP:char.status', self.checkstats)
       if not self.statdb.getstat('monsterskilled'):
         exported.execute('whois')
 

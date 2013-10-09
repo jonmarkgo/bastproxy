@@ -24,13 +24,13 @@ class Plugin(BasePlugin):
     initialize the instance
     """
     BasePlugin.__init__(self, *args, **kwargs)
-    self.events['aard_quest_comp'] = {'func':self.compquest}
-    self.events['aard_cp_comp'] = {'func':self.compcp}
-    self.events['aard_level_gain'] = {'func':self.levelgain}
-    self.events['aard_gq_won'] = {'func':self.compgq}
-    self.events['aard_gq_done'] = {'func':self.compgq}
-    self.events['aard_gq_completed'] = {'func':self.compgq}
-    self.events['statmn_showminutes'] = {'func':self.showchange}
+    self.event.register('aard_quest_comp', self.compquest)
+    self.event.register('aard_cp_comp', self.compcp)
+    self.event.register('aard_level_gain', self.levelgain)
+    self.event.register('aard_gq_won', self.compgq)
+    self.event.register('aard_gq_done', self.compgq)
+    self.event.register('aard_gq_completed', self.compgq)
+    self.event.register('statmn_showminutes', self.showchange)
     self.addsetting('statcolor', '@W', 'color', 'the stat color')
     self.addsetting('infocolor', '@x33', 'color', 'the info color')
     self.addsetting('showminutes', 5, int,
@@ -267,7 +267,7 @@ class Plugin(BasePlugin):
     """
     self.msgs.append(msg)
 
-    exported.event.register('trigger_emptyline', self.showmessages)
+    self.event.register('trigger_emptyline', self.showmessages)
 
     #exported.timer.add('msgtimer',
                 #{'func':self.showmessages, 'seconds':1, 'onetime':True,
@@ -277,7 +277,7 @@ class Plugin(BasePlugin):
     """
     show a message
     """
-    exported.event.unregister('trigger_emptyline', self.showmessages)
+    self.event.unregister('trigger_emptyline', self.showmessages)
     for i in self.msgs:
       exported.sendtoclient(i, preamble=False)
 

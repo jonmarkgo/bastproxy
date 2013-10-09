@@ -103,29 +103,29 @@ class Plugin(BasePlugin):
       'regex':"^## You have already remorted the max number of times.$",
       'enabled':True, 'group':'remort'}
 
-    self.events['trigger_lvlpup'] = {'func':self._lvl}
-    self.events['trigger_lvlpupbless'] = {'func':self._lvl}
-    self.events['trigger_lvllevel'] = {'func':self._lvl}
-    self.events['trigger_lvlbless'] = {'func':self._lvl}
-    self.events['trigger_lvlgains'] = {'func':self._lvlgains}
-    self.events['trigger_lvlpupgains'] = {'func':self._lvlgains}
-    self.events['trigger_lvlblesstrain'] = {'func':self._lvlblesstrains}
-    self.events['trigger_lvlbonustrains'] = {'func':self._lvlbonustrains}
-    self.events['trigger_lvlbonusstat'] = {'func':self._lvlbonusstat}
+    self.event.register('trigger_lvlpup', self._lvl)
+    self.event.register('trigger_lvlpupbless', self._lvl)
+    self.event.register('trigger_lvllevel', self._lvl)
+    self.event.register('trigger_lvlbless', self._lvl)
+    self.event.register('trigger_lvlgains', self._lvlgains)
+    self.event.register('trigger_lvlpupgains', self._lvlgains)
+    self.event.register('trigger_lvlblesstrain', self._lvlblesstrains)
+    self.event.register('trigger_lvlbonustrains', self._lvlbonustrains)
+    self.event.register('trigger_lvlbonusstat', self._lvlbonusstat)
 
-    self.events['trigger_lvlshbadstar'] = {'func':self._superherobad}
-    self.events['trigger_lvlshbad'] = {'func':self._superherobad}
-    self.events['trigger_lvlshnogold'] = {'func':self._superherobad}
-    self.events['trigger_lvlshnoqp'] = {'func':self._superherobad}
+    self.event.register('trigger_lvlshbadstar', self._superherobad)
+    self.event.register('trigger_lvlshbad', self._superherobad)
+    self.event.register('trigger_lvlshnogold', self._superherobad)
+    self.event.register('trigger_lvlshnoqp', self._superherobad)
 
-    self.events['cmd_shloud'] = {'func':self.cmd_superhero}
-    self.events['cmd_shsilent'] = {'func':self.cmd_superhero}
-    self.events['cmd_shconfirm'] = {'func':self.cmd_superhero}
-    self.events['cmd_shloudconfirm'] = {'func':self.cmd_superhero}
+    self.event.register('cmd_shloud', self.cmd_superhero)
+    self.event.register('cmd_shsilent', self.cmd_superhero)
+    self.event.register('cmd_shconfirm', self.cmd_superhero)
+    self.event.register('cmd_shloudconfirm', self.cmd_superhero)
 
-    self.events['trigger_lvlpreremort'] = {'func':self._preremort}
-    self.events['trigger_lvlremortcomp'] = {'func':self._remortcomp}
-    self.events['trigger_lvltier'] = {'func':self._tier}
+    self.event.register('trigger_lvlpreremort', self._preremort)
+    self.event.register('trigger_lvlremortcomp', self._remortcomp)
+    self.event.register('trigger_lvltier', self._tier)
 
   def _gmcpstatus(self, _=None):
     """
@@ -135,8 +135,8 @@ class Plugin(BasePlugin):
     if state == 2:
       exported.sendtoclient('seen2')
       self.variables['seen2'] = True
-      self.eventunregister('GMCP:char.status', self._gmcpstatus)
-      self.eventregister('GMCP:char.base', self._gmcpbase)
+      self.event.unregister('GMCP:char.status', self._gmcpstatus)
+      self.event.register('GMCP:char.base', self._gmcpbase)
 
   def _gmcpbase(self, _=None):
     """
@@ -146,7 +146,7 @@ class Plugin(BasePlugin):
     state = exported.GMCP.getv('char.status.state')
     if self.variables['tiering'] and self.variables['seen2'] and state == 3:
       exported.sendtoclient('in char.base')
-      self.eventunregister('GMCP:char.base', self._gmcpstatus)
+      self.event.unregister('GMCP:char.base', self._gmcpstatus)
       self._lvl({'level':1})
 
   def _tier(self, _=None):
@@ -155,7 +155,7 @@ class Plugin(BasePlugin):
     """
     self.variables['tiering'] = True
     exported.sendtoclient('tiering')
-    self.eventregister('GMCP:char.status', self._gmcpstatus)
+    self.event.register('GMCP:char.status', self._gmcpstatus)
 
   def _remortcomp(self, _=None):
     """
@@ -189,7 +189,7 @@ class Plugin(BasePlugin):
     print 'didn\'t sh though'
     exported.trigger.togglegroup('superhero', False)
     exported.trigger.togglegroup('linfo', False)
-    self.eventunregister('trigger_emptyline', self._finish)
+    self.event.unregister('trigger_emptyline', self._finish)
 
   def resetlevel(self):
     """
@@ -239,7 +239,7 @@ class Plugin(BasePlugin):
       self.levelinfo['type'] = 'level'
 
     exported.trigger.togglegroup('linfo', True)
-    self.eventregister('trigger_emptyline', self._finish)
+    self.event.register('trigger_emptyline', self._finish)
 
 
   def _lvlblesstrains(self, args):
@@ -282,7 +282,7 @@ class Plugin(BasePlugin):
     self.levelinfo['finishtime'] = time.time()
     self.levelinfo.sync()
     exported.trigger.togglegroup('linfo', False)
-    self.eventunregister('trigger_emptyline', self._finish)
+    self.event.unregister('trigger_emptyline', self._finish)
     exported.event.eraise('aard_level_gain', copy.deepcopy(self.levelinfo))
     if self.levelinfo['level'] == 200 and self.levelinfo['type'] == 'level':
       exported.msg('raising hero event', 'level')

@@ -51,18 +51,18 @@ class Plugin(BasePlugin):
             {'regex':"^\{/scan\}$",
               'enabled':False, 'group':'scan'}
 
-    self.events['trigger_scanstart'] = {'func':self.scanstart}
-    self.events['trigger_scanend'] = {'func':self.scanend}
-    self.events['aard_cp_mobsleft'] = {'func':self.cpmobs}
-    self.events['aard_cp_failed'] = {'func':self.cpclear}
-    self.events['aard_cp_comp'] = {'func':self.cpclear}
-    self.events['aard_gq_mobsleft'] = {'func':self.gqmobs}
-    self.events['aard_gq_done'] = {'func':self.gqclear}
-    self.events['aard_gq_completed'] = {'func':self.gqmobs}
-    self.events['aard_gq_won'] = {'func':self.gqmobs}
-    self.events['aard_quest_start'] = {'func':self.questmob}
-    self.events['aard_quest_failed'] = {'func':self.questclear}
-    self.events['aard_quest_comp'] = {'func':self.questclear}
+    self.event.register('trigger_scanstart', self.scanstart)
+    self.event.register('trigger_scanend', self.scanend)
+    self.event.register('aard_cp_mobsleft', self.cpmobs)
+    self.event.register('aard_cp_failed', self.cpclear)
+    self.event.register('aard_cp_comp', self.cpclear)
+    self.event.register('aard_gq_mobsleft', self.gqmobs)
+    self.event.register('aard_gq_done', self.gqclear)
+    self.event.register('aard_gq_completed', self.gqmobs)
+    self.event.register('aard_gq_won', self.gqmobs)
+    self.event.register('aard_quest_start', self.questmob)
+    self.event.register('aard_quest_failed', self.questclear)
+    self.event.register('aard_quest_comp', self.questclear)
 
     self.mobs = {}
 
@@ -72,7 +72,7 @@ class Plugin(BasePlugin):
     """
     self.msg('found {scan}')
     exported.trigger.togglegroup('scan', True)
-    self.eventregister('trigger_all', self.scanline)
+    self.event.register('trigger_all', self.scanline)
 
   def scanline(self, args):
     """
@@ -107,7 +107,7 @@ class Plugin(BasePlugin):
     reset current when seeing a spellheaders ending
     """
     self.msg('found {/scan}')
-    self.eventunregister('trigger_all', self.scanline)
+    self.event.unregister('trigger_all', self.scanline)
     exported.trigger.togglegroup('scan', False)
 
   def cpmobs(self, args):

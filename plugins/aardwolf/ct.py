@@ -23,7 +23,7 @@ class Plugin(BasePlugin):
     initialize the instance
     """
     BasePlugin.__init__(self, *args, **kwargs)
-    self.events['aard_mobkill'] = {'func':self.mobkill}
+    self.event.register('aard_mobkill', self.mobkill)
     self.dependencies.append('mobk')
     self.addsetting('statcolor', '@W', 'color', 'the stat color')
     self.addsetting('infocolor', '@x33', 'color', 'the info color')
@@ -111,7 +111,7 @@ class Plugin(BasePlugin):
     """
     self.msgs.append(msg)
 
-    exported.event.register('trigger_emptyline', self.showmessages)
+    self.event.register('trigger_emptyline', self.showmessages)
 
     #exported.timer.add('msgtimerct',
     #            {'func':self.showmessages, 'seconds':1, 'onetime':True,
@@ -123,7 +123,7 @@ class Plugin(BasePlugin):
     show a message
     """
 
-    exported.event.unregister('trigger_emptyline', self.showmessages)
+    self.event.unregister('trigger_emptyline', self.showmessages)
     for i in self.msgs:
       exported.sendtoclient(i, preamble=False)
 

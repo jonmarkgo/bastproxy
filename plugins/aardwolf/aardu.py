@@ -205,9 +205,9 @@ class Plugin(BasePlugin):
     self.exported['parsedamageline'] = {'func':parsedamageline}
     self.exported['firstactive'] = {'func':self._firstactive}
 
-    self.events['mudconnect'] = {'func':self._mudconnect}
-    self.events['muddisconnect'] = {'func':self._muddisconnect}
-    self.events['GMCP:char.status'] = {'func':self._charstatus}
+    self.event.register('mudconnect', self._mudconnect)
+    self.event.register('muddisconnect', self._muddisconnect)
+    self.event.register('GMCP:char.status', self._charstatus)
 
   def _firstactive(self):
     """
@@ -226,8 +226,8 @@ class Plugin(BasePlugin):
     reset for next connection
     """
     self.connected = False
-    exported.event.unregister('GMCP:char.status', self._charstatus)
-    exported.event.register('GMCP:char.status', self._charstatus)
+    self.event.unregister('GMCP:char.status', self._charstatus)
+    self.event.register('GMCP:char.status', self._charstatus)
 
   def _charstatus(self, args=None):
     """
@@ -235,7 +235,7 @@ class Plugin(BasePlugin):
     """
     state = exported.GMCP.getv('char.status.state')
     if state == 3 and exported.PROXY and exported.PROXY.connected:
-      exported.event.unregister('GMCP:char.status', self._charstatus)
+      self.event.unregister('GMCP:char.status', self._charstatus)
       self.connected = True
       self.firstactive = True
       exported.sendtoclient('sending first active')

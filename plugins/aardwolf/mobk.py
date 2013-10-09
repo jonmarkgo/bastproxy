@@ -114,29 +114,29 @@ class Plugin(BasePlugin):
     self.triggers['mobdamage2'] = {
       'regex':"^Your (.*) \[(.*)\]$"}
 
-    self.events['trigger_mobxp'] = {'func':self.mobxp}
-    self.events['trigger_mobxpptless'] = {'func':self.mobxpptless}
-    self.events['trigger_mobswitch'] = {'func':self.mobswitch}
-    self.events['trigger_mobflee'] = {'func':self.mobnone}
-    self.events['trigger_mobretreat'] = {'func':self.mobnone}
-    self.events['trigger_mobblessxp'] = {'func':self.mobblessxp}
-    self.events['trigger_mobbonusxp'] = {'func':self.mobbonusxp}
-    self.events['trigger_mobgold'] = {'func':self.mobgold}
-    self.events['trigger_mobsplitgold'] = {'func':self.mobgold}
-    self.events['trigger_mobname'] = {'func':self.mobname}
-    self.events['trigger_mobsac'] = {'func':self.mobname}
-    self.events['trigger_mobconsume'] = {'func':self.mobname}
-    self.events['trigger_mobtrivia'] = {'func':self.mobtrivia}
-    self.events['trigger_mobvorpal'] = {'func':self.mobvorpal}
-    self.events['trigger_mobassassin'] = {'func':self.mobassassin}
-    self.events['trigger_mobdeathblow'] = {'func':self.mobdeathblow}
-    self.events['trigger_mobslit'] = {'func':self.mobslit}
-    self.events['trigger_mobdisintegrate'] = {'func':self.mobdisintegrate}
-    self.events['trigger_mobbanish'] = {'func':self.mobbanish}
-    self.events['trigger_mobdamage'] = {'func':self.mobdamage}
-    self.events['trigger_mobdamage2'] = {'func':self.mobdamage}
+    self.event.register('trigger_mobxp', self.mobxp)
+    self.event.register('trigger_mobxpptless', self.mobxpptless)
+    self.event.register('trigger_mobswitch', self.mobswitch)
+    self.event.register('trigger_mobflee', self.mobnone)
+    self.event.register('trigger_mobretreat', self.mobnone)
+    self.event.register('trigger_mobblessxp', self.mobblessxp)
+    self.event.register('trigger_mobbonusxp', self.mobbonusxp)
+    self.event.register('trigger_mobgold', self.mobgold)
+    self.event.register('trigger_mobsplitgold', self.mobgold)
+    self.event.register('trigger_mobname', self.mobname)
+    self.event.register('trigger_mobsac', self.mobname)
+    self.event.register('trigger_mobconsume', self.mobname)
+    self.event.register('trigger_mobtrivia', self.mobtrivia)
+    self.event.register('trigger_mobvorpal', self.mobvorpal)
+    self.event.register('trigger_mobassassin', self.mobassassin)
+    self.event.register('trigger_mobdeathblow', self.mobdeathblow)
+    self.event.register('trigger_mobslit', self.mobslit)
+    self.event.register('trigger_mobdisintegrate', self.mobdisintegrate)
+    self.event.register('trigger_mobbanish', self.mobbanish)
+    self.event.register('trigger_mobdamage', self.mobdamage)
+    self.event.register('trigger_mobdamage2', self.mobdamage)
 
-    self.events['GMCP:char.status'] = {'func':self.gmcpcharstatus}
+    self.event.register('GMCP:char.status', self.gmcpcharstatus)
 
   def gmcpcharstatus(self, args):
     """

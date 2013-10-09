@@ -29,7 +29,7 @@ class Plugin(BasePlugin):
     """
     BasePlugin.__init__(self, *args, **kwargs)
     self.password = ''
-    self.events['client_connected'] = {'func':self.checkpassword}
+    self.event.register('client_connected', self.checkpassword)
     self.cmds['password'] = {'func':self.cmd_pw, 'shelp':'set the password'}
     self.cmds['test'] = {'func':self.cmd_test, 'shelp':'send a test email'}
     self.cmds['check'] = {'func':self.cmd_check,
@@ -78,7 +78,9 @@ X-Mailer: My-Mail
 
 %s""" % (senddate,
           self.variables['from'], mailto, subject, msg)
+
       try:
+
         pid = os.fork()
         if pid == 0:
           server = '%s:%s' % (self.variables['server'],
@@ -89,7 +91,9 @@ X-Mailer: My-Mail
           server.login(self.variables['username'], self.password)
           server.sendmail(self.variables['from'], mailto, mhead)
           server.quit()
-          os._exit(0)
+          os._exit(os.EX_OK)
+
+
       except:
         server = '%s:%s' % (self.variables['server'], self.variables['port'])
         server = smtplib.SMTP(server)

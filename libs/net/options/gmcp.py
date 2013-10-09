@@ -163,10 +163,10 @@ class Plugin(BasePlugin):
     self.exported['togglemodule'] = {'func':self.gmcptogglemodule}
     self.exported['sendmodule'] = {'func':self.sendmoduletoclients}
     self.exported['sendpacket'] = {'func':gmcpsendpacket}
-    self.events['GMCP_raw'] = {'func':self.gmcpfromserver}
-    self.events['GMCP_from_client'] = {'func':self.gmcpfromclient}
-    self.events['GMCP:server-enabled'] = {'func':self.gmcprequest}
-    self.events['muddisconnect'] = {'func':self.disconnect}
+    self.event.register('GMCP_raw', self.gmcpfromserver)
+    self.event.register('GMCP_from_client', self.gmcpfromclient)
+    self.event.register('GMCP:server-enabled', self.gmcprequest)
+    self.event.register('muddisconnect', self.disconnect)
     self.canreload = False
 
     self.gmcpcache = {}

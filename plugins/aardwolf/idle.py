@@ -23,7 +23,7 @@ class Plugin(BasePlugin):
     BasePlugin.__init__(self, *args, **kwargs)
     self.triggers['glaze'] = \
             {'regex':"^Your eyes glaze over.$"}
-    self.events['trigger_glaze'] = {'func':self.glaze}
+    self.event.register('trigger_glaze', self.glaze)
 
   def glaze(self, args):
     """

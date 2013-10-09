@@ -82,16 +82,16 @@ class Plugin(BasePlugin):
       #'regex':"^You die.$",
       #'enabled':True, 'group':'dead'}
 
-    self.events['GMCP:char.vitals'] = {'func':self._charvitals}
-    self.events['GMCP:char.status'] = {'func':self._charstatus}
-    self.events['moved_room'] = {'func':self._moved}
-    self.events['skill_fail'] = {'func':self._skillfail}
-    self.events['aard_skill_affon'] = {'func':self._affon}
-    self.events['aard_skill_affoff'] = {'func':self._affoff}
-    self.events['aard_skill_recoff'] = {'func':self._recoff}
-    self.events['su_enabled'] = {'func':self.enabledchange}
-    self.events['skills_affected_update'] = {'func':self.nextspell}
-    self.events['aard_skill_gain'] = {'func':self.skillgain}
+    self.event.register('GMCP:char.vitals', self._charvitals)
+    self.event.register('GMCP:char.status', self._charstatus)
+    self.event.register('moved_room', self._moved)
+    self.event.register('skill_fail', self._skillfail)
+    self.event.register('aard_skill_affon', self._affon)
+    self.event.register('aard_skill_affoff', self._affoff)
+    self.event.register('aard_skill_recoff', self._recoff)
+    self.event.register('su_enabled', self.enabledchange)
+    self.event.register('skills_affected_update', self.nextspell)
+    self.event.register('aard_skill_gain', self.skillgain)
 
   def skillgain(self, args=None):
     """
