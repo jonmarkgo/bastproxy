@@ -137,6 +137,7 @@ class EventMgr:
     exported.add(self.registerevent, 'event', 'register')
     exported.add(self.unregisterevent, 'event', 'unregister')
     exported.add(self.raiseevent, 'event', 'eraise')
+    exported.add(self.removeplugin, 'event', 'removeplugin')
 
     exported.add(self.addtimer, 'timer', 'add')
     exported.add(self.removetimer, 'timer', 'remove')
@@ -352,9 +353,11 @@ class EventMgr:
     remove all events related to a plugin
     """
     if plugin and plugin in self.pluginlookup:
-      for i in self.pluginlookup[plugin]['events']:
-        event = self.pluginlookup[plugin]['events'][i]
-        self.unregisterevent(event['eventname'], i, plugin)
+      tkeys = self.pluginlookup[plugin]['events'].keys()
+      for i in tkeys:
+	if i in self.pluginlookup[plugin]['events'][i]:
+          event = self.pluginlookup[plugin]['events'][i]
+          self.unregisterevent(event['eventname'], i, plugin=plugin)
 
       self.pluginlookup[plugin]['events'] = {}
 

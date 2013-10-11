@@ -303,8 +303,7 @@ class BasePlugin:
     """
     if we are connected do
     """
-    self.event.unregister('firstactive', self.firstactive,
-                                  plugin=self.sname)
+    self.event.unregister('firstactive', self.firstactive)
 
   def eventregister(self, eventname, tfunc):
     """
