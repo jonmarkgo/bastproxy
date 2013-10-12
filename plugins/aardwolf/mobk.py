@@ -1,6 +1,7 @@
 """
 $Id$
-#TODO: get weapon for vorpals
+
+This plugin handles mobkills on Aardwolf
 """
 import time
 import copy

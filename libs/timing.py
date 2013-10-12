@@ -1,6 +1,7 @@
 """
 $Id$
-#TODO: add a timing flag
+
+this module is for timing functions
 """
 import time
 

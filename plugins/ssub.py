@@ -1,5 +1,7 @@
 """
 $Id$
+
+This plugin is a simple substition plugin
 """
 import os
 from libs import color

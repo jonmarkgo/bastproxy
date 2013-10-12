@@ -1,7 +1,8 @@
 """
 $Id$
 
-This will manage Telnet Options
+This module holds the class that manages Telnet Options as well as an
+instance of the class
 """
 
 import glob
@@ -54,26 +55,26 @@ class TelnetOptionMgr:
         name = "libs.net.options." + mem2
         _module = __import__(name)
         _module = sys.modules[name]
-          
+
         if "Plugin" in _module.__dict__:
           exported.PLUGINMGR.add_plugin(_module, mem2, path, name)
 
         if "load" in _module.__dict__:
           _module.load()
-          
+
         _module.__dict__["proxy_import"] = 1
         self.options[name] = True
         self.optionsmod[name] = _module
-        
+
       except:
         exported.write_traceback("Option module '%s' refuses to load." % name)
-        
+
   def reloadmod(self, mod):
     """
     reload a module
     """
     exported.event.eraise('OPTRELOAD', {'option':mod})
-  
+
   def addtoclient(self, client):
     """
     add an option to a client
@@ -83,7 +84,7 @@ class TelnetOptionMgr:
         self.optionsmod[i].CLIENT(client)
       except AttributeError:
         exported.msg('Did not add option to client: %s' % i, 'telopt')
-        
+
   def addtoserver(self, server):
     """
     add an option to a server
@@ -93,15 +94,15 @@ class TelnetOptionMgr:
         self.optionsmod[i].SERVER(server)
       except AttributeError:
         exported.msg('Did not add option to server: %s' % i, 'telopt')
-  
+
   def resetoptions(self, server, onclose=False):
     """
     reset options
     """
     for i in server.option_handlers:
       if i in server.options:
-        server.option_handlers[i].reset(onclose)          
-      
-        
+        server.option_handlers[i].reset(onclose)
+
+
 TELOPTMGR = TelnetOptionMgr()
 exported.LOGGER.adddtype('telopt')

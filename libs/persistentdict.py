@@ -1,4 +1,6 @@
 """
+$Id$
+
 a module that holds a persistent dictionary implementation
 it saves the dict to a file
 """

@@ -1,9 +1,7 @@
 """
 $Id$
 
-#TODO: load the db into memory and then when adding something, fork and save
-  it to disk?
-
+this module is a sqlite3 interface
 """
 import sqlite3
 import os

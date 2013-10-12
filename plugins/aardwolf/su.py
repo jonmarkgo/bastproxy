@@ -1,10 +1,7 @@
 """
 $Id$
 
-#TODO: how to figure out when to start spellups after connecting or
-          after a reload
-#TODO: add ability to spellup others
-#TODO: add ability to have spell blockers
+This plugin keeps up spells/skills for Aardwolf
 """
 import copy
 import time

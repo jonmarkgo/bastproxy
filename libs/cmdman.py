@@ -1,8 +1,7 @@
 """
 $Id$
 
-#TODO: use fnmatch to match commands
-  count them so that ambiguous commands are not run
+This module handles commands and parsing input
 """
 from libs import exported
 import shlex

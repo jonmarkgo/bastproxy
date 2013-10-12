@@ -1,5 +1,7 @@
 """
 $Id$
+
+This plugin sends emails when certain events happen in aardwolf
 """
 from libs import exported
 from plugins import BasePlugin

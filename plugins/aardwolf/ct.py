@@ -1,10 +1,12 @@
 """
 $Id$
-#TODO: add % of total damage to each damtype
+
+This plugin includes a combat tracker for aardwolf
 """
 from libs import exported
 from libs import utils
 from plugins import BasePlugin
+import math
 
 NAME = 'CombatTracker'
 SNAME = 'ct'
@@ -33,10 +35,12 @@ class Plugin(BasePlugin):
     """
     handle a mob kill
     """
-    linelen = 65
+    linelen = 72
     msg = []
     msg.append(self.variables['infocolor'] + '-' * linelen)
     timestr = ''
+    totald = 0
+    [totald + args['damage'][x]['damage'] for x in args['damage'].keys()]
     if args['finishtime'] and args['starttime']:
       timestr = '%s' % utils.timedeltatostring(args['starttime'],
               args['finishtime'],
@@ -55,24 +59,25 @@ class Plugin(BasePlugin):
     msg.append(self.variables['infocolor'] + '-' * linelen)
 
     bstringt = "{statcolor}{dtype:<20} {infocolor}: {statcolor}{hits:^10} " \
-                "{damage:^10} {misses:^10} {average:^10}"
+                "{damage:^10} ({percent:4.0%}) {misses:^10} {average:^10}"
 
     msg.append(bstringt.format(
            statcolor=self.variables['infocolor'],
            infocolor=self.variables['infocolor'],
            dtype='Dam Type',
            hits='Hits',
+           percent=0,
            damage='Damage',
            misses='Misses',
            average='Average'))
     msg.append(self.variables['infocolor'] + '-' * linelen)
-    totald = 0
+    #totald = 0
     totalm = 0
     totalh = 0
     for i in args['damage']:
       if i != 'enemy' and i != 'starttime' and i != 'finishtime':
         vdict = args['damage'][i]
-        totald = totald + vdict['damage']
+        #totald = totald + vdict['damage']
         totalm = totalm + vdict['misses']
         totalh = totalh + vdict['hits']
         damt = i
@@ -84,11 +89,14 @@ class Plugin(BasePlugin):
         else:
           avedamage = vdict['damage'] / vdict['hits']
 
+        tperc = vdict['damage'] / totald
+
         msg.append(bstringt.format(
            statcolor=self.variables['statcolor'],
            infocolor=self.variables['infocolor'],
            dtype=damt,
            hits=vdict['hits'],
+           percent=tperc,
            damage=vdict['damage'],
            misses=vdict['misses'],
            average=avedamage))
@@ -99,6 +107,7 @@ class Plugin(BasePlugin):
            infocolor=self.variables['infocolor'],
            dtype='Total',
            hits=totalh,
+           percent=1,
            damage=totald,
            misses=totalm,
            average=totald/(totalh or 1)))
@@ -112,11 +121,6 @@ class Plugin(BasePlugin):
     self.msgs.append(msg)
 
     self.event.register('trigger_emptyline', self.showmessages)
-
-    #exported.timer.add('msgtimerct',
-    #            {'func':self.showmessages, 'seconds':1, 'onetime':True,
-    #             'nodupe':True})
-
 
   def showmessages(self, _=None):
     """

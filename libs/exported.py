@@ -1,5 +1,7 @@
 """
 $Id$
+
+this module handles functions to be exported to other modules
 """
 
 from __future__ import print_function

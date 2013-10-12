@@ -1,5 +1,8 @@
 """
 $Id$
+
+This plugin shows how to use colors and contains a command that shows
+what the colors are
 """
 from plugins import BasePlugin
 
@@ -25,14 +28,14 @@ class Plugin(BasePlugin):
     BasePlugin.__init__(self, *args, **kwargs)
     self.cmds['show'] = {'func':self.show, 'shelp':'Show colors'}
     self.cmds['example'] = {'func':self.example, 'shelp':'Show colors'}
-    
+
   def show(self, args):
     """
     @G%(name)s@w - @B%(cmdname)s@w
       Show xterm colors
       @CUsage@w: show @Y"compact"@w
         @Y"compact"@w    = The original string to be replaced
-    """  
+    """
     msg = ['']
     lmsg = []
     compact = False
@@ -47,35 +50,35 @@ class Plugin(BasePlugin):
       if i % 8 == 0 and i != 0:
         msg.append(joinc.join(lmsg))
         lmsg = []
-        
-      if compact:        
+
+      if compact:
         lmsg.append(colors % (i))
       else:
         lmsg.append(colors % (i, i))
-     
+
     lmsg.append('\n')
     msg.append(joinc.join(lmsg))
 
     lmsg = []
-    
+
     for i in range(16, 256):
       if (i - 16) % 36 == 0 and ((i - 16) != 0 and not i > 233):
         lmsg.append('\n')
-              
+
       if (i - 16) % 6 == 0 and (i - 16) != 0:
         msg.append(joinc.join(lmsg))
         lmsg = []
-      
-      if compact:        
+
+      if compact:
         lmsg.append(colors % (i))
       else:
         lmsg.append(colors % (i, i))
-     
+
     msg.append(joinc.join(lmsg))
     lmsg = []
-    
+
     msg.append('')
-    
+
     return True, msg
 
 
@@ -84,7 +87,7 @@ class Plugin(BasePlugin):
     @G%(name)s@w - @B%(cmdname)s@w
       Show examples of how to use colors
       @CUsage@w: example
-    """      
+    """
     msg = ['']
     msg.append('Examples')
     msg.append('Raw   : @@z165Regular text with color 165 Background@@w')
@@ -96,4 +99,3 @@ class Plugin(BasePlugin):
     msg.append('Note: see the show command to show the table of colors')
     msg.append('')
     return True, msg
-    

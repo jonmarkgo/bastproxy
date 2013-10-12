@@ -1,5 +1,7 @@
 """
 $Id$
+
+This plugin highlights cp/gq/quest mobs in scan
 """
 import time
 import os

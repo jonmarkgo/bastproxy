@@ -163,9 +163,11 @@ class BasePlugin:
     """
     unload stuff
     """
+    self.msg('unloading %s', % self.name)
     #clear all commands for this plugin
     exported.cmd.reset(self.sname)
 
+    #remove all events
     exported.event.removeplugin(self.sname)
 
     # delete all timers

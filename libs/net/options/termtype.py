@@ -1,5 +1,7 @@
 """
 $Id$
+
+this module holds the termtype option
 """
 from libs.net.options._option import TelnetOption
 from libs.net.telnetlib import WILL, DO, IAC, SE, SB, DONT, NOOPT
@@ -25,11 +27,11 @@ class SERVER(TelnetOption):
     """
     handle the opt
     """
-    self.telnetobj.msg('TTYPE:', ord(command), '- in handleopt', 
+    self.telnetobj.msg('TTYPE:', ord(command), '- in handleopt',
                                   mtype='TTYPE')
     if command == DO:
       self.telnetobj.msg(
-            'TTYPE: sending IAC SB TTYPE NOOPT MUSHclient-Aard IAC SE', 
+            'TTYPE: sending IAC SB TTYPE NOOPT MUSHclient-Aard IAC SE',
             mtype='TTYPE')
       self.telnetobj.send(
                 IAC + SB + TTYPE + NOOPT + self.telnetobj.ttype + IAC + SE)
@@ -52,7 +54,7 @@ class CLIENT(TelnetOption):
     """
     handle the opt
     """
-    self.telnetobj.msg('TTYPE:', ord(command), '- in handleopt: ', 
+    self.telnetobj.msg('TTYPE:', ord(command), '- in handleopt: ',
                                   sbdata, mtype='TTYPE')
 
     if command == WILL:
@@ -75,5 +77,5 @@ class CLIENT(TelnetOption):
     """
     self.telnetobj.msg('TTYPE: resetting', mtype='TTYPE')
     if not onclose:
-      self.telnetobj.addtooutbuffer(IAC + DONT + TTYPE, True)    
-    TelnetOption.reset(self)  
+      self.telnetobj.addtooutbuffer(IAC + DONT + TTYPE, True)
+    TelnetOption.reset(self)

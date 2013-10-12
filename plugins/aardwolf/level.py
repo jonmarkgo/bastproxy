@@ -1,5 +1,7 @@
 """
 $Id$
+
+This plugin handles level events on Aardwolf
 """
 import time
 import os

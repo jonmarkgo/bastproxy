@@ -1,5 +1,7 @@
 """
 $Id$
+
+This plugin is an example plugin to show how to use gmcp
 """
 
 from libs import exported

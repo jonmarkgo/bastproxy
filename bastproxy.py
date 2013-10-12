@@ -3,7 +3,6 @@
 $Id$
 
 This is the beginnings of a Mud Proxy that can have triggers, aliases, gags
-#TODO: create alias plugin
 """
 import asyncore
 import ConfigParser

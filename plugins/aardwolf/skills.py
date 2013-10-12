@@ -1,9 +1,7 @@
 """
 $Id$
 
-#TODO: reset all when tiering and remorting
-#TODO: have a flag so we know that spell affects are current
-  so that the spellup plugin doesn't start casting spells early.
+This plugin handles slist from Aardwolf
 """
 import time
 import os

@@ -1,5 +1,7 @@
 """
 $Id$
+
+This plugin holds a stat database for quests/cp/gqs/mobkills
 """
 import copy
 import time

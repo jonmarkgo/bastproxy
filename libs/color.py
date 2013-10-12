@@ -1,6 +1,8 @@
 """
 $Id$
 
+This module handles colors
+
 Color Codes:
 xterm 256
 @x154 - make text color xterm 154
@@ -17,8 +19,6 @@ Cyan       @c        @C
 White      @w        @W
 Reset      @k        @D
 
-
-# TODO: get closest color client does not support 256 colors
 """
 import re
 
@@ -30,8 +30,8 @@ CONVERTCOLORS = {
   'k' : '0;30',
   'r' : '0;31',
   'g' : '0;32',
-  'y' : '0;33', 
-  'b' : '0;34', 
+  'y' : '0;33',
+  'b' : '0;34',
   'm' : '0;35',
   'c' : '0;36',
   'w' : '0;37',
@@ -42,7 +42,7 @@ CONVERTCOLORS = {
   'B' : '1;34',
   'M' : '1;35',
   'C' : '1;36',
-  'W' : '1;37', 
+  'W' : '1;37',
 }
 
 
@@ -57,23 +57,23 @@ def fixstring(tstr):
   """
   fix a strings invalid colors
   """
-  # Thanks to Fiendish from the aardwolf mushclient package, see 
+  # Thanks to Fiendish from the aardwolf mushclient package, see
   # http://code.google.com/p/aardwolfclientpackage/
-  
+
   # fix tildes
-  tstr = re.sub("@-", "~", tstr)  
+  tstr = re.sub("@-", "~", tstr)
   # change @@ to \0
-  tstr = re.sub("@@", "\0", tstr)    
+  tstr = re.sub("@@", "\0", tstr)
   # strip invalid xterm codes (non-number)
-  tstr = re.sub("@[xz]([^\d])", genrepl, tstr)     
+  tstr = re.sub("@[xz]([^\d])", genrepl, tstr)
   # strip invalid xterm codes (300+)
-  tstr = re.sub("@[xz][3-9]\d\d", "", tstr) 
+  tstr = re.sub("@[xz][3-9]\d\d", "", tstr)
   # strip invalid xterm codes (260+)
-  tstr = re.sub("@[xz]2[6-9]\d", "", tstr) 
+  tstr = re.sub("@[xz]2[6-9]\d", "", tstr)
   # strip invalid xterm codes (256+)
-  tstr = re.sub("@[xz]25[6-9]", "", tstr)         
+  tstr = re.sub("@[xz]25[6-9]", "", tstr)
   # rip out hidden garbage
-  tstr = re.sub("@[^xzcmyrgbwCMYRGBWD]", "", tstr)    
+  tstr = re.sub("@[^xzcmyrgbwCMYRGBWD]", "", tstr)
   return tstr
 
 def iscolor(color):
@@ -88,7 +88,7 @@ def iscolor(color):
       num = int(mat.groupdict()['num'])
       if num > 0 and num < 257:
         return True
-        
+
   return False
 
 def convertcolors(tstr):
@@ -118,17 +118,17 @@ def convertcolors(tstr):
         tstr2 = tstr2 + ansicode(color, newtext)
       else:
         tstr2 = tstr2 + ansicode(CONVERTCOLORS[color], text)
-        
+
     if tstr2:
       tstr = tstr2 + "%c[0m" % chr(27)
     if test:
       print 'After:', tstr
   else:
     pass
-  tstr = re.sub("\0", "@", tstr)    # put @ back in 
+  tstr = re.sub("\0", "@", tstr)    # put @ back in
   return tstr
 
-      
+
 def ansicode(color, data):
   """
   return an ansicoded string

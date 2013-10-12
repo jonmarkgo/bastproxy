@@ -1,5 +1,7 @@
 """
 $Id$
+
+This plugin shows stats for events on Aardwolf
 """
 from libs import exported
 from libs import utils

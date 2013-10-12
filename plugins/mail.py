@@ -1,5 +1,7 @@
 """
 $Id$
+
+This plugin sends mail
 """
 import smtplib
 import os

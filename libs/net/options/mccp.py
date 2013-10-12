@@ -1,5 +1,7 @@
 """
 $Id$
+
+This module handles mccp
 """
 from libs.net.options._option import TelnetOption
 from libs.net.telnetlib import WILL, DO, IAC, SE, SB, DONT
@@ -26,17 +28,17 @@ class SERVER(TelnetOption):
     """
     handle the mccp opt
     """
-    self.telnetobj.msg('MCCP2:', ord(command), '- in handleopt', 
+    self.telnetobj.msg('MCCP2:', ord(command), '- in handleopt',
                                                 mtype='MCCP2')
     if command == WILL:
       self.telnetobj.msg('MCCP2: sending IAC DO MCCP2', mtype='MCCP2')
       self.telnetobj.send(IAC + DO + MCCP2)
     elif command == SE:
-      self.telnetobj.msg('MCCP2: got an SE mccp in handleopt', 
+      self.telnetobj.msg('MCCP2: got an SE mccp in handleopt',
                                               mtype='MCCP2')
-      self.telnetobj.msg('MCCP2: starting compression with server', 
+      self.telnetobj.msg('MCCP2: starting compression with server',
                                               mtype='MCCP2')
-      self.telnetobj.options[ord(MCCP2)] = True          
+      self.telnetobj.options[ord(MCCP2)] = True
       self.negotiate()
 
   def negotiate(self):
@@ -51,7 +53,7 @@ class SERVER(TelnetOption):
         ind = 0
       else:
         ind = ind + 1
-      self.telnetobj.msg('MCCP2: converting rawq in handleopt', 
+      self.telnetobj.msg('MCCP2: converting rawq in handleopt',
                                                 mtype='MCCP2')
       try:
         tempraw = self.telnetobj.rawq[:ind]
@@ -81,11 +83,11 @@ class SERVER(TelnetOption):
     resetting the option
     """
     self.telnetobj.msg('MCCP: resetting', mtype='MCCP2')
-    self.telnetobj.addtooutbuffer(IAC + DONT + MCCP2, True)    
-    self.telnetobj.rawq = self.zlib_decomp.decompress(self.telnetobj.rawq)     
-    setattr(self.telnetobj, 'readdatafromsocket', 
-                                self.orig_readdatafromsocket)      
-    TelnetOption.reset(self)    
+    self.telnetobj.addtooutbuffer(IAC + DONT + MCCP2, True)
+    self.telnetobj.rawq = self.zlib_decomp.decompress(self.telnetobj.rawq)
+    setattr(self.telnetobj, 'readdatafromsocket',
+                                self.orig_readdatafromsocket)
+    TelnetOption.reset(self)
 
 
 class CLIENT(TelnetOption):
@@ -107,11 +109,11 @@ class CLIENT(TelnetOption):
     """
     handle the mccp option
     """
-    self.telnetobj.msg('MCCP2:', ord(command), '- in handleopt', 
+    self.telnetobj.msg('MCCP2:', ord(command), '- in handleopt',
                                                         mtype='MCCP2')
 
     if command == DO:
-      self.telnetobj.options[ord(MCCP2)] = True        
+      self.telnetobj.options[ord(MCCP2)] = True
       self.negotiate()
 
   def negotiate(self):
@@ -146,8 +148,8 @@ class CLIENT(TelnetOption):
     """
     self.telnetobj.msg('MCCP: resetting', mtype='MCCP2')
     if not onclose:
-      self.telnetobj.addtooutbuffer(IAC + DONT + MCCP2, True)    
+      self.telnetobj.addtooutbuffer(IAC + DONT + MCCP2, True)
     setattr(self.telnetobj, 'convert_outdata', self.orig_convert_outdata)
     self.telnetobj.outbuffer = \
-                        self.zlib_comp.uncompress(self.telnetobj.outbuffer)    
-    TelnetOption.reset(self)  
+                        self.zlib_comp.uncompress(self.telnetobj.outbuffer)
+    TelnetOption.reset(self)

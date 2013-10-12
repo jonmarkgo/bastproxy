@@ -1,5 +1,7 @@
 """
 $Id$
+
+this module holds the proxy client class
 """
 from libs.net.telnetlib import Telnet
 from libs import exported

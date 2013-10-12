@@ -1,7 +1,7 @@
 """
 $Id$
 
-This will do both debugging and logging, didn't know what
+This module will do both debugging and logging, didn't know what
 else to name it
 """
 from __future__ import print_function

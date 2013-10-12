@@ -340,6 +340,8 @@ class EventMgr:
       self.events[eventname][prio] = []
     if self.events[eventname][prio].count(func) == 0:
       self.events[eventname][prio].append(func)
+      exported.msg('adding function %s to event %s' % (func, eventname),
+                     'events')
     if plugin:
       if not (plugin in self.pluginlookup):
         self.pluginlookup[plugin] = {}
@@ -347,19 +349,6 @@ class EventMgr:
 
       self.pluginlookup[plugin]['events'][func] = \
                             {'eventname':eventname, 'prio':prio}
-
-  def removeplugin(self, plugin):
-    """
-    remove all events related to a plugin
-    """
-    if plugin and plugin in self.pluginlookup:
-      tkeys = self.pluginlookup[plugin]['events'].keys()
-      for i in tkeys:
-	if i in self.pluginlookup[plugin]['events'][i]:
-          event = self.pluginlookup[plugin]['events'][i]
-          self.unregisterevent(event['eventname'], i, plugin=plugin)
-
-      self.pluginlookup[plugin]['events'] = {}
 
   def unregisterevent(self, eventname, func, **kwargs):
     """
@@ -376,17 +365,33 @@ class EventMgr:
       keys.sort()
       for i in keys:
         if self.events[eventname][i].count(func) == 1:
+          exported.msg('removing function %s from event %s' % (
+                func, eventname), 'events')
           self.events[eventname][i].remove(func)
 
       if plugin and plugin in self.pluginlookup:
         if func in self.pluginlookup[plugin]['events']:
           del(self.pluginlookup[plugin]['events'][func])
 
+  def removeplugin(self, plugin):
+    """
+    remove all events related to a plugin
+    """
+    exported.msg('removing plugin %s' % plugin, 'events')
+    if plugin and plugin in self.pluginlookup:
+      tkeys = self.pluginlookup[plugin]['events'].keys()
+      for i in tkeys:
+        if i in self.pluginlookup[plugin]['events'][i]:
+          event = self.pluginlookup[plugin]['events'][i]
+          self.unregisterevent(event['eventname'], i, plugin=plugin)
+
+      self.pluginlookup[plugin]['events'] = {}
+
   def raiseevent(self, eventname, args):
     """
     raise an event with args
     """
-    #exported.msg('raiseevent', eventname, args)
+    exported.msg('raiseevent', eventname, args)
     nargs = args.copy()
     nargs['eventname'] = eventname
     if eventname in self.events:

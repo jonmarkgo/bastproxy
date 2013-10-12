@@ -1,5 +1,7 @@
 """
 $Id$
+
+This module holds the base class for a Telnet Option
 """
 class TelnetOption(object):
   """
@@ -10,7 +12,7 @@ class TelnetOption(object):
     initalize the instance
     """
     self.telnetobj = telnetobj
-    self.option = option    
+    self.option = option
     self.telnetobj.option_handlers[ord(self.option)] = self
     #self.telnetobj.debug_types.append(self.option)
 
@@ -18,14 +20,14 @@ class TelnetOption(object):
     """
     a method for when an option connects
     """
-    self.telnetobj.msg('onconnect for option', ord(self.option), 
+    self.telnetobj.msg('onconnect for option', ord(self.option),
                                                       mtype='option')
 
   def handleopt(self, command, sbdata):
     """
     handle an option
     """
-    self.telnetobj.msg('handleopt for option', ord(self.option), 
+    self.telnetobj.msg('handleopt for option', ord(self.option),
                                 command, sbdata, mtype='option')
 
   def reset(self, onclose=False):

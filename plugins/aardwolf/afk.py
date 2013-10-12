@@ -1,7 +1,7 @@
 """
 $Id$
-Make this search all comms for player's name and add them to the queue
-keep a record of players who send tells and then reply appropriately
+
+This plugin holds a afk plugin
 """
 from libs import exported
 from libs import utils

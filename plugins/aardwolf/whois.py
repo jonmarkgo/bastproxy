@@ -1,5 +1,7 @@
 """
 $Id$
+
+This plugin parses whois data from Aardwolf
 """
 import os
 import copy

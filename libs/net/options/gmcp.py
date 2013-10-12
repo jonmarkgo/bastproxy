@@ -1,8 +1,6 @@
 """
 $Id$
 
-#BUG: errors when decoding ansi data when rawcolors is off
-
 This module handles all things GMCP
 
 SERVER handles all GMCP communication to and from the MUD

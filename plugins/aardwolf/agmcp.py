@@ -1,6 +1,7 @@
 """
 $Id$
-#'client_connected'
+
+This plugin runs gmcp commands after connecting to aardwolf
 """
 
 from libs import exported

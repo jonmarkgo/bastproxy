@@ -1,5 +1,7 @@
 """
 $Id$
+
+This is an example plugin about how to use triggers
 """
 from libs import exported
 from plugins import BasePlugin

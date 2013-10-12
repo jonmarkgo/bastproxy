@@ -1,5 +1,7 @@
 """
 $Id$
+
+This plugin keeps you from disconnecting from Aardwolf
 """
 from libs import exported
 from plugins import BasePlugin
