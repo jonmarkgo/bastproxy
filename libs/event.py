@@ -381,9 +381,8 @@ class EventMgr:
     if plugin and plugin in self.pluginlookup:
       tkeys = self.pluginlookup[plugin]['events'].keys()
       for i in tkeys:
-        if i in self.pluginlookup[plugin]['events'][i]:
-          event = self.pluginlookup[plugin]['events'][i]
-          self.unregisterevent(event['eventname'], i, plugin=plugin)
+        event = self.pluginlookup[plugin]['events'][i]
+        self.unregisterevent(event['eventname'], i, plugin=plugin)
 
       self.pluginlookup[plugin]['events'] = {}
 
@@ -391,7 +390,7 @@ class EventMgr:
     """
     raise an event with args
     """
-    exported.msg('raiseevent', eventname, args)
+    exported.msg('raiseevent %s' % eventname, 'events')
     nargs = args.copy()
     nargs['eventname'] = eventname
     if eventname in self.events:
