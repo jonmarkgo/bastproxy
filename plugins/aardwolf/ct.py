@@ -39,8 +39,8 @@ class Plugin(BasePlugin):
     msg = []
     msg.append(self.variables['infocolor'] + '-' * linelen)
     timestr = ''
-    totald = 0
-    [totald + args['damage'][x]['damage'] for x in args['damage'].keys()]
+    damages = args['damage']
+    totald = sum(damages[d]['damage'] for d in damages)
     if args['finishtime'] and args['starttime']:
       timestr = '%s' % utils.timedeltatostring(args['starttime'],
               args['finishtime'],
@@ -74,7 +74,7 @@ class Plugin(BasePlugin):
     #totald = 0
     totalm = 0
     totalh = 0
-    for i in args['damage']:
+    for i in damages:
       if i != 'enemy' and i != 'starttime' and i != 'finishtime':
         vdict = args['damage'][i]
         #totald = totald + vdict['damage']
@@ -89,7 +89,7 @@ class Plugin(BasePlugin):
         else:
           avedamage = vdict['damage'] / vdict['hits']
 
-        tperc = vdict['damage'] / totald
+        tperc = vdict['damage'] / float(totald)
 
         msg.append(bstringt.format(
            statcolor=self.variables['statcolor'],
