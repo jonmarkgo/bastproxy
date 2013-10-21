@@ -12,12 +12,13 @@ make all functions that add things use kwargs instead of a table
 import glob
 import os
 import sys
+import inspect
 
 from libs.utils import find_files, verify, convert
 from libs.persistentdict import PersistentDict
 from libs.utils import DotDict
 from libs.api import API
-import inspect
+
 
 class PersistentDictEvent(PersistentDict):
   """
