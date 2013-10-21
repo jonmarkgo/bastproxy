@@ -7,7 +7,6 @@ import smtplib
 import os
 from datetime import datetime
 from plugins import BasePlugin
-from libs import exported
 
 
 #these 5 are required
@@ -31,7 +30,7 @@ class Plugin(BasePlugin):
     """
     BasePlugin.__init__(self, *args, **kwargs)
     self.password = ''
-    self.event.register('client_connected', self.checkpassword)
+    self.api.get('events.register')('client_connected', self.checkpassword)
     self.cmds['password'] = {'func':self.cmd_pw, 'shelp':'set the password'}
     self.cmds['test'] = {'func':self.cmd_test, 'shelp':'send a test email'}
     self.cmds['check'] = {'func':self.cmd_check,
@@ -111,7 +110,7 @@ X-Mailer: My-Mail
     """
     if 'username' in self.variables:
       if not self.password:
-        exported.sendtoclient(
+        self.api.get('output.client')(
                       '@CPlease set the email password for account: @M%s@w' \
                              % self.variables['username'].replace('@', '@@'))
 
@@ -157,7 +156,7 @@ X-Mailer: My-Mail
     """
     BasePlugin.load(self)
     if self.variables['username'] != '':
-      exported.sendtoclient('Please set the mail password')
+      self.api.get('output.client')('Please set the mail password')
 
   def cmd_test(self, args):
     """

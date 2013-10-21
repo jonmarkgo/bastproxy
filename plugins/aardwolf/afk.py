@@ -3,7 +3,6 @@ $Id$
 
 This plugin holds a afk plugin
 """
-from libs import exported
 from libs import utils
 from plugins import BasePlugin
 import time
@@ -17,7 +16,7 @@ AUTHOR = 'Bast'
 VERSION = 1
 
 # This keeps the plugin from being autoloaded if set to False
-AUTOLOAD = True
+AUTOLOAD = False
 
 titlematch = '^Your title is: (?P<title>.*)\.$'
 titlere = re.compile(titlematch)
@@ -42,9 +41,9 @@ class Plugin(BasePlugin):
     self.addsetting('queue', [], list, 'the tell queue', readonly=True)
     self.addsetting('isafk', False, bool, 'AFK flag', readonly=True)
 
-    self.event.register('client_connected', self.clientconnected)
-    self.event.register('client_disconnected', self.clientdisconnected)
-    self.event.register('aardwolf_firstactive', self.afkfirstactive)
+    self.api.get('events.register')('client_connected', self.clientconnected)
+    self.api.get('events.register')('client_disconnected', self.clientdisconnected)
+    self.api.get('events.register')('aardwolf_firstactive', self.afkfirstactive)
 
     self.cmds['show'] = {'func':self.cmd_showqueue,
                                   'shelp':'Show the afk comm queue'}
@@ -55,25 +54,25 @@ class Plugin(BasePlugin):
 
     self.temptitle = ''
 
-    exported.watch.add('titleset', {
+    self.api.get('watch.add')('titleset', {
       'regex':'^(tit|titl|title) (?P<title>.*)$'})
 
-    self.event.register('cmd_titleset', self._titlesetcmd)
+    self.api.get('events.register')('cmd_titleset', self._titlesetcmd)
 
   def afkfirstactive(self, args):
     """
     set the title when we first connect
     """
     if self.variables['lasttitle']:
-      exported.execute('title %s' % self.variables['lasttitle'])
+      self.api.get('input.execute')('title %s' % self.variables['lasttitle'])
 
   def _titlesetcmd(self, args):
     """
     check for stuff when the title command is seen
     """
-    self.msg('saw title set command %s' % args)
+    self.api.get('output.msg')('saw title set command %s' % args)
     self.temptitle = args['title']
-    self.event.register('trigger_all', self.titlesetline)
+    self.api.get('events.register')('trigger_all', self.titlesetline)
 
   def titlesetline(self, args):
     """
@@ -86,10 +85,10 @@ class Plugin(BasePlugin):
         newtitle = tmatch.groupdict()['title']
         if newtitle != self.variables['afktitle']:
           self.variables['lasttitle'] = self.temptitle
-          self.msg('lasttitle is "%s"' % self.variables['lasttitle'])
+          self.api.get('output.msg')('lasttitle is "%s"' % self.variables['lasttitle'])
       else:
         self.msg('unregistering trigger_all from titlesetline')
-        self.event.unregister('trigger_all', self.titlesetline)
+        self.api.get('events.unregister')('trigger_all', self.titlesetline)
 
   def cmd_showqueue(self, _=None):
     """
@@ -152,23 +151,23 @@ class Plugin(BasePlugin):
     enable afk mode
     """
     self.variables['isafk'] = True
-    self.event.register('GMCP:comm.channel', self.checkfortell)
-    exported.execute('title %s' % self.variables['afktitle'])
+    self.api.get('event.register')('GMCP:comm.channel', self.checkfortell)
+    self.api.get('input.execute')('title %s' % self.variables['afktitle'])
 
   def disableafk(self):
     """
     disable afk mode
     """
     self.variables['isafk'] = False
-    exported.execute('title %s' % self.variables['lasttitle'])
+    self.api.get('input.execute')('title %s' % self.variables['lasttitle'])
     try:
-      self.event.unregister('GMCP:comm.channel', self.checkfortell)
+      self.api.get('events.unregister')('GMCP:comm.channel', self.checkfortell)
     except KeyError:
       pass
 
     if len(self.variables['queue']) > 0:
-      exported.sendtoclient("@BAFK Queue")
-      exported.sendtoclient("@BYou have %s tells in the queue" % \
+      self.api.get('output.client')("@BAFK Queue")
+      self.api.get('output.client')("@BYou have %s tells in the queue" % \
                 len(self.variables['queue']))
 
 
@@ -176,8 +175,9 @@ class Plugin(BasePlugin):
     """
     if we have enabled triggers when there were no clients, disable them
     """
-    if len(exported.PROXY.clients) == 1:
-      self.msg('disabling afk mode')
+    proxy = self.api.get('managers.getm')('proxy')
+    if len(proxy.clients) == 1:
+      self.api.get('output.msg')('disabling afk mode')
       self.disableafk()
 
 
@@ -185,7 +185,8 @@ class Plugin(BasePlugin):
     """
     if this is the last client, enable afk triggers
     """
-    if len(exported.PROXY.clients) == 0:
-      self.msg('enabling afk mode')
+    proxy = self.api.get('managers.getm')('proxy')
+    if len(proxy.clients) == 0:
+      self.api.get('output.msg')('enabling afk mode')
       self.enableafk()
 

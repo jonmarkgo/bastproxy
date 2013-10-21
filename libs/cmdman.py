@@ -3,10 +3,10 @@ $Id$
 
 This module handles commands and parsing input
 """
-from libs import exported
+from libs.api import API
 import shlex
 
-class CmdMgr:
+class CmdMgr(object):
   """
   a class to manage internal commands
   """
@@ -14,20 +14,19 @@ class CmdMgr:
     """
     init the class
     """
+    self.sname = 'commands'
     self.cmds = {}
+    self.api = API()
     self.nomultiplecmds = {}
     self.regexlookup = {}
     self.lastcmd = ''
     self.addcmd('help', 'list', {'lname':'Help', 'func':self.listcmds})
     self.addcmd('help', 'default', {'lname':'Help', 'func':self.listcmds})
 
-    #exported.add(self.addwatch, 'cmdwatch', 'add')
-    #exported.add(self.removewatch, 'cmdwatch', 'remove')
-
-    exported.add(self.addcmd, 'cmd', 'add')
-    exported.add(self.removecmd, 'cmd', 'remove')
-    exported.add(self.setdefault, 'cmd', 'default')
-    exported.add(self.resetcmds, 'cmd', 'reset')
+    self.api.add(self.sname, 'add', self.addcmd)
+    self.api.add(self.sname, 'remove', self.removecmd)
+    self.api.add(self.sname, 'default', self.setdefault)
+    self.api.add(self.sname, 'reset', self.resetcmds)
 
   def formatretmsg(self, msg, sname, stcmd):
     """
@@ -55,11 +54,11 @@ class CmdMgr:
 
     if retval:
       if msg and isinstance(msg, list):
-        exported.sendtoclient('\n'.join(self.formatretmsg(msg, sname, stcmd)))
+        self.api.get('output.client')('\n'.join(self.formatretmsg(msg, sname, stcmd)))
         return True
     else:
       _, msg = self.listcmds([sname, scmd])
-      exported.sendtoclient('\n'.join(self.formatretmsg(
+      self.api.get('output.client')('\n'.join(self.formatretmsg(
                                                   msg, 'plugins', 'help')))
     return retval
 
@@ -97,7 +96,7 @@ class CmdMgr:
         except ValueError:
           pass
         _, msg = self.listcmds(targs)
-        exported.sendtoclient('\n'.join(self.formatretmsg(
+        self.api.get('output.client')('\n'.join(self.formatretmsg(
                                               msg, 'plugins', 'help')))
       elif sname and scmd:
         if sname in self.cmds:
@@ -115,13 +114,13 @@ class CmdMgr:
           except ValueError:
             pass
           if not stcmd:
-            exported.sendtoclient("@R%s.%s@W is not a command" % \
+            self.api.get('output.client')("@R%s.%s@W is not a command" % \
                                                         (sname, scmd))
           else:
             self.runcmd(self.cmds[sname][stcmd]['func'], targs,
                                                   sname, stcmd, scmd)
         else:
-          exported.sendtoclient("@R%s.%s@W is not a command." % \
+          self.api.get('output.client')("@R%s.%s@W is not a command." % \
                                                   (sname, scmd))
       else:
         try:
@@ -133,7 +132,7 @@ class CmdMgr:
         except ValueError:
           pass
         _, msg = self.listcmds(targs)
-        exported.sendtoclient('\n'.join(self.formatretmsg(
+        self.api.get('output.client')('\n'.join(self.formatretmsg(
                                                 msg, 'plugins', 'help')))
 
       return {'fromdata':''}
@@ -152,11 +151,11 @@ class CmdMgr:
     #lname, cmd, tfunction, shelp="", lhelp=""
     #{'func':tfunction, 'lname':lname, 'lhelp':lhelp, 'shelp':shelp}
     if not ('lname' in args):
-      exported.msg('cmd %s.%s has no long name, not adding' % \
+      self.api.get('output.msg')('cmd %s.%s has no long name, not adding' % \
                                                 (sname, cmdname), 'cmd')
       return
     if not ('func' in args):
-      exported.msg('cmd %s.%s has no function, not adding' % \
+      self.api.get('output.msg')('cmd %s.%s has no function, not adding' % \
                                                 (sname, cmdname), 'cmd')
       return
     if not (sname in self.cmds):
@@ -170,7 +169,7 @@ class CmdMgr:
     if sname in self.cmds and cmdname in self.cmds[sname]:
       del self.cmds[sname][cmdname]
     else:
-      exported.msg('removecmd: cmd %s.%s does not exist' % \
+      self.api.get('output.msg')('removecmd: cmd %s.%s does not exist' % \
                                                 (sname, cmdname), 'cmd')
 
   def setdefault(self, sname, cmd):
@@ -187,7 +186,7 @@ class CmdMgr:
     if sname in self.cmds:
       del self.cmds[sname]
     else:
-      exported.msg('resetcmds: cmd %s does not exist' % sname, 'cmd')
+      self.api.get('output.msg')('resetcmds: cmd %s does not exist' % sname, 'cmd')
 
   def listcmds(self, args):
     """
@@ -226,8 +225,9 @@ class CmdMgr:
     """
     load external stuff
     """
-    exported.event.register('from_client_event', self.chkcmd, prio=1)
-    exported.LOGGER.adddtype('cmds')
-    exported.LOGGER.cmd_console(['cmds'])
-
+    self.api.get('managers.add')('command', self)
+    self.api.get('logger.adddtype')(self.sname)
+    self.api.get('logger.console')([self.sname])
+    self.api.get('events.register')('from_client_event', self.chkcmd, prio=1)
+    self.api.get('events.eraise')('plugin_cmdman_loaded', {})
 

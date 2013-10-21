@@ -4,14 +4,13 @@ $Id$
 This plugin is a utility plugin for aardwolf functions
 It adds functions to exported.aardu
 """
-from libs import exported
 from plugins import BasePlugin
 import math
 import re
 
 NAME = 'Aardwolf Utils'
 SNAME = 'aardu'
-PURPOSE = 'Aard related functions for exported'
+PURPOSE = 'Aard related functions to use in the api'
 AUTHOR = 'Bast'
 VERSION = 1
 
@@ -137,23 +136,6 @@ def parsedamageline(line):
 
   return ddict
 
-def getactuallevel(level=None, remort=None, tier=None, redos=None):
-  """
-  get an actual level
-  all arguments are optional, if an argument is not given, it will be
-    gotten from gmcp
-  level, remort, tier, redos
-  """
-  level = level or exported.GMCP.getv('char.status.level') or 0
-  remort = remort or exported.GMCP.getv('char.base.remorts') or 0
-  tier = tier or exported.GMCP.getv('char.base.tier') or 0
-  redos = int(redos or exported.GMCP.getv('char.base.redos') or 0)
-  if redos == 0:
-    return (tier * 7 * 201) + ((remort - 1) * 201) + level
-  else:
-    return (tier * 7 * 201) + (redos * 7 * 201) + ((remort - 1) * 201) + level
-
-
 def convertlevel(level):
   """
   convert a level to tier, redos, remort, level
@@ -201,16 +183,16 @@ class Plugin(BasePlugin):
     self.connected = False
     self.firstactive = False
 
-    self.exported['getactuallevel'] = {'func':getactuallevel}
+    self.exported['getactuallevel'] = {'func':self.getactuallevel}
     self.exported['convertlevel'] = {'func':convertlevel}
     self.exported['classabb'] = {'func':classabb}
     self.exported['rewardtable'] = {'func':rewardtable}
     self.exported['parsedamageline'] = {'func':parsedamageline}
     self.exported['firstactive'] = {'func':self._firstactive}
 
-    self.event.register('mudconnect', self._mudconnect)
-    self.event.register('muddisconnect', self._muddisconnect)
-    self.event.register('GMCP:char.status', self._charstatus)
+    self.api.get('events.register')('mudconnect', self._mudconnect)
+    self.api.get('events.register')('muddisconnect', self._muddisconnect)
+    self.api.get('events.register')('GMCP:char.status', self._charstatus)
 
   def _firstactive(self):
     """
@@ -229,18 +211,34 @@ class Plugin(BasePlugin):
     reset for next connection
     """
     self.connected = False
-    self.event.unregister('GMCP:char.status', self._charstatus)
-    self.event.register('GMCP:char.status', self._charstatus)
+    self.api.get('events.unregister')('GMCP:char.status', self._charstatus)
+    self.api.get('events.register')('GMCP:char.status', self._charstatus)
 
   def _charstatus(self, args=None):
     """
     check status for 3
     """
-    state = exported.GMCP.getv('char.status.state')
-    if state == 3 and exported.PROXY and exported.PROXY.connected:
-      self.event.unregister('GMCP:char.status', self._charstatus)
+    state = self.api.get('GMCP.getv')('char.status.state')
+    proxy = self.api.get('managers.getm')('proxy')
+    if state == 3 and proxy and proxy.connected:
+      self.api.get('events.unregister')('GMCP:char.status', self._charstatus)
       self.connected = True
       self.firstactive = True
-      exported.sendtoclient('sending first active')
-      exported.event.eraise('aardwolf_firstactive', {})
+      self.api.get('output.client')('sending first active')
+      self.api.get('events.eraise')('aardwolf_firstactive', {})
 
+  def getactuallevel(self, level=None, remort=None, tier=None, redos=None):
+    """
+    get an actual level
+    all arguments are optional, if an argument is not given, it will be
+      gotten from gmcp
+    level, remort, tier, redos
+    """
+    level = level or self.api.get('GMCP.getv')('char.status.level') or 0
+    remort = remort or self.api.get('GMCP.getv')('char.base.remorts') or 0
+    tier = tier or self.api.get('GMCP.getv')('char.base.tier') or 0
+    redos = int(redos or self.api.get('GMCP.getv')('char.base.redos') or 0)
+    if redos == 0:
+      return (tier * 7 * 201) + ((remort - 1) * 201) + level
+    else:
+      return (tier * 7 * 201) + (redos * 7 * 201) + ((remort - 1) * 201) + level

@@ -3,7 +3,6 @@ $Id$
 
 This is an example plugin about how to use triggers
 """
-from libs import exported
 from plugins import BasePlugin
 
 NAME = 'Trigger Example'
@@ -25,11 +24,11 @@ class Plugin(BasePlugin):
     BasePlugin.__init__(self, *args, **kwargs)
     self.triggers['example_trigger'] = \
             {'regex':"^(?P<name>.*) flicks a (?P<insect>.*) off his bar\.$"}
-    self.event.register('trigger_example_trigger', self.testtrigger)
+    self.api.get('events.register')('trigger_example_trigger', self.testtrigger)
 
   def testtrigger(self, args):
     """
     show that the trigger fired
     """
-    exported.sendtoclient('Trigger fired: args returned %s' % args)
+    self.api.get('output.client')('Trigger fired: args returned %s' % args)
 

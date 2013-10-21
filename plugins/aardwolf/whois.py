@@ -5,7 +5,6 @@ This plugin parses whois data from Aardwolf
 """
 import os
 import copy
-from libs import exported
 from libs.persistentdict import PersistentDict
 from plugins import BasePlugin
 
@@ -30,7 +29,7 @@ class Plugin(BasePlugin):
     self.savewhoisfile = os.path.join(self.savedir, 'whois.txt')
     self.whois = PersistentDict(self.savewhoisfile, 'c', format='json')
     self.dependencies.append('aardu')
-    exported.watch.add('whois', {
+    self.api.get('watch.add')('whois', {
                 'regex':'^(whoi|whois)$'})
 
     self.triggers['whoisheader'] = {
@@ -66,21 +65,21 @@ class Plugin(BasePlugin):
       'regex':"^-{74,74}$",
       'enabled':False}
 
-    self.event.register('cmd_whois', self._whois)
-    self.event.register('trigger_whoisheader', self._whoisheader)
-    self.event.register('trigger_whoisclasses', self._whoisclasses)
-    self.event.register('trigger_whois1', self._whoisstats)
-    self.event.register('trigger_whois2', self._whoisstats)
-    self.event.register('trigger_whois3', self._whoisstats)
-    self.event.register('trigger_whoispowerup', self._whoisstats)
-    self.event.register('trigger_whoisend', self._whoisend)
+    self.api.get('events.register')('cmd_whois', self._whois)
+    self.api.get('events.register')('trigger_whoisheader', self._whoisheader)
+    self.api.get('events.register')('trigger_whoisclasses', self._whoisclasses)
+    self.api.get('events.register')('trigger_whois1', self._whoisstats)
+    self.api.get('events.register')('trigger_whois2', self._whoisstats)
+    self.api.get('events.register')('trigger_whois3', self._whoisstats)
+    self.api.get('events.register')('trigger_whoispowerup', self._whoisstats)
+    self.api.get('events.register')('trigger_whoisend', self._whoisend)
 
   def _whois(self, args=None):
     """
     reset the whois info when a "whois" command is sent
     """
     self.whois.clear()
-    exported.trigger.togglegroup('whois', True)
+    self.api.get('trigger.togglegroup')('whois', True)
     return args
 
   def _whoisstats(self, args=None):
@@ -107,30 +106,30 @@ class Plugin(BasePlugin):
     """
     do stuff when we see the whois header
     """
-    self.whois["name"] = exported.GMCP.getv('char.base.name')
-    self.whois['level'] = exported.GMCP.getv('char.status.level')
-    self.whois['tiers'] = exported.GMCP.getv('char.base.tier')
-    self.whois['redos'] = int(exported.GMCP.getv('char.base.redos'))
-    self.whois['race'] = exported.GMCP.getv('char.base.race').lower()
+    self.whois["name"] = self.api.get('GMCP.getv')('char.base.name')
+    self.whois['level'] = self.api.get('GMCP.getv')('char.status.level')
+    self.whois['tiers'] = self.api.get('GMCP.getv')('char.base.tier')
+    self.whois['redos'] = int(self.api.get('GMCP.getv')('char.base.redos'))
+    self.whois['race'] = self.api.get('GMCP.getv')('char.base.race').lower()
     self.whois['sex'] = args['sex'].lower()
-    self.whois['subclass'] = exported.GMCP.getv('char.base.subclass').lower()
+    self.whois['subclass'] = self.api.get('GMCP.getv')('char.base.subclass').lower()
     self.whois['powerupsall'] = 0
     self.whois['powerupsmort'] = 0
-    self.whois['remorts'] = exported.GMCP.getv('char.base.remorts')
+    self.whois['remorts'] = self.api.get('GMCP.getv')('char.base.remorts')
     if self.whois['remorts'] == 1:
-      classabs = exported.aardu.classabb()
+      classabs = self.api.get('aardu.classabb')()
       self.whois['classes'] = []
       self.whois['classes'].append({'remort':1,
-              'class':classabs[exported.GMCP.getv(
+              'class':classabs[self.api.get('GMCP.getv')(
                                       'char.base.class').lower()]})
 
-    exported.trigger.toggle('whoisend', True)
+    self.api.get('trigger.toggle')('whoisend', True)
 
   def _whoisclasses(self, args):
     """
     add classes
     """
-    classabs = exported.aardu.classabb()
+    classabs = self.api.get('aardu.classabb')()
     tlist = args['classes'].split("/")
     remorts = len(tlist)
     self.whois['classes'] = []
@@ -145,13 +144,13 @@ class Plugin(BasePlugin):
     """
     send a whois
     """
-    self.whois['totallevels'] = exported.aardu.getactuallevel(
+    self.whois['totallevels'] = self.api.get('aardu.getactuallevel')(
                       self.whois['level'], self.whois['remorts'],
                       self.whois['tiers'], self.whois['redos'])
     self.whois.sync()
-    exported.trigger.togglegroup('whois', False)
-    exported.trigger.toggle('whoisend', False)
-    exported.event.eraise('aard_whois', copy.deepcopy(self.whois))
+    self.api.get('trigger.togglegroup')('whois', False)
+    self.api.get('trigger.toggle')('whoisend', False)
+    self.api.get('events.eraise')('aard_whois', copy.deepcopy(self.whois))
     self.msg('whois: %s' % self.whois)
 
   def savestate(self):

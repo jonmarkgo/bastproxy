@@ -5,7 +5,6 @@ This plugin sends events when moving between rooms
 """
 import copy
 from plugins import BasePlugin
-from libs import exported
 
 NAME = 'movement'
 SNAME = 'move'
@@ -25,7 +24,7 @@ class Plugin(BasePlugin):
     """
     BasePlugin.__init__(self, *args, **kwargs)
 
-    self.event.register('GMCP:room.info', self._roominfo)
+    self.api.get('events.register')('GMCP:room.info', self._roominfo)
     self.lastroom = {}
 
 
@@ -33,7 +32,7 @@ class Plugin(BasePlugin):
     """
     figure out if we moved or not
     """
-    room = exported.GMCP.getv('room.info')
+    room = self.api.get('GMCP.getv')('room.info')
     if not self.lastroom:
       self.lastroom = copy.deepcopy(dict(room))
     else:
@@ -42,9 +41,9 @@ class Plugin(BasePlugin):
         for i in self.lastroom['exits']:
           if self.lastroom['exits'][i] == room['num']:
             direction = i
-        self.msg('raising moved_room, from: %s, to : %s, dir : %s' % (
+        self.api.get('output.msg')('raising moved_room, from: %s, to : %s, dir : %s' % (
                     self.lastroom['num'], room['num'], direction))
-        exported.event.eraise('moved_room', {'from':self.lastroom,
+        self.api.get('events.eraise')('moved_room', {'from':self.lastroom,
             'to': room, 'direction':direction})
         self.lastroom = copy.deepcopy(dict(room))
 

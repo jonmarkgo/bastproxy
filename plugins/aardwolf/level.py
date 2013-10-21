@@ -7,7 +7,6 @@ import time
 import os
 import copy
 import re
-from libs import exported
 from libs.persistentdict import PersistentDict
 from plugins import BasePlugin
 
@@ -37,13 +36,13 @@ class Plugin(BasePlugin):
     self.addsetting('tiering', False, bool, 'flag for tiering')
     self.addsetting('seen2', False, bool, 'we saw a state 2 after tiering')
 
-    exported.watch.add('shloud', {
+    self.api.get('watch.add')('shloud', {
             'regex':'^superhero loud$'})
-    exported.watch.add('shsilent', {
+    self.api.get('watch.add')('shsilent', {
             'regex':'^superhero silent$'})
-    exported.watch.add('shconfirm', {
+    self.api.get('watch.add')('shconfirm', {
             'regex':'^superhero confirm$'})
-    exported.watch.add('shloudconfirm', {
+    self.api.get('watch.add')('shloudconfirm', {
             'regex':'^superhero loud confirm$'})
 
     self.triggers['lvlpup'] = {
@@ -105,50 +104,50 @@ class Plugin(BasePlugin):
       'regex':"^## You have already remorted the max number of times.$",
       'enabled':True, 'group':'remort'}
 
-    self.event.register('trigger_lvlpup', self._lvl)
-    self.event.register('trigger_lvlpupbless', self._lvl)
-    self.event.register('trigger_lvllevel', self._lvl)
-    self.event.register('trigger_lvlbless', self._lvl)
-    self.event.register('trigger_lvlgains', self._lvlgains)
-    self.event.register('trigger_lvlpupgains', self._lvlgains)
-    self.event.register('trigger_lvlblesstrain', self._lvlblesstrains)
-    self.event.register('trigger_lvlbonustrains', self._lvlbonustrains)
-    self.event.register('trigger_lvlbonusstat', self._lvlbonusstat)
+    self.api.get('events.register')('trigger_lvlpup', self._lvl)
+    self.api.get('events.register')('trigger_lvlpupbless', self._lvl)
+    self.api.get('events.register')('trigger_lvllevel', self._lvl)
+    self.api.get('events.register')('trigger_lvlbless', self._lvl)
+    self.api.get('events.register')('trigger_lvlgains', self._lvlgains)
+    self.api.get('events.register')('trigger_lvlpupgains', self._lvlgains)
+    self.api.get('events.register')('trigger_lvlblesstrain', self._lvlblesstrains)
+    self.api.get('events.register')('trigger_lvlbonustrains', self._lvlbonustrains)
+    self.api.get('events.register')('trigger_lvlbonusstat', self._lvlbonusstat)
 
-    self.event.register('trigger_lvlshbadstar', self._superherobad)
-    self.event.register('trigger_lvlshbad', self._superherobad)
-    self.event.register('trigger_lvlshnogold', self._superherobad)
-    self.event.register('trigger_lvlshnoqp', self._superherobad)
+    self.api.get('events.register')('trigger_lvlshbadstar', self._superherobad)
+    self.api.get('events.register')('trigger_lvlshbad', self._superherobad)
+    self.api.get('events.register')('trigger_lvlshnogold', self._superherobad)
+    self.api.get('events.register')('trigger_lvlshnoqp', self._superherobad)
 
-    self.event.register('cmd_shloud', self.cmd_superhero)
-    self.event.register('cmd_shsilent', self.cmd_superhero)
-    self.event.register('cmd_shconfirm', self.cmd_superhero)
-    self.event.register('cmd_shloudconfirm', self.cmd_superhero)
+    self.api.get('events.register')('cmd_shloud', self.cmd_superhero)
+    self.api.get('events.register')('cmd_shsilent', self.cmd_superhero)
+    self.api.get('events.register')('cmd_shconfirm', self.cmd_superhero)
+    self.api.get('events.register')('cmd_shloudconfirm', self.cmd_superhero)
 
-    self.event.register('trigger_lvlpreremort', self._preremort)
-    self.event.register('trigger_lvlremortcomp', self._remortcomp)
-    self.event.register('trigger_lvltier', self._tier)
+    self.api.get('events.register')('trigger_lvlpreremort', self._preremort)
+    self.api.get('events.register')('trigger_lvlremortcomp', self._remortcomp)
+    self.api.get('events.register')('trigger_lvltier', self._tier)
 
   def _gmcpstatus(self, _=None):
     """
     check gmcp status when tiering
     """
-    state = exported.GMCP.getv('char.status.state')
+    state = self.api.get('GMCP.getv')('char.status.state')
     if state == 2:
-      exported.sendtoclient('seen2')
+      self.api.get('ouput.client')('seen2')
       self.variables['seen2'] = True
-      self.event.unregister('GMCP:char.status', self._gmcpstatus)
-      self.event.register('GMCP:char.base', self._gmcpbase)
+      self.api.get('events.unregister')('GMCP:char.status', self._gmcpstatus)
+      self.api.get('events.register')('GMCP:char.base', self._gmcpbase)
 
   def _gmcpbase(self, _=None):
     """
     look for a new base when we remort
     """
-    exported.sendtoclient('called char.base')
-    state = exported.GMCP.getv('char.status.state')
+    self.api.get('output.client')('called char.base')
+    state = self.api.get('GMCP.getv')('char.status.state')
     if self.variables['tiering'] and self.variables['seen2'] and state == 3:
-      exported.sendtoclient('in char.base')
-      self.event.unregister('GMCP:char.base', self._gmcpstatus)
+      self.api.get('output.client')('in char.base')
+      self.api.get('events.unregister')('GMCP:char.base', self._gmcpstatus)
       self._lvl({'level':1})
 
   def _tier(self, _=None):
@@ -156,8 +155,8 @@ class Plugin(BasePlugin):
     about to tier
     """
     self.variables['tiering'] = True
-    exported.sendtoclient('tiering')
-    self.event.register('GMCP:char.status', self._gmcpstatus)
+    self.api.get('output.client')('tiering')
+    self.api.get('events.register')('GMCP:char.status', self._gmcpstatus)
 
   def _remortcomp(self, _=None):
     """
@@ -172,26 +171,26 @@ class Plugin(BasePlugin):
     set the preremort flag
     """
     self.variables['preremort'] = True
-    exported.event.eraise('aard_level_preremort', {})
+    self.api.get('events.eraise')('aard_level_preremort', {})
 
   def cmd_superhero(self, _=None):
     """
     figure out what is done when superhero is typed
     """
-    exported.sendtoclient('superhero was typed')
+    self.api.get('output.client')('superhero was typed')
     print 'trying to got a sh'
-    exported.trigger.togglegroup('superhero', True)
+    self.api.get('trigger.togglegroup')('superhero', True)
     self._lvl({'level':201})
 
   def _superherobad(self, _=None):
     """
     undo things that we typed if we didn't really superhero
     """
-    exported.sendtoclient('didn\'t sh though')
+    self.api.get('output.client')('didn\'t sh though')
     print 'didn\'t sh though'
-    exported.trigger.togglegroup('superhero', False)
-    exported.trigger.togglegroup('linfo', False)
-    self.event.unregister('trigger_emptyline', self._finish)
+    self.api.get('trigger.togglegroup')('superhero', False)
+    self.api.get('trigger.togglegroup')('linfo', False)
+    self.api.get('events.unregister')('trigger_emptyline', self._finish)
 
   def resetlevel(self):
     """
@@ -231,17 +230,17 @@ class Plugin(BasePlugin):
     self.resetlevel()
     if 'triggername' in args and (args['triggername'] == 'lvlpup' \
         or args['triggername'] == 'lvlpupbless'):
-      self.levelinfo['level'] = exported.GMCP.getv('char.status.level')
-      self.levelinfo['totallevels'] = exported.aardu.getactuallevel()
+      self.levelinfo['level'] = self.api.get('GMCP.getv')('char.status.level')
+      self.levelinfo['totallevels'] = self.api.get('aardu.getactuallevel')()
       self.levelinfo['type'] = 'pup'
     else:
       self.levelinfo['level'] = args['level']
-      self.levelinfo['totallevels'] = exported.aardu.getactuallevel(
+      self.levelinfo['totallevels'] = self.api.get('aardu.getactuallevel')(
                                                             args['level'])
       self.levelinfo['type'] = 'level'
 
-    exported.trigger.togglegroup('linfo', True)
-    self.event.register('trigger_emptyline', self._finish)
+    self.api.get('trigger.togglegroup')('linfo', True)
+    self.api.get('events.register')('trigger_emptyline', self._finish)
 
 
   def _lvlblesstrains(self, args):
@@ -283,25 +282,25 @@ class Plugin(BasePlugin):
       return
     self.levelinfo['finishtime'] = time.time()
     self.levelinfo.sync()
-    exported.trigger.togglegroup('linfo', False)
-    self.event.unregister('trigger_emptyline', self._finish)
-    exported.event.eraise('aard_level_gain', copy.deepcopy(self.levelinfo))
+    self.api.get('trigger.togglegroup')('linfo', False)
+    self.api.get('events.unregister')('trigger_emptyline', self._finish)
+    self.api.get('eventa.eraise')('aard_level_gain', copy.deepcopy(self.levelinfo))
     if self.levelinfo['level'] == 200 and self.levelinfo['type'] == 'level':
-      exported.msg('raising hero event', 'level')
-      exported.event.eraise('aard_level_hero', {})
+      self.api.get('output.msg')('raising hero event', 'level')
+      self.api.get('events.eraise')('aard_level_hero', {})
     elif self.levelinfo['level'] == 201 and self.levelinfo['type'] == 'level':
-      exported.msg('raising superhero event', 'level')
-      exported.event.eraise('aard_level_superhero', {})
+      self.api.get('output.msg')('raising superhero event', 'level')
+      self.api.get('events.eraise')('aard_level_superhero', {})
     elif self.levelinfo['level'] == 1:
       if self.variables['tiering']:
-        exported.msg('raising tier event', 'level')
+        self.api.get('output.msg')('raising tier event', 'level')
         self.variables['tiering'] = False
         self.variables['seen2'] = False
-        exported.event.eraise('aard_level_tier', {})
+        self.api.get('events.eraise')('aard_level_tier', {})
       else:
-        exported.msg('raising remort event', 'level')
+        self.api.get('output.msg')('raising remort event', 'level')
         self.variables['remortcomp'] = False
-        exported.event.eraise('aard_level_remort', {})
+        self.api.get('events.eraise')('aard_level_remort', {})
 
   def savestate(self):
     """

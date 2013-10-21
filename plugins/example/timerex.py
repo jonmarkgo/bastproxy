@@ -3,7 +3,6 @@ $Id$
 
 This plugin is an example plugin to show how to use timers
 """
-from libs import exported
 from plugins import BasePlugin
 
 NAME = 'Timer Example'
@@ -36,25 +35,25 @@ class Plugin(BasePlugin):
     """
     send a message to the mud and client
     """
-    exported.sendtoclient('@RHere is the timer that fires every 600 seconds!')
-    exported.execute('look')
+    self.api.get('output.client')('@RHere is the timer that fires every 600 seconds!')
+    self.api.get('input.execute')('look')
 
   def test_to_user(self):
     """
     test a onetime timer
     """
-    exported.sendtoclient('@RA onetime timer just fired.')
+    self.api.get('output.client')('@RA onetime timer just fired.')
 
   def test_timewsec(self):
     """
     test an time timer with seconds
     """
-    exported.sendtoclient(
+    self.api.get('output.client')(
             'this is the timer that starts at 2010 and goes every 1 minute')
 
   def test_time(self):
     """
     test an time timer
     """
-    exported.sendtoclient(
+    self.api.get('output.client')(
             'this is the timer that fires at noon')

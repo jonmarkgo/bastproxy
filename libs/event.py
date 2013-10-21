@@ -11,12 +11,12 @@ This plugin handles events.
 import time
 import datetime
 import re
-from libs import exported
 from libs.color import convertcolors
 from libs.timing import timeit
 from libs.utils import secondstodhms
+from libs.api import API
 
-class Event:
+class Event(object):
   """
   a basic event class
   """
@@ -107,7 +107,7 @@ class TimerEvent(Event):
                                   self.enabled, self.nextcall)
 
 
-class EventMgr:
+class EventMgr(object):
   """
   a class to manage events, events include
     timers
@@ -124,38 +124,42 @@ class EventMgr:
     self.timerlookup = {}
     self.triggergroups = {}
     self.pluginlookup = {}
+    self.api = API()
     self.lasttime = int(time.time())
     self.registerevent('from_mud_event', self.checktrigger, prio=1)
     self.registerevent('from_client_event', self.checkcmd)
-    exported.msg('lasttime:  %s' % self.lasttime, 'events')
+    self.api.get('output.msg')('lasttime:  %s' % self.lasttime, self.sname)
 
-    exported.add(self.addtrigger, 'trigger', 'add')
-    exported.add(self.removetrigger, 'trigger', 'remove')
-    exported.add(self.toggletrigger, 'trigger', 'toggle')
-    exported.add(self.toggletriggergroup, 'trigger', 'togglegroup')
-    exported.add(self.toggletriggeromit, 'trigger', 'toggleomit')
+    self.api.add('trigger', 'add', self.addtrigger)
+    self.api.add('trigger', 'remove', self.removetrigger)
+    self.api.add('trigger', 'toggle', self.toggletrigger)
+    self.api.add('trigger', 'toggletroup', self.toggletriggergroup)
+    self.api.add('trigger', 'toggleomit', self.toggletriggeromit)
 
-    exported.add(self.registerevent, 'event', 'register')
-    exported.add(self.unregisterevent, 'event', 'unregister')
-    exported.add(self.raiseevent, 'event', 'eraise')
-    exported.add(self.removeplugin, 'event', 'removeplugin')
+    self.api.add(self.sname, 'register', self.registerevent)
+    self.api.add(self.sname, 'unregister', self.unregisterevent)
+    self.api.add(self.sname, 'eraise', self.raiseevent)
+    self.api.add(self.sname, 'removeplugin', self.removeplugin)
 
-    exported.add(self.addtimer, 'timer', 'add')
-    exported.add(self.removetimer, 'timer', 'remove')
-    exported.add(self.toggletimer, 'timer', 'toggle')
+    self.api.add('timer', 'add', self.addtimer)
+    self.api.add('timer', 'remove', self.removetimer)
+    self.api.add('timer', 'toggle', self.toggletimer)
 
-    exported.add(self.addwatch, 'watch', 'add')
-    exported.add(self.removewatch, 'watch', 'remove')
+    self.api.add('watch', 'add', self.addwatch)
+    self.api.add('watch', 'remove', self.removewatch)
+
+    #print 'api', self.api.api
+    #print 'overloadedapi', self.api.overloadedapi
 
   def addwatch(self, cmdname, args):
     """
     add a watch
     """
     if not ('regex' in args):
-      exported.msg('cmdwatch %s has no regex, not adding' % cmdname, 'cmds')
+      self.api.get('output.msg')('cmdwatch %s has no regex, not adding' % cmdname, 'cmds')
       return
     if args['regex'] in self.regexlookup:
-      exported.msg(
+      self.api.get('output.msg')(
           'cmdwatch %s tried to add a regex that already existed for %s' % \
                       (cmdname, self.regexlookup[args['regex']]), 'cmds')
       return
@@ -164,7 +168,7 @@ class EventMgr:
       self.watchcmds[cmdname]['compiled'] = re.compile(args['regex'])
       self.regexlookup[args['regex']] = cmdname
     except:
-      exported.write_traceback(
+      self.api.get('output.traceback')(
           'Could not compile regex for cmd watch: %s : %s' % \
                 (cmdname, args['regex']))
 
@@ -176,7 +180,7 @@ class EventMgr:
       del self.regexlookup[self.watchcmds[cmdname]['regex']]
       del self.watchcmds[cmdname]
     else:
-      exported.msg('removewatch: watch %s does not exist' % cmdname, 'cmds')
+      self.api.get('output.msg')('removewatch: watch %s does not exist' % cmdname, 'cmds')
 
   def checkcmd(self, data):
     """
@@ -190,8 +194,8 @@ class EventMgr:
         targs = mat.groupdict()
         targs['cmdname'] = 'cmd_' + i
         targs['data'] = tdat
-        exported.msg('raising %s' % targs['cmdname'], 'cmds')
-        tdata = exported.event.eraise('cmd_' + i, targs)
+        self.api.get('output.msg')('raising %s' % targs['cmdname'], 'cmds')
+        tdata = self.raiseevent('cmd_' + i, targs)
         if 'changed' in tdata:
           data['nfromdata'] = tdata['changed']
 
@@ -209,13 +213,13 @@ class EventMgr:
       omit: (optional) whether to omit the line, default is False
     """
     if not ('regex' in args):
-      exported.msg('trigger %s has no regex, not adding' % triggername,
-                            'events')
+      self.api.get('output.msg')('trigger %s has no regex, not adding' % triggername,
+                            self.sname)
       return
     if args['regex'] in self.regexlookup:
-      exported.msg(
+      self.api.get('output.msg')(
             'trigger %s tried to add a regex that already existed for %s' % \
-                    (triggername, self.regexlookup[args['regex']]), 'events')
+                    (triggername, self.regexlookup[args['regex']]), self.sname)
       return
     if not ('enabled' in args):
       args['enabled'] = True
@@ -234,7 +238,7 @@ class EventMgr:
           self.triggergroups[args['group']] = []
         self.triggergroups[args['group']].append(triggername)
     except:
-      exported.write_traceback(
+      self.api.get('output.traceback')(
               'Could not compile regex for trigger: %s : %s' % \
                       (triggername, args['regex']))
 
@@ -246,8 +250,8 @@ class EventMgr:
       del self.regexlookup[self.triggers[triggername]['regex']]
       del self.triggers[triggername]
     else:
-      exported.msg('deletetrigger: trigger %s does not exist' % \
-                        triggername, 'events')
+      self.api.get('output.msg')('deletetrigger: trigger %s does not exist' % \
+                        triggername, self.sname)
 
   def toggletrigger(self, triggername, flag):
     """
@@ -256,8 +260,8 @@ class EventMgr:
     if triggername in self.triggers:
       self.triggers[triggername]['enabled'] = flag
     else:
-      exported.msg('toggletrigger: trigger %s does not exist' % \
-                        triggername, 'events')
+      self.api.get('output.msg')('toggletrigger: trigger %s does not exist' % \
+                        triggername, self.sname)
 
   def toggletriggeromit(self, triggername, flag):
     """
@@ -266,14 +270,14 @@ class EventMgr:
     if triggername in self.triggers:
       self.triggers[triggername]['omit'] = flag
     else:
-      exported.msg('toggletriggeromit: trigger %s does not exist' % \
-                        triggername, 'events')
+      self.api.get('output.msg')('toggletriggeromit: trigger %s does not exist' % \
+                        triggername, self.sname)
 
   def toggletriggergroup(self, triggroup, flag):
     """
     toggle a trigger group
     """
-    exported.msg('toggletriggergroup: %s to %s' % (triggroup, flag), 'events')
+    self.api.get('output.msg')('toggletriggergroup: %s to %s' % (triggroup, flag), self.sname)
     if triggroup in self.triggergroups:
       for i in self.triggergroups[triggroup]:
         self.toggletrigger(i, flag)
@@ -315,9 +319,9 @@ class EventMgr:
     raise a trigger event
     """
     tdat = self.raiseevent('trigger_' + triggername, args)
-    exported.msg('trigger raiseevent returned: %s' % tdat, 'events')
+    self.api.get('output.msg')('trigger raiseevent returned: %s' % tdat, self.sname)
     if tdat and 'newline' in tdat:
-      exported.msg('changing line from trigger', 'events')
+      self.api.get('output.msg')('changing line from trigger', self.sname)
       origargs['fromdata'] = convertcolors(tdat['newline'])
     if triggername in self.triggers and self.triggers[triggername]['omit']:
       origargs['fromdata'] = ''
@@ -341,8 +345,8 @@ class EventMgr:
       self.events[eventname][prio] = []
     if self.events[eventname][prio].count(func) == 0:
       self.events[eventname][prio].append(func)
-      exported.msg('adding function %s to event %s' % (func, eventname),
-                     'events')
+      self.api.get('output.msg')('adding function %s (plugin: %s) to event %s' % (func, plugin, eventname),
+                     self.sname)
     if plugin:
       if not (plugin in self.pluginlookup):
         self.pluginlookup[plugin] = {}
@@ -366,8 +370,8 @@ class EventMgr:
       keys.sort()
       for i in keys:
         if self.events[eventname][i].count(func) == 1:
-          exported.msg('removing function %s from event %s' % (
-                func, eventname), 'events')
+          self.api.get('output.msg')('removing function %s from event %s' % (
+                func, eventname), self.sname)
           self.events[eventname][i].remove(func)
 
       if plugin and plugin in self.pluginlookup:
@@ -378,12 +382,12 @@ class EventMgr:
     """
     remove all events related to a plugin
     """
-    exported.msg('removing plugin %s' % plugin, 'events')
+    self.api.get('output.msg')('removing plugin %s' % plugin, self.sname)
     if plugin and plugin in self.pluginlookup:
       tkeys = self.pluginlookup[plugin]['events'].keys()
       for i in tkeys:
         event = self.pluginlookup[plugin]['events'][i]
-        self.unregisterevent(event['eventname'], i, plugin=plugin)
+        self.unregisterevent(event['eventname'], i)
 
       self.pluginlookup[plugin]['events'] = {}
 
@@ -391,7 +395,7 @@ class EventMgr:
     """
     raise an event with args
     """
-    exported.msg('raiseevent %s' % eventname, 'events')
+    self.api.get('output.msg')('raiseevent %s' % eventname, self.sname)
     nargs = args.copy()
     nargs['eventname'] = eventname
     if eventname in self.events:
@@ -402,16 +406,16 @@ class EventMgr:
           for i in self.events[eventname][k]:
             try:
               tnargs = i(nargs)
-              #exported.msg('%s: returned %s' % (eventname, tnargs), 'events')
+              #self.api.get('output.msg')('%s: returned %s' % (eventname, tnargs), self.sname)
               if tnargs:
                 nargs = tnargs
             except:
-              exported.write_traceback(
+              self.api.get('output.traceback')(
                       "error when calling function for event %s" % eventname)
     else:
       pass
-      #exported.msg('nothing to process for %s' % eventname)
-    #exported.msg('returning', nargs)
+      #self.api.get('output.msg')('nothing to process for %s' % eventname)
+    #self.api.get('output.msg')('returning', nargs)
     return nargs
 
   def addtimer(self, name, args):
@@ -423,19 +427,19 @@ class EventMgr:
       onetime: (optional) whether this is a onetime timer, default is False
     """
     if not ('seconds' in args):
-      exported.msg('timer %s has no seconds, not adding' % name, 'events')
+      self.api.get('output.msg')('timer %s has no seconds, not adding' % name, self.sname)
       return
     if not ('func' in args):
-      exported.msg('timer %s has no function, not adding' % name, 'events')
+      self.api.get('output.msg')('timer %s has no function, not adding' % name, self.sname)
       return
 
     if 'nodupe' in args and args['nodupe']:
       if name in self.timerlookup:
-        exported.msg('trying to add duplicate timer: %s' % name)
+        self.api.get('output.msg')('trying to add duplicate timer: %s' % name)
         return
 
     tevent = TimerEvent(name, args)
-    exported.msg('adding', tevent)
+    self.api.get('output.msg')('adding', tevent)
     self._addtimer(tevent)
     return tevent
 
@@ -451,7 +455,7 @@ class EventMgr:
           self.timerevents[ttime].remove(tevent)
         del self.timerlookup[name]
     except KeyError:
-      exported.msg('%s does not exist' % name, 'events')
+      self.api.get('output.msg')('%s does not exist' % name, self.sname)
 
   def toggletimer(self, name, flag):
     """
@@ -476,7 +480,7 @@ class EventMgr:
     """
     ntime = int(time.time())
     if ntime - self.lasttime > 1:
-      exported.msg('timer had to check multiple seconds', 'events')
+      self.api.get('output.msg')('timer had to check multiple seconds', self.sname)
     for i in range(self.lasttime + 1, ntime + 1):
       if i in self.timerevents and len(self.timerevents[i]) > 0:
         for timer in self.timerevents[i]:
@@ -484,7 +488,7 @@ class EventMgr:
             try:
               timer.execute()
             except:
-              exported.write_traceback('A timer had an error')
+              self.api.get('output.traceback')('A timer had an error')
           self.timerevents[i].remove(timer)
           if not timer.onetime:
             timer.nextcall = timer.nextcall + timer.seconds
@@ -492,23 +496,32 @@ class EventMgr:
           else:
             self.removetimer(timer.name)
           if len(self.timerevents[i]) == 0:
-            #exported.msg('deleting', i)
+            #self.api.get('output.msg')('deleting', i)
             del self.timerevents[i]
 
     self.lasttime = ntime
+
+  def loggerloaded(self, args):
+    """
+    initialize the event logger types
+    """
+    self.api.get('logger.adddtype')(self.sname)
+    self.api.get('logger.console')(self.sname)
+
 
   def load(self):
     """
     load the module
     """
-    exported.LOGGER.adddtype(self.sname)
-    exported.LOGGER.cmd_console(self.sname)
+    self.api.get('managers.add')(self.sname, self)
+    self.registerevent('plugin_logger_loaded', self.loggerloaded)
+    self.raiseevent('plugin_event_loaded', {})
 
   def unload(self):
     """
     unload the module
     """
-    exported.remove('event')
-    exported.remove('trigger')
-    exported.remove('timer')
+    self.api.remove('event')
+    self.api.remove('trigger')
+    self.api.remove('timer')
 

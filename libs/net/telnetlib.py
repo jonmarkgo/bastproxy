@@ -9,10 +9,11 @@ J. Reynolds
 """
 
 from __future__ import print_function
-from libs import exported
 # Imported modules
 import asyncore
 import socket
+
+from libs.api import API
 
 __all__ = ["Telnet"]
 
@@ -173,6 +174,7 @@ class Telnet(asyncore.dispatcher):
     self.host = host
     self.port = port
     self.rawq = ''
+    self.api = API()
     self.irawq = 0
     self.cookedq = ''
     self.eof = 0
@@ -184,7 +186,6 @@ class Telnet(asyncore.dispatcher):
     self.option_callback = self.handleopt
     self.option_handlers = {}
     self.connected = False
-    exported.CONNECTED = False
     self.ttype = 'Unknown'
     self.debug_types = []
 
@@ -255,7 +256,7 @@ class Telnet(asyncore.dispatcher):
     if 'mtype' in kwargs:
       mtype = kwargs['mtype']
     if kwargs['level'] >= self.debuglevel or mtype in self.debug_types:
-      exported.msg('Telnet(%-15s - %-5s %-7s %-5s): ' % \
+      self.api.get('output.msg')('Telnet(%-15s - %-5s %-7s %-5s): ' % \
                           (self.host, self.port, self.ttype, mtype), mtype)
 
   def set_debuglevel(self, debuglevel):
@@ -276,7 +277,6 @@ class Telnet(asyncore.dispatcher):
     self.set_reuse_addr()
     self.connect((self.host, self.port))
     self.connected = True
-    exported.CONNECTED = True
     for i in self.option_handlers:
       self.option_handlers[i].onconnect()
 
@@ -310,12 +310,12 @@ class Telnet(asyncore.dispatcher):
     """
     self.msg('adding to buffer', raw, outbuffer)
     if not raw and IAC in outbuffer:
-    #if not raw and outbuffer.find(IAC) >= 0:      
+    #if not raw and outbuffer.find(IAC) >= 0:
       outbuffer = outbuffer.replace(IAC, IAC+IAC)
 
     outbuffer = self.convert_outdata(outbuffer)
 
-    self.outbuffer = self.outbuffer + outbuffer     
+    self.outbuffer = self.outbuffer + outbuffer
 
   def convert_outdata(self, outbuffer):
     """
@@ -334,7 +334,7 @@ class Telnet(asyncore.dispatcher):
     """
     hand an error
     """
-    exported.write_traceback("Telnet error: %s" % self.ttype)
+    self.api.get('output.traceback')("Telnet error: %s" % self.ttype)
 
   def handle_read(self):
     """
@@ -422,10 +422,10 @@ class Telnet(asyncore.dispatcher):
               self.sbdataq = self.sbdataq + buf[1]
               buf[1] = ''
               if len(self.sbdataq) == 1:
-                self.msg('proccess_rawq: got an SE', 
+                self.msg('proccess_rawq: got an SE',
                                   ord(self.sbdataq), level=2)
               else:
-                self.msg('proccess_rawq: got an SE (2)', 
+                self.msg('proccess_rawq: got an SE (2)',
                                   self.sbdataq, level=2)
             if self.option_callback:
               # Callback is supposed to look into
@@ -459,7 +459,7 @@ class Telnet(asyncore.dispatcher):
     except EOFError: # raised by self.rawq_getchar()
       self.iacseq = '' # Reset on EOF
       self.sb = 0
-      
+
     self.cookedq = self.cookedq + buf[0]
     self.sbdataq = self.sbdataq + buf[1]
 

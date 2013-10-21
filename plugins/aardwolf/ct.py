@@ -3,7 +3,6 @@ $Id$
 
 This plugin includes a combat tracker for aardwolf
 """
-from libs import exported
 from libs import utils
 from plugins import BasePlugin
 import math
@@ -25,7 +24,7 @@ class Plugin(BasePlugin):
     initialize the instance
     """
     BasePlugin.__init__(self, *args, **kwargs)
-    self.event.register('aard_mobkill', self.mobkill)
+    self.api.get('events.register')('aard_mobkill', self.mobkill)
     self.dependencies.append('mobk')
     self.addsetting('statcolor', '@W', 'color', 'the stat color')
     self.addsetting('infocolor', '@x33', 'color', 'the info color')
@@ -120,16 +119,16 @@ class Plugin(BasePlugin):
     """
     self.msgs.append(msg)
 
-    self.event.register('trigger_emptyline', self.showmessages)
+    self.api.get('events.register')('trigger_emptyline', self.showmessages)
 
   def showmessages(self, _=None):
     """
     show a message
     """
 
-    self.event.unregister('trigger_emptyline', self.showmessages)
+    self.api.get('events.unregister')('trigger_emptyline', self.showmessages)
     for i in self.msgs:
-      exported.sendtoclient(i, preamble=False)
+      self.api.get('output.client')(i, preamble=False)
 
     self.msgs = []
 

@@ -5,7 +5,6 @@ This plugin handles mobkills on Aardwolf
 """
 import time
 import copy
-from libs import exported
 from libs.color import strip_ansi
 from plugins import BasePlugin
 
@@ -115,29 +114,29 @@ class Plugin(BasePlugin):
     self.triggers['mobdamage2'] = {
       'regex':"^Your (.*) \[(.*)\]$"}
 
-    self.event.register('trigger_mobxp', self.mobxp)
-    self.event.register('trigger_mobxpptless', self.mobxpptless)
-    self.event.register('trigger_mobswitch', self.mobswitch)
-    self.event.register('trigger_mobflee', self.mobnone)
-    self.event.register('trigger_mobretreat', self.mobnone)
-    self.event.register('trigger_mobblessxp', self.mobblessxp)
-    self.event.register('trigger_mobbonusxp', self.mobbonusxp)
-    self.event.register('trigger_mobgold', self.mobgold)
-    self.event.register('trigger_mobsplitgold', self.mobgold)
-    self.event.register('trigger_mobname', self.mobname)
-    self.event.register('trigger_mobsac', self.mobname)
-    self.event.register('trigger_mobconsume', self.mobname)
-    self.event.register('trigger_mobtrivia', self.mobtrivia)
-    self.event.register('trigger_mobvorpal', self.mobvorpal)
-    self.event.register('trigger_mobassassin', self.mobassassin)
-    self.event.register('trigger_mobdeathblow', self.mobdeathblow)
-    self.event.register('trigger_mobslit', self.mobslit)
-    self.event.register('trigger_mobdisintegrate', self.mobdisintegrate)
-    self.event.register('trigger_mobbanish', self.mobbanish)
-    self.event.register('trigger_mobdamage', self.mobdamage)
-    self.event.register('trigger_mobdamage2', self.mobdamage)
+    self.api.get('events.register')('trigger_mobxp', self.mobxp)
+    self.api.get('events.register')('trigger_mobxpptless', self.mobxpptless)
+    self.api.get('events.register')('trigger_mobswitch', self.mobswitch)
+    self.api.get('events.register')('trigger_mobflee', self.mobnone)
+    self.api.get('events.register')('trigger_mobretreat', self.mobnone)
+    self.api.get('events.register')('trigger_mobblessxp', self.mobblessxp)
+    self.api.get('events.register')('trigger_mobbonusxp', self.mobbonusxp)
+    self.api.get('events.register')('trigger_mobgold', self.mobgold)
+    self.api.get('events.register')('trigger_mobsplitgold', self.mobgold)
+    self.api.get('events.register')('trigger_mobname', self.mobname)
+    self.api.get('events.register')('trigger_mobsac', self.mobname)
+    self.api.get('events.register')('trigger_mobconsume', self.mobname)
+    self.api.get('events.register')('trigger_mobtrivia', self.mobtrivia)
+    self.api.get('events.register')('trigger_mobvorpal', self.mobvorpal)
+    self.api.get('events.register')('trigger_mobassassin', self.mobassassin)
+    self.api.get('events.register')('trigger_mobdeathblow', self.mobdeathblow)
+    self.api.get('events.register')('trigger_mobslit', self.mobslit)
+    self.api.get('events.register')('trigger_mobdisintegrate', self.mobdisintegrate)
+    self.api.get('events.register')('trigger_mobbanish', self.mobbanish)
+    self.api.get('events.register')('trigger_mobdamage', self.mobdamage)
+    self.api.get('events.register')('trigger_mobdamage2', self.mobdamage)
 
-    self.event.register('GMCP:char.status', self.gmcpcharstatus)
+    self.api.get('events.register')('GMCP:char.status', self.gmcpcharstatus)
 
   def gmcpcharstatus(self, args):
     """
@@ -200,7 +199,6 @@ class Plugin(BasePlugin):
     """
     if args['triggername'] in ['mobsac', 'mobconsume'] \
         and self.kill_info['name']:
-      #exported.sendtoclient('got mobsac/mobconsume with name')
       self.raise_kill()
 
   def mobxpptless(self, _=None):
@@ -226,7 +224,6 @@ class Plugin(BasePlugin):
     """
     add regular xp
     """
-    #exported.sendtoclient('mobxp')
     mxp = args['xp']
     if '+' in mxp:
       newxp = 0
@@ -316,10 +313,9 @@ class Plugin(BasePlugin):
     """
     raise a kill
     """
-    #exported.sendtoclient('raising a kill')
     self.kill_info['finishtime'] = time.time()
-    self.kill_info['room_id'] = exported.GMCP.getv('room.info.num')
-    self.kill_info['level'] = exported.aardu.getactuallevel()
+    self.kill_info['room_id'] = self.api.get('GMCP.getv')('room.info.num')
+    self.kill_info['level'] = self.api.get('.aardu.getactuallevel')()
     self.kill_info['time'] = time.time()
     if not self.kill_info['raised']:
       if not self.kill_info['name']:
@@ -328,8 +324,8 @@ class Plugin(BasePlugin):
                                   self.kill_info['bonusxp'] + \
                                   self.kill_info['blessingxp']
 
-      self.msg('raising a mobkill')
-      exported.event.eraise('aard_mobkill', copy.deepcopy(self.kill_info))
+      self.api.get('output.msg')('raising a mobkill')
+      self.api.get('events.eraise')('aard_mobkill', copy.deepcopy(self.kill_info))
 
     self.reset_kill()
 
@@ -356,7 +352,7 @@ class Plugin(BasePlugin):
     """
     saw a damage line
     """
-    tdam = exported.aardu.parsedamageline(args['line'])
+    tdam = self.api.get('aardu.parsedamageline')(args['line'])
 
     if not self.kill_info['starttime']:
       self.kill_info['starttime'] = time.time()

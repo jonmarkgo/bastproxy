@@ -13,10 +13,10 @@ import glob
 import os
 import sys
 
-from libs import exported
 from libs.utils import find_files, verify, convert
 from libs.persistentdict import PersistentDict
 from libs.utils import DotDict
+from libs.api import API
 import inspect
 
 class PersistentDictEvent(PersistentDict):
@@ -28,6 +28,7 @@ class PersistentDictEvent(PersistentDict):
     init the class
     """
     self.plugin = plugin
+    self.api = API()
     PersistentDict.__init__(self, filename, *args, **kwds)
 
   def __setitem__(self, key, val):
@@ -39,7 +40,7 @@ class PersistentDictEvent(PersistentDict):
     dict.__setitem__(self, key, val)
     eventname = '%s_%s' % (self.plugin.sname, key)
     if not self.plugin.resetflag:
-      exported.event.eraise(eventname, {'var':key,
+      self.api.get('events.eraise')(eventname, {'var':key,
                                         'newvalue':val})
 
 
@@ -73,7 +74,7 @@ def findplugin(name):
   return False, ''
 
 
-class BasePlugin:
+class BasePlugin(object):
   """
   a base class for plugins
   """
@@ -89,13 +90,14 @@ class BasePlugin:
     self.dependencies = []
     self.canreload = True
     self.resetflag = False
-    self.savedir = os.path.join(exported.BASEPATH, 'data',
+    self.api = API()
+    self.savedir = os.path.join(self.api.BASEPATH, 'data',
                                       'plugins', self.sname)
     try:
       os.makedirs(self.savedir)
     except OSError:
       pass
-    self.savefile = os.path.join(exported.BASEPATH, 'data',
+    self.savefile = os.path.join(self.api.BASEPATH, 'data',
                                     'plugins', self.sname, 'variables.txt')
     self.fullname = fullname
     self.basepath = basepath
@@ -106,99 +108,97 @@ class BasePlugin:
     self.variables = PersistentDictEvent(self, self.savefile,
                             'c', format='json')
     self.settings = {}
-    try:
-      self.event
-    except:
-      self.event = DotDict()
-    self.event.register = self.eventregister
-    self.event.unregister = self.eventunregister
-    self.event.eraise = exported.event.eraise
+    self.api.overload('events', 'register', self.eventregister)
+    self.api.overload('events', 'unregister', self.eventunregister)
+    self.api.overload('output', 'msg', self.msg)
     self.timers = {}
     self.triggers = {}
     self.exported = {}
     self.cmdwatch = {}
 
-    exported.LOGGER.adddtype(self.sname)
+    self.api.get('logger.adddtype')(self.sname)
     self.cmds['set'] = {'func':self.cmd_set, 'shelp':'Show/Set Variables'}
     self.cmds['reset'] = {'func':self.cmd_reset, 'shelp':'reset the plugin'}
     self.cmds['save'] = {'func':self.cmd_save, 'shelp':'save plugin state'}
-    self.event.register('firstactive', self.firstactive)
+    self.api.get('events.register')('firstactive', self.firstactive)
 
   def load(self):
     """
     load stuff
     """
     # load all commands
+    proxy = self.api.get('managers.getm')('proxy')
+
     for i in self.cmds:
       cmd = self.cmds[i]
       if not 'lname' in cmd:
         cmd['lname'] = self.name
-      exported.cmd.add(self.sname, i, cmd)
+      self.api.get('commands.add')(self.sname, i, cmd)
       #self.addCmd(i, cmd['func'], cmd['shelp'])
 
     # if there is a default command, then set it
     if self.defaultcmd:
-      exported.cmd.setdefault(self.defaultcmd)
+      self.api.get('commands.default')(self.sname, self.defaultcmd)
 
     self.variables.pload()
 
     # register all timers
     for i in self.timers:
       tim = self.timers[i]
-      exported.timer.add(i, tim)
+      self.api.get('timer.add')(i, tim)
 
     for i in self.triggers:
-      exported.trigger.add(i, self.triggers[i])
+      self.api.get('trigger.add')(i, self.triggers[i])
 
     for i in self.cmdwatch:
-      exported.cmdwatch.add(i, self.watch[i])
+      self.api.get('cmdwatch.add')(i, self.watch[i])
 
     if len(self.exported) > 0:
       for i in self.exported:
-        exported.add(self.exported[i]['func'], self.sname, i)
+        self.api.add(self.sname, i, self.exported[i]['func'])
 
-    if exported.PROXY and exported.PROXY.connected:
-      if exported.aardu.firstactive():
-        self.event.unregister('firstactive', self.firstactive)
+    if proxy and proxy.connected:
+      if self.api.get('aardu.firstactive')():
+        self.api.get('events.unregister')('firstactive', self.firstactive)
         self.firstactive()
 
-    self.event.eraise('event_plugin_unload', {'plugin':self.sname})
+    self.api.get('events.eraise')('event_plugin_load', {'plugin':self.sname})
 
   def unload(self):
     """
     unload stuff
     """
-    self.msg('unloading %s' % self.name)
+    self.api.get('output.msg')('unloading %s' % self.name)
+
     #clear all commands for this plugin
-    exported.cmd.reset(self.sname)
+    self.api.get('commands.reset')(self.sname)
 
     #remove all events
-    exported.event.removeplugin(self.sname)
+    self.api.get('events.removeplugin')(self.sname)
 
     # delete all timers
     for i in self.timers:
-      exported.timer.remove(i)
+      self.api.get('timer.remove')(i)
 
     for i in self.triggers:
-      exported.trigger.remove(i)
+      self.api.get('trigger.remove')(i)
 
     for i in self.cmdwatch:
-      exported.cmdwatch.remove(i, self.watch[i])
+      self.api.get('cmdwatch.remove')(i, self.watch[i])
 
     #save the state
     self.savestate()
 
-    if len(self.exported) > 0:
-      exported.remove(None, self.sname)
+    self.api.remove(self.sname)
 
-    self.event.eraise('event_plugin_unload', {'plugin':self.sname})
+    self.api.get('events.eraise')('event_plugin_unload', {'plugin':self.sname})
 
 
   def msg(self, msg):
     """
     an internal function to send msgs
     """
-    exported.msg(msg, self.sname)
+    self.api.get('output.msg', True)(msg, self.sname)
 
   def savestate(self):
     """
@@ -313,28 +313,24 @@ class BasePlugin:
     """
     if we are connected do
     """
-    self.event.unregister('firstactive', self.firstactive)
+    self.api.get('events.unregister')('firstactive', self.firstactive)
 
   def eventregister(self, eventname, tfunc):
     """
     register an event
     """
-    #if not (eventname in self.events):
-    #  self.events[eventname] = []
-
-    #self.events[eventname].append(tfunc)
-    exported.event.register(eventname, tfunc, plugin=self.sname)
+    # we call the non overloaded version
+    self.api.get('events.register', True)(eventname, tfunc, plugin=self.sname)
 
   def eventunregister(self, eventname, tfunc):
     """
     unregister an event
     """
-    #if eventname in self.events and tfunc in self.events[eventname]:
-    #  self.events[eventname].remove(tfunc)
-    exported.event.unregister(eventname, tfunc, plugin=self.sname)
+    # we call the non overloaded versions
+    self.api.get('events.unregister', True)(eventname, tfunc, plugin=self.sname)
 
 
-class PluginMgr:
+class PluginMgr(object):
   """
   a class to manage plugins
   """
@@ -345,14 +341,15 @@ class PluginMgr:
     self.plugins = {}
     self.pluginl = {}
     self.pluginm = {}
-    self.savefile = os.path.join(exported.BASEPATH, 'data',
+    self.api = API()
+    self.savefile = os.path.join(self.api.BASEPATH, 'data',
                                           'plugins', 'loadedplugins.txt')
     self.loadedplugins = PersistentDict(self.savefile, 'c', format='json')
     self.sname = 'plugins'
     self.lname = 'Plugins'
-    exported.LOGGER.adddtype(self.sname)
-    exported.LOGGER.cmd_console([self.sname])
-    exported.add(self.isinstalled, self.sname)
+    self.api.get('logger.adddtype')(self.sname)
+    self.api.get('logger.console')([self.sname])
+    self.api.add(self.sname, 'isinstalled', self.isinstalled)
 
   def isinstalled(self, pluginname):
     """
@@ -362,20 +359,16 @@ class PluginMgr:
       return True
     return False
 
-  def checkdependency(self, pluginname):
+  def loaddependencies(self, pluginname, dependencies):
     """
-    check the dependencies for a plugin
+    load a list of modules
     """
-    load = []
-    if pluginname in self.plugins:
-      for i in self.plugins[pluginname].dependencies:
-        if i in self.plugins or i in self.pluginl:
-          pass
-        else:
-          load.append(i)
+    for i in dependencies:
+      if i in self.plugins or i in self.pluginl:
+        continue
 
-    for i in load:
-      exported.msg('%s: loading depencency %s' % (pluginname, i), self.sname)
+      self.api.get('output.msg')('%s: loading dependency %s' % (pluginname, i), pluginname)
+
       name, path = findplugin(i)
       if name:
         self.load_module(name, path, force=True)
@@ -475,7 +468,6 @@ class PluginMgr:
           if reason == 'already':
             tmsg.append('Module %s is already loaded' % sname)
           else:
-            self.checkdependency(sname)
             tmsg.append('Load complete: %s - %s' % \
                                           (sname, self.plugins[sname].name))
         else:
@@ -519,7 +511,6 @@ class PluginMgr:
       if self.plugins[args[0]].canreload:
         tret, _ = self.reload_module(args[0], True)
         if tret and tret != True:
-          self.checkdependency(tret)
           tmsg.append("Reload complete: %s" % self.plugins[tret].fullimploc)
           return True, tmsg
       else:
@@ -565,7 +556,7 @@ class PluginMgr:
       if fullimploc in sys.modules:
         return sys.modules[fullimploc].SNAME, 'already'
 
-      exported.msg('loading %s' % fullimploc, self.sname)
+      self.api.get('output.msg')('importing %s' % fullimploc, self.sname)
       _module = __import__(fullimploc)
       _module = sys.modules[fullimploc]
       load = True
@@ -581,24 +572,25 @@ class PluginMgr:
           self.add_plugin(_module, fullname, basepath, fullimploc)
 
         else:
-          exported.msg('Module %s has no Plugin class' % \
+          self.api.get('output.msg')('Module %s has no Plugin class' % \
                                               _module.NAME, self.sname)
 
         _module.__dict__["proxy_import"] = 1
-        exported.sendtoclient("load: loaded %s" % fullimploc)
+        self.api.get('output.client')("load: loaded %s" % fullimploc)
+        self.api.get('output.msg')('loaded %s' % fullimploc, self.sname)
 
         return _module.SNAME, 'Loaded'
       else:
         if fullimploc in sys.modules:
           del sys.modules[fullimploc]
-        exported.msg('Not loading %s (%s) because autoload is False' % \
+        self.api.get('output.msg')('Not loading %s (%s) because autoload is False' % \
                                     (_module.NAME, fullimploc), self.sname)
       return True, 'not autoloaded'
     except:
       if fullimploc in sys.modules:
         del sys.modules[fullimploc]
 
-      exported.write_traceback("Module '%s' refuses to load." % fullimploc)
+      self.api.get('output.traceback')("Module '%s' refuses to load." % fullimploc)
       return False, 'error'
 
   def unload_module(self, fullimploc):
@@ -616,17 +608,17 @@ class PluginMgr:
             try:
               _module.unload()
             except:
-              exported.write_traceback(
+              self.api.get('output.traceback')(
                     "unload: module %s didn't unload properly." % fullimploc)
 
           if not self.remove_plugin(_module.SNAME):
-            exported.sendtoclient('could not remove plugin %s' % fullimploc)
+            self.api.get('output.client')('could not remove plugin %s' % fullimploc)
 
         del sys.modules[fullimploc]
-        exported.sendtoclient("unload: unloaded %s." % fullimploc)
+        self.api.get('output.client')("unload: unloaded %s." % fullimploc)
 
       except:
-        exported.write_traceback(
+        self.api.get('output.traceback')(
                       "unload: had problems unloading %s." % fullimploc)
         return False
     else:
@@ -664,11 +656,14 @@ class PluginMgr:
     plugin.purpose = module.PURPOSE
     plugin.version = module.VERSION
     if plugin.name in self.pluginl:
-      exported.msg('Plugin %s already exists' % plugin.name, self.sname)
+      self.api.get('output.msg')('Plugin %s already exists' % plugin.name, self.sname)
       return False
     if plugin.sname in self.plugins:
-      exported.msg('Plugin %s already exists' % plugin.sname, self.sname)
+      self.api.get('output.msg')('Plugin %s already exists' % plugin.sname, self.sname)
       return False
+
+    #check dependencies here
+    self.loaddependencies(plugin.sname, plugin.dependencies)
 
     plugin.load()
     self.pluginl[plugin.name] = plugin
@@ -707,20 +702,19 @@ class PluginMgr:
     """
     load various things
     """
+    self.api.get('managers.add')('plugin', self)
     self.load_modules("*.py")
-    for i in self.plugins.keys():
-      self.checkdependency(i)
-    exported.cmd.add(self.sname, 'list', {'lname':'Plugin Manager',
+    self.api.get('commands.add')(self.sname, 'list', {'lname':'Plugin Manager',
                           'func':self.cmd_list, 'shelp':'List plugins'})
-    exported.cmd.add(self.sname, 'load', {'lname':'Plugin Manager',
+    self.api.get('commands.add')(self.sname, 'load', {'lname':'Plugin Manager',
                           'func':self.cmd_load, 'shelp':'Load a plugin'})
-    exported.cmd.add(self.sname, 'unload', {'lname':'Plugin Manager',
+    self.api.get('commands.add')(self.sname, 'unload', {'lname':'Plugin Manager',
                           'func':self.cmd_unload, 'shelp':'Unload a plugin'})
-    exported.cmd.add(self.sname, 'reload', {'lname':'Plugin Manager',
+    self.api.get('commands.add')(self.sname, 'reload', {'lname':'Plugin Manager',
                           'func':self.cmd_reload, 'shelp':'Reload a plugin'})
-    exported.cmd.add(self.sname, 'exported', {'lname':'Plugin Manager',
-                          'func':self.cmd_exported,
-                          'shelp':'Examine the exported module'})
-    exported.cmd.setdefault(self.sname, 'list')
-    exported.event.register('savestate', self.savestate, plugin=self.sname)
+    #self.api.get('commands.add')(self.sname, 'exported', {'lname':'Plugin Manager',
+                          #'func':self.cmd_exported,
+                          #'shelp':'Examine the exported module'})
+    self.api.get('commands.default')(self.sname, 'list')
+    self.api.get('events.register')('savestate', self.savestate, plugin=self.sname)
 

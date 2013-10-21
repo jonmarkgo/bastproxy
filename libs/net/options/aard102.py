@@ -28,61 +28,16 @@ To get A102 data:
 
 from libs.net.options._option import TelnetOption
 from libs.net.telnetlib import WILL, DO, IAC, SE, SB
-from libs import exported
-from plugins import BasePlugin
 
 NAME = 'A102'
 SNAME = 'A102'
 PURPOSE = 'Aardwolf 102 telnet options'
 AUTHOR = 'Bast'
 VERSION = 1
+
 AUTOLOAD = True
 
-AOPTIONS = {}
-AOPTIONS['STATMON'] = 1
-AOPTIONS['BIGMAPTAGS'] = 2
-AOPTIONS['HELPTAGS'] = 3
-AOPTIONS['MAPTAGS'] = 4
-AOPTIONS['CHANNELTAGS'] = 5
-AOPTIONS['TELLTAGS'] = 6
-AOPTIONS['SPELLUPTAGS'] = 7
-AOPTIONS['SKILLGAINTAGS'] = 8
-AOPTIONS['SAYTAGS'] = 9
-AOPTIONS['SCORETAGS'] = 11
-AOPTIONS['ROOMNAME'] = 12
-AOPTIONS['EXITS'] = 14
-AOPTIONS['EDITORTAGS'] = 15
-AOPTIONS['EQTAGS'] = 16
-AOPTIONS['INVTAGS'] = 17
-AOPTIONS['ROOMDESCTAGS'] =  18
-AOPTIONS['ROOMNAMETAGS'] = 19
-AOPTIONS['REPOPTAGS'] = 21
-
-AOPTIONS['QUIETTAGS'] = 50
-AOPTIONS['AUTOTICK'] =  51
-AOPTIONS['PROMPT'] = 52
-AOPTIONS['PAGING'] = 53
-AOPTIONS['AUTOMAP'] = 54
-AOPTIONS['SHORTMAP'] = 55
-
-AOPTIONREV = {}
-for i in AOPTIONS:
-  AOPTIONREV[AOPTIONS[i]] = i
-
-ON = chr(1)
-OFF = chr(2)
-
 A102 = chr(102)
-
-#IAC SB A102 <atcp message text> IAC SE
-def a102sendpacket(what):
-  """
-  send an a102 packet
-  """
-  exported.event.eraise('to_mud_event', {'data':'%s%s%s%s%s%s' % \
-        (IAC, SB, A102, what.replace(IAC, IAC+IAC), IAC, SE),
-        'raw':True, 'dtype':A102})
-
 
 # Server
 class SERVER(TelnetOption):
@@ -106,13 +61,13 @@ class SERVER(TelnetOption):
       self.telnetobj.msg('A102: sending IAC DO A102', level=2, mtype='A102')
       self.telnetobj.send(IAC + DO + A102)
       self.telnetobj.options[ord(A102)] = True
-      exported.event.eraise('A102:server-enabled', {})
+      self.api.get('events.eraise')('A102:server-enabled', {})
 
     elif command == SE:
       if not self.telnetobj.options[ord(A102)]:
         print '##BUG: Enabling A102, missed negotiation'
         self.telnetobj.options[ord(A102)] = True
-        exported.event.eraise('A102:server-enabled', {})
+        self.api.get('events.eraise')('A102:server-enabled', {})
 
       tdata = {}
       tdata['option'] = ord(sbdata[0])
@@ -120,11 +75,11 @@ class SERVER(TelnetOption):
       tdata['server'] = self.telnetobj
       self.telnetobj.msg('A102: got %s,%s from server' % \
               (tdata['option'], tdata['flag']), level=2, mtype='A102')
-      exported.event.eraise('to_client_event',
+      self.api.get('events.eraise')('to_client_event',
                   {'todata':'%s%s%s%s%s%s' % (IAC, SB, A102,
                   sbdata.replace(IAC, IAC+IAC), IAC, SE),
                   'raw':True, 'dtype':A102})
-      exported.event.eraise('A102_from_server', tdata)
+      self.api.get('events.eraise')('A102_from_server', tdata)
 
 
 # Client
@@ -150,125 +105,6 @@ class CLIENT(TelnetOption):
       self.telnetobj.msg('A102:setting options[A102] to True', mtype='A102')
       self.telnetobj.options[ord(A102)] = True
     elif command == SE:
-      exported.event.eraise('A102_from_client',
+      self.api.get('events.eraise')('A102_from_client',
                                 {'data': sbdata, 'client':self.telnetobj})
-
-
-# Plugin
-class Plugin(BasePlugin):
-  """
-  the plugin to handle external a102 stuff
-  """
-  def __init__(self, tname, tsname, filename, directory, importloc):
-    """
-    Iniitilaize the class
-
-    self.optionsstates - the current counter for what
-                            options have been enabled
-    self.a102optionqueue - the queue of a102 options
-                            that were enabled by the client before
-                             connected to the server
-    """
-    BasePlugin.__init__(self, tname, tsname, filename, directory, importloc)
-    self.exported['sendpacket'] = {'func':a102sendpacket}
-    self.exported['toggle'] = {'func':self.toggle}
-    self.event.register('A102_from_server', self.a102fromserver)
-    self.event.register('A102_from_client', self.a102fromclient)
-    self.event.register('A102:server-enabled', self.a102request)
-    self.event.register('muddisconnect', self.disconnect)
-    self.canreload = False
-
-    self.optionstates = {}
-    self.a102optionqueue = []
-
-    self.reconnecting = False
-
-  def disconnect(self, _=None):
-    """
-    this function is registered with the muddisconnect hook
-    """
-    self.msg('setting reconnect to true')
-    self.reconnecting = True
-
-  def toggle(self, aoption, mstate):
-    """
-    exported function to toggle an option
-    """
-    if aoption in AOPTIONS:
-      self.a102toggleoption(AOPTIONS[aoption], mstate)
-      return True
-    else:
-      return False
-
-  def a102toggleoption(self, aoption, mstate):
-    """
-    toggle an a102 option
-    """
-    if not (aoption in self.optionstates):
-      if mstate:
-        self.optionstates[aoption] = 0
-      else:
-        self.optionstates[aoption] = 1
-
-    if mstate:
-      mstate = 1
-      if self.optionstates[aoption] == 0:
-        self.msg('Enabling A102 option: %s' % AOPTIONREV[aoption])
-        cmd = '%s%s' % (chr(aoption), ON)
-        a102sendpacket(cmd)
-      self.optionstates[aoption] = self.optionstates[aoption] + 1
-
-    else:
-      mstate = 2
-      self.optionstates[aoption] = self.optionstates[aoption] - 1
-      if self.optionstates[aoption] == 0:
-        self.msg('Disabling A102 option: %s' % AOPTIONREV[aoption])
-        cmd = '%s%s' % (chr(aoption), OFF)
-        a102sendpacket(cmd)
-
-  def a102fromserver(self, args):
-    """
-    handle stuff from the server
-    """
-    exported.event.eraise('A102', args)
-    exported.event.eraise('A102:%s' % args['option'], args)
-
-  def a102request(self, _=None):
-    """
-    this function is called when the a102 option is enabled
-    """
-    self.msg('cleaning a102 queues')
-    if not self.reconnecting:
-      for i in self.a102optionqueue:
-        self.a102toggleoption(i['option'], i['toggle'])
-    else:
-      self.reconnecting = False
-      for i in self.optionstates:
-        tnum = self.optionstates[i]
-        if tnum > 0:
-          self.msg('Re-Enabling A102 option: %s' % AOPTIONREV[i])
-          cmd = '%s%s' % (i, 1)
-          a102sendpacket(cmd)
-        else:
-          self.msg('Re-Disabling A102 option: %s' % AOPTIONREV[i])
-          cmd = '%s%s' % (i, 2)
-          a102sendpacket(cmd)
-
-
-  def a102fromclient(self, args):
-    """
-    this function is called when we receive an a102 option from the client
-    """
-    data = args['data']
-    option = ord(data[0])
-    mstate = ord(data[1])
-    if mstate == 1:
-      mstate = True
-    else:
-      mstate = False
-    if not exported.CONNECTED:
-      self.a102optionqueue.append({'option':option, 'toggle':mstate})
-    else:
-      self.a102toggleoption(option, mstate)
-
 

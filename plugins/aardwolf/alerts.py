@@ -3,7 +3,6 @@ $Id$
 
 This plugin sends emails when certain events happen in aardwolf
 """
-from libs import exported
 from plugins import BasePlugin
 
 NAME = 'Aardwolf Alerts'
@@ -27,30 +26,32 @@ class Plugin(BasePlugin):
     self.dependencies.append('gq')
     self.addsetting('email', '', str, 'the email to send the alerts',
               nocolor=True)
-    self.event.register('aard_gq_declared', self._gqdeclared)
-    self.event.register('aard_quest_ready', self._quest)
+    self.api.get('events.register')('aard_gq_declared', self._gqdeclared)
+    self.api.get('events.register')('aard_quest_ready', self._quest)
 
   def _gqdeclared(self, args):
     """
     do something when a gq is declared
     """
+    proxy = self.api.get('managers.getm')('proxy')
     msg = '%s:%s - A GQuest has been declared for levels %s to %s.' % (
-              exported.PROXY.host, exported.PROXY.port,
+              proxy.host, proxy.port,
               args['lowlev'], args['highlev'])
     if self.variables['email']:
-      exported.mail.send('New GQuest', msg,
+      self.api.get('mail.send')('New GQuest', msg,
               self.variables['email'])
     else:
-      exported.mail.send('New GQuest', msg)
+      self.api.get('mail.send')('New GQuest', msg)
 
   def _quest(self, _=None):
     """
     do something when you can quest
     """
+    proxy = self.api.get('managers.getm')('proxy')
     msg = '%s:%s - Time to quest!' % (
-              exported.PROXY.host, exported.PROXY.port)
+              proxy.host, proxy.port)
     if self.variables['email']:
-      exported.mail.send('Quest Time', msg,
+      self.api.get('mail.send')('Quest Time', msg,
               self.variables['email'])
     else:
-      exported.mail.send('Quest Time', msg)
+      self.api.get('mail.send')('Quest Time', msg)

@@ -2,9 +2,16 @@
 $Id$
 
 This plugin is an example plugin to show how to use gmcp
-"""
 
-from libs import exported
+#BUG:
+#BP: Sun Oct 20 2013 18:18:51 - error      : error when calling function for event GMCP:char
+#BP: Traceback (most recent call last):
+#BP:   File "/home/endavis/games/proxy/testproxy/libs/event.py", line 408, in raiseevent
+#BP:     tnargs = i(nargs)
+#BP:   File "/home/endavis/games/proxy/testproxy/plugins/example/gmcpex.py", line 75, in testchar
+#BP:     self.msg('\n'.join(msg))
+#BP: TypeError: sequence item 1: expected string, DotDict found
+"""
 from plugins import BasePlugin
 
 NAME = 'GMCP Test'
@@ -24,9 +31,9 @@ class Plugin(BasePlugin):
     initialize the instance
     """
     BasePlugin.__init__(self, *args, **kwargs)
-    self.event.register('GMCP', self.test)
-    self.event.register('GMCP:char', self.testchar)
-    self.event.register('GMCP:char.status', self.testcharstatus)
+    self.api.get('events.register')('GMCP', self.test)
+    self.api.get('events.register')('GMCP:char', self.testchar)
+    self.api.get('events.register')('GMCP:char.status', self.testcharstatus)
     self.cmds['get'] = {'func':self.cmd_get,
                         'shelp':'print what is in the gmcp cache'}
     self.defaultcmd = 'get'
@@ -39,7 +46,7 @@ class Plugin(BasePlugin):
         @Ygmcpmod@w    = The gmcp module to print, such as char.status
     """
     if len(args) > 0:
-      return True, ['%s' % exported.gmcp.getv(args[0])]
+      return True, ['%s' % self.api.get('GMCP.getv')(args[0])]
 
     return False
 
@@ -47,16 +54,17 @@ class Plugin(BasePlugin):
     """
     show the gmcp event
     """
-    exported.sendtoclient('@x52@z192 Event @w- @GGMCP@w: @B%s@w : %s' % \
+    self.api.get('output.client')('@x52@z192 Event @w- @GGMCP@w: @B%s@w : %s' % \
                          (args['module'], args['data']))
 
   def testchar(self, args):
     """
     show the gmcp char event
     """
+    getv = self.api.get('GMCP.getv')
     msg = []
     msg.append('testchar --------------------------')
-    tchar = exported.gmcp.getv('char')
+    tchar = getv('char')
     msg.append(tchar)
     if tchar and tchar.status:
       msg.append('char.status.state from tchar')
@@ -64,23 +72,23 @@ class Plugin(BasePlugin):
     else:
       msg.append('Do not have status')
     msg.append('char.status.state with getting full')
-    cstate = exported.gmcp.getv('char.status.state')
+    cstate = getv('char.status.state')
     if cstate:
       msg.append('Got state: %s' % cstate)
     else:
       msg.append('did not get state')
     msg.append('getting a module that doesn\'t exist')
-    msg.append(exported.gmcp.getv('char.test'))
+    msg.append(getv('char.test'))
     msg.append('getting a variable that doesn\'t exist')
-    msg.append(exported.gmcp.getv('char.status.test'))
+    msg.append(getv('char.status.test'))
     self.msg('\n'.join(msg))
 
-    exported.sendtoclient('@CEvent@w - @GGMCP:char@w: %s' % args['module'])
+    self.api.get('output.client')('@CEvent@w - @GGMCP:char@w: %s' % args['module'])
 
   def testcharstatus(self, _=None):
     """
     show the gmcp char.status event
     """
-    exported.sendtoclient('@CEvent@w - @GGMCP:char.status@w')
+    self.api.get('output.client')('@CEvent@w - @GGMCP:char.status@w')
 
 

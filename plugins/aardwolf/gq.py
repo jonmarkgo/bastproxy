@@ -6,7 +6,6 @@ This plugin handles gquest events on Aardwolf
 import os
 import time
 import copy
-from libs import exported
 from libs.color import strip_ansi
 from libs.persistentdict import PersistentDict
 from plugins import BasePlugin
@@ -38,7 +37,7 @@ class Plugin(BasePlugin):
     self.mobsleft = []
     self.nextdeath = False
     self.linecount = 0
-    exported.watch.add('gq_check', {
+    self.api.get('watch.add')('gq_check', {
       'regex':'^(gq|gqu|gque|gques|gquest) (c|ch|che|chec|check)$'})
     self.triggers['gqdeclared'] = {
       'regex':"^Global Quest: Global quest \# (?P<gqnum>.*) has been " \
@@ -94,23 +93,23 @@ class Plugin(BasePlugin):
               "Aardwolf Subj: Lvl (?P<low>.*) to (?P<high>.*) - " \
               "Global quest # (?P<gqnum>.*)$"}
 
-    self.event.register('trigger_gqdeclared', self._gqdeclared)
-    self.event.register('trigger_gqjoined', self._gqjoined)
-    self.event.register('trigger_gqstarted', self._gqstarted)
-    self.event.register('trigger_gqnone', self._notstarted)
-    self.event.register('trigger_gqitem', self._gqitem)
-    self.event.register('trigger_gqnotstarted', self._notstarted)
-    self.event.register('trigger_gqreward', self._gqreward)
-    self.event.register('trigger_gqmobdead', self._gqmobdead)
-    self.event.register('trigger_gqwon', self._gqwon)
-    self.event.register('trigger_gqwon2', self._gqwon)
-    self.event.register('trigger_gqdone', self._gqdone)
-    self.event.register('trigger_gqquit', self._gqquit)
-    self.event.register('trigger_gqextover', self._gqextover)
-    self.event.register('trigger_gqextover2', self._gqextover)
-    self.event.register('trigger_gqextfin', self._gqextfin)
-    self.event.register('trigger_gqnote', self._gqreset)
-    self.event.register('cmd_gq_check', self._gqcheckcmd)
+    self.api.get('events.register')('trigger_gqdeclared', self._gqdeclared)
+    self.api.get('events.register')('trigger_gqjoined', self._gqjoined)
+    self.api.get('events.register')('trigger_gqstarted', self._gqstarted)
+    self.api.get('events.register')('trigger_gqnone', self._notstarted)
+    self.api.get('events.register')('trigger_gqitem', self._gqitem)
+    self.api.get('events.register')('trigger_gqnotstarted', self._notstarted)
+    self.api.get('events.register')('trigger_gqreward', self._gqreward)
+    self.api.get('events.register')('trigger_gqmobdead', self._gqmobdead)
+    self.api.get('events.register')('trigger_gqwon', self._gqwon)
+    self.api.get('events.register')('trigger_gqwon2', self._gqwon)
+    self.api.get('events.register')('trigger_gqdone', self._gqdone)
+    self.api.get('events.register')('trigger_gqquit', self._gqquit)
+    self.api.get('events.register')('trigger_gqextover', self._gqextover)
+    self.api.get('events.register')('trigger_gqextover2', self._gqextover)
+    self.api.get('events.register')('trigger_gqextfin', self._gqextfin)
+    self.api.get('events.register')('trigger_gqnote', self._gqreset)
+    self.api.get('events.register')('cmd_gq_check', self._gqcheckcmd)
 
 
 
@@ -126,8 +125,8 @@ class Plugin(BasePlugin):
     self.gqinfo['tp'] = 0
     self.gqinfo['qp'] = 0
     self.gqinfo['qpmobs'] = 0
-    self.gqinfo['level'] =  exported.aardu.getactuallevel(
-                        exported.GMCP.getv('char.status.level'))
+    self.gqinfo['level'] =  self.api.get('aardu.getactuallevel')(
+                        self.api.get('GMCP.getv')('char.status.level'))
     self.gqinfo['starttime'] = 0
     self.gqinfo['finishtime'] = 0
     self.gqinfo['length'] = 0
@@ -140,24 +139,24 @@ class Plugin(BasePlugin):
     do something when a gq is declared
     """
     self._gqnew()
-    exported.trigger.togglegroup('gqdone', True)
-    exported.trigger.togglegroup('gq_start', True)
+    self.api.get('trigger.togglegroup')('gqdone', True)
+    self.api.get('trigger.togglegroup')('gq_start', True)
     self.variables['declared'] = True
-    exported.event.eraise('aard_gq_declared', args)
+    self.api.get('events.eraise')('aard_gq_declared', args)
 
   def _gqjoined(self, args):
     """
     do something when a gq is joined
     """
-    exported.trigger.togglegroup('gqdone', True)
-    exported.trigger.togglegroup('gq_start', True)
+    self.api.get('trigger.togglegroup')('gqdone', True)
+    self.api.get('trigger.togglegroup')('gq_start', True)
     self.variables['joined'] = True
     self.mobsleft = []
     if self.variables['started'] or not self.variables['declared']:
       self.variables['declared'] = True
       self._gqnew()
       self._gqstarted()
-    exported.event.eraise('aard_gq_joined', args)
+    self.api.get('events.eraise')('aard_gq_joined', args)
 
   def _gqstarted(self, args=None):
     """
@@ -169,8 +168,8 @@ class Plugin(BasePlugin):
     self._gqnew()
     if self.variables['joined']:
       self.gqinfo['starttime'] = time.time()
-      exported.trigger.togglegroup("gqin", True)
-      exported.execute("gq check")
+      self.api.get('trigger.togglegroup')("gqin", True)
+      self.api.get('input.execute')("gq check")
 
   def _gqitem(self, args):
     """
@@ -180,7 +179,7 @@ class Plugin(BasePlugin):
     num = args['num']
     location = args['location']
     if not name or not location or not num:
-      exported.sendtoclient("error parsing line: %s" % args['line'])
+      self.api.get('ouput.client')("error parsing line: %s" % args['line'])
     else:
       self.mobsleft.append({'name':name, 'nocolorname':strip_ansi(name),
             'location':location, 'num':int(num)})
@@ -189,9 +188,9 @@ class Plugin(BasePlugin):
     """
     this will be called when a gq check returns the not started message
     """
-    exported.trigger.togglegroup('gqcheck', False)
-    exported.trigger.togglegroup('gqin', False)
-    self.event.unregister('trigger_emptyline', self._emptyline)
+    self.api.get('trigger.togglegroup')('gqcheck', False)
+    self.api.get('trigger.togglegroup')('gqin', False)
+    self.api.get('events.unregister')('trigger_emptyline', self._emptyline)
 
   def _emptyline(self, _=None):
     """
@@ -201,9 +200,9 @@ class Plugin(BasePlugin):
       self.gqinfo['mobs'] = self.mobsleft[:]
       self.savestate()
 
-    exported.trigger.togglegroup('gqcheck', False)
-    self.event.unregister('trigger_emptyline', self._emptyline)
-    exported.event.eraise('aard_gq_mobsleft',
+    self.api.get('trigger.togglegroup')('gqcheck', False)
+    self.api.get('events.unregister')('trigger_emptyline', self._emptyline)
+    self.api.get('events.eraise')('aard_gq_mobsleft',
                 {'mobsleft':copy.deepcopy(self.mobsleft)})
 
   def _gqmobdead(self, _=None):
@@ -211,15 +210,15 @@ class Plugin(BasePlugin):
     called when a gq mob is killed
     """
     self.gqinfo['qpmobs'] = self.gqinfo['qpmobs'] + 3
-    self.event.register('aard_mobkill', self._mobkillevent)
+    self.api.get('events.register')('aard_mobkill', self._mobkillevent)
     self.nextdeath = True
 
   def _mobkillevent(self, args):
     """
     this will be registered to the mobkill hook
     """
-    exported.msg('checking kill %s' % args['name'], 'gq')
-    self.event.register('aard_mobkill', self._mobkillevent)
+    self.api.get('output.msg')('checking kill %s' % args['name'], 'gq')
+    self.api.get('events.register')('aard_mobkill', self._mobkillevent)
 
     found = False
     removeitem = None
@@ -237,18 +236,18 @@ class Plugin(BasePlugin):
       del(self.mobsleft[removeitem])
 
     if found:
-      exported.event.eraise('aard_gq_mobsleft',
+      self.api.get('eventa.eraise')('aard_gq_mobsleft',
                         copy.deepcopy({'mobsleft':self.mobsleft}))
     else:
-      exported.msg("GQ: could not find mob: %s" % args['name'], 'gq')
-      exported.execute("gq check")
+      self.api.get('ouput.msg')("GQ: could not find mob: %s" % args['name'], 'gq')
+      self.api.get('input.execute')("gq check")
 
   def _gqwon(self, _=None):
     """
     the gquest was won
     """
     self.gqinfo['won'] = 1
-    exported.trigger.togglegroup("gqrew", True)
+    self.api.get('trigger.togglegroup')("gqrew", True)
 
   def _gqdone(self, _=None):
     """
@@ -262,7 +261,7 @@ class Plugin(BasePlugin):
     else:
       #need to check for extended time
       self.linecount = 0
-      self.event.register('trigger_all', self._triggerall)
+      self.api.get('events.register')('trigger_all', self._triggerall)
 
   def _triggerall(self, args=None):
     """
@@ -271,13 +270,13 @@ class Plugin(BasePlugin):
     self.linecount = self.linecount + 1
 
     if 'extended time for 3 more minutes' in args['line']:
-      exported.trigger.togglegroup("gqext", True)
+      self.api.get('trigger.togglegroup')("gqext", True)
       self.variables['extended'] = True
 
     if self.linecount < 3:
       return
 
-    self.event.unregister('trigger_all', self._triggerall)
+    self.api.get('events.unregister')('trigger_all', self._triggerall)
 
     if not self.variables['extended']:
       self._raisegq('aard_gq_done')
@@ -288,19 +287,19 @@ class Plugin(BasePlugin):
     """
     rtype = args['type']
     ramount = args['amount']
-    rewardt = exported.aardu.rewardtable()
+    rewardt = self.api.get('aardu.rewardtable')()
     self.gqinfo['won'] = 1
     self.gqinfo[rewardt[rtype]] = ramount
     self.savestate()
-    exported.trigger.togglegroup('gqdone', True)
+    self.api.get('trigger.togglegroup')('gqdone', True)
 
   def _gqcheckcmd(self, args=None):
     """
     do something after we see a gq check
     """
     self.mobsleft = []
-    exported.trigger.togglegroup('gqcheck', True)
-    self.event.register('trigger_emptyline', self._emptyline)
+    self.api.get('trigger.togglegroup')('gqcheck', True)
+    self.api.get('events.register')('trigger_emptyline', self._emptyline)
     return args
 
   def _gqquit(self, _=None):
@@ -309,7 +308,7 @@ class Plugin(BasePlugin):
     """
     self.variables['started'] = False
     self.variables['joined'] = False
-    exported.event.eraise('aard_gq_quit', {})
+    self.api.get('events.eraise')('aard_gq_quit', {})
 
   def _gqextfin(self, _=None):
     """
@@ -330,19 +329,19 @@ class Plugin(BasePlugin):
     """
     self.gqinfo['finishtime'] = time.time()
     self.savestate()
-    exported.event.eraise(event, copy.deepcopy(self.gqinfo))
+    self.api.get('events.eraise')(event, copy.deepcopy(self.gqinfo))
     self._gqreset()
 
   def _gqreset(self, _=None):
     """
     reset gq triggers
     """
-    exported.trigger.togglegroup("gqcheck", False)
-    exported.trigger.togglegroup("gqin", False)
-    exported.trigger.togglegroup("gqrew", False)
-    exported.trigger.togglegroup("gqdone", False)
-    exported.trigger.togglegroup("gqext", False)
-    self.event.unregister('aard_mobkill', self._mobkillevent)
+    self.api.get('trigger.togglegroup')("gqcheck", False)
+    self.api.get('trigger.togglegroup')("gqin", False)
+    self.api.get('trigger.togglegroup')("gqrew", False)
+    self.api.get('trigger.togglegroup')("gqdone", False)
+    self.api.get('trigger.togglegroup')("gqext", False)
+    self.api.get('events.unregister')('aard_mobkill', self._mobkillevent)
     self.variables['joined'] = False
     self.variables['started'] = False
     self.variables['declared'] = False

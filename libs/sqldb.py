@@ -10,10 +10,12 @@ import inspect
 import time
 import zipfile
 
-from libs import exported
-exported.LOGGER.adddtype('sqlite')
-exported.LOGGER.cmd_file(['sqlite'])
-exported.LOGGER.cmd_console(['sqlite'])
+from libs.api import API
+
+api = API()
+api.get('logger.adddtype')('sqlite')
+api.get('logger.tofile')(['sqlite'])
+api.get('logger.console')(['sqlite'])
 
 
 def dict_factory(cursor, row):
@@ -47,11 +49,12 @@ class Sqldb(object):
     """
     initialize the class
     """
+    self.api = api
     self.dbconn = None
     self.plugin = plugin
     self.dbname = dbname or "db"
     self.backupform = '%s_%%s.sqlite' % self.dbname
-    self.dbdir = dbdir or os.path.join(exported.BASEPATH, 'data', 'db')
+    self.dbdir = dbdir or os.path.join(api.BASEPATH, 'data', 'db')
     try:
       os.makedirs(self.dbdir)
     except OSError:
@@ -68,7 +71,7 @@ class Sqldb(object):
     """
     close the database
     """
-    exported.msg('close: called by - %s' % inspect.stack()[1][3], 'sqlite')
+    api.get('output.msg')('close: called by - %s' % inspect.stack()[1][3], 'sqlite')
     try:
       self.dbconn.close()
     except:
@@ -82,7 +85,7 @@ class Sqldb(object):
     funcname = inspect.stack()[1][3]
     if funcname == '__getattribute__':
       funcname = inspect.stack()[2][3]
-    exported.msg('open: called by - %s' % funcname, 'sqlite')
+    api.get('output.msg')('open: called by - %s' % funcname, 'sqlite')
     self.dbconn = sqlite3.connect(self.dbfile)
     self.dbconn.row_factory = dict_factory
     # only return byte strings so is easier to send to a client or the mud
@@ -319,18 +322,18 @@ class Sqldb(object):
     """
     update a database from oldversion to newversion
     """
-    exported.msg('updating %s from version %s to %s' % (self.dbfile,
+    api.get('output.msg')('updating %s from version %s to %s' % (self.dbfile,
                                             oldversion, newversion), 'sqlite')
     self.backupdb(oldversion)
     for i in range(oldversion + 1, newversion + 1):
       try:
         self.versionfuncs[i]()
-        exported.msg('updated to version %s' % i, 'sqlite')
+        api.get('output.msg')('updated to version %s' % i, 'sqlite')
       except:
-        exported.write_traceback('could not upgrade db: %s' % self.dbloc)
+        api.get('output.traceback')('could not upgrade db: %s' % self.dbloc)
         return
     self.setversion(newversion)
-    exported.msg('Done upgrading!', 'sqlite')
+    api.get('output.msg')('Done upgrading!', 'sqlite')
 
   def runselect(self, selectstmt):
     """
@@ -342,7 +345,7 @@ class Sqldb(object):
       for row in cur.execute(selectstmt):
         result.append(row)
     except:
-      exported.write_traceback('could not run sql statement : %s' % \
+      api.get('output.traceback')('could not run sql statement : %s' % \
                             selectstmt)
     cur.close()
     return result
@@ -358,7 +361,7 @@ class Sqldb(object):
       for row in cur.execute(selectstmt):
         result[row[keyword]] = row
     except:
-      exported.write_traceback('could not run sql statement : %s' % \
+      api.get('output.traceback')('could not run sql statement : %s' % \
                                       selectstmt)
     cur.close()
     return result
@@ -369,7 +372,7 @@ class Sqldb(object):
     """
     results = {}
     if not (ttable in self.tables):
-      exported.msg('table %s does not exist in getlast' % ttable)
+      api.get('output.msg')('table %s does not exist in getlast' % ttable)
       return
 
     colid = self.tables[ttable]['keyfield']
@@ -403,7 +406,7 @@ class Sqldb(object):
     """
     success = False
     #self.cmd_vac()
-    exported.msg('backing up database %s' % self.dbname, 'sqlite')
+    api.get('output.msg')('backing up database %s' % self.dbname, 'sqlite')
     integrity = True
     cur = self.dbconn.cursor()
     cur.execute('PRAGMA integrity_check')
@@ -412,7 +415,7 @@ class Sqldb(object):
       integrity = False
 
     if not integrity:
-      exported.msg('Integrity check failed, aborting backup', 'sqlite')
+      api.get('output.msg')('Integrity check failed, aborting backup', 'sqlite')
       return
     self.close()
     try:
@@ -428,7 +431,7 @@ class Sqldb(object):
     try:
       shutil.copy(self.dbfile, backupfile)
     except IOError:
-      exported.msg('backup failed, could not copy file', 'sqlite')
+      api.get('output.msg')('backup failed, could not copy file', 'sqlite')
       return success
 
     try:
@@ -436,10 +439,10 @@ class Sqldb(object):
         myzip.write(backupfile)
       os.remove(backupfile)
       success = True
-      exported.msg('%s was backed up to %s' % (self.dbfile, backupzipfile),
+      api.get('output.msg')('%s was backed up to %s' % (self.dbfile, backupzipfile),
                                           'sqlite')
     except IOError:
-      exported.msg('could not zip backupfile', 'sqlite')
+      api.get('output.msg')('could not zip backupfile', 'sqlite')
       return success
 
     return success

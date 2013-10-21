@@ -3,12 +3,13 @@ $Id$
 
 this module holds the proxy client class
 """
-from libs.net.telnetlib import Telnet
-from libs import exported
-from libs.net.options import TELOPTMGR
-from libs.color import convertcolors
 from ConfigParser import NoOptionError
 import time
+
+from libs.api import API
+from libs.net.telnetlib import Telnet
+from libs.net.options import TELOPTMGR
+from libs.color import convertcolors
 
 PASSWORD = 0
 CONNECTED = 1
@@ -24,6 +25,7 @@ class ProxyClient(Telnet):
     Telnet.__init__(self, sock=sock)
     self.host = host
     self.port = port
+    self.api = API()
     self.ttype = 'Client'
     self.connectedtime = None
     self.supports = {}
@@ -35,7 +37,7 @@ class ProxyClient(Telnet):
       self.connected = True
       self.connectedtime = time.mktime(time.localtime())
 
-    exported.event.register('to_client_event', self.addtooutbufferevent,
+    self.api.get('events.register')('to_client_event', self.addtooutbufferevent,
                                                       prio=99)
     TELOPTMGR.addtoclient(self)
     self.state = PASSWORD
@@ -72,6 +74,9 @@ class ProxyClient(Telnet):
     """
     handle a read
     """
+
+    proxy = self.api.get('managers.getm')('proxy')
+    config = self.api.get('managers.getm')('config')
     if self.connected == False:
       return
     Telnet.handle_read(self)
@@ -84,12 +89,12 @@ class ProxyClient(Telnet):
           self.addtooutbufferevent(
                {'todata':convertcolors('@R#BP@w: @RYou are in view mode!@w')})
         else:
-          if not exported.PROXY.connected:
-            exported.PROXY.connectmud()
+          if not proxy.connected:
+            proxy.connectmud()
           newdata = {}
           if len(data) > 0:
             # can transform data here
-            newdata = exported.event.eraise('from_client_event',
+            newdata = self.api.get('events.eraise')('from_client_event',
                                                 {'fromdata':data})
 
           if 'fromdata' in newdata:
@@ -97,45 +102,45 @@ class ProxyClient(Telnet):
 
           if data:
             # cannot transform data
-            exported.event.eraise('to_mud_event',
+            self.api.get('events.eraise')('to_mud_event',
                                   {'data':data, 'dtype':'fromclient'})
 
       elif self.state == PASSWORD:
         data = data.strip()
         try:
-          dpw = exported.CONFIG.get("proxy", "password")
+          dpw = config.get("proxy", "password")
         except NoOptionError:
           dpw = None
         try:
-          vpw = exported.CONFIG.get("proxy", "viewpw")
+          vpw = config.get("proxy", "viewpw")
         except NoOptionError:
           vpw = None
 
         if dpw and  data == dpw:
-          exported.msg('Successful password from %s : %s' % \
+          self.api.get('output.msg')('Successful password from %s : %s' % \
                                             (self.host, self.port), 'net')
           self.state = CONNECTED
           self.viewonly = False
-          exported.PROXY.addclient(self)
-          exported.event.eraise('client_connected', {'client':self})
-          exported.sendtoclient("%s - %s: Client Connected" % \
+          proxy.addclient(self)
+          self.api.get('events.eraise')('client_connected', {'client':self})
+          self.api.get('output.client')("%s - %s: Client Connected" % \
                                       (self.host, self.port))
-          if not exported.PROXY.connected:
-            exported.PROXY.connectmud()
+          if not proxy.connected:
+            proxy.connectmud()
           else:
             self.addtooutbufferevent({'todata':convertcolors(
                     '@R#BP@W: @GThe proxy is already connected to the mud@w')})
         elif vpw and data == vpw:
-          exported.msg('Successful view password from %s : %s' % \
+          self.api.get('output.msg')('Successful view password from %s : %s' % \
                               (self.host, self.port), 'net')
           self.state = CONNECTED
           self.viewonly = True
           self.addtooutbufferevent({'todata':convertcolors(
                             '@R#BP@W: @GYou are connected in view mode@w')})
-          exported.PROXY.addclient(self)
-          exported.event.eraise('client_connected_view',
+          proxy.addclient(self)
+          self.api.get('events.eraise')('client_connected_view',
                                           {'client':self})
-          exported.sendtoclient("%s - %s: Client Connected (View Mode)" % \
+          self.api.get('output.client')("%s - %s: Client Connected (View Mode)" % \
                                       (self.host, self.port))
         else:
           self.pwtries += 1
@@ -143,9 +148,9 @@ class ProxyClient(Telnet):
             self.addtooutbufferevent({'todata':convertcolors(
                         '@R#BP@w: @RYou have been BANNED for 10 minutes:@w'),
                         'dtype':'passwd'})
-            exported.msg('%s has been banned.' % self.host, 'net')
-            exported.PROXY.removeclient(self)
-            exported.PROXY.addbanned(self.host)
+            self.api.get('output.msg')('%s has been banned.' % self.host, 'net')
+            proxy.removeclient(self)
+            proxy.addbanned(self.host)
             self.close()
           else:
             self.addtooutbufferevent({'todata':convertcolors(
@@ -156,10 +161,10 @@ class ProxyClient(Telnet):
     """
     handle a close
     """
-    exported.sendtoclient("%s - %s: Client Disconnected" % \
+    self.api.get('output.client')("%s - %s: Client Disconnected" % \
                                 (self.host, self.port))
-    exported.PROXY.removeclient(self)
-    exported.event.eraise('client_disconnected', {'client':self})
-    exported.event.unregister('to_client_event', self.addtooutbuffer)
+    self.api.get('managers.getm')('proxy').removeclient(self)
+    self.api.get('events.eraise')('client_disconnected', {'client':self})
+    self.api.get('events.unregister')('to_client_event', self.addtooutbuffer)
     Telnet.handle_close(self)
 

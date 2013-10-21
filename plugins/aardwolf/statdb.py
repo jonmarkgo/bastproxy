@@ -7,7 +7,6 @@ import copy
 import time
 from plugins import BasePlugin
 from libs.sqldb import Sqldb
-from libs import exported
 from libs.utils import readablenumber, format_time
 
 NAME = 'StatDB'
@@ -213,7 +212,7 @@ class Statdb(Sqldb):
     rowid = cur.lastrowid
     self.dbconn.commit()
     cur.close()
-    exported.msg('added quest: %s' % rowid, 'statdb')
+    self.api.get('output.msg')('added quest: %s' % rowid, 'statdb')
     return rowid
 
   def setstat(self, stat, value):
@@ -226,7 +225,7 @@ class Statdb(Sqldb):
     cur.execute(stmt)
     self.dbconn.commit()
     cur.close()
-    exported.msg('set %s to %s' % (stat, value), 'statdb')
+    self.api.get('output.msg')('set %s to %s' % (stat, value), 'statdb')
 
   def getstat(self, stat):
     """
@@ -280,7 +279,7 @@ class Statdb(Sqldb):
 
     self.dbconn.commit()
     cur.close()
-    exported.msg('updated stats', 'statdb')
+    self.api.get('output.msg')('updated stats', 'statdb')
     # add classes here
     self.addclasses(whoisinfo['classes'])
 
@@ -294,7 +293,7 @@ class Statdb(Sqldb):
     trows = self.runselect('SELECT * FROM stats WHERE milestone = "%s"' \
                                                           % milestone)
     if len(trows) > 0:
-      exported.sendtoclient('@RMilestone %s already exists' % milestone)
+      self.api.get('output.client')('@RMilestone %s already exists' % milestone)
       return -1
 
     stats = self.runselect('SELECT * FROM stats WHERE milestone = "current"')
@@ -310,7 +309,7 @@ class Statdb(Sqldb):
       self.dbconn.commit()
       cur.close()
 
-      exported.msg('inserted milestone %s with rowid: %s' % (
+      self.api.get('output.msg')('inserted milestone %s with rowid: %s' % (
                                             milestone, trow), 'statdb')
       return trow
 
@@ -342,7 +341,7 @@ class Statdb(Sqldb):
     """
     initialize the class table
     """
-    classabb = exported.aardu.classabb()
+    classabb = self.api.get('aardu.classabb')()
     classes = []
     for i in classabb:
       classes.append({'class':i})
@@ -356,7 +355,7 @@ class Statdb(Sqldb):
     """
     reset the class table
     """
-    classabb = exported.aardu.classabb()
+    classabb = self.api.get('aardu.classabb')()
     classes = []
     for i in classabb:
       classes.append({'class':i})
@@ -386,7 +385,7 @@ class Statdb(Sqldb):
     rowid = self.getlastrowid('campaigns')
     self.dbconn.commit()
     cur.close()
-    exported.msg('added cp: %s' % rowid, 'statdb')
+    self.api.get('output.msg')('added cp: %s' % rowid, 'statdb')
 
     for i in cpinfo['mobs']:
       i['cp_id'] = rowid
@@ -413,7 +412,7 @@ class Statdb(Sqldb):
     rowid = self.getlastrowid('gquests')
     self.dbconn.commit()
     cur.close()
-    exported.msg('added gq: %s' % rowid, 'statdb')
+    self.api.get('output.msg')('added gq: %s' % rowid, 'statdb')
 
     for i in gqinfo['mobs']:
       i['gq_id'] = rowid
@@ -448,7 +447,7 @@ class Statdb(Sqldb):
     stmt = self.converttoinsert('levels', keynull=True)
     cur.execute(stmt, levelinfo)
     rowid = self.getlastrowid('levels')
-    exported.msg('inserted level %s' % rowid, 'statdb')
+    self.api.get('output.msg')('inserted level %s' % rowid, 'statdb')
     if rowid > 1:
       stmt2 = "UPDATE levels SET finishtime = %s WHERE level_id = %d" % (
                     levelinfo['starttime'], int(rowid) - 1)
@@ -475,7 +474,7 @@ class Statdb(Sqldb):
     self.dbconn.commit()
     rowid = self.getlastrowid('mobkills')
     cur.close()
-    exported.msg('inserted mobkill: %s' % rowid, 'statdb')
+    self.api.get('output.msg')('inserted mobkill: %s' % rowid, 'statdb')
 
 
 class Plugin(BasePlugin):
@@ -520,25 +519,25 @@ class Plugin(BasePlugin):
       'regex':"^You die.$",
       'enabled':True, 'group':'dead'}
 
-    self.event.register('aard_quest_comp', self.questevent)
-    self.event.register('aard_quest_failed', self.questevent)
-    self.event.register('aard_cp_comp', self.cpevent)
-    self.event.register('aard_cp_failed', self.cpevent)
-    self.event.register('aard_whois', self.whoisevent)
-    self.event.register('aard_level_gain', self.levelevent)
-    self.event.register('aard_level_hero', self.heroevent)
-    self.event.register('aard_level_superhero', self.heroevent)
-    self.event.register('aard_level_remort', self.heroevent)
-    self.event.register('aard_level_tier', self.heroevent)
-    self.event.register('aard_mobkill', self.mobkillevent)
-    self.event.register('aard_gq_completed', self.gqevent)
-    self.event.register('aard_gq_done', self.gqevent)
-    self.event.register('aard_gq_won', self.gqevent)
-    self.event.register('GMCP:char.status', self.checkstats)
-    self.event.register('statdb_backupstart', self.changetimer)
-    self.event.register('statdb_backupinternval', self.changetimer)
+    self.api.get('events.register')('aard_quest_comp', self.questevent)
+    self.api.get('events.register')('aard_quest_failed', self.questevent)
+    self.api.get('events.register')('aard_cp_comp', self.cpevent)
+    self.api.get('events.register')('aard_cp_failed', self.cpevent)
+    self.api.get('events.register')('aard_whois', self.whoisevent)
+    self.api.get('events.register')('aard_level_gain', self.levelevent)
+    self.api.get('events.register')('aard_level_hero', self.heroevent)
+    self.api.get('events.register')('aard_level_superhero', self.heroevent)
+    self.api.get('events.register')('aard_level_remort', self.heroevent)
+    self.api.get('events.register')('aard_level_tier', self.heroevent)
+    self.api.get('events.register')('aard_mobkill', self.mobkillevent)
+    self.api.get('events.register')('aard_gq_completed', self.gqevent)
+    self.api.get('events.register')('aard_gq_done', self.gqevent)
+    self.api.get('events.register')('aard_gq_won', self.gqevent)
+    self.api.get('events.register')('GMCP:char.status', self.checkstats)
+    self.api.get('events.register')('statdb_backupstart', self.changetimer)
+    self.api.get('events.register')('statdb_backupinternval', self.changetimer)
 
-    self.event.register('trigger_dead', self.dead)
+    self.api.get('events.register')('trigger_dead', self.dead)
 
     self.exported['runselect'] = {'func':self.runselect}
 
@@ -548,8 +547,8 @@ class Plugin(BasePlugin):
     """
     do something when the reportminutes changes
     """
-    exported.timer.remove('stats_backup')
-    exported.timer.add('stats_backup',
+    self.api.get('timer.remove')('stats_backup')
+    self.api.get('timer.add')('stats_backup',
                     {'func':self.backupdb,
                      'seconds':self.variables['backupinterval'],
                      'time':self.variables['backupstart']})
@@ -575,11 +574,11 @@ class Plugin(BasePlugin):
     """
     check to see if we have stats
     """
-    state = exported.GMCP.getv('char.status.state')
+    state = self.api.get('GMCP.getv')('char.status.state')
     if state == 3:
-      self.event.unregister('GMCP:char.status', self.checkstats)
+      self.api.get('events.unregister')('GMCP:char.status', self.checkstats)
       if not self.statdb.getstat('monsterskilled'):
-        exported.execute('whois')
+        self.api.get('input.execute')('whois')
 
   def _format_row(self, rowname, data1, data2, datacolor="@W",
                     headercolor="@C"):
@@ -694,7 +693,7 @@ class Plugin(BasePlugin):
           if int(item['daily']) == 1:
             dbl = dbl + 'E'
 
-          leveld = exported.aardu.convertlevel(item['level'])
+          leveld = self.api.get('aardu.convertlevel')(item['level'])
 
           ttime = format_time(item['finishtime'] - item['starttime'])
           if int(item['failed']) == 1:
@@ -831,7 +830,7 @@ class Plugin(BasePlugin):
           if int(item['blessingtrains']) > 0:
             bonus = bonus + int(item['blessingtrains'])
 
-          leveld = exported.aardu.convertlevel(item['level'])
+          leveld = self.api.get('aardu.convertlevel')(item['level'])
 
           if item['finishtime'] != '-1' and item['starttime'] != '-1':
             ttime = format_time(item['finishtime'] - item['starttime'])
@@ -954,7 +953,7 @@ class Plugin(BasePlugin):
         msg.append('@G----------------------------------------------------')
 
         for item in lastitems:
-          leveld = exported.aardu.convertlevel(item['level'])
+          leveld = self.api.get('aardu.convertlevel')(item['level'])
           levelstr = 'T%d R%d L%d' % (leveld['tier'], leveld['remort'],
                               leveld['level'])
 
@@ -1094,7 +1093,7 @@ class Plugin(BasePlugin):
         msg.append('@G----------------------------------------------------')
 
         for item in lastitems:
-          leveld = exported.aardu.convertlevel(item['level'])
+          leveld = self.api.get('aardu.convertlevel')(item['level'])
           levelstr = 'T%d R%d L%d' % (leveld['tier'], leveld['remort'],
                               leveld['level'])
 
@@ -1227,7 +1226,7 @@ class Plugin(BasePlugin):
         msg.append('@G----------------------------------------------------')
 
         for item in lastitems:
-          leveld = exported.aardu.convertlevel(item['level'])
+          leveld = self.api.get('aardu.convertlevel')(item['level'])
           levelstr = leveld['level']
 
           bonus = ''
@@ -1316,7 +1315,7 @@ class Plugin(BasePlugin):
     """
     add a hero/super milestone
     """
-    tlist = exported.aardu.convertlevel(exported.aardu.getactuallevel())
+    tlist = self.api.get('aardu.convertlevel')(self.api.get('aardu.getactuallevel')())
     if int(tlist['tier']) == 9:
       milestone = "t%s+%sr%sl%s" % (tlist['tier'], tlist['redos'],
                                     tlist['remort'], tlist['level'])
@@ -1325,9 +1324,9 @@ class Plugin(BasePlugin):
                                     tlist['remort'], tlist['level'])
 
     if args['eventname'] == 'aard_level_remort':
-      self.setstat('remorts', exported.GMCP.getv('char.base.remorts'))
-      self.setstat('tier', exported.GMCP.getv('char.base.tier'))
-      alev = exported.aardu.getactuallevel()
+      self.setstat('remorts', self.api.get('GMCP.getv')('char.base.remorts'))
+      self.setstat('tier', self.api.get('GMCP.getv')('char.base.tier'))
+      alev = self.api.get('aardu.getactuallevel')()
       self.setstat('totallevels', alev)
       self.setstat('level', 1)
 

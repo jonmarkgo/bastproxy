@@ -4,6 +4,8 @@ $Id$
 this module is for timing functions
 """
 import time
+from libs.api import API
+api = API()
 
 def timeit(func):
   """
@@ -13,13 +15,12 @@ def timeit(func):
     """
     the wrapper to time a function
     """
-    from libs import exported
     time1 = time.time()
-    exported.msg('%s: started %s' % (func.func_name, arg), 'timing')
+    api.get('output.msg')('%s: started %s' % (func.func_name, arg), 'timing')
     res = func(*arg)
     time2 = time.time()
-    exported.LOGGER.adddtype('timing')
-    exported.msg('%s: %0.3f ms' % \
+    api.get('logger.adddtype')('timing')
+    api.get('output.msg')('%s: %0.3f ms' % \
               (func.func_name, (time2-time1)*1000.0), 'timing')
     return res
   return wrapper

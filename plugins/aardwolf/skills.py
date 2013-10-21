@@ -6,7 +6,6 @@ This plugin handles slist from Aardwolf
 import time
 import os
 import copy
-from libs import exported
 from plugins import BasePlugin
 from libs.persistentdict import PersistentDict
 from libs import utils
@@ -110,24 +109,24 @@ class Plugin(BasePlugin):
             {'regex':"^\{sfail\}(?P<sn>\d+),(?P<target>\d+)," \
                       "(?P<reason>\d+),(?P<recovery>-?\d+)$"}
 
-    self.event.register('trigger_spellh_noprompt', self.skillstart)
-    self.event.register('trigger_spellh_spellup_noprompt', self.skillstart)
-    self.event.register('trigger_spellh_affected_noprompt', self.skillstart)
-    self.event.register('trigger_spellh_spellline', self.skillline)
-    self.event.register('trigger_spellh_end_noprompt', self.skillend)
-    self.event.register('trigger_affoff', self.affoff)
-    self.event.register('trigger_affon', self.affon)
-    self.event.register('trigger_recov_noprompt', self.recovstart)
-    self.event.register('trigger_recov_affected_noprompt', self.recovstart)
-    self.event.register('trigger_spellh_recovline', self.recovline)
-    self.event.register('trigger_recov_end_noprompt', self.recovend)
-    self.event.register('trigger_recoff', self.recoff)
-    self.event.register('trigger_recon', self.recon)
+    self.api.get('events.register')('trigger_spellh_noprompt', self.skillstart)
+    self.api.get('events.register')('trigger_spellh_spellup_noprompt', self.skillstart)
+    self.api.get('events.register')('trigger_spellh_affected_noprompt', self.skillstart)
+    self.api.get('events.register')('trigger_spellh_spellline', self.skillline)
+    self.api.get('events.register')('trigger_spellh_end_noprompt', self.skillend)
+    self.api.get('events.register')('trigger_affoff', self.affoff)
+    self.api.get('events.register')('trigger_affon', self.affon)
+    self.api.get('events.register')('trigger_recov_noprompt', self.recovstart)
+    self.api.get('events.register')('trigger_recov_affected_noprompt', self.recovstart)
+    self.api.get('events.register')('trigger_spellh_recovline', self.recovline)
+    self.api.get('events.register')('trigger_recov_end_noprompt', self.recovend)
+    self.api.get('events.register')('trigger_recoff', self.recoff)
+    self.api.get('events.register')('trigger_recon', self.recon)
 
-    self.event.register('trigger_skillgain', self.skillgain)
-    self.event.register('trigger_skillfail', self.skillfail)
+    self.api.get('events.register')('trigger_skillgain', self.skillgain)
+    self.api.get('events.register')('trigger_skillfail', self.skillfail)
 
-    self.event.register('GMCP:char.status', self.checkskills)
+    self.api.get('events.register')('GMCP:char.status', self.checkskills)
 
     self.cmds['refresh'] = {'func':self.cmd_refresh,
               'shelp':'refresh skills and spells'}
@@ -161,7 +160,6 @@ class Plugin(BasePlugin):
     """
     cmd to lookup a spell
     """
-    #exported.sendtoclient('%s' % self.skills)
     msg = []
     skill = self.getskill(args[0])
     if skill:
@@ -195,8 +193,8 @@ class Plugin(BasePlugin):
     """
     self.skills.clear()
     self.recoveries.clear()
-    exported.execute('slist noprompt')
-    exported.execute('slist spellup noprompt')
+    self.api.get('input.execute')('slist noprompt')
+    self.api.get('input.execute')('slist spellup noprompt')
     msg = ['Refreshing spells and skills']
     return True, msg
 
@@ -204,18 +202,18 @@ class Plugin(BasePlugin):
     """
     check to see if we have spells
     """
-    state = exported.GMCP.getv('char.status.state')
+    state = self.api.get('GMCP.getv')('char.status.state')
     if state == 3:
-      self.msg('refreshing skills')
-      self.event.unregister('GMCP:char.status', self.checkskills)
-      exported.A102.toggle('SPELLUPTAGS', True)
-      exported.A102.toggle('SKILLGAINTAGS', True)
-      exported.A102.toggle('QUIETTAGS', False)
+      self.api.get('output.msg')('refreshing skills')
+      self.api.get('events.unregister')('GMCP:char.status', self.checkskills)
+      self.api.get('A102.toggle')('SPELLUPTAGS', True)
+      self.api.get('A102.toggle')('SKILLGAINTAGS', True)
+      self.api.get('A102.toggle')('QUIETTAGS', False)
       if len(self.skills) == 0:
         self.cmd_refresh({})
       else:
         self.resetskills()
-        exported.execute('slist affected noprompt')
+        self.api.get('input.execute')('slist affected noprompt')
 
   def resetskills(self):
     """
@@ -234,7 +232,7 @@ class Plugin(BasePlugin):
     pct = int(args['percent'])
     if sn in self.skills:
       self.skills[sn]['percent'] = pct
-      exported.event.eraise('aard_skill_gain', {'sn':sn, 'percent':pct})
+      self.api.get('events.eraise')('aard_skill_gain', {'sn':sn, 'percent':pct})
 
   def skillfail(self, args):
     """
@@ -243,9 +241,9 @@ class Plugin(BasePlugin):
     ndict = {'sn': int(args['sn']), 'reason':FAILREASON[int(args['reason'])],
             'target':FAILTARG[int(args['target'])],
             'recovery':int(args['recovery'])}
-    self.msg('raising skillfail: %s' % ndict)
-    exported.event.eraise('skill_fail_%s' % args['sn'], ndict)
-    exported.event.eraise('skill_fail', ndict)
+    self.api.get('output.msg')('raising skillfail: %s' % ndict)
+    self.api.get('events.eraise')('skill_fail_%s' % args['sn'], ndict)
+    self.api.get('events.eraise')('skill_fail', ndict)
 
   def affoff(self, args):
     """
@@ -255,8 +253,8 @@ class Plugin(BasePlugin):
     if sn in self.skills:
       self.skills[sn]['duration'] = 0
       self.savestate()
-      exported.event.eraise('aard_skill_affoff_%s' % sn, {'sn':sn})
-      exported.event.eraise('aard_skill_affoff', {'sn':sn})
+      self.api.get('events.eraise')('aard_skill_affoff_%s' % sn, {'sn':sn})
+      self.api.get('events.eraise')('aard_skill_affoff', {'sn':sn})
 
   def affon(self, args):
     """
@@ -267,22 +265,21 @@ class Plugin(BasePlugin):
     if sn in self.skills:
       self.skills[sn]['duration'] = time.mktime(time.localtime()) + duration
       self.savestate()
-      exported.event.eraise('aard_skill_affon_%s' % sn, {'sn':sn,
+      self.api.get('events.eraise')('aard_skill_affon_%s' % sn, {'sn':sn,
                               'duration':self.skills[sn]['duration']})
-      exported.event.eraise('aard_skill_affon', {'sn':sn,
+      self.api.get('events.eraise')('aard_skill_affon', {'sn':sn,
                               'duration':self.skills[sn]['duration']})
 
   def recovstart(self, args):
     """
     show that the trigger fired
     """
-    #exported.sendtoclient('found spellstart')
     if 'triggername' in args \
         and args['triggername'] == 'trigger_recov_affected_noprompt':
       self.current = 'affected'
     else:
       self.current = ''
-    exported.trigger.togglegroup('recoveries', True)
+    self.api.get('trigger.togglegroup')('recoveries', True)
 
   def recovline(self, args):
     """
@@ -308,13 +305,11 @@ class Plugin(BasePlugin):
     """
     reset current when seeing a spellheaders ending
     """
-    #exported.sendtoclient('found spellend')
-
-    exported.trigger.togglegroup('recoveries', False)
+    self.api.get('trigger.togglegroup')('recoveries', False)
     if self.current == '' or self.current == 'affected':
       self.isuptodatef = True
-      self.msg('sending skills_affected_update')
-      exported.event.eraise('skills_affected_update', {})
+      self.api.get('output.msg')('sending skills_affected_update')
+      self.api.get('events.eraise')('skills_affected_update', {})
     self.savestate()
 
   def recoff(self, args):
@@ -325,7 +320,7 @@ class Plugin(BasePlugin):
     if sn in self.recoveries:
       self.recoveries[sn]['duration'] = 0
       self.savestate()
-      exported.event.eraise('aard_skill_recoff', {'sn':sn})
+      self.api.get('events.eraise')('aard_skill_recoff', {'sn':sn})
 
   def recon(self, args):
     """
@@ -337,31 +332,27 @@ class Plugin(BasePlugin):
       self.recoveries[sn]['duration'] = \
                         time.mktime(time.localtime()) + duration
       self.savestate()
-      exported.event.eraise('aard_skill_recon', {'sn':sn,
+      self.api.get('events.eraise')('aard_skill_recon', {'sn':sn,
                                   'duration':self.recoveries[sn]['duration']})
 
   def skillstart(self, args):
     """
     show that the trigger fired
     """
-    #exported.sendtoclient('found spellstart')
     if 'triggername' in args \
         and args['triggername'] == 'spellh_spellup_noprompt':
-      #exported.sendtoclient('found a spellup header')
       self.current = 'spellup'
     elif 'triggername' in args \
         and args['triggername'] == 'spellh_affected_noprompt':
       self.current = 'affected'
     else:
       self.current = ''
-    exported.trigger.togglegroup('spellhead', True)
+    self.api.get('trigger.togglegroup')('spellhead', True)
 
   def skillline(self, args):
     """
     parse spell lines
     """
-    #exported.sendtoclient('found spellline: %s' % args)
-
     sn = int(args['sn'])
     name = args['name']
     target = int(args['target'])
@@ -394,15 +385,13 @@ class Plugin(BasePlugin):
     """
     reset current when seeing a spellheaders ending
     """
-    #exported.sendtoclient('found spellend')
-
-    exported.trigger.togglegroup('spellhead', False)
+    self.api.get('trigger.togglegroup')('spellhead', False)
     self.savestate()
     if self.current:
       evname = 'aard_skill_ref_%s' % self.current
     else:
       evname = 'aard_skill_ref'
-    exported.event.eraise(evname, {})
+    self.api.get('events.eraise')(evname, {})
     self.current = ''
 
   @timeit
@@ -410,7 +399,7 @@ class Plugin(BasePlugin):
     """
     get a skill
     """
-    exported.msg('looking for %s' % tsn, 'skills')
+    self.api.get('output.msg')('looking for %s' % tsn, 'skills')
     sn = -1
     name = tsn
     try:
@@ -420,16 +409,16 @@ class Plugin(BasePlugin):
 
     tskill = None
     if sn >= 1:
-      exported.msg('%s >= 0' % sn, 'skills')
+      self.api.get('output.msg')('%s >= 0' % sn, 'skills')
       if sn in self.skills:
-        exported.msg('found sn', 'skills')
+        self.api.get('output.msg')('found sn', 'skills')
         tskill = copy.deepcopy(self.skills[sn])
         #tskill = self.skills[sn]
       else:
-        exported.msg('did not find skill for int', 'skill')
+        self.api.get('output.msg')('did not find skill for int', 'skill')
 
     if not tskill and name:
-      exported.msg('trying name', 'skills')
+      self.api.get('output.msg')('trying name', 'skills')
       tlist = utils.checklistformatch(name, self.skillsnamelookup.keys())
       if len(tlist) == 1:
         tskill = copy.deepcopy(self.skills[self.skillsnamelookup[tlist[0]]])
@@ -449,12 +438,12 @@ class Plugin(BasePlugin):
     skill = self.getskill(sn)
     if skill:
       if skill['type'] == 'spell':
-        self.msg('casting %s' % skill['name'])
-        exported.execute('cast %s' % skill['sn'])
+        self.api.get('output.msg')('casting %s' % skill['name'])
+        self.api.get('input.execute')('cast %s' % skill['sn'])
       else:
         name = skill['name'].split()[0]
-        self.msg('sending skill %s' % skill['name'])
-        exported.execute(name)
+        self.api.get('output.msg')('sending skill %s' % skill['name'])
+        self.api.get('input.execute')(name)
 
   def canuse(self, sn):
     """

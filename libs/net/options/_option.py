@@ -3,6 +3,8 @@ $Id$
 
 This module holds the base class for a Telnet Option
 """
+from libs.api import API
+
 class TelnetOption(object):
   """
   a base class for a telnet object
@@ -11,6 +13,7 @@ class TelnetOption(object):
     """
     initalize the instance
     """
+    self.api = API()
     self.telnetobj = telnetobj
     self.option = option
     self.telnetobj.option_handlers[ord(self.option)] = self

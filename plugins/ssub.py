@@ -37,7 +37,7 @@ class Plugin(BasePlugin):
     self.cmds['clear'] = {'func':self.cmd_clear,
                             'shelp':'Clear all substitutes'}
     self.defaultcmd = 'list'
-    self.event.register('to_client_event', self.findsub)
+    self.api.get('events.register')('to_client_event', self.findsub)
     self.addsetting('test', True, bool, 'A test boolean variable')
 
   def findsub(self, args):

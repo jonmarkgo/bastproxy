@@ -6,7 +6,6 @@ This plugin highlights cp/gq/quest mobs in scan
 import time
 import os
 import copy
-from libs import exported
 from plugins import BasePlugin
 from libs.persistentdict import PersistentDict
 from libs import utils
@@ -53,18 +52,18 @@ class Plugin(BasePlugin):
             {'regex':"^\{/scan\}$",
               'enabled':False, 'group':'scan'}
 
-    self.event.register('trigger_scanstart', self.scanstart)
-    self.event.register('trigger_scanend', self.scanend)
-    self.event.register('aard_cp_mobsleft', self.cpmobs)
-    self.event.register('aard_cp_failed', self.cpclear)
-    self.event.register('aard_cp_comp', self.cpclear)
-    self.event.register('aard_gq_mobsleft', self.gqmobs)
-    self.event.register('aard_gq_done', self.gqclear)
-    self.event.register('aard_gq_completed', self.gqmobs)
-    self.event.register('aard_gq_won', self.gqmobs)
-    self.event.register('aard_quest_start', self.questmob)
-    self.event.register('aard_quest_failed', self.questclear)
-    self.event.register('aard_quest_comp', self.questclear)
+    self.api.get('events.register')('trigger_scanstart', self.scanstart)
+    self.api.get('events.register')('trigger_scanend', self.scanend)
+    self.api.get('events.register')('aard_cp_mobsleft', self.cpmobs)
+    self.api.get('events.register')('aard_cp_failed', self.cpclear)
+    self.api.get('events.register')('aard_cp_comp', self.cpclear)
+    self.api.get('events.register')('aard_gq_mobsleft', self.gqmobs)
+    self.api.get('events.register')('aard_gq_done', self.gqclear)
+    self.api.get('events.register')('aard_gq_completed', self.gqmobs)
+    self.api.get('events.register')('aard_gq_won', self.gqmobs)
+    self.api.get('events.register')('aard_quest_start', self.questmob)
+    self.api.get('events.register')('aard_quest_failed', self.questclear)
+    self.api.get('events.register')('aard_quest_comp', self.questclear)
 
     self.mobs = {}
 
@@ -73,8 +72,8 @@ class Plugin(BasePlugin):
     show that the trigger fired
     """
     self.msg('found {scan}')
-    exported.trigger.togglegroup('scan', True)
-    self.event.register('trigger_all', self.scanline)
+    self.api.get('trigger.togglegroup')('scan', True)
+    self.api.get('events.register')('trigger_all', self.scanline)
 
   def scanline(self, args):
     """
@@ -109,8 +108,8 @@ class Plugin(BasePlugin):
     reset current when seeing a spellheaders ending
     """
     self.msg('found {/scan}')
-    self.event.unregister('trigger_all', self.scanline)
-    exported.trigger.togglegroup('scan', False)
+    self.api.get('events.unregister')('trigger_all', self.scanline)
+    self.api.get('trigger.togglegroup')('scan', False)
 
   def cpmobs(self, args):
     """

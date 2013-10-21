@@ -11,12 +11,12 @@ import os
 import shutil
 import zipfile
 
-from libs import exported
-from libs.color import strip_ansi
+import libs.color as color
 from libs.persistentdict import PersistentDict
 from libs import utils
+from libs.api import API
 
-class Logger:
+class Logger(object):
   """
   a class to manage logging and its related activities
   """
@@ -25,9 +25,13 @@ class Logger:
     init the class
     """
     self.sname = 'log'
-    self.savedir = os.path.join(exported.BASEPATH, 'data',
+    self.api = API()
+    #print('logger api.api', self.api.api)
+    #print('logger basepath', self.api.BASEPATH)
+    self.savedir = os.path.join(self.api.BASEPATH, 'data',
                                           'plugins', self.sname)
-    self.logdir = os.path.join(exported.BASEPATH, 'data', 'logs')
+    self.logdir = os.path.join(self.api.BASEPATH, 'data', 'logs')
+    #print('logdir', self.logdir)
     try:
       os.makedirs(self.savedir)
     except OSError:
@@ -80,7 +84,7 @@ class Logger:
                 time.strftime('%a %b %d %Y %H:%M:%S', time.localtime()),
                 dtype)
     if dtype in self.colors:
-      tstring = exported.color.convertcolors(self.colors[dtype] + tstring)
+      tstring = color.convertcolors(self.colors[dtype] + tstring)
     tmsg = [tstring]
     tmsg.append(args['msg'])
 
@@ -88,10 +92,10 @@ class Logger:
     nontimestamp = args['msg']
 
     if dtype in self.sendtoclient and self.sendtoclient[dtype]:
-      exported.sendtoclient(timestampmsg)
+      self.api.get('output.client')(timestampmsg)
 
     if dtype in self.sendtofile and self.sendtofile[dtype]['file']:
-      self.logtofile(exported.color.strip_ansi(nontimestamp), dtype)
+      self.logtofile(color.strip_ansi(nontimestamp), dtype)
 
 
     if dtype in self.sendtoconsole and self.sendtoconsole[dtype]:
@@ -140,7 +144,7 @@ class Logger:
       tstring = '%s : ' % \
             (time.strftime('%a %b %d %Y %H:%M:%S', time.localtime()))
       msg = tstring + msg
-    self.openlogs[self.currentlogs[dtype]].write(strip_ansi(msg) + '\n')
+    self.openlogs[self.currentlogs[dtype]].write(color.strip_ansi(msg) + '\n')
     self.openlogs[self.currentlogs[dtype]].flush()
 
   def cmd_client(self, args):
@@ -281,24 +285,40 @@ class Logger:
       self.logtofile(data, 'frommud')
     return args
 
+  def cmdinit(self, args):
+    """
+    initialize commands
+    """
+    self.api.get('commands.add')('log', 'client',
+                        {'lname':'Logger', 'func':self.cmd_client,
+                         'shelp':'Send message of a type to clients'})
+    self.api.get('commands.add')('log', 'file',
+                        {'lname':'Logger', 'func':self.cmd_file,
+                        'shelp':'Send message of a type to a file'})
+    self.api.get('commands.add')('log', 'console',
+                        {'lname':'Logger', 'func':self.cmd_console,
+                        'shelp':'Send message of a type to console'})
+    self.api.get('commands.add')('log', 'types',
+                        {'lname':'Logger', 'func':self.cmd_types,
+                        'shelp':'Show data types'})
+    #self.api.get('command.add')('log', 'archive',
+                        #{'lname':'Logger', 'func':self.cmd_archive,
+                        #'shelp':'archive a dtype'})
+
   def load(self):
     """
     load external stuff
     """
-    exported.cmd.add('log', 'client',
-                        {'lname':'Logger', 'func':self.cmd_client,
-                         'shelp':'Send message of a type to clients'})
-    exported.cmd.add('log', 'file',
-                        {'lname':'Logger', 'func':self.cmd_file,
-                        'shelp':'Send message of a type to a file'})
-    exported.cmd.add('log', 'console',
-                        {'lname':'Logger', 'func':self.cmd_console,
-                        'shelp':'Send message of a type to console'})
-    exported.cmd.add('log', 'types',
-                        {'lname':'Logger', 'func':self.cmd_types,
-                        'shelp':'Show data types'})
-    #exported.cmd.add('log', 'archive',
-                        #{'lname':'Logger', 'func':self.cmd_archive,
-                        #'shelp':'archive a dtype'})
-    exported.event.register('from_mud_event', self.logmud)
-    exported.event.register('to_mud_event', self.logmud)
+    #print('logger api before adding', self.api.api)
+    self.api.get('managers.add')('logger', self)
+    self.api.add('logger', 'msg', self.msg)
+    self.api.add('logger', 'adddtype', self.adddtype)
+    self.api.add('logger', 'console', self.cmd_console)
+    self.api.add('logger', 'tofile', self.cmd_file)
+    #print('logger api after adding', self.api.api)
+    self.api.get('events.register')('from_mud_event', self.logmud, plugin='log')
+    self.api.get('events.register')('to_mud_event', self.logmud, plugin='log')
+    self.api.get('events.register')('plugin_cmdman_loaded', self.cmdinit)
+    self.api.get('events.eraise')('plugin_logger_loaded', {})
+    #print('logger loaded')
+

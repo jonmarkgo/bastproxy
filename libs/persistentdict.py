@@ -10,7 +10,8 @@ import csv
 import os
 import shutil
 from libs.utils import convert
-#from libs import exported
+from libs.api import API
+api = API()
 
 def convertkeystoint(tdict):
   new = {}
@@ -127,7 +128,7 @@ class PersistentDict(dict):
           return self.update(loader(fileobj))
       except:
         #if not ('log' in self.filename):
-        #  exported.write_traceback("Error when loading %s" % loader)
+        #  api.get('output.traceback')("Error when loading %s" % loader)
         #else:
         #  pass
         pass

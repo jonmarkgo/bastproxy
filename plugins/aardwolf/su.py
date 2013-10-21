@@ -7,7 +7,6 @@ import copy
 import time
 import os
 from plugins import BasePlugin
-from libs import exported
 from libs.timing import timeit
 from libs.persistentdict import PersistentDict
 
@@ -79,16 +78,16 @@ class Plugin(BasePlugin):
       #'regex':"^You die.$",
       #'enabled':True, 'group':'dead'}
 
-    self.event.register('GMCP:char.vitals', self._charvitals)
-    self.event.register('GMCP:char.status', self._charstatus)
-    self.event.register('moved_room', self._moved)
-    self.event.register('skill_fail', self._skillfail)
-    self.event.register('aard_skill_affon', self._affon)
-    self.event.register('aard_skill_affoff', self._affoff)
-    self.event.register('aard_skill_recoff', self._recoff)
-    self.event.register('su_enabled', self.enabledchange)
-    self.event.register('skills_affected_update', self.nextspell)
-    self.event.register('aard_skill_gain', self.skillgain)
+    self.api.get('events.register')('GMCP:char.vitals', self._charvitals)
+    self.api.get('events.register')('GMCP:char.status', self._charstatus)
+    self.api.get('events.register')('moved_room', self._moved)
+    self.api.get('events.register')('skill_fail', self._skillfail)
+    self.api.get('events.register')('aard_skill_affon', self._affon)
+    self.api.get('events.register')('aard_skill_affoff', self._affoff)
+    self.api.get('events.register')('aard_skill_recoff', self._recoff)
+    self.api.get('events.register')('su_enabled', self.enabledchange)
+    self.api.get('events.register')('skills_affected_update', self.nextspell)
+    self.api.get('events.register')('aard_skill_gain', self.skillgain)
 
   def skillgain(self, args=None):
     """
@@ -141,12 +140,12 @@ class Plugin(BasePlugin):
     """
     catch a skill fail event
     """
-    self.msg('skillfail: %s' % args)
+    self.api.get('output.msg')('skillfail: %s' % args)
     sn = args['sn']
     if args['reason'] == 'nomana':
       self.variables['waiting'] = -1
       self.variables['nomana'] = True
-      self.lastmana = exported.GMCP.getv('char.vitals.mana')
+      self.lastmana = self.api.get('GMCP.getv')('char.vitals.mana')
     elif args['reason'] == 'nocastroom':
       self.variables['waiting'] = -1
       self.variables['nocast'] = True
@@ -156,14 +155,14 @@ class Plugin(BasePlugin):
     elif args['reason'] == 'nomoves':
       self.variables['waiting'] = -1
       self.variables['nomoves'] = True
-      self.lastmana = exported.GMCP.getv('char.vitals.moves')
+      self.lastmana = self.api.get('GMCP.getv')('char.vitals.moves')
     elif self.variables['waiting'] == sn:
       if args['reason'] == 'lostconc':
-        exported.skills.sendcmd(self.variables['waiting'])
+        self.api.get('skills.sendcmd')(self.variables['waiting'])
       elif args['reason'] == 'alreadyaff':
         self.variables['waiting'] = -1
-        skill = exported.skills.gets(sn)
-        exported.sendtoclient(
+        skill = self.api.get('skills.gets')(sn)
+        self.api.get('output.client')(
           "@BSpellup - disabled %s because you are already affected" % \
                                   skill['name'])
         if sn in self.spellups['self']:
@@ -185,8 +184,8 @@ class Plugin(BasePlugin):
         self.nextspell()
       elif args['reason'] == 'disabled':
         self.variables['waiting'] = -1
-        skill = exported.skills.gets(sn)
-        exported.sendtoclient(
+        skill = self.api.get('skills.gets')(sn)
+        self.api.get('output.client')(
           "@BSpellup - disabled %s because it is disabled mudside" % \
                                   skill['name'])
         if sn in self.spellups['self']:
@@ -210,13 +209,13 @@ class Plugin(BasePlugin):
     check if we have more mana and moves
     """
     if self.variables['nomana']:
-      newmana = exported.GMCP.getv('char.vitals.mana')
+      newmana = self.api.get('GMCP.getv')('char.vitals.mana')
       if newmana > self.lastmana:
         self.lastmana = -1
         self.variables['nomana'] = False
         self.nextspell()
     if self.variables['nomoves']:
-      newmoves = exported.GMCP.getv('char.vitals.moves')
+      newmoves = self.api.get('GMCP.getv')('char.vitals.moves')
       if newmoves > self.lastmoves:
         self.lastmoves = -1
         self.variables['nomoves'] = False
@@ -226,8 +225,8 @@ class Plugin(BasePlugin):
     """
     check if we have more mana and moves
     """
-    status = exported.GMCP.getv('char.status.state')
-    if status == 3 and exported.skills.isuptodate():
+    status = self.api.get('GMCP.getv')('char.status.state')
+    if status == 3 and self.api.get('skills.isuptodate')():
       self.nextspell()
 
   @timeit
@@ -235,20 +234,21 @@ class Plugin(BasePlugin):
     """
     check to cast the next spell
     """
-    if not exported.PROXY:
+    proxy = self.api.get('managers.get')('proxy')
+    if not proxy:
       return False
-    self.msg('waiting type: %s' % type(self.variables['waiting']))
-    self.msg('currentstatus = %s' % exported.GMCP.getv('char.status.state'))
+    self.api.get('output.msg')('waiting type: %s' % type(self.variables['waiting']))
+    self.api.get('output.msg')('currentstatus = %s' % self.api.get('GMCP.getv')('char.status.state'))
 
     if self.variables['nomoves'] or self.variables['nomana'] or \
        self.variables['nocast'] or self.variables['waiting'] != -1 or \
        not self.variables['enabled'] or \
-       not exported.skills.isuptodate() or \
-       exported.GMCP.getv('char.status.state') != 3:
-      self.msg('checked returned False')
+       not self.api.get('skills.isuptodate')() or \
+       self.api.get('GMCP.getv')('char.status.state') != 3:
+      self.api.get('output.msg')('checked returned False')
       return False
 
-    self.msg('checked returned True')
+    self.api.get('output.msg')('checked returned True')
     return True
 
   @timeit
@@ -256,13 +256,13 @@ class Plugin(BasePlugin):
     """
     try to cast the next spell
     """
-    self.msg('nextspell')
+    self.api.get('output.msg')('nextspell')
     if self.check():
       for i in self.spellups['sorder']:
         if self.spellups['self'][i]['enabled']:
-          if exported.skills.canuse(i):
+          if self.api.get('skills.canuse')(i):
             self.variables['waiting'] = int(i)
-            exported.skills.sendcmd(i)
+            self.api.get('skills.sendcmd')(i)
             return
 
   def savestate(self):
@@ -277,13 +277,13 @@ class Plugin(BasePlugin):
     add a spell internally
     """
     msg = []
-    spell = exported.skills.gets(sn)
+    spell = self.api.get('skills.gets')(sn)
 
     if not spell:
       msg.append('%-20s: does not exist' % tspell)
       return msg
 
-    if not override and not exported.skills.isspellup(spell['sn']):
+    if not override and not self.api.get('skills.isspellup')(spell['sn']):
       msg.append('%-20s: not a spellup' % spell['name'])
       return msg
 
@@ -305,13 +305,13 @@ class Plugin(BasePlugin):
     """
     add a spellup
     """
-    #exported.sendtoclient('%s' % args)
+    #self.api.get('output.client')('%s' % args)
     msg = []
     if len(args) < 1:
       return False, ['Please supply a spell']
 
     if args[0] == 'all':
-      spellups = exported.skills.getspellups()
+      spellups = self.api.get('skills.getspellups')()
       for spell in spellups:
         if spell['percent'] > 1:
           tmsg = self._addselfspell(spell['sn'])
@@ -320,7 +320,7 @@ class Plugin(BasePlugin):
       self.nextspell()
 
     elif len(args) == 2 and 'override' in args:
-      exported.sendtoclient('got override')
+      self.api.get('output.client')('got override')
       aspell = args[0]
       tspell = aspell
       place = -1
@@ -364,13 +364,13 @@ class Plugin(BasePlugin):
               'Num', 'Name', 'A', 'P', 'B', 'D', 'NP', 'NL'))
       msg.append('@B' + '-'* 60)
       for i in self.spellups['sorder']:
-        skill = exported.skills.gets(i)
+        skill = self.api.get('skills.gets')(i)
         msg.append('%-3s - %-30s : %2s %2s %2s %2s  %-2s  %-2s' % (
                       self.spellups['sorder'].index(i),
                       skill['name'],
-                      'A' if exported.skills.isaffected(i) else '',
+                      'A' if self.api.get('skills.isaffected')(i) else '',
                       'P' if self.variables['waiting'] == i else '',
-                      'B' if exported.skills.isblockedbyrecovery(i) else '',
+                      'B' if self.api.get('skills.isblockedbyrecovery')(i) else '',
                       'D' if not self.spellups['self'][i]['enabled'] else '',
                       'NP' if skill['percent'] == 1 else '',
                       'NL' if skill['percent'] == 0 else '',))
@@ -394,7 +394,7 @@ class Plugin(BasePlugin):
 
     else:
       for spella in args:
-        spell = exported.skills.gets(spella)
+        spell = self.api.get('skills.gets')(spella)
 
         if not spell:
           msg.append('%s does not exist' % spella)
@@ -418,7 +418,7 @@ class Plugin(BasePlugin):
     msg = []
     if len(args) > 0:
       for sn in args:
-        skill = exported.skills.gets(sn)
+        skill = self.api.get('skills.gets')(sn)
         if skill:
           if skill['sn'] in self.spellups['sorder']:
             self.spellups['self'][skill['sn']]['enabled'] = True
@@ -439,7 +439,7 @@ class Plugin(BasePlugin):
     msg = []
     if len(args) > 0:
       for sn in args:
-        skill = exported.skills.gets(sn)
+        skill = self.api.get('skills.gets')(sn)
         if skill:
           if skill['sn'] in self.spellups['sorder']:
             self.spellups['self'][skill['sn']]['enabled'] = False

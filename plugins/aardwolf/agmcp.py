@@ -3,8 +3,6 @@ $Id$
 
 This plugin runs gmcp commands after connecting to aardwolf
 """
-
-from libs import exported
 from plugins import BasePlugin
 
 NAME = 'GMCP Aardwolf'
@@ -13,7 +11,7 @@ PURPOSE = 'Do things for Aardwolf GMCP'
 AUTHOR = 'Bast'
 VERSION = 1
 
-AUTOLOAD = True
+AUTOLOAD = False
 
 class Plugin(BasePlugin):
   """
@@ -24,28 +22,29 @@ class Plugin(BasePlugin):
     initialize the instance
     """
     BasePlugin.__init__(self, *args, **kwargs)
-    self.event.register('GMCP:server-enabled', self.enablemods)
-    self.event.register('client_connected', self.clientconnected)
+    self.api.get('events.register')('GMCP:server-enabled', self.enablemods)
+    self.api.get('events.register')('client_connected', self.clientconnected)
 
   def enablemods(self, _=None):
     """
     enable modules for aardwolf
     """
-    exported.GMCP.sendpacket("rawcolor on")
-    exported.GMCP.sendpacket("group on")
-    exported.GMCP.togglemodule('Char', True)
-    exported.GMCP.togglemodule('Room', True)
-    exported.GMCP.togglemodule('Comm', True)
-    exported.GMCP.togglemodule('Group', True)
-    exported.GMCP.togglemodule('Core', True)
+    self.api.get('GMCP.sendpacket')("rawcolor on")
+    self.api.get('GMCP.sendpacket')("group on")
+    self.api.get('GMCP.togglemodule')('Char', True)
+    self.api.get('GMCP.togglemodule')('Room', True)
+    self.api.get('GMCP.togglemodule')('Comm', True)
+    self.api.get('GMCP.togglemodule')('Group', True)
+    self.api.get('GMCP.togglemodule')('Core', True)
 
   def clientconnected(self, _=None):
     """
     do stuff when a client connects
     """
-    if exported.PROXY.connected:
-      exported.execute('protocols gmcp sendchar')
-      exported.GMCP.sendmodule('comm.quest')
-      exported.GMCP.sendmodule('room.info')
+    proxy = self.api.get('managers.getm')('proxy')
+    if proxy.connected:
+      self.api.get('input.execute')('protocols gmcp sendchar')
+      self.api.get('GMCP.sendmodule')('comm.quest')
+      self.api.get('GMCP.sendmodule')('room.info')
 
 

@@ -3,7 +3,6 @@ $Id$
 
 This plugin shows stats for events on Aardwolf
 """
-from libs import exported
 from libs import utils
 from plugins import BasePlugin
 import time
@@ -26,13 +25,13 @@ class Plugin(BasePlugin):
     initialize the instance
     """
     BasePlugin.__init__(self, *args, **kwargs)
-    self.event.register('aard_quest_comp', self.compquest)
-    self.event.register('aard_cp_comp', self.compcp)
-    self.event.register('aard_level_gain', self.levelgain)
-    self.event.register('aard_gq_won', self.compgq)
-    self.event.register('aard_gq_done', self.compgq)
-    self.event.register('aard_gq_completed', self.compgq)
-    self.event.register('statmn_showminutes', self.showchange)
+    self.api.get('events.register')('aard_quest_comp', self.compquest)
+    self.api.get('events.register')('aard_cp_comp', self.compcp)
+    self.api.get('events.register')('aard_level_gain', self.levelgain)
+    self.api.get('events.register')('aard_gq_won', self.compgq)
+    self.api.get('events.register')('aard_gq_done', self.compgq)
+    self.api.get('events.register')('aard_gq_completed', self.compgq)
+    self.api.get('events.register')('statmn_showminutes', self.showchange)
     self.addsetting('statcolor', '@W', 'color', 'the stat color')
     self.addsetting('infocolor', '@x33', 'color', 'the info color')
     self.addsetting('showminutes', 5, int,
@@ -51,14 +50,14 @@ class Plugin(BasePlugin):
     """
     do something when the reportminutes changes
     """
-    exported.timer.remove('statrep')
+    self.api.get('timer.remove')('statrep')
     if int(args['newvalue']) > 0:
-      exported.timer.add('statrep',
+      self.api.get('timer.add')('statrep',
                {'func':self.timershow,
                 'seconds':int(args['newvalue']) * 60,
                 'nodupe':True})
     else:
-      exported.sendtoclient('Turning off the statmon report')
+      self.api.get('output.client')('Turning off the statmon report')
 
   def timershow(self):
     """
@@ -108,10 +107,10 @@ class Plugin(BasePlugin):
          colors=self.variables['infocolor']),
          self.variables['infocolor']))
 
-    if exported.plugins.isinstalled('statdb'):
+    if self.api.get('plugins.isinstalled')('statdb'):
       stmt = "SELECT COUNT(*) as COUNT, AVG(totqp) as AVEQP " \
               "FROM quests where failed = 0"
-      tst = exported.statdb.runselect(stmt)
+      tst = self.api.get('statdb.runselect')(stmt)
       quest_total = tst[0]['COUNT']
       quest_avg = tst[0]['AVEQP']
       if quest_total > 1:
@@ -127,7 +126,7 @@ class Plugin(BasePlugin):
     """
     handle a cp completion
     """
-    self.msg('compcp: %s' % args)
+    self.api.get('output.msg')('compcp: %s' % args)
     msg = []
     msg.append('%sStatMonitor: CP finished for ' % \
                   self.variables['infocolor'])
@@ -162,7 +161,7 @@ class Plugin(BasePlugin):
     """
     handle a gq completion
     """
-    self.msg('compgq: %s' % args)
+    self.api.get('output.msg')('compgq: %s' % args)
     msg = []
     msg.append('%sStatMonitor: GQ finished for ' % \
                   self.variables['infocolor'])
@@ -192,7 +191,7 @@ class Plugin(BasePlugin):
     """
     handle a level or pup gain
     """
-    self.msg('levelgain: %s' % args)
+    self.api.get('output.msg')('levelgain: %s' % args)
     msg = []
     msg.append('%sStatMonitor: Gained a %s:' % (self.variables['infocolor'],
                 args['type']))
@@ -241,11 +240,11 @@ class Plugin(BasePlugin):
               colorn=self.variables['statcolor'],
               colors=self.variables['infocolor']))
 
-    if exported.plugins.isinstalled('statdb'):
+    if self.api.get('plugins.isinstalled')('statdb'):
       stmt = "SELECT count(*) as count, AVG(xp + bonusxp) as average FROM " \
             "mobkills where time > %d and time < %d and xp > 0" % \
              (args['starttime'], args['finishtime'])
-      tst = exported.statdb.runselect(stmt)
+      tst = self.api.get('statdb.runselect')(stmt)
       count = tst[0]['count']
       ave = tst[0]['average']
       if count > 0 and ave > 0:
@@ -255,7 +254,7 @@ class Plugin(BasePlugin):
         msg.append(' (%s%02.02f%sxp/mob' % (self.variables['statcolor'],
           ave, self.variables['infocolor']))
         if length:
-          expmin = exported.GMCP.getv('char.base.perlevel')/(length/60)
+          expmin = self.api.get('GMCP.getv')('char.base.perlevel')/(length/60)
           if int(expmin) > self.variables['exppermin']:
             msg.append(' %s%02d%sxp/min' % (self.variables['statcolor'],
               expmin, self.variables['infocolor']))
@@ -269,9 +268,9 @@ class Plugin(BasePlugin):
     """
     self.msgs.append(msg)
 
-    self.event.register('trigger_emptyline', self.showmessages)
+    self.api.get('events.register')('trigger_emptyline', self.showmessages)
 
-    #exported.timer.add('msgtimer',
+    #self.api.get('timer.add')('msgtimer',
                 #{'func':self.showmessages, 'seconds':1, 'onetime':True,
                  #'nodupe':True})
 
@@ -279,9 +278,9 @@ class Plugin(BasePlugin):
     """
     show a message
     """
-    self.event.unregister('trigger_emptyline', self.showmessages)
+    self.api.get('events.unregister')('trigger_emptyline', self.showmessages)
     for i in self.msgs:
-      exported.sendtoclient(i, preamble=False)
+      self.api.get('output.client')(i, preamble=False)
 
     self.msgs = []
 
@@ -289,7 +288,7 @@ class Plugin(BasePlugin):
     """
     return a report of stats for a # of minutes
     """
-    if not exported.plugins.isinstalled('statdb'):
+    if not self.api.get('plugins.isinstalled')('statdb'):
       return []
 
     linelen = 50
@@ -329,7 +328,7 @@ class Plugin(BasePlugin):
                      SUM(gold) as gold,
                      SUM(tp) as tp
                      FROM quests where finishtime > %d""" % starttime
-    tst = exported.statdb.runselect(stmt)
+    tst = self.api.get('statdb.runselect')(stmt)
     if tst[0]['total'] > 0:
       queststats.update(tst[0])
 
@@ -339,7 +338,7 @@ class Plugin(BasePlugin):
                      SUM(tp) as tp
                      FROM campaigns
                      where finishtime > %d and failed = 0""" % starttime
-    tst = exported.statdb.runselect(stmt)
+    tst = self.api.get('statdb.runselect')(stmt)
     if tst[0]['total'] > 0:
       cpstats.update(tst[0])
 
@@ -348,7 +347,7 @@ class Plugin(BasePlugin):
                      SUM(gold) as gold,
                      SUM(tp) as tp
                      FROM gquests where finishtime > %d""" % starttime
-    tst = exported.statdb.runselect(stmt)
+    tst = self.api.get('statdb.runselect')(stmt)
     if tst[0]['total'] > 0:
       gqstats.update(tst[0])
 
@@ -357,7 +356,7 @@ class Plugin(BasePlugin):
                      SUM(gold) as gold,
                      SUM(tp) as tp
                      FROM mobkills where time > %d""" % starttime
-    tst = exported.statdb.runselect(stmt)
+    tst = self.api.get('statdb.runselect')(stmt)
     if tst[0]['total'] > 0:
       mobstats.update(tst[0])
 
@@ -418,7 +417,7 @@ class Plugin(BasePlugin):
 
     msg = self.statreport(minutes)
 
-    exported.sendtoclient('\n'.join(msg), preamble=False)
+    self.api.get('output.client')('\n'.join(msg), preamble=False)
 
     return True, []
 

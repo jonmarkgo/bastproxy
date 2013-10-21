@@ -10,10 +10,10 @@ import os
 import sys
 import socket
 import signal
+from libs import io
+from libs.api import API
 
-from libs import exported
-
-signal.signal(signal.SIGCHLD, signal.SIG_IGN)
+sys.stderr = sys.stdout
 
 def setuppaths():
   """
@@ -21,44 +21,23 @@ def setuppaths():
   """
   npath = os.path.abspath(__file__)
   index = npath.rfind(os.sep)
+  tpath = ''
   if index == -1:
-    exported.BASEPATH = os.curdir + os.sep
+    tpath = os.curdir + os.sep
   else:
-    exported.BASEPATH = npath[:index]
+    tpath = npath[:index]
 
-  print 'setting basepath to', exported.BASEPATH
+  api.get('output.msg')('setting basepath to: %s'% tpath, 'startup')
+  API.BASEPATH = tpath
 
   try:
-    os.makedirs(os.path.join(exported.BASEPATH, 'data', 'logs'))
+    os.makedirs(os.path.join(api.BASEPATH, 'data', 'logs'))
   except OSError:
     pass
 
-setuppaths()
+signal.signal(signal.SIGCHLD, signal.SIG_IGN)
 
-from libs.logger import Logger
-exported.LOGGER = Logger()
-
-from libs.event import EventMgr
-exported.EVENTMGR = EventMgr()
-
-from libs.cmdman import CmdMgr
-exported.CMDMGR = CmdMgr()
-
-from plugins import PluginMgr
-exported.PLUGINMGR = PluginMgr()
-
-exported.LOGGER.load()
-exported.CMDMGR.load()
-exported.PLUGINMGR.load()
-exported.EVENTMGR.load()
-
-exported.LOGGER.adddtype('net')
-exported.LOGGER.cmd_console(['net'])
-
-from libs.net.proxy import Proxy
-from libs.net.client import ProxyClient
-
-
+api = API()
 
 class Listener(asyncore.dispatcher):
   """
@@ -81,40 +60,43 @@ class Listener(asyncore.dispatcher):
     self.proxy = None
     self.server_address = server_address
     self.server_port = server_port
-    exported.msg("Forwarder bound on: %s" % listen_port)
+    api.get('output.msg')("Forwarder bound on: %s" % listen_port, 'startup')
 
   def handle_error(self):
     """
     show the traceback for an error in the listener
     """
-    exported.write_traceback("Forwarder error:")
+    api.get('output.traceback')("Forwarder error:")
 
   def handle_accept(self):
     """
     accept a new client
     """
     if not self.proxy:
+      from libs.net.proxy import Proxy
+
       # do proxy stuff here
       self.proxy = Proxy(self.server_address, self.server_port)
-      exported.PROXY = self.proxy
+      api.get('managers.add')('proxy', self.proxy)
     client_connection, source_addr = self.accept()
 
     try:
       ipaddress = source_addr[0]
       if self.proxy.checkbanned(ipaddress):
-        exported.msg("HOST: %s is banned" % ipaddress, 'net')
+        api.get('output.msg')("HOST: %s is banned" % ipaddress, 'net')
         client_connection.close()
       elif len(self.proxy.clients) == 5:
-        exported.msg("Only 5 clients can be connected at the same time", 'net')
+        api.get('output.msg')("Only 5 clients can be connected at the same time", 'net')
         client_connection.close()
       else:
-        exported.msg("Accepted connection from %s : %s" %
+        api.get('output.msg')("Accepted connection from %s : %s" %
                                       (source_addr[0], source_addr[1]), 'net')
 
         #Proxy client keeps up with itself
+        from libs.net.client import ProxyClient
         ProxyClient(client_connection, source_addr[0], source_addr[1])
     except:
-      exported.write_traceback('Error handling client')
+      api.get('output.traceback')('Error handling client')
 
 
 def start(listen_port, server_address, server_port):
@@ -129,17 +111,19 @@ def start(listen_port, server_address, server_port):
 
       asyncore.loop(timeout=.25, count=1)
      # check our timer event
-      exported.EVENTMGR.checktimerevents()
+      api.get('managers.getm')('events').checktimerevents()
 
   except KeyboardInterrupt:
     pass
 
-  exported.msg("Shutting down...")
+  api.get('output.msg')("Shutting down...", 'shutdown')
 
 def main():
   """
   the main function that runs everything
   """
+  setuppaths()
+
   try:
     if sys.argv[1] == "-d":
       daemon = True
@@ -152,11 +136,43 @@ def main():
     sys.exit(1)
 
   try:
-    exported.CONFIG = ConfigParser.RawConfigParser()
-    exported.CONFIG.read(config)
+    api.get('output.msg')('Config - loading', 'startup')
+    CONFIG = ConfigParser.RawConfigParser()
+    api.get('managers.add')('config', CONFIG)
+    CONFIG.read(config)
+    api.get('output.msg')('Config - loaded', 'startup')
   except:
-    print "Error parsing config!"
+    api.get('output.traceback')('Error parsing config!')
     sys.exit(1)
+
+  api.get('output.msg')('Event Manager - loading', 'startup')
+  from libs.event import EventMgr
+  EVENTMGR = EventMgr()
+  EVENTMGR.load()
+  api.get('output.msg')('Event Manager - loaded', 'startup')
+
+  api.get('output.msg')('Logger - loading', 'startup')
+  from libs.logger import Logger
+  LOGGER = Logger()
+  LOGGER.load()
+  LOGGER.adddtype('startup')
+  LOGGER.cmd_console(['startup'])
+  api.get('output.msg')('Logger - loaded', 'startup')
+
+  api.get('output.msg')('Command Manager - loading', 'startup')
+  from libs.cmdman import CmdMgr
+  CMDMGR = CmdMgr()
+  CMDMGR.load()
+  api.get('output.msg')('Command Manager - loaded', 'startup')
+
+  api.get('output.msg')('Plugin Manager - loading', 'startup')
+  from plugins import PluginMgr
+  PLUGINMGR = PluginMgr()
+  PLUGINMGR.load()
+  api.get('output.msg')('Plugin Manager - loaded', 'startup')
+
+  api.get('logger.adddtype')('net')
+  api.get('logger.console')(['net'])
 
   def guard(func, message):
     """
@@ -169,18 +185,18 @@ def main():
       raise
 #      sys.exit(1)
 
-  listen_port = guard(lambda:exported.CONFIG.getint("proxy", "listen_port"),
+  listen_port = guard(lambda:CONFIG.getint("proxy", "listen_port"),
     "listen_port is a required field")
-  server_address = guard(lambda:exported.CONFIG.get("proxy", "server_address"),
+  server_address = guard(lambda:CONFIG.get("proxy", "server_address"),
     "server is a required field")
-  server_port = guard(lambda:exported.CONFIG.getint("proxy", "server_port"),
+  server_port = guard(lambda:CONFIG.getint("proxy", "server_port"),
     "server_port is a required field")
 
   if not daemon:
     try:
       start(listen_port, server_address, server_port)
     except KeyboardInterrupt:
-      exported.event.eraise('savestate', {})
+      api.get('event.eraise')('savestate', {})
   else:
     os.close(0)
     os.close(1)

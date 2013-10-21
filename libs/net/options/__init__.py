@@ -9,7 +9,7 @@ import glob
 import os
 import sys
 
-from libs import exported
+from libs.api import API
 
 def get_module_name(filename):
   """
@@ -18,7 +18,7 @@ def get_module_name(filename):
   _, filename = os.path.split(filename)
   return os.path.splitext(filename)[0]
 
-class TelnetOptionMgr:
+class TelnetOptionMgr(object):
   """
   a class to manage telnet options
   """
@@ -26,14 +26,18 @@ class TelnetOptionMgr:
     """
     initialize the instance
     """
+    self.api = API()
+    self.api.get('managers.add')('telopt', self)
     self.options = {}
     self.optionsmod = {}
     self.load_options()
+    self.api.get('logger.adddtype')('telopt')
 
   def load_options(self):
     """
     load all options
     """
+    pluginmgr = self.api.get('managers.getm')('plugin')
     index = __file__.rfind(os.sep)
     if index == -1:
       path = "." + os.sep
@@ -57,7 +61,7 @@ class TelnetOptionMgr:
         _module = sys.modules[name]
 
         if "Plugin" in _module.__dict__:
-          exported.PLUGINMGR.add_plugin(_module, mem2, path, name)
+          pluginmgr.add_plugin(_module, mem2, path, name)
 
         if "load" in _module.__dict__:
           _module.load()
@@ -67,13 +71,13 @@ class TelnetOptionMgr:
         self.optionsmod[name] = _module
 
       except:
-        exported.write_traceback("Option module '%s' refuses to load." % name)
+        self.api.get('output', 'traceback')("Option module '%s' refuses to load." % name)
 
   def reloadmod(self, mod):
     """
     reload a module
     """
-    exported.event.eraise('OPTRELOAD', {'option':mod})
+    self.api.get('events.eraise')('OPTRELOAD', {'option':mod})
 
   def addtoclient(self, client):
     """
@@ -83,7 +87,7 @@ class TelnetOptionMgr:
       try:
         self.optionsmod[i].CLIENT(client)
       except AttributeError:
-        exported.msg('Did not add option to client: %s' % i, 'telopt')
+        self.api.get('output.msg')('Did not add option to client: %s' % i, 'telopt')
 
   def addtoserver(self, server):
     """
@@ -93,7 +97,7 @@ class TelnetOptionMgr:
       try:
         self.optionsmod[i].SERVER(server)
       except AttributeError:
-        exported.msg('Did not add option to server: %s' % i, 'telopt')
+        self.api.get('output.msg')('Did not add option to server: %s' % i, 'telopt')
 
   def resetoptions(self, server, onclose=False):
     """
@@ -105,4 +109,3 @@ class TelnetOptionMgr:
 
 
 TELOPTMGR = TelnetOptionMgr()
-exported.LOGGER.adddtype('telopt')
