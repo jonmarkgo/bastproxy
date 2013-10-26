@@ -64,19 +64,21 @@ class Logger(object):
     self.sendtoconsole.sync()
     self.sendtofile.sync()
 
-  def adddtype(self, dtype):
+  # add a datatype to the logger
+  def adddtype(self, datatype):
+    """  add a datatype
+    @Ydatatype@w  = the datatype to add
     """
-    add a datatype
-    """
-    if not (dtype in self.dtypes):
-      self.dtypes[dtype] = True
-      self.sendtoclient[dtype] = False
-      self.sendtoconsole[dtype] = False
+    if not (datatype in self.dtypes):
+      self.dtypes[datatype] = True
+      self.sendtoclient[datatype] = False
+      self.sendtoconsole[datatype] = False
 
+  # process a message, use output.msg instead for the api
   def msg(self, args, dtype='default'):
-    """
-    process a message
-    """
+    """  send a message
+    @Ymsg@w        = This message to send
+    @Ydatatype@w   = the type to toggle"""
     if 'dtype' in args:
       dtype = args['dtype']
 
@@ -104,6 +106,7 @@ class Logger(object):
     if 'default' in self.sendtofile:
       self.logtofile(timestampmsg, 'default')
 
+  # archive a log fle
   def archivelog(self, dtype):
     """
     archive the previous log
@@ -120,6 +123,7 @@ class Logger(object):
     os.remove(backupfile)
     del self.openlogs[self.currentlogs[dtype]]
 
+  # log something to a file
   def logtofile(self, msg, dtype):
     """
     send a message to a log file
@@ -147,11 +151,22 @@ class Logger(object):
     self.openlogs[self.currentlogs[dtype]].write(color.strip_ansi(msg) + '\n')
     self.openlogs[self.currentlogs[dtype]].flush()
 
+  # toggle logging a datatype to the clients
+  def toggletoclient(self, datatype, flag=True):
+    """  toggle a data type to show to clients
+    @Ydatatype@w  = the type to toggle, can be multiple (list)
+    @Yflag@w      = True to send to clients, false otherwise (default: True)"""
+    if datatype in self.sendtoclient and datatype != 'frommud':
+      self.sendtoclient[datatype] = flag
+
+    self.sendtoclient.sync()
+
+  # toggle logging datatypes to the clients
   def cmd_client(self, args):
     """@G%(name)s@w - @B%(cmdname)s@w
   toggle a message type to show to clients
   @CUsage@w: show @Y<datatype>@w
-    @Ydatatype@w  = the type to toggle, can be multiple
+    @Ydatatype@w  = the type to toggle
     if no arguments, list types that are sent to client"""
     tmsg = []
     if len(args) > 0:
@@ -174,11 +189,22 @@ class Logger(object):
           tmsg.append(i)
       return True, tmsg
 
+  # toggle logging a datatype to the console
+  def toggletoconsole(self, datatype, flag=True):
+    """  toggle a data type to show to console
+    @Ydatatype@w  = the type to toggle
+    @Yflag@w      = True to send to console, false otherwise (default: True)"""
+    if datatype in self.sendtoconsole and datatype != 'frommud':
+      self.sendtoconsole[datatype] = flag
+
+    self.sendtoconsole.sync()
+
+  # toggle logging datatypes to the console
   def cmd_console(self, args):
     """@G%(name)s@w - @B%(cmdname)s@w
   toggle a message type to show in the console
   @CUsage@w: show @Y<datatype>@w
-    @Ydatatype@w  = the type to toggle, can be multiple
+    @Ydatatype@w  = the type to toggle, can be multiple (list)
     if no arguments, list types that are sent to console"""
     tmsg = []
     if len(args) > 0:
@@ -201,11 +227,29 @@ class Logger(object):
           tmsg.append(i)
       return True, tmsg
 
+  # toggle logging a datatype to a file
+  def toggletofile(self, datatype, flag=True):
+    """  toggle a data type to show to file
+    @Ydatatype@w  = the type to toggle
+    @Yflag@w      = True to send to file, false otherwise (default: True)"""
+    if datatype in self.sendtofile:
+      del self.sendtofile[datatype]
+    else:
+      tfile = '%a-%b-%d-%Y.log'
+
+      self.sendtofile[datatype] = {'file':tfile,
+                                'logdir':os.path.join(self.logdir, datatype),
+                                'timestamp':self.api.timestamp}
+      tmsg.append('setting %s to log to %s' % \
+                      (datatype, self.sendtofile[datatype]['file']))
+      self.sendtofile.sync()
+
+  # toggle logging datatypes to a file
   def cmd_file(self, args):
     """@G%(name)s@w - @B%(cmdname)s@w
   toggle a message type to show to file
   @CUsage@w: show @Y<datatype>@w @Y<timestamp>@w
-    @Ydatatype@w  = the type to toggle, can be multiple
+    @Ydatatype@w  = the type to toggle, can be multiple (list)
     @Ytimestamp@W = (optional) if True, then add timestamps before each line
            if False, do not add timestamps
            the default is True
@@ -243,11 +287,12 @@ class Logger(object):
              (i, self.sendtofile[i]['file'], self.sendtofile[i]['timestamp']))
       return True, tmsg
 
+  # archive a datatype
   def cmd_archive(self, args):
     """@G%(name)s@w - @B%(cmdname)s@w
   archive a log file
   @CUsage@w: show @Y<datatype>@w
-    @Ydatatype@w  = the type to toggle, can be multiple
+    @Ydatatype@w  = the type to toggle, can be multiple (list)
     if no arguments, list types that are sent to client"""
     tmsg = []
     if len(args) > 0:
@@ -261,7 +306,7 @@ class Logger(object):
       tmsg = self.cmd_types()
       return True, tmsg
 
-
+  # show all types
   def cmd_types(self, _=None):
     """@G%(name)s@w - @B%(cmdname)s@w
   show data types
@@ -289,16 +334,16 @@ class Logger(object):
     """
     initialize commands
     """
-    self.api.get('commands.add')('log', 'client',
+    self.api.get('commands.add')('client',
                         {'lname':'Logger', 'func':self.cmd_client,
                          'shelp':'Send message of a type to clients'})
-    self.api.get('commands.add')('log', 'file',
+    self.api.get('commands.add')('file',
                         {'lname':'Logger', 'func':self.cmd_file,
                         'shelp':'Send message of a type to a file'})
-    self.api.get('commands.add')('log', 'console',
+    self.api.get('commands.add')('console',
                         {'lname':'Logger', 'func':self.cmd_console,
                         'shelp':'Send message of a type to console'})
-    self.api.get('commands.add')('log', 'types',
+    self.api.get('commands.add')('types',
                         {'lname':'Logger', 'func':self.cmd_types,
                         'shelp':'Show data types'})
     #self.api.get('command.add')('log', 'archive',
@@ -313,8 +358,9 @@ class Logger(object):
     self.api.get('managers.add')('logger', self)
     self.api.add('logger', 'msg', self.msg)
     self.api.add('logger', 'adddtype', self.adddtype)
-    self.api.add('logger', 'console', self.cmd_console)
-    self.api.add('logger', 'tofile', self.cmd_file)
+    self.api.add('logger', 'console', self.toggletoconsole)
+    self.api.add('logger', 'file', self.toggletofile)
+    self.api.add('logger', 'client', self.toggletoclient)
     #print('logger api after adding', self.api.api)
     self.api.get('events.register')('from_mud_event', self.logmud, plugin='log')
     self.api.get('events.register')('to_mud_event', self.logmud, plugin='log')

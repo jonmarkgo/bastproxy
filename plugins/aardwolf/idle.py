@@ -3,7 +3,7 @@ $Id$
 
 This plugin keeps you from disconnecting from Aardwolf
 """
-from plugins import BasePlugin
+from plugins.aardwolf._aardwolfbaseplugin import AardwolfBasePlugin
 
 NAME = 'Aardwolf Idle'
 SNAME = 'idle'
@@ -13,7 +13,7 @@ VERSION = 1
 
 AUTOLOAD = False
 
-class Plugin(BasePlugin):
+class Plugin(AardwolfBasePlugin):
   """
   a plugin to show how to use triggers
   """
@@ -21,11 +21,10 @@ class Plugin(BasePlugin):
     """
     initialize the instance
     """
-    BasePlugin.__init__(self, *args, **kwargs)
+    AardwolfBasePlugin.__init__(self, *args, **kwargs)
     self.triggers['glaze'] = \
             {'regex':"^Your eyes glaze over.$"}
     self.api.get('events.register')('trigger_glaze', self.glaze)
-    self.dependencies.append('aardu')
 
   def glaze(self, args):
     """

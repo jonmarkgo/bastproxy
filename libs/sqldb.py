@@ -14,8 +14,8 @@ from libs.api import API
 
 api = API()
 api.get('logger.adddtype')('sqlite')
-api.get('logger.tofile')(['sqlite'])
-api.get('logger.console')(['sqlite'])
+api.get('logger.file')('sqlite')
+api.get('logger.console')('sqlite')
 
 
 def dict_factory(cursor, row):

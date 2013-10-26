@@ -2,6 +2,8 @@
 $Id$
 
 This module handles commands and parsing input
+
+#TODO: use decorators to handle the adding of commands?
 """
 from libs.api import API
 import shlex
@@ -15,18 +17,20 @@ class CmdMgr(object):
     init the class
     """
     self.sname = 'commands'
+    self.name = 'Commands'
     self.cmds = {}
     self.api = API()
     self.nomultiplecmds = {}
     self.regexlookup = {}
     self.lastcmd = ''
-    self.addcmd('help', 'list', {'lname':'Help', 'func':self.listcmds})
-    self.addcmd('help', 'default', {'lname':'Help', 'func':self.listcmds})
 
     self.api.add(self.sname, 'add', self.addcmd)
     self.api.add(self.sname, 'remove', self.removecmd)
     self.api.add(self.sname, 'default', self.setdefault)
-    self.api.add(self.sname, 'reset', self.resetcmds)
+    self.api.add(self.sname, 'removeplugin', self.removeplugin)
+
+    self.addcmd('list', {'func':self.listcmds, 'shelp':'list commands'})
+    self.addcmd('default', {'func':self.listcmds, 'shelp':'list commands'})
 
   def formatretmsg(self, msg, sname, stcmd):
     """
@@ -144,24 +148,38 @@ class CmdMgr(object):
 
       return data
 
-  def addcmd(self, sname, cmdname, args):
+  # add a command
+  def addcmd(self, cmdname, args):
     """
     add a command
     """
     #lname, cmd, tfunction, shelp="", lhelp=""
     #{'func':tfunction, 'lname':lname, 'lhelp':lhelp, 'shelp':shelp}
-    if not ('lname' in args):
+    lname = None
+    try:
+      sname = args['func'].im_self.sname
+    except AttributeError:
+      self.api.get('output.msg')('Function is not part of a class: %s' % cmdname)
+      return
+    try:
+      lname = args['func'].im_self.name
+      args['lname'] = lname
+    except AttributeError:
+      pass
+
+    if not lname and not ('lname' in args):
       self.api.get('output.msg')('cmd %s.%s has no long name, not adding' % \
-                                                (sname, cmdname), 'cmd')
+                                                (sname, cmdname), self.sname)
       return
     if not ('func' in args):
       self.api.get('output.msg')('cmd %s.%s has no function, not adding' % \
-                                                (sname, cmdname), 'cmd')
+                                                (sname, cmdname), self.sname)
       return
     if not (sname in self.cmds):
       self.cmds[sname] = {}
     self.cmds[sname][cmdname] = args
 
+  # remove a command
   def removecmd(self, sname, cmdname):
     """
     remove a command
@@ -170,8 +188,9 @@ class CmdMgr(object):
       del self.cmds[sname][cmdname]
     else:
       self.api.get('output.msg')('removecmd: cmd %s.%s does not exist' % \
-                                                (sname, cmdname), 'cmd')
+                                                (sname, cmdname), self.sname)
 
+  # set the default command for a plugin
   def setdefault(self, sname, cmd):
     """
     set the default command for a plugin or commandset
@@ -179,14 +198,15 @@ class CmdMgr(object):
     if sname in self.cmds and cmd in self.cmds[sname]:
       self.cmds[sname]['default'] = self.cmds[sname][cmd]
 
-  def resetcmds(self, sname):
+  # remove all commands for a plugin
+  def removeplugin(self, sname):
     """
     reset the commands for a plugin
     """
     if sname in self.cmds:
       del self.cmds[sname]
     else:
-      self.api.get('output.msg')('resetcmds: cmd %s does not exist' % sname, 'cmd')
+      self.api.get('output.msg')('removeplugin: cmd %s does not exist' % sname, self.sname)
 
   def listcmds(self, args):
     """
@@ -225,9 +245,9 @@ class CmdMgr(object):
     """
     load external stuff
     """
-    self.api.get('managers.add')('command', self)
+    self.api.get('managers.add')(self.sname, self)
     self.api.get('logger.adddtype')(self.sname)
-    self.api.get('logger.console')([self.sname])
+    self.api.get('logger.console')(self.sname)
     self.api.get('events.register')('from_client_event', self.chkcmd, prio=1)
     self.api.get('events.eraise')('plugin_cmdman_loaded', {})
 

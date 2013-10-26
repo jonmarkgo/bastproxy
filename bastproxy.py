@@ -172,7 +172,7 @@ def main():
   api.get('output.msg')('Plugin Manager - loaded', 'startup')
 
   api.get('logger.adddtype')('net')
-  api.get('logger.console')(['net'])
+  api.get('logger.console')('net')
 
   def guard(func, message):
     """

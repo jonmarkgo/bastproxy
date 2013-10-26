@@ -50,10 +50,12 @@ OFF = chr(2)
 
 A102 = chr(102)
 
-#IAC SB A102 <atcp message text> IAC SE
+# Sends an A102 message
 def a102sendpacket(what):
   """
   send an a102 packet
+
+  #IAC SB A102 <atcp message text> IAC SE
   """
   from libs.api import API
   api = API()
@@ -78,8 +80,8 @@ class Plugin(BasePlugin):
                              connected to the server
     """
     BasePlugin.__init__(self, tname, tsname, filename, directory, importloc)
-    self.exported['sendpacket'] = {'func':a102sendpacket}
-    self.exported['toggle'] = {'func':self.toggle}
+    self.api.get('api.add')('sendpacket', a102sendpacket)
+    self.api.get('api.add')('toggle', self.toggle)
     self.api.get('events.register')('A102_from_server', self.a102fromserver)
     self.api.get('events.register')('A102_from_client', self.a102fromclient)
     self.api.get('events.register')('A102:server-enabled', self.a102request)
@@ -98,9 +100,10 @@ class Plugin(BasePlugin):
     self.api.get('output.msg')('setting reconnect to true')
     self.reconnecting = True
 
+  # toggle an a102 option
   def toggle(self, aoption, mstate):
     """
-    exported function to toggle an option
+    toggle an A102 option
     """
     if aoption in AOPTIONS:
       self.a102toggleoption(AOPTIONS[aoption], mstate)

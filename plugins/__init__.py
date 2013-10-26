@@ -61,15 +61,26 @@ def findplugin(name):
   """
   basepath = ''
   index = __file__.rfind(os.sep)
+
   if index == -1:
     basepath = "." + os.sep
   else:
     basepath = __file__[:index]
 
+  if '.' in name:
+    tlist = name.split('.')
+    name = tlist[-1]
+    del tlist[-1]
+    npath = os.sep.join(tlist)
+
   _module_list = find_files( basepath, name + ".py")
 
   if len(_module_list) == 1:
     return _module_list[0], basepath
+  else:
+    for i in _module_list:
+      if npath in i:
+        return i, basepath
 
   return False, ''
 
@@ -98,29 +109,48 @@ class BasePlugin(object):
     except OSError:
       pass
     self.savefile = os.path.join(self.api.BASEPATH, 'data',
-                                    'plugins', self.sname, 'variables.txt')
+                                    'plugins', self.sname, 'settingvalues.txt')
     self.fullname = fullname
     self.basepath = basepath
     self.fullimploc = fullimploc
 
     self.cmds = {}
-    self.defaultcmd = ''
-    self.variables = PersistentDictEvent(self, self.savefile,
+    self.settingvalues = PersistentDictEvent(self, self.savefile,
                             'c', format='json')
     self.settings = {}
-    self.api.overload('events', 'register', self.eventregister)
-    self.api.overload('events', 'unregister', self.eventunregister)
     self.api.overload('output', 'msg', self.msg)
+    self.api.overload('commands', 'default', self.defaultcmd)
+    self.api.overload('dependency', 'add', self.adddependency)
+    self.api.overload('setting', 'add', self.addsetting)
+    self.api.overload('setting', 'gets', self.getsetting)
+    self.api.overload('api', 'add', self.addapi)
     self.timers = {}
     self.triggers = {}
-    self.exported = {}
     self.cmdwatch = {}
 
     self.api.get('logger.adddtype')(self.sname)
-    self.cmds['set'] = {'func':self.cmd_set, 'shelp':'Show/Set Variables'}
-    self.cmds['reset'] = {'func':self.cmd_reset, 'shelp':'reset the plugin'}
-    self.cmds['save'] = {'func':self.cmd_save, 'shelp':'save plugin state'}
-    self.api.get('events.register')('firstactive', self.firstactive)
+    self.api.get('commands.add')('set', {'func':self.cmd_set, 'shelp':'Show/Set Settings'})
+    self.api.get('commands.add')('reset', {'func':self.cmd_reset, 'shelp':'reset the plugin'})
+    self.api.get('commands.add')('save', {'func':self.cmd_save, 'shelp':'save plugin state'})
+    self.api.get('events.register')('firstactive', self.afterfirstactive)
+
+  # get the vaule of a setting
+  def getsetting(self, setting):
+    """
+    get a setting
+    """
+    try:
+      return self.settingvalues[setting]
+    except KeyError:
+      return None
+
+  # add a plugin dependency
+  def adddependency(self, dependency):
+    """
+    add a dependency
+    """
+    if not (dependency in self.dependencies):
+      self.dependencies.append(dependency)
 
   def load(self):
     """
@@ -129,18 +159,7 @@ class BasePlugin(object):
     # load all commands
     proxy = self.api.get('managers.getm')('proxy')
 
-    for i in self.cmds:
-      cmd = self.cmds[i]
-      if not 'lname' in cmd:
-        cmd['lname'] = self.name
-      self.api.get('commands.add')(self.sname, i, cmd)
-      #self.addCmd(i, cmd['func'], cmd['shelp'])
-
-    # if there is a default command, then set it
-    if self.defaultcmd:
-      self.api.get('commands.default')(self.sname, self.defaultcmd)
-
-    self.variables.pload()
+    self.settingvalues.pload()
 
     # register all timers
     for i in self.timers:
@@ -153,14 +172,17 @@ class BasePlugin(object):
     for i in self.cmdwatch:
       self.api.get('cmdwatch.add')(i, self.watch[i])
 
-    if len(self.exported) > 0:
-      for i in self.exported:
-        self.api.add(self.sname, i, self.exported[i]['func'])
+    #if len(self.exported) > 0:
+      #for i in self.exported:
+        #self.api.add(self.sname, i, self.exported[i]['func'])
 
     if proxy and proxy.connected:
-      if self.api.get('aardu.firstactive')():
-        self.api.get('events.unregister')('firstactive', self.firstactive)
-        self.firstactive()
+      try:
+        if self.api.get('connect.firstactive'):
+          self.api.get('events.unregister')('firstactive', self.afterfirstactive)
+          self.afterfirstactive()
+      except AttributeError:
+        pass
 
     self.api.get('events.eraise')('event_plugin_load', {'plugin':self.sname})
 
@@ -171,7 +193,7 @@ class BasePlugin(object):
     self.api.get('output.msg')('unloading %s' % self.name)
 
     #clear all commands for this plugin
-    self.api.get('commands.reset')(self.sname)
+    self.api.get('commands.removeplugin')(self.sname)
 
     #remove all events
     self.api.get('events.removeplugin')(self.sname)
@@ -189,11 +211,12 @@ class BasePlugin(object):
     #save the state
     self.savestate()
 
-    self.api.remove(self.sname)
+    # remove anything out of the api
+    self.api.get('api.remove')(self.sname)
 
     self.api.get('events.eraise')('event_plugin_unload', {'plugin':self.sname})
 
-
+  # handle a message
   def msg(self, msg):
     """
     an internal function to send msgs
@@ -204,17 +227,17 @@ class BasePlugin(object):
     """
     save the state
     """
-    self.variables.sync()
+    self.settingvalues.sync()
 
   def cmd_set(self, args):
     """
     @G%(name)s@w - @B%(cmdname)s@w
     List or set vars
     @CUsage@w: var @Y<varname>@w @Y<varvalue>@w
-      @Yvarname@w    = The variable to set
-      @Yvarvalue@w   = The value to set it to
+      @Ysettingname@w    = The setting to set
+      @Ysettingvalue@w   = The value to set it to
       if there are no arguments or 'list' is the first argument then
-      it will list the variables for the plugin
+      it will list the settings for the plugin
     """
     if len(args) == 0 or args[0] == 'list':
       return True, self.listvars()
@@ -230,9 +253,9 @@ class BasePlugin(object):
             val = self.settings[var]['default']
           try:
             val = verify(val, self.settings[var]['stype'])
-            self.variables[var] = val
-            self.variables.sync()
-            tvar = self.variables[var]
+            self.settingvalues[var] = val
+            self.settingvalues.sync()
+            tvar = self.settingvalues[var]
             if self.settings[var]['nocolor']:
               tvar = tvar.replace('@', '@@')
             elif self.settings[var]['stype'] == 'color':
@@ -256,15 +279,15 @@ class BasePlugin(object):
 
   def listvars(self):
     """
-    return a list of strings that list all variables
+    return a list of strings that list all settings
     """
     tmsg = []
-    if len(self.variables) == 0:
-      tmsg.append('There are no variables defined')
+    if len(self.settingvalues) == 0:
+      tmsg.append('There are no settings defined')
     else:
       tform = '%-15s : %-15s - %s'
       for i in self.settings:
-        val = self.variables[i]
+        val = self.settingvalues[i]
         if 'nocolor' in self.settings[i] and self.settings[i]['nocolor']:
           val = val.replace('@', '@@')
         elif self.settings[i]['stype'] == 'color':
@@ -272,6 +295,7 @@ class BasePlugin(object):
         tmsg.append(tform % (i, val, self.settings[i]['help']))
     return tmsg
 
+  # add a setting to the plugin
   def addsetting(self, name, default, stype, shelp, **kwargs):
     """
     add a setting
@@ -284,8 +308,8 @@ class BasePlugin(object):
       readonly = kwargs['readonly']
     else:
       readonly = False
-    if not (name in self.variables):
-      self.variables[name] = default
+    if not (name in self.settingvalues):
+      self.settingvalues[name] = default
     self.settings[name] = {'default':default, 'help':shelp,
                   'stype':stype, 'nocolor':nocolor, 'readonly':readonly}
 
@@ -303,32 +327,33 @@ class BasePlugin(object):
     internal function to reset data
     """
     self.resetflag = True
-    self.variables.clear()
+    self.settingvalues.clear()
     for i in self.settings:
-      self.variables[i] = self.settings[i]['default']
-    self.variables.sync()
+      self.settingvalues[i] = self.settings[i]['default']
+    self.settingvalues.sync()
     self.resetflag = False
 
-  def firstactive(self, _=None):
+  def afterfirstactive(self, _=None):
     """
     if we are connected do
     """
-    self.api.get('events.unregister')('firstactive', self.firstactive)
+    self.api.get('events.unregister')('firstactive', self.afterfirstactive)
 
-  def eventregister(self, eventname, tfunc):
+  # set the default command
+  def defaultcmd(self, cmd):
     """
-    register an event
-    """
-    # we call the non overloaded version
-    self.api.get('events.register', True)(eventname, tfunc, plugin=self.sname)
-
-  def eventunregister(self, eventname, tfunc):
-    """
-    unregister an event
+    set a command as default
     """
     # we call the non overloaded versions
-    self.api.get('events.unregister', True)(eventname, tfunc, plugin=self.sname)
+    self.api.get('commands.default', True)(self.sname, cmd)
 
+  # add a function to the api
+  def addapi(self, name, func):
+    """
+    set a command as default
+    """
+    # we call the non overloaded versions
+    self.api.add(self.sname, name, func)
 
 class PluginMgr(object):
   """
@@ -346,11 +371,12 @@ class PluginMgr(object):
                                           'plugins', 'loadedplugins.txt')
     self.loadedplugins = PersistentDict(self.savefile, 'c', format='json')
     self.sname = 'plugins'
-    self.lname = 'Plugins'
+    self.lname = 'Plugin Manager'
     self.api.get('logger.adddtype')(self.sname)
-    self.api.get('logger.console')([self.sname])
+    self.api.get('logger.console')(self.sname)
     self.api.add(self.sname, 'isinstalled', self.isinstalled)
 
+  # check if a plugin is installed
   def isinstalled(self, pluginname):
     """
     check if a plugin is installed
@@ -381,28 +407,37 @@ class PluginMgr(object):
       @CUsage@w: exported
     """
     tmsg = []
-    if len(args) == 0:
-      tmsg.append('Items available in exported')
-      for i in dir(exported):
-        if not (i in ['sys', 'traceback', '__builtins__', '__doc__',
-                                '__file__', '__name__', '__package__',]):
-          if inspect.isfunction(exported.__dict__[i]):
-            tmsg.append('Function: %s' % i)
-          elif isinstance(exported.__dict__[i], dict):
-            for tfunc in exported.__dict__[i]:
-              tmsg.append('Function: %s.%s' % (i, tfunc))
-    else:
-      i = args[0]
-      if i in dir(exported):
-        if inspect.isfunction(exported.__dict__[i]):
-          tmsg = self.printexported(i, exported.__dict__[i])
-        elif isinstance(exported.__dict__[i], dict):
-          tmsg = []
-          for tfunc in exported.__dict__[i]:
-            tmsg = tmsg + self.printexported('%s.%s' % (i, tfunc),
-                                          exported.__dict__[i][tfunc])
-      else:
-        tmsg.append('Could not find function')
+    apilist = []
+    for i in api.api:
+      for k in api.api[i]:
+        tstr = i + '.' + k
+        if not (tstr in apilist):
+          tstr.append(apilist)
+
+    apilist.sort()
+    print apilist
+    #if len(args) == 0:
+      #tmsg.append('Items available in exported')
+      #for i in dir(exported):
+        #if not (i in ['sys', 'traceback', '__builtins__', '__doc__',
+                                #'__file__', '__name__', '__package__',]):
+          #if inspect.isfunction(exported.__dict__[i]):
+            #tmsg.append('Function: %s' % i)
+          #elif isinstance(exported.__dict__[i], dict):
+            #for tfunc in exported.__dict__[i]:
+              #tmsg.append('Function: %s.%s' % (i, tfunc))
+    #else:
+      #i = args[0]
+      #if i in dir(exported):
+        #if inspect.isfunction(exported.__dict__[i]):
+          #tmsg = self.printexported(i, exported.__dict__[i])
+        #elif isinstance(exported.__dict__[i], dict):
+          #tmsg = []
+          #for tfunc in exported.__dict__[i]:
+            #tmsg = tmsg + self.printexported('%s.%s' % (i, tfunc),
+                                          #exported.__dict__[i][tfunc])
+      #else:
+        #tmsg.append('Could not find function')
     return True, tmsg
 
   def printexported(self, item, tfunction):
@@ -706,15 +741,15 @@ class PluginMgr(object):
     """
     self.api.get('managers.add')('plugin', self)
     self.load_modules("*.py")
-    self.api.get('commands.add')(self.sname, 'list', {'lname':'Plugin Manager',
+    self.api.get('commands.add')('list', {'lname':'Plugin Manager',
                           'func':self.cmd_list, 'shelp':'List plugins'})
-    self.api.get('commands.add')(self.sname, 'load', {'lname':'Plugin Manager',
+    self.api.get('commands.add')('load', {'lname':'Plugin Manager',
                           'func':self.cmd_load, 'shelp':'Load a plugin'})
-    self.api.get('commands.add')(self.sname, 'unload', {'lname':'Plugin Manager',
+    self.api.get('commands.add')('unload', {'lname':'Plugin Manager',
                           'func':self.cmd_unload, 'shelp':'Unload a plugin'})
-    self.api.get('commands.add')(self.sname, 'reload', {'lname':'Plugin Manager',
+    self.api.get('commands.add')('reload', {'lname':'Plugin Manager',
                           'func':self.cmd_reload, 'shelp':'Reload a plugin'})
-    #self.api.get('commands.add')(self.sname, 'exported', {'lname':'Plugin Manager',
+    #self.api.get('commands.add')('exported', {'lname':'Plugin Manager',
                           #'func':self.cmd_exported,
                           #'shelp':'Examine the exported module'})
     self.api.get('commands.default')(self.sname, 'list')

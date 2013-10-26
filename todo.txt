@@ -1,0 +1,73 @@
+
+Overall:
+  #TODO: get rid of exported from within plugins
+    created an api module
+    everything should use methods from api
+    in the api variable, make a command to show all things in the api
+    add all doc strings for apis
+  #TODO: figure out a way to document raised events, decorator?
+  #TODO: make everything use baseplugin?
+  #TODO: convert to run under python3
+  #TODO: break up timers, triggers, command watch into seperate plugins
+
+New Plugins:
+  Base Plugins:
+    #TODO: create an alias plugin
+    #TODO: create a help plugin
+    #TODO: create a variable plugin, change ${varname} in any input
+    #TODO: create a plugin to search log files (or maybe a seperate process that is a webserver?)
+  Aardwolf Plugins:
+    #TODO: create an autohunt plugin
+    #TODO: create a plugin to parse eq events
+    #TODO: create a plugin to do eqsets
+    #TODO: create a potion manager plugin
+
+Events:
+  #TODO: add cmd to show stats
+    number of triggers, aliases, events, etc..
+  #TODO: add cmd to show info for specific timers, triggers, etc..
+  #TODO: triggers need to also be able to check colors
+  #TODO: add onetime flag to registering events
+
+CmdMan:
+  #TODO: use fnmatch to match commands
+    count them so that duplicate commands are not run
+
+color:
+  #TODO: get closest color client does not support 256 colors
+
+sqlitedb:
+  #TODO: load the db into memory and then when adding something, fork and save
+      it to disk?
+
+timing:
+  #TODO: add a global timing flag
+
+gmcp:
+  #BUG: errors when decoding ansi data when rawcolors is off
+
+mccp:
+  #BUG: mccp doesn't reset correctly on a ice age in Aardwolf
+
+afk:
+  #TODO: Make this search all comms for player's name and add them to the queue
+  #TODO: keep a record of players who send tells and then reply appropriately
+
+ct:
+  #TODO: add dodges
+  #TODO: sort damage
+
+mobk:
+  #TODO: get weapon for vorpals
+
+skills:
+  #TODO: reset all when tiering and remorting
+  #TODO: have a flag so we know that spell affects are current
+    so that the spellup plugin doesn't start casting spells early.
+
+su:
+  #TODO: how to figure out when to start spellups after connecting or
+            after a reload
+  #TODO: add ability to spellup others
+  #TODO: add ability to have spell blockers
+

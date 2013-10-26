@@ -18,11 +18,12 @@ VERSION = 1
 # This keeps the plugin from being autoloaded if set to False
 AUTOLOAD = True
 
-#IAC SB GMCP <gmcp message text> IAC SE
+# send a gmcp packet
 def gmcpsendpacket(what):
   """
   send a gmcp packet
   only argument is what to send
+  #IAC SB GMCP <gmcp message text> IAC SE
   """
   from libs.api import API
   api = API()
@@ -47,10 +48,10 @@ class Plugin(BasePlugin):
               the client before connected to the server
     """
     BasePlugin.__init__(self, *args, **kwargs)
-    self.exported['getv'] = {'func':self.gmcpget}
-    self.exported['togglemodule'] = {'func':self.gmcptogglemodule}
-    self.exported['sendmodule'] = {'func':self.sendmoduletoclients}
-    self.exported['sendpacket'] = {'func':gmcpsendpacket}
+    self.api.get('api.add')('sendpacket', gmcpsendpacket)
+    self.api.get('api.add')('sendmodule', self.sendmoduletoclients)
+    self.api.get('api.add')('togglemodule', self.gmcptogglemodule)
+    self.api.get('api.add')('getv', self.gmcpget)
     self.api.get('events.register')('GMCP_raw', self.gmcpfromserver)
     self.api.get('events.register')('GMCP_from_client', self.gmcpfromclient)
     self.api.get('events.register')('GMCP:server-enabled', self.gmcprequest)
@@ -71,6 +72,7 @@ class Plugin(BasePlugin):
     self.api.get('output.msg')('setting reconnect to true')
     self.reconnecting = True
 
+  # toggle a gmcp module
   def gmcptogglemodule(self, modname, mstate):
     """
     toggle a gmcp module
@@ -94,6 +96,7 @@ class Plugin(BasePlugin):
         cmd = 'Core.Supports.Set [ "%s %s" ]' % (modname, 0)
         gmcpsendpacket(cmd)
 
+  # get a gmcp value/module from the cache
   def gmcpget(self, module):
     """
     Get a gmcp module from the cache
@@ -114,6 +117,7 @@ class Plugin(BasePlugin):
 
     return currenttable
 
+  # send a gmcp module to all clients that support gmcp
   def sendmoduletoclients(self, modname):
     """
     send a gmcp module

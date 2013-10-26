@@ -30,15 +30,14 @@ class Plugin(BasePlugin):
     BasePlugin.__init__(self, *args, **kwargs)
     self.savesubfile = os.path.join(self.savedir, 'subs.txt')
     self._substitutes = PersistentDict(self.savesubfile, 'c', format='json')
-    self.cmds['add'] = {'func':self.cmd_add, 'shelp':'Add a substitute'}
-    self.cmds['remove'] = {'func':self.cmd_remove,
-                            'shelp':'Remove a substitute'}
-    self.cmds['list'] = {'func':self.cmd_list, 'shelp':'List substitutes'}
-    self.cmds['clear'] = {'func':self.cmd_clear,
-                            'shelp':'Clear all substitutes'}
-    self.defaultcmd = 'list'
+    self.api.get('commands.add')('add', {'func':self.cmd_add, 'shelp':'Add a substitute'})
+    self.api.get('commands.add')('remove', {'func':self.cmd_remove,
+                            'shelp':'Remove a substitute'})
+    self.api.get('commands.add')('list', {'func':self.cmd_list, 'shelp':'List substitutes'})
+    self.api.get('commands.add')('clear', {'func':self.cmd_clear,
+                            'shelp':'Clear all substitutes'})
+    self.api.get('commands.default')('list')
     self.api.get('events.register')('to_client_event', self.findsub)
-    self.addsetting('test', True, bool, 'A test boolean variable')
 
   def findsub(self, args):
     """

@@ -133,15 +133,15 @@ class Plugin(BasePlugin):
     self.cmds['lu'] = {'func':self.cmd_lu,
               'shelp':'lookup skill by name or sn'}
 
-    self.exported['gets'] = {'func':self.getskill}
-    self.exported['isspellup'] = {'func':self.isspellup}
-    self.exported['getspellups'] = {'func':self.getspellups}
-    self.exported['sendcmd'] = {'func':self.sendcmd}
-    self.exported['isaffected'] = {'func':self.isaffected}
-    self.exported['isblockedbyrecovery'] = {'func':self.isblockedbyrecovery}
-    self.exported['ispracticed'] = {'func':self.ispracticed}
-    self.exported['canuse'] = {'func':self.canuse}
-    self.exported['isuptodate'] = {'func':self.isuptodate}
+    self.api.get('api.add')('gets', {'func':self.getskill})
+    self.api.get('api.add')('isspellup', {'func':self.isspellup})
+    self.api.get('api.add')('getspellups', {'func':self.getspellups})
+    self.api.get('api.add')('sendcmd', {'func':self.sendcmd})
+    self.api.get('api.add')('isaffected', {'func':self.isaffected})
+    self.api.get('api.add')('isblockedbyrecovery', {'func':self.isblockedbyrecovery})
+    self.api.get('api.add')('ispracticed', {'func':self.ispracticed})
+    self.api.get('api.add')('canuse', {'func':self.canuse})
+    self.api.get('api.add')('isuptodate', {'func':self.isuptodate})
 
   def firstactive(self):
     """

@@ -26,8 +26,8 @@ class Plugin(BasePlugin):
     initialize the instance
     """
     BasePlugin.__init__(self, *args, **kwargs)
-    self.cmds['show'] = {'func':self.show, 'shelp':'Show colors'}
-    self.cmds['example'] = {'func':self.example, 'shelp':'Show colors'}
+    self.api.get('commands.add')('show', {'func':self.show, 'shelp':'Show colors'})
+    self.api.get('commands.add')('example', {'func':self.example, 'shelp':'Show colors'})
 
   def show(self, args):
     """

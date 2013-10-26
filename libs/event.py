@@ -151,6 +151,7 @@ class EventMgr(object):
     #print 'api', self.api.api
     #print 'overloadedapi', self.api.overloadedapi
 
+  # add a cmd to watch for
   def addwatch(self, cmdname, args):
     """
     add a watch
@@ -172,6 +173,7 @@ class EventMgr(object):
           'Could not compile regex for cmd watch: %s : %s' % \
                 (cmdname, args['regex']))
 
+  # remove a command to watch for
   def removewatch(self, cmdname):
     """
     remove a watch
@@ -203,6 +205,7 @@ class EventMgr(object):
       data['fromdata'] = data['nfromdata']
     return data
 
+  # add a trigger
   def addtrigger(self, triggername, args):
     """
     add a trigger
@@ -242,6 +245,7 @@ class EventMgr(object):
               'Could not compile regex for trigger: %s : %s' % \
                       (triggername, args['regex']))
 
+  # remove a trigger
   def removetrigger(self, triggername):
     """
     remove a trigger
@@ -253,6 +257,7 @@ class EventMgr(object):
       self.api.get('output.msg')('deletetrigger: trigger %s does not exist' % \
                         triggername, self.sname)
 
+  # toggle a trigger
   def toggletrigger(self, triggername, flag):
     """
     toggle a trigger
@@ -263,6 +268,7 @@ class EventMgr(object):
       self.api.get('output.msg')('toggletrigger: trigger %s does not exist' % \
                         triggername, self.sname)
 
+  # toggle the omit flag for a trigger
   def toggletriggeromit(self, triggername, flag):
     """
     toggle a trigger
@@ -273,6 +279,7 @@ class EventMgr(object):
       self.api.get('output.msg')('toggletriggeromit: trigger %s does not exist' % \
                         triggername, self.sname)
 
+  # toggle a trigger group
   def toggletriggergroup(self, triggroup, flag):
     """
     toggle a trigger group
@@ -327,18 +334,22 @@ class EventMgr(object):
       origargs['fromdata'] = ''
     return
 
+  # register a function with an event
   def registerevent(self, eventname, func,  **kwargs):
-    """
-    register a function with an event
+    """  register a function with an event
+    @Yeventname@w   = The event to register with
+    @Yfunc@w        = The function to register
+    keyword arguments:
+      prio          = the priority of the function (default: 50)
     """
     if not ('prio' in kwargs):
       prio = 50
     else:
       prio = kwargs['prio']
-    if not ('plugin' in kwargs):
+    try:
+      plugin = func.im_self.sname
+    except AttributeError:
       plugin = ''
-    else:
-      plugin = kwargs['plugin']
     if not (eventname in self.events):
       self.events[eventname] = {}
     if not (prio in self.events[eventname]):
@@ -355,9 +366,13 @@ class EventMgr(object):
       self.pluginlookup[plugin]['events'][func] = \
                             {'eventname':eventname, 'prio':prio}
 
+  # unregister a function from an event
   def unregisterevent(self, eventname, func, **kwargs):
-    """
-    unregister a function with an event
+    """  unregister a function with an event
+    @Yeventname@w   = The event to unregister with
+    @Yfunc@w        = The function to unregister
+    keyword arguments:
+      plugin        = the plugin this function is a part of
     """
     if not ('plugin' in kwargs):
       plugin = ''
@@ -378,9 +393,10 @@ class EventMgr(object):
         if func in self.pluginlookup[plugin]['events']:
           del(self.pluginlookup[plugin]['events'][func])
 
+  # remove all registered functions that are specific to a plugin
   def removeplugin(self, plugin):
-    """
-    remove all events related to a plugin
+    """  remove all registered functions that are specific to a plugin
+    @Yplugin@w   = The plugin to remove events for
     """
     self.api.get('output.msg')('removing plugin %s' % plugin, self.sname)
     if plugin and plugin in self.pluginlookup:
@@ -391,9 +407,11 @@ class EventMgr(object):
 
       self.pluginlookup[plugin]['events'] = {}
 
+  # raise an event, args vary
   def raiseevent(self, eventname, args):
-    """
-    raise an event with args
+    """  raise an event with args
+    @Yeventname@w   = The event to raise
+    @Yargs@w        = A table of arguments
     """
     self.api.get('output.msg')('raiseevent %s' % eventname, self.sname)
     nargs = args.copy()
@@ -418,6 +436,7 @@ class EventMgr(object):
     #self.api.get('output.msg')('returning', nargs)
     return nargs
 
+  # add a timer
   def addtimer(self, name, args):
     """
     add a timer
@@ -443,6 +462,7 @@ class EventMgr(object):
     self._addtimer(tevent)
     return tevent
 
+  # remove a time
   def removetimer(self, name):
     """
     remove a timer
@@ -457,6 +477,7 @@ class EventMgr(object):
     except KeyError:
       self.api.get('output.msg')('%s does not exist' % name, self.sname)
 
+  # toggle a timer
   def toggletimer(self, name, flag):
     """
     toggle a timer
@@ -506,7 +527,7 @@ class EventMgr(object):
     initialize the event logger types
     """
     self.api.get('logger.adddtype')(self.sname)
-    self.api.get('logger.console')(self.sname)
+    #self.api.get('logger.console')(self.sname)
 
 
   def load(self):

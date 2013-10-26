@@ -4,7 +4,7 @@ $Id$
 This plugin is a utility plugin for aardwolf functions
 It adds functions to exported.aardu
 """
-from plugins import BasePlugin
+from plugins.aardwolf._aardwolfbaseplugin import AardwolfBasePlugin
 import math
 import re
 
@@ -16,6 +16,7 @@ VERSION = 1
 
 AUTOLOAD = False
 
+# a table of class abbreviations
 CLASSABB = {
   'mag':'mage',
   'thi':'thief',
@@ -26,10 +27,12 @@ CLASSABB = {
   'ran':'ranger',
   }
 
+# the reverse of CLASSABB
 CLASSABBREV = {}
 for i in CLASSABB:
   CLASSABBREV[CLASSABB[i]] = i
 
+# a table of rewards
 REWARDTABLE = {
         'quest':'qp',
         'training':'trains',
@@ -38,6 +41,7 @@ REWARDTABLE = {
         'practice':'pracs',
     }
 
+# a table of damages
 DAMAGES = [
   'misses',
   'tickles',
@@ -98,10 +102,12 @@ DAMAGES = [
   'pimpslaps'
 ]
 
+# the reverse of DAMAGES
 DAMAGESREV = {}
 for i in DAMAGES:
   DAMAGESREV[i] = DAMAGES.index(i)
 
+# parse a damage line
 def parsedamageline(line):
   """
   parse a combat damage line
@@ -136,6 +142,7 @@ def parsedamageline(line):
 
   return ddict
 
+# convert a level to redos, tier, remort, level
 def convertlevel(level):
   """
   convert a level to tier, redos, remort, level
@@ -157,7 +164,7 @@ def convertlevel(level):
   return {'tier':int(tier), 'redos':int(redos),
           'remort':int(remort), 'level':int(alevel)}
 
-
+# get the Class abbreviations table
 def classabb(rev=False):
   """
   return the class abbreviations
@@ -167,66 +174,27 @@ def classabb(rev=False):
   else:
     return CLASSABBREV
 
+# get the reward table
 def rewardtable():
   """
   return the reward tables
   """
   return REWARDTABLE
 
-class Plugin(BasePlugin):
+class Plugin(AardwolfBasePlugin):
   """
   a plugin to handle aardwolf cp events
   """
   def __init__(self, *args, **kwargs):
-    BasePlugin.__init__(self, *args, **kwargs)
+    AardwolfBasePlugin.__init__(self, *args, **kwargs)
 
-    self.connected = False
-    self.firstactive = False
+    self.api.get('api.add')('getactuallevel', self.getactuallevel)
+    self.api.get('api.add')('convertlevel', convertlevel)
+    self.api.get('api.add')('classabb', classabb)
+    self.api.get('api.add')('rewardtable', rewardtable)
+    self.api.get('api.add')('parsedamageline', parsedamageline)
 
-    self.exported['getactuallevel'] = {'func':self.getactuallevel}
-    self.exported['convertlevel'] = {'func':convertlevel}
-    self.exported['classabb'] = {'func':classabb}
-    self.exported['rewardtable'] = {'func':rewardtable}
-    self.exported['parsedamageline'] = {'func':parsedamageline}
-    self.exported['firstactive'] = {'func':self._firstactive}
-
-    self.api.get('events.register')('mudconnect', self._mudconnect)
-    self.api.get('events.register')('muddisconnect', self._muddisconnect)
-    self.api.get('events.register')('GMCP:char.status', self._charstatus)
-
-  def _firstactive(self):
-    """
-    return the first active flag
-    """
-    return self.firstactive
-
-  def _mudconnect(self, _=None):
-    """
-    set a flag for connect
-    """
-    self.connected = True
-
-  def _muddisconnect(self, _None):
-    """
-    reset for next connection
-    """
-    self.connected = False
-    self.api.get('events.unregister')('GMCP:char.status', self._charstatus)
-    self.api.get('events.register')('GMCP:char.status', self._charstatus)
-
-  def _charstatus(self, args=None):
-    """
-    check status for 3
-    """
-    state = self.api.get('GMCP.getv')('char.status.state')
-    proxy = self.api.get('managers.getm')('proxy')
-    if state == 3 and proxy and proxy.connected:
-      self.api.get('events.unregister')('GMCP:char.status', self._charstatus)
-      self.connected = True
-      self.firstactive = True
-      self.api.get('output.client')('sending first active')
-      self.api.get('events.eraise')('aardwolf_firstactive', {})
-
+  # convert level, remort, tier, redos to the total levels
   def getactuallevel(self, level=None, remort=None, tier=None, redos=None):
     """
     get an actual level

@@ -9,19 +9,21 @@ import traceback
 from libs.api import API
 from libs import color
 
-def msg(tmsg, dtype='default'):
-  """send a msg through the LOGGER
-argument 1: the message to send
-argument 2: (optional) the data type, the default is 'default"""
+# send a message
+def msg(tmsg, datatype='default'):
+  """  send a message through the logger
+    @Ymsg@w        = This message to send
+    @Ydatatype@w   = the type to toggle"""
   try:
-    api.get('logger.msg')({'msg':tmsg}, dtype)
+    api.get('logger.msg')({'msg':tmsg}, datatype)
   except AttributeError: #%s - %-10s :
     print '%s - %-10s : %s' % (time.strftime(api.timestring,
-                                          time.localtime()), dtype, tmsg)
+                                          time.localtime()), datatype, tmsg)
 
+# write and format a traceback
 def write_traceback(message=""):
-  """write a traceback through the LOGGER
-argument 1: (optional) the message to show with the traceback"""
+  """  handle a traceback
+    @Ymessage@w  = the message to put into the traceback"""
   exc = "".join(traceback.format_exception(sys.exc_info()[0],
                     sys.exc_info()[1], sys.exc_info()[2]))
 
@@ -31,9 +33,10 @@ argument 1: (optional) the message to show with the traceback"""
     message = exc
   api.get('output.error')(message)
 
+# write and format an error
 def write_error(text):
-  """write an error through the LOGGER
-argument 1: the text of the error"""
+  """  handle an error
+    @Ytext@w  = The error to handle"""
   text = str(text)
   test = []
   for i in text.split('\n'):
@@ -42,14 +45,15 @@ argument 1: the text of the error"""
   try:
     api.get('logger.msg')({'msg':tmsg, 'dtype':'error'})
   except (AttributeError, TypeError):
-    print '%s - No Logger - %s : %s' % (time.strftime(self.timestring,
+    print '%s - No Logger - %s : %s' % (time.strftime(api.timestring,
                                           time.localtime()), 'error', tmsg)
 
+# send text to the clients
 def sendtoclient(text, raw=False, preamble=True):
-  """send text to the clients converting color codes
-argument 1: the text to send
-argument 2: (optional) if this argument is True, do
-            not convert color codes"""
+  """  handle a traceback
+    @Ytext@w      = The text to send to the clients
+    @Yraw@w       = if True, don't convert colors
+    @Ypreamble@w  = if True, send the preamble"""
   if isinstance(text, basestring):
     text = text.split('\n')
 
@@ -67,12 +71,12 @@ argument 2: (optional) if this argument is True, do
   except (NameError, TypeError, AttributeError):
     api.get('output.msg')("couldn't send msg to client: %s" % '\n'.join(text), 'error')
 
-
+# execute a command throgh the interpreter
 def execute(cmd):
-  """execute a command through the interpreter
-argument 1: the cmd to execute
-  It will first be checked to see if it is an internal command
-  and then sent to the mud if not"""
+  """  execute a command through the interpreter
+  It will first check to see if it is an internal command, and then
+  sent to the mud if not.
+    @Ycmd@w      = the command to send through the interpreter"""
   data = None
   if cmd[-1] != '\n':
     cmd = cmd + '\n'

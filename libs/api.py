@@ -2,13 +2,17 @@
 $Id$
 
 this module handles the api for all other modules
+
+#TODO: decorator function to set attributes on a function for the api (short description)?
 """
 import sys
 import time
+#from decorator import decorator
 try:
   from libs import color
 except ImportError:
   pass
+
 
 class API(object):
   """
@@ -26,8 +30,11 @@ class API(object):
     self.timestring = '%a %b %d %Y %H:%M:%S'
     self.overload('managers', 'add', self.addmanager)
     self.overload('managers', 'getm', self.getmanager)
+    self.overload('api', 'add', self.add)
+    self.overload('api', 'remove', self.remove)
 
-  def add(self, ptype, name, function):
+  # add a function to the api
+  def add(self, ptype, name, function, desc=None):
     """
     add stuff to the api
     """
@@ -37,24 +44,34 @@ class API(object):
     if not (name in API.api[ptype]):
       API.api[ptype][name] = function
 
+  # overload a function in the api
   def overload(self, ptype, name, function):
     """
     add stuff to the plugin api
     """
+    try:
+      ofunc = self.get(ptype + '.' + name)
+      function.__doc__ = ofunc.__doc__
+    except AttributeError:
+      pass
+    
     if not (ptype in self.overloadedapi):
       self.overloadedapi[ptype] = {}
 
     self.overloadedapi[ptype][name] = function
 
+  # get a manager
   def getmanager(self, name):
     if name in self.MANAGERS:
       return self.MANAGERS[name]
     else:
       return None
 
+  # add a manager
   def addmanager(self, name, manager):
     self.MANAGERS[name] = manager
 
+  # remove a toplevel api
   def remove(self, ptype):
     if ptype in API.api:
       del API.api[ptype]

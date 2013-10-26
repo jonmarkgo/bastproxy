@@ -71,7 +71,7 @@ class TelnetOptionMgr(object):
         self.optionsmod[name] = _module
 
       except:
-        self.api.get('output', 'traceback')("Option module '%s' refuses to load." % name)
+        self.api.get('output.traceback')("Option module '%s' refuses to load." % name)
 
   def reloadmod(self, mod):
     """
