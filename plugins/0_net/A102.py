@@ -50,17 +50,16 @@ OFF = chr(2)
 
 A102 = chr(102)
 
-# Sends an A102 message
-def a102sendpacket(what):
-  """
-  send an a102 packet
+# Send an A102 packet
+def a102sendpacket(message):
+  """  send an A102 packet
+  @Ymessage@w  = the message to send
 
-  #IAC SB A102 <atcp message text> IAC SE
-  """
+  Format: IAC SB A102 <atcp message text> IAC SE"""
   from libs.api import API
   api = API()
   api.get('events.eraise')('to_mud_event', {'data':'%s%s%s%s%s%s' % \
-        (IAC, SB, A102, what.replace(IAC, IAC+IAC), IAC, SE),
+        (IAC, SB, A102, message.replace(IAC, IAC+IAC), IAC, SE),
         'raw':True, 'dtype':A102})
 
 
@@ -102,8 +101,9 @@ class Plugin(BasePlugin):
 
   # toggle an a102 option
   def toggle(self, aoption, mstate):
-    """
-    toggle an A102 option
+    """  toggle an A102 option
+    @Yaoption@w  = the A102 option to toggle
+    @Ymstate@w  = the state, either True or False
     """
     if aoption in AOPTIONS:
       self.a102toggleoption(AOPTIONS[aoption], mstate)

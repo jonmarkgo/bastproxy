@@ -136,9 +136,8 @@ class BasePlugin(object):
 
   # get the vaule of a setting
   def getsetting(self, setting):
-    """
-    get a setting
-    """
+    """  get the value of a setting
+    @Ysetting@w = the setting value to get"""
     try:
       return self.settingvalues[setting]
     except KeyError:
@@ -146,9 +145,8 @@ class BasePlugin(object):
 
   # add a plugin dependency
   def adddependency(self, dependency):
-    """
-    add a dependency
-    """
+    """  add a depencency
+    @Ydependency@w    = the name of the plugin that will be a dependency"""
     if not (dependency in self.dependencies):
       self.dependencies.append(dependency)
 
@@ -297,9 +295,15 @@ class BasePlugin(object):
 
   # add a setting to the plugin
   def addsetting(self, name, default, stype, shelp, **kwargs):
-    """
-    add a setting
-    """
+    """  remove a command
+    @Yname@w     = the name of the setting
+    @Ydefault@w  = the default value of the setting
+    @Ystype@w    = the type of the setting
+    @Yshelp@w    = the help associated with the setting
+    Keyword Arguments
+      @Ynocolor@w    = if True, don't parse colors when showing value
+      @Yreadonly@w   = if True, can't be changed by a client"""
+
     if 'nocolor' in kwargs:
       nocolor = kwargs['nocolor']
     else:
@@ -378,9 +382,8 @@ class PluginMgr(object):
 
   # check if a plugin is installed
   def isinstalled(self, pluginname):
-    """
-    check if a plugin is installed
-    """
+    """  check if a plugin is installed
+    @Ypluginname@w  = the plugin to check for"""
     if pluginname in self.plugins or pluginname in self.pluginl:
       return True
     return False

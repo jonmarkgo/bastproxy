@@ -35,9 +35,8 @@ class Plugin(BasePlugin):
 
   # returns the firstactive flag
   def _firstactive(self):
-    """
-    return the first active flag
-    """
+    """  return the firstactive flag
+      returns a bool"""
     return self.firstactive
 
   def _mudconnect(self, _=None):

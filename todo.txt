@@ -3,8 +3,10 @@ Overall:
   #TODO: get rid of exported from within plugins
     created an api module
     everything should use methods from api
-    in the api variable, make a command to show all things in the api
-    add all doc strings for apis
+    add all doc strings for apis, need to add what each returns
+    break out baseplugin into _baseplugin
+  #TODO: standard command declaration cmd_*
+  #TODO: standard api declaration api_*
   #TODO: figure out a way to document raised events, decorator?
   #TODO: make everything use baseplugin?
   #TODO: convert to run under python3

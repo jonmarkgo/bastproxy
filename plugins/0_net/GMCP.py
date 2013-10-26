@@ -18,17 +18,16 @@ VERSION = 1
 # This keeps the plugin from being autoloaded if set to False
 AUTOLOAD = True
 
-# send a gmcp packet
-def gmcpsendpacket(what):
-  """
-  send a gmcp packet
-  only argument is what to send
-  #IAC SB GMCP <gmcp message text> IAC SE
-  """
+# send a GMCP packet
+def gmcpsendpacket(message):
+  """  send a GMCP packet
+  @Ymessage@w  = the message to send
+
+  Format: IAC SB GMCP <gmcp message text> IAC SE"""
   from libs.api import API
   api = API()
   api.get('events.eraise')('to_mud_event', {'data':'%s%s%s%s%s%s' % \
-              (IAC, SB, GMCP, what.replace(IAC, IAC+IAC), IAC, SE),
+              (IAC, SB, GMCP, message.replace(IAC, IAC+IAC), IAC, SE),
               'raw':True, 'dtype':GMCP})
 
 # Plugin
@@ -72,12 +71,11 @@ class Plugin(BasePlugin):
     self.api.get('output.msg')('setting reconnect to true')
     self.reconnecting = True
 
-  # toggle a gmcp module
+  # toggle a GMCP module
   def gmcptogglemodule(self, modname, mstate):
-    """
-    toggle a gmcp module
-    argument 1: module name
-    argument 2: state (boolean)
+    """  toggle a GMCP module
+    @Ymodname@w  = the GMCP module to toggle
+    @Ymstate@w  = the state, either True or False
     """
     if not (modname in self.modstates):
       self.modstates[modname] = 0
@@ -96,12 +94,10 @@ class Plugin(BasePlugin):
         cmd = 'Core.Supports.Set [ "%s %s" ]' % (modname, 0)
         gmcpsendpacket(cmd)
 
-  # get a gmcp value/module from the cache
+  # get a GMCP value/module from the cache
   def gmcpget(self, module):
-    """
-    Get a gmcp module from the cache
-    argument 1: module name (such as char.status)
-    """
+    """  get a GMCP value/module from the cache
+    @Ymodule@w  = the module to get"""
     mods = module.split('.')
     mods = [x.lower() for x in mods]
     tlen = len(mods)
@@ -117,11 +113,10 @@ class Plugin(BasePlugin):
 
     return currenttable
 
-  # send a gmcp module to all clients that support gmcp
+  # send a GMCP module to all clients that support GMCP
   def sendmoduletoclients(self, modname):
-    """
-    send a gmcp module
-    """
+    """  send a GMCP module to clients that support GMCP
+    @Ymodname@w  = the module to send to clients"""
     data = self.gmcpget(modname)
     if data:
       import json

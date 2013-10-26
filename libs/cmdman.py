@@ -150,12 +150,24 @@ class CmdMgr(object):
 
   # add a command
   def addcmd(self, cmdname, args):
-    """
-    add a command
-    """
+    """  add a command
+    @Ycmdname@w  = the base that the api should be under
+    The @Yargs@w should contain
+      @Yfunc@w   = the function that should be run when this command is executed
+      @Yshelp@w  = the short help, a brief description of what the command does
+      @Ylhelp@w  = a longer description of what the command does
+
+      The command will be added as sname.cmdname
+
+      sname is gotten from the class the function belongs to"""
+
     #lname, cmd, tfunction, shelp="", lhelp=""
     #{'func':tfunction, 'lname':lname, 'lhelp':lhelp, 'shelp':shelp}
     lname = None
+    if not ('func' in args):
+      self.api.get('output.msg')('cmd %s.%s has no function, not adding' % \
+                                                (sname, cmdname), self.sname)
+      return
     try:
       sname = args['func'].im_self.sname
     except AttributeError:
@@ -167,12 +179,8 @@ class CmdMgr(object):
     except AttributeError:
       pass
 
-    if not lname and not ('lname' in args):
+    if not ('lname' in args):
       self.api.get('output.msg')('cmd %s.%s has no long name, not adding' % \
-                                                (sname, cmdname), self.sname)
-      return
-    if not ('func' in args):
-      self.api.get('output.msg')('cmd %s.%s has no function, not adding' % \
                                                 (sname, cmdname), self.sname)
       return
     if not (sname in self.cmds):
@@ -181,9 +189,9 @@ class CmdMgr(object):
 
   # remove a command
   def removecmd(self, sname, cmdname):
-    """
-    remove a command
-    """
+    """  remove a command
+    @Ysname@w    = the top level of the command
+    @Ycmdname@w  = the name of the command"""
     if sname in self.cmds and cmdname in self.cmds[sname]:
       del self.cmds[sname][cmdname]
     else:
@@ -192,17 +200,16 @@ class CmdMgr(object):
 
   # set the default command for a plugin
   def setdefault(self, sname, cmd):
-    """
-    set the default command for a plugin or commandset
-    """
+    """  set the default command for a plugin
+    @Ysname@w    = the plugin of the command
+    @Ycmdname@w  = the name of the command"""
     if sname in self.cmds and cmd in self.cmds[sname]:
       self.cmds[sname]['default'] = self.cmds[sname][cmd]
 
   # remove all commands for a plugin
   def removeplugin(self, sname):
-    """
-    reset the commands for a plugin
-    """
+    """  remove all commands for a plugin
+    @Ysname@w    = the plugin to remove commands for"""
     if sname in self.cmds:
       del self.cmds[sname]
     else:

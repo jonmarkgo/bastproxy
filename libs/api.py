@@ -34,10 +34,13 @@ class API(object):
     self.overload('api', 'remove', self.remove)
 
   # add a function to the api
-  def add(self, ptype, name, function, desc=None):
-    """
-    add stuff to the api
-    """
+  def add(self, ptype, name, function):
+    """  add a function to the api
+    @Yptype@w  = the base that the api should be under
+    @Yname@w  = the name of the api
+    @Yfunction@w  = the function
+
+    the function is added as ptype.name into the api"""
     if not (ptype in API.api):
       API.api[ptype] = {}
 
@@ -46,15 +49,18 @@ class API(object):
 
   # overload a function in the api
   def overload(self, ptype, name, function):
-    """
-    add stuff to the plugin api
-    """
+    """  overload a function in the api
+    @Yptype@w  = the base that the api should be under
+    @Yname@w  = the name of the api
+    @Yfunction@w  = the function
+
+    the function is added as ptype.name into the overloaded api"""
     try:
       ofunc = self.get(ptype + '.' + name)
       function.__doc__ = ofunc.__doc__
     except AttributeError:
       pass
-    
+
     if not (ptype in self.overloadedapi):
       self.overloadedapi[ptype] = {}
 
@@ -62,6 +68,8 @@ class API(object):
 
   # get a manager
   def getmanager(self, name):
+    """  get a manager
+    @Yname@w  = the name of the manager to get"""
     if name in self.MANAGERS:
       return self.MANAGERS[name]
     else:
@@ -69,10 +77,15 @@ class API(object):
 
   # add a manager
   def addmanager(self, name, manager):
+    """  add a manager
+    @Yname@w  = the name of the manager
+    @Ymanager@w  = the manager instance"""
     self.MANAGERS[name] = manager
 
   # remove a toplevel api
   def remove(self, ptype):
+    """  remove a toplevel api
+    @Yptype@w  = the base of the api to remove"""
     if ptype in API.api:
       del API.api[ptype]
 

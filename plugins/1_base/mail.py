@@ -64,11 +64,11 @@ class Plugin(BasePlugin):
 
   # send an email
   def send(self, subject, msg, mailto=None):
-    """
-    send an email
-      argument 1: the name of the event
-      argument 2: the argument list
-    """
+    """  send an email
+    @Ysubject@w  = the subject of the message
+    @Ymsg@w      = the msg to send
+    @Ymailto@w   = the email address to send to (default: the to
+      setting of the mail plugin)"""
     if self.check():
       senddate = datetime.strftime(datetime.now(), '%Y-%m-%d')
       if not mailto:

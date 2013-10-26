@@ -107,11 +107,10 @@ DAMAGESREV = {}
 for i in DAMAGES:
   DAMAGESREV[i] = DAMAGES.index(i)
 
-# parse a damage line
+# parse an Aardwolf damage line
 def parsedamageline(line):
-  """
-  parse a combat damage line
-  """
+  """  parse an Aardwolf damage line from combat
+  @Yline@w  = the line to parse"""
   ddict = {}
   tsplit = line.split(' ')
   ddict['hits'] = 1
@@ -144,9 +143,8 @@ def parsedamageline(line):
 
 # convert a level to redos, tier, remort, level
 def convertlevel(level):
-  """
-  convert a level to tier, redos, remort, level
-  """
+  """  convert a level to redos, tier, remort, level
+  @Ylevel@w  = the level to convert"""
   if not level or level < 1:
     return {'tier':-1, 'redos':-1, 'remort':-1, 'level':-1}
   tier = math.floor(level / (7 * 201))
@@ -166,9 +164,8 @@ def convertlevel(level):
 
 # get the Class abbreviations table
 def classabb(rev=False):
-  """
-  return the class abbreviations
-  """
+  """  get the class abbreviations
+  @Yrev@w  = if True, return the reversed table"""
   if rev:
     return CLASSABB
   else:
@@ -176,9 +173,8 @@ def classabb(rev=False):
 
 # get the reward table
 def rewardtable():
-  """
-  return the reward tables
-  """
+  """  get the reward table
+  @Yrev@w  = if True, return the reversed table"""
   return REWARDTABLE
 
 class Plugin(AardwolfBasePlugin):
@@ -196,12 +192,11 @@ class Plugin(AardwolfBasePlugin):
 
   # convert level, remort, tier, redos to the total levels
   def getactuallevel(self, level=None, remort=None, tier=None, redos=None):
-    """
-    get an actual level
-    all arguments are optional, if an argument is not given, it will be
-      gotten from gmcp
-    level, remort, tier, redos
-    """
+    """  convert level, remort, tier, redos to the total levels
+    @Ylevel@w  = the level, defaults to GMCP value
+    @Yremort@w  = the # of remorts, default to GMCP value
+    @Ytier@w  = the # of tiers, default to GMCP value
+    @Yredos@w  = the # of redos, default to GMCP value"""
     level = level or self.api.get('GMCP.getv')('char.status.level') or 0
     remort = remort or self.api.get('GMCP.getv')('char.base.remorts') or 0
     tier = tier or self.api.get('GMCP.getv')('char.base.tier') or 0
