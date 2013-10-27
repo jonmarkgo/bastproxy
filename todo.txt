@@ -1,16 +1,11 @@
 
 Overall:
-  #TODO: get rid of exported from within plugins
-    created an api module
-    everything should use methods from api
-    add all doc strings for apis, need to add what each returns
-    break out baseplugin into _baseplugin
   #TODO: standard command declaration cmd_*
   #TODO: standard api declaration api_*
   #TODO: figure out a way to document raised events, decorator?
   #TODO: make everything use baseplugin?
   #TODO: convert to run under python3
-  #TODO: break up timers, triggers, command watch into seperate plugins
+  #TODO: remove func from the table in commands.add
 
 New Plugins:
   Base Plugins:
@@ -18,6 +13,8 @@ New Plugins:
     #TODO: create a help plugin
     #TODO: create a variable plugin, change ${varname} in any input
     #TODO: create a plugin to search log files (or maybe a seperate process that is a webserver?)
+    #TODO: break up command watch into seperate plugins
+    #TODO: fix timers and triggers plugins to be reloadable (either have the plugins readd them or copy the structures somewhere else)
   Aardwolf Plugins:
     #TODO: create an autohunt plugin
     #TODO: create a plugin to parse eq events
