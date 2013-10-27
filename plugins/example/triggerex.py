@@ -3,7 +3,7 @@ $Id$
 
 This is an example plugin about how to use triggers
 """
-from plugins import BasePlugin
+from plugins._baseplugin import BasePlugin
 
 NAME = 'Trigger Example'
 SNAME = 'triggerex'

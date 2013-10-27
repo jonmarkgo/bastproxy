@@ -4,7 +4,7 @@ $Id$
 This plugin shows how to use colors and contains a command that shows
 what the colors are
 """
-from plugins import BasePlugin
+from plugins._baseplugin import BasePlugin
 
 #these 5 are required
 NAME = 'Color Example'

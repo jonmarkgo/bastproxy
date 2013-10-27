@@ -3,7 +3,7 @@ $Id$
 
 This plugin is an example plugin to show how to use timers
 """
-from plugins import BasePlugin
+from plugins._baseplugin import BasePlugin
 
 NAME = 'Timer Example'
 SNAME = 'timerex'

@@ -4,7 +4,7 @@ $Id$
 This plugin is an example plugin to show how to use the aardwolf 102
 telnet options
 """
-from plugins import BasePlugin
+from plugins._baseplugin import BasePlugin
 
 NAME = 'Aard102 Example'
 SNAME = 'a102ex'

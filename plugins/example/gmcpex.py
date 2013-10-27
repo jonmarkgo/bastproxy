@@ -12,7 +12,7 @@ This plugin is an example plugin to show how to use gmcp
 #BP:     self.msg('\n'.join(msg))
 #BP: TypeError: sequence item 1: expected string, DotDict found
 """
-from plugins import BasePlugin
+from plugins._baseplugin import BasePlugin
 
 NAME = 'GMCP Test'
 SNAME = 'gmcpex'
