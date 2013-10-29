@@ -290,13 +290,13 @@ class Statdb(Sqldb):
     if not milestone:
       return
 
-    trows = self.runselect('SELECT * FROM stats WHERE milestone = "%s"' \
+    trows = self.statdb.runselect('SELECT * FROM stats WHERE milestone = "%s"' \
                                                           % milestone)
     if len(trows) > 0:
       self.api.get('output.client')('@RMilestone %s already exists' % milestone)
       return -1
 
-    stats = self.runselect('SELECT * FROM stats WHERE milestone = "current"')
+    stats = self.statdb.runselect('SELECT * FROM stats WHERE milestone = "current"')
     tstats = stats[0]
 
     if tstats:
@@ -330,7 +330,7 @@ class Statdb(Sqldb):
     get all classes
     """
     classes = []
-    tclasses = self.runselect('SELECT * FROM classes ORDER by remort ASC')
+    tclasses = self.statdb.runselect('SELECT * FROM classes ORDER by remort ASC')
     for i in tclasses:
       if i['remort'] != -1:
         classes.append(i['class'])
@@ -538,7 +538,7 @@ class Plugin(AardwolfBasePlugin):
 
     self.api.get('events.register')('trigger_dead', self.dead)
 
-    self.api.get('api.add')('runselect', self.runselect)
+    self.api.get('api.add')('runselect', self.api_runselect)
 
     self.statdb = Statdb(self)
 
@@ -1298,7 +1298,7 @@ class Plugin(AardwolfBasePlugin):
     AardwolfBasePlugin.unload(self)
     self.statdb.close()
 
-  def runselect(self, select):
+  def api_runselect(self, select):
     """
     run a select stmt against the char db
     """

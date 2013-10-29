@@ -72,6 +72,16 @@ class Plugin(AardwolfBasePlugin):
     self.current = ''
     self.isuptodatef = False
 
+    self.api.get('api.add')('gets', self.api_getskill)
+    self.api.get('api.add')('isspellup', self.api_isspellup)
+    self.api.get('api.add')('getspellups', self.api_getspellups)
+    self.api.get('api.add')('sendcmd', self.api_sendcmd)
+    self.api.get('api.add')('isaffected', self.api_isaffected)
+    self.api.get('api.add')('isblockedbyrecovery', self.api_isblockedbyrecovery)
+    self.api.get('api.add')('ispracticed', self.api_ispracticed)
+    self.api.get('api.add')('canuse', self.api_canuse)
+    self.api.get('api.add')('isuptodate', self.api_isuptodate)
+
     self.triggers['spellh_noprompt'] = \
             {'regex':"^\{spellheaders noprompt\}$"}
     self.triggers['spellh_spellup_noprompt'] = \
@@ -133,15 +143,6 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('commands.add')('lu', self.cmd_lu,
                                  {'shelp':'lookup skill by name or sn'})
 
-    self.api.get('api.add')('gets', self.getskill)
-    self.api.get('api.add')('isspellup', self.isspellup)
-    self.api.get('api.add')('getspellups', self.getspellups)
-    self.api.get('api.add')('sendcmd', self.sendcmd)
-    self.api.get('api.add')('isaffected', self.isaffected)
-    self.api.get('api.add')('isblockedbyrecovery', self.isblockedbyrecovery)
-    self.api.get('api.add')('ispracticed', self.ispracticed)
-    self.api.get('api.add')('canuse', self.canuse)
-    self.api.get('api.add')('isuptodate', self.isuptodate)
 
   def firstactive(self):
     """
@@ -150,7 +151,7 @@ class Plugin(AardwolfBasePlugin):
     AardwolfBasePlugin.firstactive(self)
     self.checkskills()
 
-  def isuptodate(self):
+  def api_isuptodate(self):
     """
     return True if we have seen affected or all spells refresh
     """
@@ -161,7 +162,7 @@ class Plugin(AardwolfBasePlugin):
     cmd to lookup a spell
     """
     msg = []
-    skill = self.getskill(args[0])
+    skill = self.api.get('skills.gets')(args[0])
     if skill:
       msg.append('%-8s : %s' % ('SN', skill['sn']))
       msg.append('%-8s : %s' % ('Name', skill['name']))
@@ -395,7 +396,7 @@ class Plugin(AardwolfBasePlugin):
     self.current = ''
 
   @timeit
-  def getskill(self, tsn):
+  def api_getskill(self, tsn):
     """
     get a skill
     """
@@ -431,11 +432,11 @@ class Plugin(AardwolfBasePlugin):
 
     return tskill
 
-  def sendcmd(self, sn):
+  def api_sendcmd(self, sn):
     """
     send the command to activate a skill/spell
     """
-    skill = self.getskill(sn)
+    skill = self.api.get('skills.gets')(sn)
     if skill:
       if skill['type'] == 'spell':
         self.api.get('output.msg')('casting %s' % skill['name'])
@@ -445,17 +446,18 @@ class Plugin(AardwolfBasePlugin):
         self.api.get('output.msg')('sending skill %s' % skill['name'])
         self.api.get('input.execute')(name)
 
-  def canuse(self, sn):
+  def api_canuse(self, sn):
     """
     return True if the spell can be used
     """
-    if self.isaffected(sn) or self.isblockedbyrecovery(sn) \
-        or not self.ispracticed(sn):
+    if self.api.get('skills.isaffected')(sn) \
+        or self.api.get('skills.isblockedbyrecovery')(sn) \
+        or not self.api.get('skills.ispracticed')(sn):
       return False
 
     return True
 
-  def isspellup(self, sn):
+  def api_isspellup(self, sn):
     """
     return True for a spellup, else return False
     """
@@ -465,21 +467,21 @@ class Plugin(AardwolfBasePlugin):
 
     return False
 
-  def isaffected(self, sn):
+  def api_isaffected(self, sn):
     """
     return True for a spellup, else return False
     """
-    skill = self.getskill(sn)
+    skill = self.api.get('skills.gets')(sn)
     if skill:
       return skill['duration'] > 0
 
     return False
 
-  def isblockedbyrecovery(self, sn):
+  def api_isblockedbyrecovery(self, sn):
     """
     check to see if a spell/skill is blocked by a recovery
     """
-    skill = self.getskill(sn)
+    skill = self.api.get('skills.gets')(sn)
     if skill:
       if 'recovery' in skill and skill['recovery'] and \
           skill['recovery']['duration'] > 0:
@@ -487,18 +489,18 @@ class Plugin(AardwolfBasePlugin):
 
     return False
 
-  def ispracticed(self, sn):
+  def api_ispracticed(self, sn):
     """
     is the spell learned
     """
-    skill = self.getskill(sn)
+    skill = self.api.get('skills.gets')(sn)
     if skill:
       if skill['percent'] > 1:
         return True
 
     return False
 
-  def getspellups(self):
+  def api_getspellups(self):
     """
     return a list of spellup spells
     """
