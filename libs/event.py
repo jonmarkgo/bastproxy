@@ -8,11 +8,6 @@ This plugin handles events.
   Watch for specific commands
 
 """
-import datetime
-import re
-from libs.color import convertcolors
-from libs.timing import timeit
-from libs.utils import secondstodhms
 from libs.api import API
 
 class Event(object):
@@ -48,9 +43,7 @@ class EventMgr(object):
   def __init__(self):
     self.sname = 'events'
     self.events = {}
-    self.watchcmds = {}
     self.pluginlookup = {}
-    self.regexlookup = {}
     self.api = API()
 
     self.api.add(self.sname, 'register', self.api_register)
@@ -58,66 +51,8 @@ class EventMgr(object):
     self.api.add(self.sname, 'eraise', self.api_eraise)
     self.api.add(self.sname, 'removeplugin', self.api_removeplugin)
 
-    self.api.add('watch', 'add', self.addwatch)
-    self.api.add('watch', 'remove', self.removewatch)
-
     #print 'api', self.api.api
     #print 'overloadedapi', self.api.overloadedapi
-
-  # add a cmd to watch for
-  def addwatch(self, cmdname, args):
-    """
-    add a watch
-    """
-    if not ('regex' in args):
-      self.api.get('output.msg')('cmdwatch %s has no regex, not adding' % cmdname, 'cmds')
-      return
-    if args['regex'] in self.regexlookup:
-      self.api.get('output.msg')(
-          'cmdwatch %s tried to add a regex that already existed for %s' % \
-                      (cmdname, self.regexlookup[args['regex']]), 'cmds')
-      return
-    try:
-      self.watchcmds[cmdname] = args
-      self.watchcmds[cmdname]['compiled'] = re.compile(args['regex'])
-      self.regexlookup[args['regex']] = cmdname
-    except:
-      self.api.get('output.traceback')(
-          'Could not compile regex for cmd watch: %s : %s' % \
-                (cmdname, args['regex']))
-
-  # remove a command to watch for
-  def removewatch(self, cmdname):
-    """
-    remove a watch
-    """
-    if cmdname in self.watchcmds:
-      del self.regexlookup[self.watchcmds[cmdname]['regex']]
-      del self.watchcmds[cmdname]
-    else:
-      self.api.get('output.msg')('removewatch: watch %s does not exist' % cmdname, 'cmds')
-
-  def checkcmd(self, data):
-    """
-    check input from the client and see if we are watching for it
-    """
-    tdat = data['fromdata'].strip()
-    for i in self.watchcmds:
-      cmdre = self.watchcmds[i]['compiled']
-      mat = cmdre.match(tdat)
-      if mat:
-        targs = mat.groupdict()
-        targs['cmdname'] = 'cmd_' + i
-        targs['data'] = tdat
-        self.api.get('output.msg')('raising %s' % targs['cmdname'], 'cmds')
-        tdata = self.api.get('events.eraise')('cmd_' + i, targs)
-        if 'changed' in tdata:
-          data['nfromdata'] = tdata['changed']
-
-    if 'nfromdata' in data:
-      data['fromdata'] = data['nfromdata']
-    return data
-
 
   # register a function with an event
   def api_register(self, eventname, func,  **kwargs):
@@ -238,7 +173,6 @@ class EventMgr(object):
     """
     self.api.get('managers.add')(self.sname, self)
     self.api.get('events.register')('plugin_logger_loaded', self.loggerloaded)
-    self.api.get('events.register')('from_client_event', self.checkcmd)
     self.api.get('events.eraise')('plugin_event_loaded', {})
 
 
