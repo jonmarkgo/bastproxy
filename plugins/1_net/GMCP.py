@@ -215,7 +215,7 @@ class Plugin(BasePlugin):
         if not proxy.connected:
           self.gmcpmodqueue.append({'modname':modname, 'toggle':toggle})
         else:
-          self.self.api.get('GMCP.togglemodule')(modname, toggle)
+          self.api.get('GMCP.togglemodule')(modname, toggle)
     elif 'rawcolor' in data.lower() or 'group' in data.lower():
       #we only support rawcolor on right now, the json parser doesn't like
       #ascii codes, we also turn on group and leave it on
