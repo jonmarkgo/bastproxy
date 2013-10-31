@@ -237,10 +237,10 @@ class Plugin(AardwolfBasePlugin):
       del(self.mobsleft[removeitem])
 
     if found:
-      self.api.get('eventa.eraise')('aard_gq_mobsleft',
+      self.api.get('events.eraise')('aard_gq_mobsleft',
                         copy.deepcopy({'mobsleft':self.mobsleft}))
     else:
-      self.api.get('ouput.msg')("GQ: could not find mob: %s" % args['name'], 'gq')
+      self.api.get('output.msg')("GQ: could not find mob: %s" % args['name'], 'gq')
       self.api.get('input.execute')("gq check")
 
   def _gqwon(self, _=None):
