@@ -29,9 +29,9 @@ class Plugin(BasePlugin):
     """
     BasePlugin.__init__(self, *args, **kwargs)
     self.api.get('commands.add')('list', self.cmd_list,
-                                 {'shelp':'list functions in the api'})
+                                 shelp='list functions in the api')
     self.api.get('commands.add')('detail', self.cmd_detail,
-                                 {'shelp':'detail a function in the api'})
+                                 shelp='detail a function in the api')
 
   def cmd_detail(self, args):
     """

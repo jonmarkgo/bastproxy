@@ -22,8 +22,8 @@ class Plugin(AardwolfBasePlugin):
     initialize the instance
     """
     AardwolfBasePlugin.__init__(self, *args, **kwargs)
-    self.triggers['glaze'] = \
-            {'regex':"^Your eyes glaze over.$"}
+    self.api.get('triggers.add')('glaze',
+                    "^Your eyes glaze over.$")
     self.api.get('events.register')('trigger_glaze', self.glaze)
 
   def glaze(self, args):

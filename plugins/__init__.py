@@ -1,10 +1,6 @@
 """
 $Id$
 
-#TODO: make initialized events use the same syntax as runtime added events
-  make an addevent function to the plugin baseclass
-  same with commands and all other items that can be added at runtime
-
 make all functions that add things use kwargs instead of a table
 """
 
@@ -264,7 +260,7 @@ class PluginMgr(object):
 
         _module.__dict__["proxy_import"] = 1
         self.api.get('output.client')("load: loaded %s" % fullimploc)
-        self.api.get('output.msg')('loaded %s' % fullimploc, self.sname)
+        self.api.get('output.msg')('loaded %s (%s: %s)' % (fullimploc, _module.SNAME, _module.NAME), self.sname)
 
         return _module.SNAME, 'Loaded'
       else:
@@ -392,13 +388,13 @@ class PluginMgr(object):
     self.api.get('managers.add')('plugin', self)
     self.load_modules("*.py")
     self.api.get('commands.add')('list', self.cmd_list,
-                        {'lname':'Plugin Manager', 'shelp':'List plugins'})
+                        lname='Plugin Manager', shelp='List plugins')
     self.api.get('commands.add')('load', self.cmd_load,
-                        {'lname':'Plugin Manager', 'shelp':'Load a plugin'})
+                        lname='Plugin Manager', shelp='Load a plugin')
     self.api.get('commands.add')('unload', self.cmd_unload,
-                        {'lname':'Plugin Manager', 'shelp':'Unload a plugin'})
+                        lname='Plugin Manager', shelp='Unload a plugin')
     self.api.get('commands.add')('reload', self.cmd_reload,
-                        {'lname':'Plugin Manager', 'shelp':'Reload a plugin'})
+                        lname='Plugin Manager', shelp='Reload a plugin')
     self.api.get('commands.default')(self.sname, 'list')
     self.api.get('events.register')('savestate', self.savestate, plugin=self.sname)
 

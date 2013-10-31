@@ -36,61 +36,62 @@ class Plugin(AardwolfBasePlugin):
     self.mobsleft = []
     self.nextdeath = False
     self.linecount = 0
-    self.api.get('watch.add')('gq_check', {
-      'regex':'^(gq|gqu|gque|gques|gquest) (c|ch|che|chec|check)$'})
-    self.triggers['gqdeclared'] = {
-      'regex':"^Global Quest: Global quest \# (?P<gqnum>.*) has been " \
-                  "declared for levels (?P<lowlev>.*) to (?P<highlev>.*)\.$"}
-    self.triggers['gqjoined'] = {
-      'regex':"^You have now joined the quest. See 'help gquest' " \
-                  "for available commands.$"}
-    self.triggers['gqstarted'] = {
-      'regex':"^Global Quest: The global quest for levels " \
-                  "(.*) to (.*) has now started.$"}
-    self.triggers['gqnone'] = {
-      'regex':"^You are not on a global quest.$",
-      'enabled':False, 'group':'gqcheck'}
-    self.triggers['gqitem'] = {
-      'regex':"^You still have to kill (?P<num>[\d]*) \* " \
-              "(?P<mob>.*?) \((?P<location>.*?)\)(|\.)$",
-      'enabled':False, 'group':'gqcheck'}
-    self.triggers['gqnotstarted'] = {
-      'regex':"^The global quest has not yet started.$",
-      'enabled':False, 'group':'gqcheck'}
-    self.triggers['gqreward'] = {
-      'regex':"^\s*Reward of (?P<amount>\d+) (?P<type>.+) .+ added\.$",
-      'enabled':False, 'group':'gqrew'}
-    self.triggers['gqmobdead'] = {
-      'regex':"^Congratulations, that was one of the GLOBAL QUEST mobs!$",
-      'enabled':False, 'group':'gqin'}
-    self.triggers['gqwon'] = {
-      'regex':"^You were the first to complete this quest!$",
-      'enabled':False, 'group':'gqin'}
-    self.triggers['gqwon2'] = {
-      'regex':"^CONGRATULATIONS! You were the first to " \
-              "complete this quest!$",
-      'enabled':False, 'group':'gqin'}
-    self.triggers['gqdone'] = {
-      'regex':"^Global Quest: The global quest has been won " \
-              "by (.*) - (.*) win.$",
-      'enabled':False, 'group':'gqdone'}
-    self.triggers['gqquit'] = {
-      'regex':"^You are no longer part of the current quest.$",
-      'enabled':False, 'group':'gqdone'}
-    self.triggers['gqextover'] = {
-      'regex':"^Global Quest: The extended global quest is now over.$",
-      'enabled':False, 'group':'gqext'}
-    self.triggers['gqextover2'] = {
-      'regex':"^Global Quest: No active players remaining, " \
-              "global quest is now over.$",
-      'enabled':False, 'group':'gqext'}
-    self.triggers['gqextfin'] = {
-      'regex':"^You have finished this global quest.$",
-      'enabled':False, 'group':'gqext'}
-    self.triggers['gqnote'] = {
-      'regex':"^INFO: New post #(?P<bdnum>.*) in forum Gquest from " \
-              "Aardwolf Subj: Lvl (?P<low>.*) to (?P<high>.*) - " \
-              "Global quest # (?P<gqnum>.*)$"}
+    self.api.get('watch.add')('gq_check',
+      '^(gq|gqu|gque|gques|gquest) (c|ch|che|chec|check)$')
+
+    self.api.get('triggers.add')('gqdeclared',
+                  "^Global Quest: Global quest \# (?P<gqnum>.*) has been " \
+                    "declared for levels (?P<lowlev>.*) to (?P<highlev>.*)\.$")
+    self.api.get('triggers.add')('gqjoined',
+                  "^You have now joined the quest. See 'help gquest' " \
+                    "for available commands.$")
+    self.api.get('triggers.add')('gqstarted',
+                  "^Global Quest: The global quest for levels " \
+                    "(.*) to (.*) has now started.$")
+    self.api.get('triggers.add')('gqnone',
+                  "^You are not on a global quest.$",
+                  enabled=False, group='gqcheck')
+    self.api.get('triggers.add')('gqitem',
+                  "^You still have to kill (?P<num>[\d]*) \* " \
+                    "(?P<mob>.*?) \((?P<location>.*?)\)(|\.)$",
+                  enabled=False, group='gqcheck')
+    self.api.get('triggers.add')('gqnotstarted',
+                  "^The global quest has not yet started.$",
+                  enabled=False, group='gqcheck')
+    self.api.get('triggers.add')('gqreward',
+                  "^\s*Reward of (?P<amount>\d+) (?P<type>.+) .+ added\.$",
+                  enabled=False, group='gqrew')
+    self.api.get('triggers.add')('gqmobdead',
+                  "^Congratulations, that was one of the GLOBAL QUEST mobs!$",
+                  enabled=False, group='gqin')
+    self.api.get('triggers.add')('gqwon',
+                  "^You were the first to complete this quest!$",
+                  enabled=False, group='gqin')
+    self.api.get('triggers.add')('gqwon2',
+                  "^CONGRATULATIONS! You were the first to " \
+                    "complete this quest!$",
+                  enabled=False, group='gqin')
+    self.api.get('triggers.add')('gqdone',
+                  "^Global Quest: The global quest has been won " \
+                    "by (.*) - (.*) win.$",
+                  enabled=False, group='gqdone')
+    self.api.get('triggers.add')('gqquit',
+                  "^You are no longer part of the current quest.$",
+                  enabled=False, group='gqdone')
+    self.api.get('triggers.add')('gqextover',
+                  "^Global Quest: The extended global quest is now over.$",
+                  enabled=False, group='gqext')
+    self.api.get('triggers.add')('gqextover2',
+                  "^Global Quest: No active players remaining, " \
+                    "global quest is now over.$",
+                  enabled=False, group='gqext')
+    self.api.get('triggers.add')('gqextfin',
+                  "^You have finished this global quest.$",
+                  enabled=False, group='gqext')
+    self.api.get('triggers.add')('gqnote',
+                  "^INFO: New post #(?P<bdnum>.*) in forum Gquest from " \
+                    "Aardwolf Subj: Lvl (?P<low>.*) to (?P<high>.*) - " \
+                    "Global quest # (?P<gqnum>.*)$")
 
     self.api.get('events.register')('trigger_gqdeclared', self._gqdeclared)
     self.api.get('events.register')('trigger_gqjoined', self._gqjoined)
@@ -108,7 +109,7 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('events.register')('trigger_gqextover2', self._gqextover)
     self.api.get('events.register')('trigger_gqextfin', self._gqextfin)
     self.api.get('events.register')('trigger_gqnote', self._gqreset)
-    self.api.get('events.register')('cmd_gq_check', self._gqcheckcmd)
+    self.api.get('events.register')('watch_gq_check', self._gqcheckcmd)
 
 
 

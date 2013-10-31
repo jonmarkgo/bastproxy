@@ -1,11 +1,14 @@
 
 Overall:
-  #TODO: standard command declaration cmd_*
-  #TODO: standard api declaration api_*
   #TODO: figure out a way to document raised events, decorator?
   #TODO: make everything use baseplugin?
+  #TODO: move all api interactions into the load function instead of the plugin __init__ (except api.add)
+  #TODO: anytime an action is performed, (Trigger matched, timer goes off, function is called from an event, command called, variable changed)
+              send output.msg with the owning plugins sname
+
+Python3:
   #TODO: convert to run under python3
-  #TODO: change all __init__ calls to use super (when converted to python3)
+  #TODO: change all parent method calls to use super (when converted to python3)
 
 New Plugins:
   Base Plugins:
@@ -13,19 +16,29 @@ New Plugins:
     #TODO: create a help plugin
     #TODO: create a variable plugin, change ${varname} in any input
     #TODO: create a plugin to search log files (or maybe a seperate process that is a webserver?)
-    #TODO: break up command watch into seperate plugins
-    #TODO: fix timers and triggers plugins to be reloadable (either have the plugins readd them or copy the structures somewhere else)
   Aardwolf Plugins:
     #TODO: create an autohunt plugin
     #TODO: create a plugin to parse eq events
     #TODO: create a plugin to do eqsets
     #TODO: create a potion manager plugin
+    #TODO: create a moonbot plugin
+
+timers:
+  #TODO: add ability to manually add timers from #bp.timers.add
+  #TODO: add command to show timer info, lists, specific info
+  #TODO: add command to show stats
+  #TODO: make reloadable, either have original plugins reload or copy the structures somewhere
+
+triggers:
+  #TODO: add ability to manually add triggers from #bp.triggers.add
+  #TODO: be able to check colors
+  #TODO: make reloadable, either have original plugins reload or copy the structures somewhere
+
+watch:
+  #TODO: add command to show watch info
+  #TODO: make reloadable, either have original plugins reload or copy the structures somewhere
 
 Events:
-  #TODO: add cmd to show stats
-    number of triggers, aliases, events, etc..
-  #TODO: add cmd to show info for specific timers, triggers, etc..
-  #TODO: triggers need to also be able to check colors
   #TODO: add onetime flag to registering events
 
 CmdMan:
@@ -38,6 +51,7 @@ color:
 sqlitedb:
   #TODO: load the db into memory and then when adding something, fork and save
       it to disk?
+  #TODO: finish the cmd_runselect
 
 timing:
   #TODO: add a global timing flag
@@ -56,6 +70,9 @@ ct:
   #TODO: add dodges
   #TODO: sort damage
 
+statdb:
+  #TODO: create commands to get specific info for a cp/gq/quest/mobk
+
 mobk:
   #TODO: get weapon for vorpals
 
@@ -70,8 +87,3 @@ su:
   #TODO: add ability to spellup others
   #TODO: add ability to have spell blockers
 
-triggers:
-  #TODO: add ability to add triggers with a command
-
-timers:
-  #TODO: add ability to add timers with a command

@@ -41,7 +41,7 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('setting.add')('exppermin', 20, int,
                 'the threshhold for showing exp per minute')
     self.api.get('commands.add')('rep', self.cmd_rep,
-              {'shelp':'show report'})
+              shelp='show report')
 
     self.api.get('timers.add')('statrep', self.timershow,
                                5*60, nodupe=True)

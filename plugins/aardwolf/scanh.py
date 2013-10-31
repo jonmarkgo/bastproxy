@@ -46,11 +46,11 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('dependency.add')('cp')
     self.api.get('dependency.add')('gq')
 
-    self.triggers['scanstart'] = \
-            {'regex':"^\{scan\}$"}
-    self.triggers['scanend'] = \
-            {'regex':"^\{/scan\}$",
-              'enabled':False, 'group':'scan'}
+    self.api.get('triggers.add')('scanstart',
+            "^\{scan\}$")
+    self.api.get('triggers.add')('scanend',
+            "^\{/scan\}$",
+            enabled=False, group='scan')
 
     self.api.get('events.register')('trigger_scanstart', self.scanstart)
     self.api.get('events.register')('trigger_scanend', self.scanend)

@@ -29,8 +29,8 @@ class CmdMgr(object):
     self.api.add(self.sname, 'default', self.api_setdefault)
     self.api.add(self.sname, 'removeplugin', self.api_removeplugin)
 
-    self.api.get('commands.add')('list', self.cmd_list, {'shelp':'list commands'})
-    self.api.get('commands.add')('default', self.cmd_list, {'shelp':'list commands'})
+    self.api.get('commands.add')('list', self.cmd_list, shelp='list commands')
+    self.api.get('commands.add')('default', self.cmd_list, shelp='list commands')
 
   def formatretmsg(self, msg, sname, stcmd):
     """
@@ -149,23 +149,22 @@ class CmdMgr(object):
       return data
 
   # add a command
-  def api_addcmd(self, cmdname, func, args):
+  def api_addcmd(self, cmdname, func, **kwargs):
     """  add a command
     @Ycmdname@w  = the base that the api should be under
-    The @Yargs@w should contain
-      @Yfunc@w   = the function that should be run when this command is executed
+    @Yfunc@w   = the function that should be run when this command is executed
+    @Ykeyword arguments@w
       @Yshelp@w  = the short help, a brief description of what the command does
       @Ylhelp@w  = a longer description of what the command does
 
-      The command will be added as sname.cmdname
+    The command will be added as sname.cmdname
 
-      sname is gotten from the class the function belongs to or the sname key
-        in args
+    sname is gotten from the class the function belongs to or the sname key
+      in args
 
     this function returns no values"""
 
-    #lname, cmd, tfunction, shelp="", lhelp=""
-    #{'func':tfunction, 'lname':lname, 'lhelp':lhelp, 'shelp':shelp}
+    args = kwargs.copy()
     lname = None
     if not func:
       self.api.get('output.msg')('cmd %s.%s has no function, not adding' % \

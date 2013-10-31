@@ -28,7 +28,7 @@ class Plugin(BasePlugin):
     """
     BasePlugin.__init__(self, *args, **kwargs)
     self.api.get('commands.add')('clients', self.cmd_clients,
-                              {'shelp':'list clients that are connected'})
+                              shelp='list clients that are connected')
     self.api.get('commands.default')('clients')
 
   def cmd_clients(self, _):

@@ -46,18 +46,17 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('events.register')('firstactive', self.afkfirstactive)
 
     self.api.get('commands.add')('show', self.cmd_show,
-                                  {'shelp':'Show the afk comm queue'})
+                                  shelp='Show the afk comm queue')
     self.api.get('commands.add')('clear', self.cmd_clear,
-                                  {'shelp':'Clear the afk comm queue'})
+                                  shelp='Clear the afk comm queue')
     self.api.get('commands.add')('toggle', self.cmd_toggle,
-                                  {'shelp':'toggle afk'})
+                                  shelp='toggle afk')
 
     self.temptitle = ''
 
-    self.api.get('watch.add')('titleset', {
-      'regex':'^(tit|titl|title) (?P<title>.*)$'})
+    self.api.get('watch.add')('titleset', '^(tit|titl|title) (?P<title>.*)$')
 
-    self.api.get('events.register')('cmd_titleset', self._titlesetevent)
+    self.api.get('events.register')('watch_titleset', self._titlesetevent)
 
   def afkfirstactive(self, args):
     """

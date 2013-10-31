@@ -350,20 +350,20 @@ class Logger(object):
     initialize commands
     """
     self.api.get('commands.add')('client', self.cmd_client,
-                        {'lname':'Logger',
-                         'shelp':'Send message of a type to clients'})
+                        lname='Logger',
+                         shelp='Send message of a type to clients')
     self.api.get('commands.add')('file', self.cmd_file,
-                        {'lname':'Logger',
-                        'shelp':'Send message of a type to a file'})
+                        lname='Logger',
+                        shelp='Send message of a type to a file')
     self.api.get('commands.add')('console', self.cmd_console,
-                        {'lname':'Logger',
-                        'shelp':'Send message of a type to console'})
+                        lname='Logger',
+                        shelp='Send message of a type to console')
     self.api.get('commands.add')('types', self.cmd_types,
-                        {'lname':'Logger',
-                        'shelp':'Show data types'})
-    #self.api.get('command.add')('log', 'archive',
-                        #{'lname':'Logger', 'func':self.cmd_archive,
-                        #'shelp':'archive a dtype'})
+                        lname='Logger',
+                        shelp='Show data types')
+    #self.api.get('commands.add')('log', 'archive', self.cmd_archive,
+                        #lname='Logger',
+                        #shelp='archive a dtype')
 
   def load(self):
     """

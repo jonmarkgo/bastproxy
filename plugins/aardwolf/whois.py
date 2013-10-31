@@ -28,43 +28,42 @@ class Plugin(AardwolfBasePlugin):
     AardwolfBasePlugin.__init__(self, *args, **kwargs)
     self.savewhoisfile = os.path.join(self.savedir, 'whois.txt')
     self.whois = PersistentDict(self.savewhoisfile, 'c', format='json')
-    self.api.get('watch.add')('whois', {
-                'regex':'^(whoi|whois)$'})
+    self.api.get('watch.add')('whois', '^(whoi|whois)$')
 
-    self.triggers['whoisheader'] = {
-      'regex':"^\[.*\]\s+.*\s*\((?P<sex>\w+)\s+\w+\)$",
-      'enabled':False,
-      'group':'whois'}
-    self.triggers['whoisclasses'] = {
-      'regex':"^\[Multiclass Player: (?P<classes>.*) \]$",
-      'enabled':False,
-      'group':'whois'}
-    self.triggers['whois1'] = {
-      'regex':"^(?P<name1>[\w\s]*)\s*:\s*\[\s*(?P<val1>[\w\d\s]*)\s*\]\s*$",
-      'enabled':False,
-      'group':'whois'}
-    self.triggers['whois2'] = {
-      'regex':"^(?P<name1>[\w\s]*)\s*:\s*\[\s*(?P<val1>[\w\d\s]*)\s*\]" \
-            "\s*(?P<name2>[\w\s]*)\s*:\s*\[\s*(?P<val2>[\w\d\s]*)\s*\]\s*$",
-      'enabled':False,
-      'group':'whois'}
-    self.triggers['whois3'] = {
-      'regex':"^(?P<name1>[\w\s]*)\s*:\s*\[\s*(?P<val1>[\w\d\s]*)\s*\]" \
-            "\s*(?P<name2>[\w\s]*)\s*:\s*\[\s*(?P<val2>[\w\d\s]*)\s*\]" \
-            "\s*(?P<name3>[\w\s]*)\s*:\s*\[\s*(?P<val3>[\w\d\s]*)\s*\]\s*$",
-      'enabled':False,
-      'group':'whois'}
-    self.triggers['whoispowerup'] = {
-      'regex':"^(?P<name1>[\w\s]*)\s*:\s*\[\s*(?P<val1>[\w\d\s]*)\s*\]" \
-            "\s*([\w\s]*)\s*:\s*\[\s*(?P<pval1>[\w\d\s]*)\s*\]\s*\[\s*" \
-            "(?P<pval2>[\w\d\s]*)\s*\]\s*$",
-      'enabled':False,
-      'group':'whois'}
-    self.triggers['whoisend'] = {
-      'regex':"^-{74,74}$",
-      'enabled':False}
+    self.api.get('triggers.add')('whoisheader',
+      "^\[.*\]\s+.*\s*\((?P<sex>\w+)\s+\w+\)$",
+      enabled=False,
+      group='whois')
+    self.api.get('triggers.add')('whoisclasses',
+      "^\[Multiclass Player: (?P<classes>.*) \]$",
+      enabled=False,
+      group='whois')
+    self.api.get('triggers.add')('whois1',
+      "^(?P<name1>[\w\s]*)\s*:\s*\[\s*(?P<val1>[\w\d\s]*)\s*\]\s*$",
+      enabled=False,
+      group='whois')
+    self.api.get('triggers.add')('whois2',
+      "^(?P<name1>[\w\s]*)\s*:\s*\[\s*(?P<val1>[\w\d\s]*)\s*\]" \
+        "\s*(?P<name2>[\w\s]*)\s*:\s*\[\s*(?P<val2>[\w\d\s]*)\s*\]\s*$",
+      enabled=False,
+      group='whois')
+    self.api.get('triggers.add')('whois3',
+      "^(?P<name1>[\w\s]*)\s*:\s*\[\s*(?P<val1>[\w\d\s]*)\s*\]" \
+        "\s*(?P<name2>[\w\s]*)\s*:\s*\[\s*(?P<val2>[\w\d\s]*)\s*\]" \
+        "\s*(?P<name3>[\w\s]*)\s*:\s*\[\s*(?P<val3>[\w\d\s]*)\s*\]\s*$",
+      enabled=False,
+      group='whois')
+    self.api.get('triggers.add')('whoispowerup',
+      "^(?P<name1>[\w\s]*)\s*:\s*\[\s*(?P<val1>[\w\d\s]*)\s*\]" \
+        "\s*([\w\s]*)\s*:\s*\[\s*(?P<pval1>[\w\d\s]*)\s*\]\s*\[\s*" \
+        "(?P<pval2>[\w\d\s]*)\s*\]\s*$",
+      enabled=False,
+      group='whois')
+    self.api.get('triggers.add')('whoisend',
+      "^-{74,74}$",
+      enabled=False)
 
-    self.api.get('events.register')('cmd_whois', self._whois)
+    self.api.get('events.register')('watch_whois', self._whois)
     self.api.get('events.register')('trigger_whoisheader', self._whoisheader)
     self.api.get('events.register')('trigger_whoisclasses', self._whoisclasses)
     self.api.get('events.register')('trigger_whois1', self._whoisstats)

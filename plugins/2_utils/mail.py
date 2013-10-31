@@ -32,11 +32,11 @@ class Plugin(BasePlugin):
     self.password = ''
     self.api.get('events.register')('client_connected', self.checkpassword)
     self.api.get('commands.add')('password', self.cmd_pw,
-                                        {'shelp':'set the password'})
+                                        shelp='set the password')
     self.api.get('commands.add')('test', self.cmd_test,
-                                        {'shelp':'send a test email'})
+                                        shelp='send a test email')
     self.api.get('commands.add')('check', self.cmd_check,
-                      {'shelp':'check to make sure all settings are applied'})
+                      shelp='check to make sure all settings are applied')
     self.api.get('api.add')('send', self.api_send)
     self.api.get('setting.add')('server', '', str, 'the smtp server to send mail through')
     self.api.get('setting.add')('port', '', int, 'the port to use when sending mail')

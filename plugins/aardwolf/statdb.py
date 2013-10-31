@@ -212,7 +212,7 @@ class Statdb(Sqldb):
     rowid = cur.lastrowid
     self.dbconn.commit()
     cur.close()
-    self.api.get('output.msg')('added quest: %s' % rowid, 'statdb')
+    self.api.get('output.msg')('added quest: %s' % rowid)
     return rowid
 
   def setstat(self, stat, value):
@@ -225,7 +225,7 @@ class Statdb(Sqldb):
     cur.execute(stmt)
     self.dbconn.commit()
     cur.close()
-    self.api.get('output.msg')('set %s to %s' % (stat, value), 'statdb')
+    self.api.get('output.msg')('set %s to %s' % (stat, value))
 
   def getstat(self, stat):
     """
@@ -279,7 +279,7 @@ class Statdb(Sqldb):
 
     self.dbconn.commit()
     cur.close()
-    self.api.get('output.msg')('updated stats', 'statdb')
+    self.api.get('output.msg')('updated stats')
     # add classes here
     self.addclasses(whoisinfo['classes'])
 
@@ -310,7 +310,7 @@ class Statdb(Sqldb):
       cur.close()
 
       self.api.get('output.msg')('inserted milestone %s with rowid: %s' % (
-                                            milestone, trow), 'statdb')
+                                            milestone, trow))
       return trow
 
     return -1
@@ -385,7 +385,7 @@ class Statdb(Sqldb):
     rowid = self.getlastrowid('campaigns')
     self.dbconn.commit()
     cur.close()
-    self.api.get('output.msg')('added cp: %s' % rowid, 'statdb')
+    self.api.get('output.msg')('added cp: %s' % rowid)
 
     for i in cpinfo['mobs']:
       i['cp_id'] = rowid
@@ -412,7 +412,7 @@ class Statdb(Sqldb):
     rowid = self.getlastrowid('gquests')
     self.dbconn.commit()
     cur.close()
-    self.api.get('output.msg')('added gq: %s' % rowid, 'statdb')
+    self.api.get('output.msg')('added gq: %s' % rowid)
 
     for i in gqinfo['mobs']:
       i['gq_id'] = rowid
@@ -447,7 +447,7 @@ class Statdb(Sqldb):
     stmt = self.converttoinsert('levels', keynull=True)
     cur.execute(stmt, levelinfo)
     rowid = self.getlastrowid('levels')
-    self.api.get('output.msg')('inserted level %s' % rowid, 'statdb')
+    self.api.get('output.msg')('inserted level %s' % rowid)
     if rowid > 1:
       stmt2 = "UPDATE levels SET finishtime = %s WHERE level_id = %d" % (
                     levelinfo['starttime'], int(rowid) - 1)
@@ -474,7 +474,7 @@ class Statdb(Sqldb):
     self.dbconn.commit()
     rowid = self.getlastrowid('mobkills')
     cur.close()
-    self.api.get('output.msg')('inserted mobkill: %s' % rowid, 'statdb')
+    self.api.get('output.msg')('inserted mobkill: %s' % rowid)
 
 
 class Plugin(AardwolfBasePlugin):
@@ -504,19 +504,19 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('dependency.add')('quest')
 
     self.api.get('commands.add')('quests', self.cmd_quests,
-                                {'shelp':'show quest stats'})
+                                shelp='show quest stats')
     self.api.get('commands.add')('levels', self.cmd_levels,
-                                {'shelp':'show level stats'})
+                                shelp='show level stats')
     self.api.get('commands.add')('cps', self.cmd_cps,
-                                {'shelp':'show cp stats'})
+                                shelp='show cp stats')
     self.api.get('commands.add')('gqs', self.cmd_gqs,
-                                {'shelp':'show gq stats'})
+                                shelp='show gq stats')
     self.api.get('commands.add')('mobs', self.cmd_mobs,
-                                {'shelp':'show mob stats'})
+                                shelp='show mob stats')
 
-    self.triggers['dead'] = {
-      'regex':"^You die.$",
-      'enabled':True, 'group':'dead'}
+    self.api.get('triggers.add')('dead',
+      "^You die.$",
+      enabled=True, group='dead')
 
     self.api.get('events.register')('aard_quest_comp', self.questevent)
     self.api.get('events.register')('aard_quest_failed', self.questevent)

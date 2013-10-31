@@ -63,55 +63,56 @@ class Plugin(AardwolfBasePlugin):
                       'the text color for an instakill')
     self.api.get('setting.add')('instaback', '@z10', 'color',
                       'the background color for an instakill')
-    self.triggers['mobxp'] = {
-      'regex':"^You receive (?P<xp>\d+(?:\+\d+)*) experience points?\.$"}
-    self.triggers['mobxpptless'] = {
-      'regex':"^That was a pointless no experience kill!$"}
-    self.triggers['mobswitch'] = {
-      'regex':"^You switch targets and " \
-              "direct your attacks at (?P<name>.*).\.$"}
-    self.triggers['mobflee'] = {
-      'regex':"^You flee from combat!$"}
-    self.triggers['mobretreat'] = {
-      'regex':"^You retreat from the combat!$"}
-    self.triggers['mobblessxp'] = {
-      'regex':"^You receive (?P<blessxp>\d+) bonus " \
-                          "experience points from your daily blessing.$"}
-    self.triggers['mobbonusxp'] = {
-      'regex':"^You receive (?P<bonxp>\d+) bonus experience points.$"}
-    self.triggers['mobgold'] = {
-      'regex':"^You get (?P<gold>.+) gold coins " \
-              "from .+ corpse of (?P<name>.+)\.$"}
-    self.triggers['mobname'] = {
-      'regex':"^You get .+ corpse of (?P<name>.+)\.$"}
-    self.triggers['mobsac'] = {
-      'regex':"^.* gives you (?P<sacgold>.+) gold coins? for " \
-                              "the .* ?corpse of (?P<name>.+)\.$"}
-    self.triggers['mobconsume'] = {
-      'regex':"^You bury your fangs deep into the " \
-              ".* ?corpse of (?P<name>.+), drinking thirstily.$"}
-    self.triggers['mobsplitgold'] = {
-      'regex':"^\w+ splits? \d+ gold coins?. " \
-                                "Your share is (?P<gold>\d+) gold\.$"}
-    self.triggers['mobtrivia'] = {
-      'regex':"^You killed a Triv bonus mob!! Triv point added\.$"}
-    self.triggers['mobvorpal'] = {
-      'regex':"^Deep magic stirs within your weapon. " \
-                    "It seems to have a life of its own.$"}
-    self.triggers['mobassassin'] = {
-      'regex':"^You assassinate (?P<name>.*) with cold efficiency.$"}
-    self.triggers['mobdeathblow'] = {
-      'regex':"^Your death blow CLEAVES (P<name>.*) in two!$"}
-    self.triggers['mobslit'] = {
-      'regex':"^You sneak behind (?P<name>.*) and slit .* throat.$"}
-    self.triggers['mobdisintegrate'] = {
-      'regex':"^You have disintegrated (?P<name>.*)!$"}
-    self.triggers['mobbanish'] = {
-      'regex':"^You look at (?P<name>.*) very strangely.$"}
-    self.triggers['mobdamage'] = {
-      'regex':"^\[(.*)\] Your (.*) \[(.*)\]$"}
-    self.triggers['mobdamage2'] = {
-      'regex':"^Your (.*) \[(.*)\]$"}
+
+    self.api.get('triggers.add')('mobxp',
+              "^You receive (?P<xp>\d+(?:\+\d+)*) experience points?\.$")
+    self.api.get('triggers.add')('mobxpptless',
+              "^That was a pointless no experience kill!$")
+    self.api.get('triggers.add')('mobswitch',
+              "^You switch targets and " \
+                "direct your attacks at (?P<name>.*).\.$")
+    self.api.get('triggers.add')('mobflee',
+              "^You flee from combat!$")
+    self.api.get('triggers.add')('mobretreat',
+              "^You retreat from the combat!$")
+    self.api.get('triggers.add')('mobblessxp',
+              "^You receive (?P<blessxp>\d+) bonus " \
+                "experience points from your daily blessing.$")
+    self.api.get('triggers.add')('mobbonusxp',
+              "^You receive (?P<bonxp>\d+) bonus experience points.$")
+    self.api.get('triggers.add')('mobgold',
+              "^You get (?P<gold>.+) gold coins " \
+                "from .+ corpse of (?P<name>.+)\.$")
+    self.api.get('triggers.add')('mobname',
+              "^You get .+ corpse of (?P<name>.+)\.$")
+    self.api.get('triggers.add')('mobsac',
+              "^.* gives you (?P<sacgold>.+) gold coins? for " \
+                "the .* ?corpse of (?P<name>.+)\.$")
+    self.api.get('triggers.add')('mobconsume',
+              "^You bury your fangs deep into the " \
+                ".* ?corpse of (?P<name>.+), drinking thirstily.$")
+    self.api.get('triggers.add')('mobsplitgold',
+              "^\w+ splits? \d+ gold coins?. " \
+                "Your share is (?P<gold>\d+) gold\.$")
+    self.api.get('triggers.add')('mobtrivia',
+              "^You killed a Triv bonus mob!! Triv point added\.$")
+    self.api.get('triggers.add')('mobvorpal',
+              "^Deep magic stirs within your weapon. " \
+                "It seems to have a life of its own.$")
+    self.api.get('triggers.add')('mobassassin',
+              "^You assassinate (?P<name>.*) with cold efficiency.$")
+    self.api.get('triggers.add')('mobdeathblow',
+              "^Your death blow CLEAVES (P<name>.*) in two!$")
+    self.api.get('triggers.add')('mobslit',
+              "^You sneak behind (?P<name>.*) and slit .* throat.$")
+    self.api.get('triggers.add')('mobdisintegrate',
+              "^You have disintegrated (?P<name>.*)!$")
+    self.api.get('triggers.add')('mobbanish',
+              "^You look at (?P<name>.*) very strangely.$")
+    self.api.get('triggers.add')('mobdamage',
+              "^\[(.*)\] Your (.*) \[(.*)\]$")
+    self.api.get('triggers.add')('mobdamage2',
+              "^Your (.*) \[(.*)\]$")
 
     self.api.get('events.register')('trigger_mobxp', self.mobxp)
     self.api.get('events.register')('trigger_mobxpptless', self.mobxpptless)

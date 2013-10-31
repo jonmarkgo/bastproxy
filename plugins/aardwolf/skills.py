@@ -82,42 +82,42 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('api.add')('canuse', self.api_canuse)
     self.api.get('api.add')('isuptodate', self.api_isuptodate)
 
-    self.triggers['spellh_noprompt'] = \
-            {'regex':"^\{spellheaders noprompt\}$"}
-    self.triggers['spellh_spellup_noprompt'] = \
-            {'regex':"^\{spellheaders spellup noprompt\}$"}
-    self.triggers['spellh_affected_noprompt'] = \
-            {'regex':"^\{spellheaders affected noprompt\}$"}
-    self.triggers['spellh_spellline'] = \
-            {'regex':"^(?P<sn>\d+),(?P<name>.+),(?P<target>\d+)," \
+    self.api.get('triggers.add')('spellh_noprompt',
+            "^\{spellheaders noprompt\}$")
+    self.api.get('triggers.add')('spellh_spellup_noprompt',
+            "^\{spellheaders spellup noprompt\}$")
+    self.api.get('triggers.add')('spellh_affected_noprompt',
+            "^\{spellheaders affected noprompt\}$")
+    self.api.get('triggers.add')('spellh_spellline',
+            "^(?P<sn>\d+),(?P<name>.+),(?P<target>\d+)," \
               "(?P<duration>\d+),(?P<pct>\d+),(?P<rcvy>-?\d+),(?P<type>\d+)$",
-              'enabled':False, 'group':'spellhead'}
-    self.triggers['spellh_end_noprompt'] = \
-            {'regex':"^\{/spellheaders\}$",
-              'enabled':False, 'group':'spellhead'}
-    self.triggers['affoff'] = \
-            {'regex':"^\{affoff\}(?P<sn>\d+)$"}
-    self.triggers['affon'] = \
-            {'regex':"^\{affon\}(?P<sn>\d+),(?P<duration>\d+)$"}
-    self.triggers['recov_noprompt'] = \
-            {'regex':"^\{recoveries noprompt\}$"}
-    self.triggers['recov_affected_noprompt'] = \
-            {'regex':"^\{recoveries affected noprompt\}$"}
-    self.triggers['spellh_recovline'] = \
-            {'regex':"^(?P<sn>\d+),(?P<name>.+),(?P<duration>\d+)$",
-              'enabled':False, 'group':'recoveries'}
-    self.triggers['recov_end_noprompt'] = \
-            {'regex':"^\{/recoveries\}$",
-              'enabled':False, 'group':'recoveries'}
-    self.triggers['recoff'] = \
-            {'regex':"^\{recoff\}(?P<sn>\d+)$"}
-    self.triggers['recon'] = \
-            {'regex':"^\{recon\}(?P<sn>\d+),(?P<duration>\d+)$"}
-    self.triggers['skillgain'] = \
-            {'regex':"^\{skillgain\}(?P<sn>\d+),(?P<percent>\d+)$"}
-    self.triggers['skillfail'] = \
-            {'regex':"^\{sfail\}(?P<sn>\d+),(?P<target>\d+)," \
-                      "(?P<reason>\d+),(?P<recovery>-?\d+)$"}
+            enabled=False, group='spellhead')
+    self.api.get('triggers.add')('spellh_end_noprompt',
+            "^\{/spellheaders\}$",
+            enabled=False, group='spellhead')
+    self.api.get('triggers.add')('affoff',
+            "^\{affoff\}(?P<sn>\d+)$")
+    self.api.get('triggers.add')('affon',
+            "^\{affon\}(?P<sn>\d+),(?P<duration>\d+)$")
+    self.api.get('triggers.add')('recov_noprompt',
+            "^\{recoveries noprompt\}$")
+    self.api.get('triggers.add')('recov_affected_noprompt',
+            "^\{recoveries affected noprompt\}$")
+    self.api.get('triggers.add')('spellh_recovline',
+            "^(?P<sn>\d+),(?P<name>.+),(?P<duration>\d+)$",
+            enabled=False, group='recoveries')
+    self.api.get('triggers.add')('recov_end_noprompt',
+            "^\{/recoveries\}$",
+            enabled=False, group='recoveries')
+    self.api.get('triggers.add')('recoff',
+            "^\{recoff\}(?P<sn>\d+)$")
+    self.api.get('triggers.add')('recon',
+            "^\{recon\}(?P<sn>\d+),(?P<duration>\d+)$")
+    self.api.get('triggers.add')('skillgain',
+            "^\{skillgain\}(?P<sn>\d+),(?P<percent>\d+)$")
+    self.api.get('triggers.add')('skillfail',
+            "^\{sfail\}(?P<sn>\d+),(?P<target>\d+)," \
+              "(?P<reason>\d+),(?P<recovery>-?\d+)$")
 
     self.api.get('events.register')('trigger_spellh_noprompt', self.skillstart)
     self.api.get('events.register')('trigger_spellh_spellup_noprompt', self.skillstart)
@@ -139,9 +139,9 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('events.register')('GMCP:char.status', self.checkskills)
 
     self.api.get('commands.add')('refresh', self.cmd_refresh,
-                                 {'shelp':'refresh skills and spells'})
+                                 shelp='refresh skills and spells')
     self.api.get('commands.add')('lu', self.cmd_lu,
-                                 {'shelp':'lookup skill by name or sn'})
+                                 shelp='lookup skill by name or sn')
 
 
   def firstactive(self):

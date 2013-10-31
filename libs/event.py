@@ -3,12 +3,11 @@ $Id$
 
 This plugin handles events.
   You can register/unregister with events, raise events
-  Manipulate timers
-  Manipulate triggers
-  Watch for specific commands
-
 """
+import inspect
 from libs.api import API
+from libs import utils
+
 
 class Event(object):
   """
@@ -50,9 +49,41 @@ class EventMgr(object):
     self.api.add(self.sname, 'unregister', self.api_unregister)
     self.api.add(self.sname, 'eraise', self.api_eraise)
     self.api.add(self.sname, 'removeplugin', self.api_removeplugin)
+    self.api.add(self.sname, 'gete', self.api_getevent)
+    #self.api.add(self.sname, 'getplugins', self.api_getplugins)
 
     #print 'api', self.api.api
     #print 'overloadedapi', self.api.overloadedapi
+
+  # return the event, will have registered functions
+  def api_getevent(self, eventname):
+    """  register a function with an event
+    @Yeventname@w   = The event to register with
+
+    this function returns a dictionary of format
+      pluginslist = list of plugins that use this event
+      funclist = a dictionary of funcnames, with their plugin, function name, and prio as values in a dictionary
+    """
+    pluginlist = []
+    funcdict = {}
+    if eventname in self.events:
+      for prio in self.events[eventname]:
+        for func in self.events[eventname][prio]:
+          try:
+            plugin = func.im_self.sname
+          except AttributeError:
+            plugin = 'Unknown'
+          if not (plugin in pluginlist):
+            pluginlist.append(plugin)
+          funcdict[func] = {}
+          funcdict[func]['name'] = func.__name__
+          funcdict[func]['priority'] = prio
+          funcdict[func]['plugin'] = plugin
+
+      return {'pluginlist':pluginlist, 'funcdict':funcdict}
+
+    else:
+      return {}
 
   # register a function with an event
   def api_register(self, eventname, func,  **kwargs):
@@ -63,6 +94,7 @@ class EventMgr(object):
       prio          = the priority of the function (default: 50)
 
     this function returns no values"""
+
     if not ('prio' in kwargs):
       prio = 50
     else:
@@ -71,6 +103,7 @@ class EventMgr(object):
       plugin = func.im_self.sname
     except AttributeError:
       plugin = ''
+
     if not (eventname in self.events):
       self.events[eventname] = {}
     if not (prio in self.events[eventname]):
@@ -84,8 +117,9 @@ class EventMgr(object):
         self.pluginlookup[plugin] = {}
         self.pluginlookup[plugin]['events'] = {}
 
-      self.pluginlookup[plugin]['events'][func] = \
-                            {'eventname':eventname, 'prio':prio}
+      if not (func in self.pluginlookup[plugin]['events']):
+        self.pluginlookup[plugin]['events'][func] = []
+      self.pluginlookup[plugin]['events'][func].append(eventname)
 
   # unregister a function from an event
   def api_unregister(self, eventname, func, **kwargs):
@@ -96,10 +130,10 @@ class EventMgr(object):
       plugin        = the plugin this function is a part of
 
     this function returns no values"""
-    if not ('plugin' in kwargs):
+    try:
+      plugin = func.im_self.sname
+    except AttributeError:
       plugin = ''
-    else:
-      plugin = kwargs['plugin']
     if not self.events[eventname]:
       return
     keys = self.events[eventname].keys()
@@ -110,10 +144,13 @@ class EventMgr(object):
           self.api.get('output.msg')('removing function %s from event %s' % (
                 func, eventname), self.sname)
           self.events[eventname][i].remove(func)
+          if len(self.events[eventname][i]) == 0:
+            del(self.events[eventname][i])
 
       if plugin and plugin in self.pluginlookup:
-        if func in self.pluginlookup[plugin]['events']:
-          del(self.pluginlookup[plugin]['events'][func])
+        if func in self.pluginlookup[plugin]['events'] \
+            and eventname in self.pluginlookup[plugin]['events'][func]:
+          self.pluginlookup[plugin]['events'][func].remove(eventname)
 
   # remove all registered functions that are specific to a plugin
   def api_removeplugin(self, plugin):
@@ -123,9 +160,10 @@ class EventMgr(object):
     self.api.get('output.msg')('removing plugin %s' % plugin, self.sname)
     if plugin and plugin in self.pluginlookup:
       tkeys = self.pluginlookup[plugin]['events'].keys()
-      for i in tkeys:
-        event = self.pluginlookup[plugin]['events'][i]
-        self.api.get('events.unregister')(event['eventname'], i)
+      for func in tkeys:
+        events = list(self.pluginlookup[plugin]['events'][func])
+        for event in events:
+          self.api.get('events.unregister')(event, func)
 
       self.pluginlookup[plugin]['events'] = {}
 

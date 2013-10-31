@@ -22,8 +22,8 @@ class Plugin(BasePlugin):
     initialize the instance
     """
     BasePlugin.__init__(self, *args, **kwargs)
-    self.triggers['example_trigger'] = \
-            {'regex':"^(?P<name>.*) flicks a (?P<insect>.*) off his bar\.$"}
+    self.api.get('triggers.add')('example_trigger',
+            "^(?P<name>.*) flicks a (?P<insect>.*) off his bar\.$")
     self.api.get('events.register')('trigger_example_trigger', self.testtrigger)
 
   def testtrigger(self, args):

@@ -35,64 +35,65 @@ class Plugin(AardwolfBasePlugin):
     self.cpinfotimer = {}
     self.linecount = 0
     self.nextdeath = False
-    self.api.get('watch.add')('cp_check', {
-      'regex':'^(cp|campa|campai|campaig|campaign) (c|ch|che|chec|check)$'})
-    self.triggers['cpnew'] = {
-      'regex':"^Commander Barcett tells you " \
-                        "'Type 'campaign info' to see what you must kill.'$"}
-    self.triggers['cpnone'] = {
-      'regex':"^You are not currently on a campaign.$",
-      'enabled':False,
-      'group':'cpcheck'}
-    self.triggers['cptime'] = {
-      'regex':"^You have (?P<time>.*) to finish this campaign.$",
-      'enabled':False,
-      'group':'cpcheck'}
-    self.triggers['cpmob'] = {
-      'regex':"^You still have to kill \* (?P<mob>.*) " \
+    self.api.get('watch.add')('cp_check',
+      '^(cp|campa|campai|campaig|campaign) (c|ch|che|chec|check)$')
+
+    self.api.get('triggers.add')('cpnew',
+      "^Commander Barcett tells you " \
+        "'Type 'campaign info' to see what you must kill.'$")
+    self.api.get('triggers.add')('cpnone',
+      "^You are not currently on a campaign.$",
+      enabled=False,
+      group='cpcheck')
+    self.api.get('triggers.add')('cptime',
+      "^You have (?P<time>.*) to finish this campaign.$",
+      enabled=False,
+      group='cpcheck')
+    self.api.get('triggers.add')('cpmob',
+      "^You still have to kill \* (?P<mob>.*) " \
             "\((?P<location>.*?)(?P<dead> - Dead|)\)$",
-      'enabled':False,
-      'group':'cpcheck'}
-    self.triggers['cpneedtolevel'] = {
-      'regex':"^You will have to level before you" \
+      enabled=False,
+      group='cpcheck')
+    self.api.get('triggers.add')('cpneedtolevel',
+      "^You will have to level before you" \
                 " can go on another campaign.$",
-      'enabled':False,
-      'group':'cpin'}
-    self.triggers['cpcantake'] = {
-      'regex':"^You may take a campaign at this level.$",
-      'enabled':False,
-      'group':'cpin'}
-    self.triggers['cpshnext'] = {
-      'regex':"^You cannot take another campaign for (?P<time>.*).$",
-      'enabled':False,
-      'group':'cpin'}
-    self.triggers['cpmobdead'] = {
-      'regex':"^Congratulations, that was one of your CAMPAIGN mobs!$",
-      'enabled':False,
-      'group':'cpin'}
-    self.triggers['cpcomplete'] = {
-      'regex':"^CONGRATULATIONS! You have completed your campaign.$",
-      'enabled':False,
-      'group':'cpin'}
-    self.triggers['cpclear'] = {
-      'regex':"^Campaign cleared.$",
-      'enabled':False,
-      'group':'cpin'}
-    self.triggers['cpreward'] = {
-      'regex':"^\s*Reward of (?P<amount>\d+) (?P<type>.+) .+ added.$",
-      'enabled':False,
-      'group':'cprew',
-      'argtypes':{'amount':int}}
-    self.triggers['cpcompdone'] = {
-      'regex':"^--------------------------" \
-                    "------------------------------------$",
-      'enabled':False,
-      'group':'cpdone'}
+      enabled=False,
+      group='cpin')
+    self.api.get('triggers.add')('cpcantake',
+      "^You may take a campaign at this level.$",
+      enabled=False,
+      group='cpin')
+    self.api.get('triggers.add')('cpshnext',
+      "^You cannot take another campaign for (?P<time>.*).$",
+      enabled=False,
+      group='cpin')
+    self.api.get('triggers.add')('cpmobdead',
+      "^Congratulations, that was one of your CAMPAIGN mobs!$",
+      enabled=False,
+      group='cpin')
+    self.api.get('triggers.add')('cpcomplete',
+      "^CONGRATULATIONS! You have completed your campaign.$",
+      enabled=False,
+      group='cpin')
+    self.api.get('triggers.add')('cpclear',
+      "^Campaign cleared.$",
+      enabled=False,
+      group='cpin')
+    self.api.get('triggers.add')('cpreward',
+      "^\s*Reward of (?P<amount>\d+) (?P<type>.+) .+ added.$",
+      enabled=False,
+      group='cprew',
+      argtypes={'amount':int})
+    self.api.get('triggers.add')('cpcompdone',
+      "^--------------------------" \
+            "------------------------------------$",
+      enabled=False,
+      group='cpdone')
 
     self.api.get('events.register')('trigger_cpnew', self._cpnew)
     self.api.get('events.register')('trigger_cpnone', self._cpnone)
     self.api.get('events.register')('trigger_cptime', self._cptime)
-    self.api.get('events.register')('cmd_cp_check', self._cpcheckcmd)
+    self.api.get('events.register')('watch_cp_check', self._cpcheckcmd)
     self.api.get('events.register')('trigger_cpmob', self._cpmob)
     self.api.get('events.register')('trigger_cpneedtolevel', self._cpneedtolevel)
     self.api.get('events.register')('trigger_cpcantake', self._cpcantake)

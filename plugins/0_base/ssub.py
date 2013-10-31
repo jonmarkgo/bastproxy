@@ -31,13 +31,13 @@ class Plugin(BasePlugin):
     self.savesubfile = os.path.join(self.savedir, 'subs.txt')
     self._substitutes = PersistentDict(self.savesubfile, 'c', format='json')
     self.api.get('commands.add')('add', self.cmd_add,
-                                 {'shelp':'Add a substitute'})
+                                 shelp='Add a substitute')
     self.api.get('commands.add')('remove', self.cmd_remove,
-                                 {'shelp':'Remove a substitute'})
+                                 shelp='Remove a substitute')
     self.api.get('commands.add')('list', self.cmd_list,
-                                 {'shelp':'List substitutes'})
+                                 shelp='List substitutes')
     self.api.get('commands.add')('clear', self.cmd_clear,
-                                 {'shelp':'Clear all substitutes'})
+                                 shelp='Clear all substitutes')
     self.api.get('commands.default')('list')
     self.api.get('events.register')('to_client_event', self.findsub)
 

@@ -27,9 +27,9 @@ class Plugin(BasePlugin):
     """
     BasePlugin.__init__(self, *args, **kwargs)
     self.api.get('commands.add')('show', self.cmd_show,
-                                    {'shelp':'Show colors'})
+                                    shelp='Show colors')
     self.api.get('commands.add')('example', self.cmd_example,
-                                    {'shelp':'Show colors'})
+                                    shelp='Show colors')
 
   def cmd_show(self, args):
     """

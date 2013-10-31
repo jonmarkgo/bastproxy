@@ -60,19 +60,15 @@ class Plugin(AardwolfBasePlugin):
                       readonly=True)
 
     self.api.get('commands.add')('sadd', self.cmd_sadd,
-              {'shelp':'add a spellup to the self list'})
+              shelp='add a spellup to the self list')
     self.api.get('commands.add')('slist', self.cmd_slist,
-              {'shelp':'list spellups'})
+              shelp='list spellups')
     self.api.get('commands.add')('srem', self.cmd_srem,
-              {'shelp':'remove a spellup from self list'})
+              shelp='remove a spellup from self list')
     self.api.get('commands.add')('sen', self.cmd_sen,
-              {'shelp':'enable a spellup on self'})
+              shelp='enable a spellup on self')
     self.api.get('commands.add')('sdis', self.cmd_sdis,
-              {'shelp':'disable a spellup on self'})
-
-    #self.triggers['dead'] = {
-      #'regex':"^You die.$",
-      #'enabled':True, 'group':'dead'}
+              shelp='disable a spellup on self')
 
     self.api.get('events.register')('GMCP:char.vitals', self._charvitals)
     self.api.get('events.register')('GMCP:char.status', self._charstatus)

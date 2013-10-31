@@ -35,73 +35,69 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('setting.add')('tiering', False, bool, 'flag for tiering')
     self.api.get('setting.add')('seen2', False, bool, 'we saw a state 2 after tiering')
 
-    self.api.get('watch.add')('shloud', {
-            'regex':'^superhero loud$'})
-    self.api.get('watch.add')('shsilent', {
-            'regex':'^superhero silent$'})
-    self.api.get('watch.add')('shconfirm', {
-            'regex':'^superhero confirm$'})
-    self.api.get('watch.add')('shloudconfirm', {
-            'regex':'^superhero loud confirm$'})
+    self.api.get('watch.add')('shloud', '^superhero loud$')
+    self.api.get('watch.add')('shsilent', '^superhero silent$')
+    self.api.get('watch.add')('shconfirm', '^superhero confirm$')
+    self.api.get('watch.add')('shloudconfirm', '^superhero loud confirm$')
 
-    self.triggers['lvlpup'] = {
-      'regex':"^Congratulations, hero. You have increased your powers!$"}
-    self.triggers['lvlpupbless'] = {
-      'regex':"^You gain a powerup\.$"}
-    self.triggers['lvllevel'] = {
-      'regex':"^You raise a level! You are now level (?P<level>\d*).$",
-      'argtypes':{'level':int}}
-    self.triggers['lvlsh'] = {
-      'regex':"^Congratulations! You are now a superhero!$",
-      'argtypes':{'level':int}}
-    self.triggers['lvlbless'] = {
-      'regex':"^You gain a level - you are now level (?P<level>\d*).$",
-      'argtypes':{'level':int}}
-    self.triggers['lvlgains'] = {
-      'regex':"^You gain (?P<hp>\d*) hit points, (?P<mp>\d*) mana, "\
+    self.api.get('triggers.add')('lvlpup',
+        "^Congratulations, hero. You have increased your powers!$")
+    self.api.get('triggers.add')('lvlpupbless',
+        "^You gain a powerup\.$")
+    self.api.get('triggers.add')('lvllevel',
+        "^You raise a level! You are now level (?P<level>\d*).$",
+        argtypes={'level':int})
+    self.api.get('triggers.add')('lvlsh',
+        "^Congratulations! You are now a superhero!$",
+        argtypes={'level':int})
+    self.api.get('triggers.add')('lvlbless',
+        "^You gain a level - you are now level (?P<level>\d*).$",
+        argtypes={'level':int})
+    self.api.get('triggers.add')('lvlgains',
+        "^You gain (?P<hp>\d*) hit points, (?P<mp>\d*) mana, "\
           "(?P<mv>\d*) moves, (?P<pr>\d*) practices and (?P<tr>\d*) trains.$",
-            'enabled':False, 'group':'linfo',
-            'argtypes':{'hp':int, 'mn':int, 'mv':int, 'pr':int, 'tr':int}}
-    self.triggers['lvlblesstrain'] = {
-      'regex':"^You gain (?P<tr>\d*) extra trains? daily blessing bonus.$",
-      'enabled':False, 'group':'linfo',
-      'argtypes':{'tr':int}}
-    self.triggers['lvlpupgains'] = {
-      'regex':"^You gain (?P<tr>\d*) trains.$",
-      'enabled':False, 'group':'linfo',
-      'argtypes':{'tr':int}}
-    self.triggers['lvlbonustrains'] = {
-      'regex':"^Lucky! You gain an extra (?P<tr>\d*) training sessions?!$",
-      'enabled':False, 'group':'linfo',
-      'argtypes':{'tr':int}}
-    self.triggers['lvlbonusstat'] = {
-      'regex':"^You gain a bonus (?P<stat>.*) point!$",
-      'enabled':False, 'group':'linfo'}
+        enabled=False, group='linfo',
+        argtypes={'hp':int, 'mn':int, 'mv':int, 'pr':int, 'tr':int})
+    self.api.get('triggers.add')('lvlblesstrain',
+        "^You gain (?P<tr>\d*) extra trains? daily blessing bonus.$",
+        enabled=False, group='linfo',
+        argtypes={'tr':int})
+    self.api.get('triggers.add')('lvlpupgains',
+        "^You gain (?P<tr>\d*) trains.$",
+        enabled=False, group='linfo',
+        argtypes={'tr':int})
+    self.api.get('triggers.add')('lvlbonustrains',
+        "^Lucky! You gain an extra (?P<tr>\d*) training sessions?!$",
+        enabled=False, group='linfo',
+        argtypes={'tr':int})
+    self.api.get('triggers.add')('lvlbonusstat',
+        "^You gain a bonus (?P<stat>.*) point!$",
+        enabled=False, group='linfo')
 
-    self.triggers['lvlshbadstar'] = {
-      'regex':"^%s$" % re.escape("*******************************" \
+    self.api.get('triggers.add')('lvlshbadstar',
+        "^%s$" % re.escape("*******************************" \
               "****************************************"),
-      'enabled':False, 'group':'superhero'}
-    self.triggers['lvlshbad'] = {
-      'regex':"^Use either: 'superhero loud'   - (?P<mins>.*) mins of " \
-              "double xp, (?P<qp>.*)qp and (?P<gold>.*) gold$",
-      'enabled':False, 'group':'superhero'}
-    self.triggers['lvlshnogold'] = {
-      'regex':"^You must be carrying at least 500,000 gold coins.$",
-      'enabled':False, 'group':'superhero'}
-    self.triggers['lvlshnoqp'] = {
-      'regex':"^You must have at least 1000 quest points.$",
-      'enabled':False, 'group':'superhero'}
+        enabled=False, group='superhero')
+    self.api.get('triggers.add')('lvlshbad',
+        "^Use either: 'superhero loud'   - (?P<mins>.*) mins of " \
+          "double xp, (?P<qp>.*)qp and (?P<gold>.*) gold$",
+        enabled=False, group='superhero')
+    self.api.get('triggers.add')('lvlshnogold',
+        "^You must be carrying at least 500,000 gold coins.$",
+        enabled=False, group='superhero')
+    self.api.get('triggers.add')('lvlshnoqp',
+        "^You must have at least 1000 quest points.$",
+        enabled=False, group='superhero')
 
-    self.triggers['lvlpreremort'] = {
-      'regex':"^You are now flagged as remorting.$",
-      'enabled':True, 'group':'remort'}
-    self.triggers['lvlremortcomp'] = {
-      'regex':"^\* Remort transformation complete!$",
-      'enabled':True, 'group':'remort'}
-    self.triggers['lvltier'] = {
-      'regex':"^## You have already remorted the max number of times.$",
-      'enabled':True, 'group':'remort'}
+    self.api.get('triggers.add')('lvlpreremort',
+        "^You are now flagged as remorting.$",
+        enabled=True, group='remort')
+    self.api.get('triggers.add')('lvlremortcomp',
+        "^\* Remort transformation complete!$",
+        enabled=True, group='remort')
+    self.api.get('triggers.add')('lvltier',
+        "^## You have already remorted the max number of times.$",
+        enabled=True, group='remort')
 
     self.api.get('events.register')('trigger_lvlpup', self._lvl)
     self.api.get('events.register')('trigger_lvlpupbless', self._lvl)
@@ -118,10 +114,10 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('events.register')('trigger_lvlshnogold', self._superherobad)
     self.api.get('events.register')('trigger_lvlshnoqp', self._superherobad)
 
-    self.api.get('events.register')('cmd_shloud', self.cmd_superhero)
-    self.api.get('events.register')('cmd_shsilent', self.cmd_superhero)
-    self.api.get('events.register')('cmd_shconfirm', self.cmd_superhero)
-    self.api.get('events.register')('cmd_shloudconfirm', self.cmd_superhero)
+    self.api.get('events.register')('watch_shloud', self.cmd_superhero)
+    self.api.get('events.register')('watch_shsilent', self.cmd_superhero)
+    self.api.get('events.register')('watch_shconfirm', self.cmd_superhero)
+    self.api.get('events.register')('watch_shloudconfirm', self.cmd_superhero)
 
     self.api.get('events.register')('trigger_lvlpreremort', self._preremort)
     self.api.get('events.register')('trigger_lvlremortcomp', self._remortcomp)

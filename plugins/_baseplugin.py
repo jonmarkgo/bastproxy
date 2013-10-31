@@ -1,15 +1,12 @@
 """
 $Id$
 
-#TODO: same with commands and all other items that can be added at runtime
-
-make all functions that add things use kwargs instead of a table
+#TODO: make all functions that add things use kwargs instead of a table
 """
 import os
 from libs.utils import verify, convert
 from libs.persistentdict import PersistentDictEvent
 from libs.api import API
-
 
 class BasePlugin(object):
   """
@@ -40,10 +37,11 @@ class BasePlugin(object):
     self.basepath = basepath
     self.fullimploc = fullimploc
 
-    self.cmds = {}
     self.settingvalues = PersistentDictEvent(self, self.savefile,
                             'c', format='json')
     self.settings = {}
+    self.cmdwatch = {}
+
     self.api.overload('output', 'msg', self.api_outputmsg)
     self.api.overload('commands', 'default', self.api_commandsdefault)
     self.api.overload('dependency', 'add', self.api_dependencyadd)
@@ -51,17 +49,16 @@ class BasePlugin(object):
     self.api.overload('setting', 'gets', self.api_settinggets)
     self.api.overload('setting', 'change', self.api_settingchange)
     self.api.overload('api', 'add', self.api_add)
-    self.timers = {}
-    self.triggers = {}
-    self.cmdwatch = {}
+    self.api.overload('triggers', 'add', self.api_triggersadd)
+    self.api.overload('watch', 'add', self.api_watchadd)
 
     self.api.get('logger.adddtype')(self.sname)
     self.api.get('commands.add')('set', self.cmd_set,
-                                 {'shelp':'Show/Set Settings'})
+                                 shelp='Show/Set Settings')
     self.api.get('commands.add')('reset', self.cmd_reset,
-                                 {'shelp':'reset the plugin'})
+                                 shelp='reset the plugin')
     self.api.get('commands.add')('save', self.cmd_save,
-                                 {'shelp':'save plugin state'})
+                                 shelp='save plugin state')
     self.api.get('events.register')('firstactive', self.afterfirstactive)
 
   # get the vaule of a setting
@@ -105,8 +102,10 @@ class BasePlugin(object):
 
     self.settingvalues.pload()
 
-    for i in self.triggers:
-      self.api.get('triggers.add')(i, self.triggers[i])
+    #for i in self.triggers:
+      #regex = self.triggers[i]['regex']
+      #del self.triggers[i]['regex']
+      #self.api.get('triggers.add', True)(i, regex, self.sname, **self.triggers[i])
 
     for i in self.cmdwatch:
       self.api.get('cmdwatch.add')(i, self.watch[i])
@@ -136,11 +135,11 @@ class BasePlugin(object):
     # delete all timers
     self.api.get('timers.removeplugin')(self.sname)
 
-    for i in self.triggers:
-      self.api.get('triggers.remove')(i)
+    # delete all triggers
+    self.api.get('triggers.removeplugin')(self.sname)
 
-    for i in self.cmdwatch:
-      self.api.get('cmdwatch.remove')(i, self.watch[i])
+    # delete all watches
+    self.api.get('watch.removeplugin')(self.sname)
 
     #save the state
     self.savestate()
@@ -156,6 +155,18 @@ class BasePlugin(object):
     an internal function to send msgs
     """
     self.api.get('output.msg', True)(msg, self.sname)
+
+  def api_triggersadd(self, triggername, regex, **kwargs):
+    """
+    add triggers
+    """
+    self.api.get('triggers.add', True)(triggername, regex, self.sname, **kwargs)
+
+  def api_watchadd(self, triggername, regex, **kwargs):
+    """
+    add triggers
+    """
+    self.api.get('watch.add', True)(triggername, regex, self.sname, **kwargs)
 
   def savestate(self):
     """

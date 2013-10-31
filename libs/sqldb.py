@@ -10,13 +10,6 @@ import inspect
 import time
 import zipfile
 
-from libs.api import API
-
-api = API()
-api.get('logger.adddtype')('sqlite')
-api.get('logger.file')('sqlite')
-api.get('logger.console')('sqlite')
-
 
 def dict_factory(cursor, row):
   """
@@ -49,12 +42,17 @@ class Sqldb(object):
     """
     initialize the class
     """
-    self.api = api
     self.dbconn = None
     self.plugin = plugin
+    self.sname = plugin.sname
+    self.name = plugin.name
+    self.api = plugin.api
     self.dbname = dbname or "db"
+    self.api.get('logger.adddtype')('sqlite')
+    self.api.get('logger.file')('sqlite')
+    self.api.get('logger.console')('sqlite')
     self.backupform = '%s_%%s.sqlite' % self.dbname
-    self.dbdir = dbdir or os.path.join(api.BASEPATH, 'data', 'db')
+    self.dbdir = dbdir or os.path.join(self.api.BASEPATH, 'data', 'db')
     try:
       os.makedirs(self.dbdir)
     except OSError:
@@ -71,7 +69,7 @@ class Sqldb(object):
     """
     close the database
     """
-    api.get('output.msg')('close: called by - %s' % inspect.stack()[1][3], 'sqlite')
+    self.api.get('output.msg')('close: called by - %s' % inspect.stack()[1][3])
     try:
       self.dbconn.close()
     except:
@@ -85,7 +83,7 @@ class Sqldb(object):
     funcname = inspect.stack()[1][3]
     if funcname == '__getattribute__':
       funcname = inspect.stack()[2][3]
-    api.get('output.msg')('open: called by - %s' % funcname, 'sqlite')
+    self.api.get('output.msg')('open: called by - %s' % funcname)
     self.dbconn = sqlite3.connect(self.dbfile)
     self.dbconn.row_factory = dict_factory
     # only return byte strings so is easier to send to a client or the mud
@@ -107,18 +105,35 @@ class Sqldb(object):
     """
     add commands to the plugin to use the database
     """
-    self.plugin.api.get('commands.add')('dbbackup', self.cmd_backup,
-                                          {'shelp':'backup the database',
-                                           'sname':self.plugin.sname,
-                                           'lname':self.plugin.name})
-    self.plugin.api.get('commands.add')('dbclose', self.cmd_close,
-                                          {'shelp':'close the database',
-                                           'sname':self.plugin.sname,
-                                           'lname':self.plugin.name})
-    self.plugin.api.get('commands.add')('dbvac', self.cmd_vac,
-                                          {'shelp':'vacuum the database',
-                                           'sname':self.plugin.sname,
-                                           'lname':self.plugin.name})
+    self.api.get('commands.add')('dbbackup', self.cmd_backup,
+                                          shelp='backup the database',
+                                           sname=self.plugin.sname,
+                                           lname=self.plugin.name)
+    self.api.get('commands.add')('dbclose', self.cmd_close,
+                                          shelp='close the database',
+                                           sname=self.plugin.sname,
+                                           lname=self.plugin.name)
+    self.api.get('commands.add')('dbvac', self.cmd_vac,
+                                          shelp='vacuum the database',
+                                           sname=self.plugin.sname,
+                                           lname=self.plugin.name)
+    self.api.get('commands.add')('runselect', self.cmd_runselect,
+                                          shelp='run a select sql statement against the database',
+                                           sname=self.plugin.sname,
+                                           lname=self.plugin.name)
+
+  def cmd_runselect(self, args=None):
+    """
+    vacuum the database
+    """
+    msg = []
+    if args:
+      print args
+      sqlstmt = args[0]
+      # check the validity of the sql statement
+    else:
+      tmsg.append('Please enter a select statement')
+    return True, msg
 
   def cmd_vac(self, _=None):
     """
@@ -328,18 +343,18 @@ class Sqldb(object):
     """
     update a database from oldversion to newversion
     """
-    api.get('output.msg')('updating %s from version %s to %s' % (self.dbfile,
-                                            oldversion, newversion), 'sqlite')
+    self.api.get('output.msg')('updating %s from version %s to %s' % (self.dbfile,
+                                            oldversion, newversion))
     self.backupdb(oldversion)
     for i in range(oldversion + 1, newversion + 1):
       try:
         self.versionfuncs[i]()
-        api.get('output.msg')('updated to version %s' % i, 'sqlite')
+        self.api.get('output.msg')('updated to version %s' % i)
       except:
-        api.get('output.traceback')('could not upgrade db: %s' % self.dbloc)
+        self.api.get('output.traceback')('could not upgrade db: %s' % self.dbloc)
         return
     self.setversion(newversion)
-    api.get('output.msg')('Done upgrading!', 'sqlite')
+    self.api.get('output.msg')('Done upgrading!')
 
   def runselect(self, selectstmt):
     """
@@ -351,7 +366,7 @@ class Sqldb(object):
       for row in cur.execute(selectstmt):
         result.append(row)
     except:
-      api.get('output.traceback')('could not run sql statement : %s' % \
+      self.api.get('output.traceback')('could not run sql statement : %s' % \
                             selectstmt)
     cur.close()
     return result
@@ -367,7 +382,7 @@ class Sqldb(object):
       for row in cur.execute(selectstmt):
         result[row[keyword]] = row
     except:
-      api.get('output.traceback')('could not run sql statement : %s' % \
+      self.api.get('output.traceback')('could not run sql statement : %s' % \
                                       selectstmt)
     cur.close()
     return result
@@ -378,7 +393,7 @@ class Sqldb(object):
     """
     results = {}
     if not (ttable in self.tables):
-      api.get('output.msg')('table %s does not exist in getlast' % ttable)
+      self.api.get('output.msg')('table %s does not exist in getlast' % ttable)
       return
 
     colid = self.tables[ttable]['keyfield']
@@ -412,7 +427,7 @@ class Sqldb(object):
     """
     success = False
     #self.cmd_vac()
-    api.get('output.msg')('backing up database %s' % self.dbname, 'sqlite')
+    self.api.get('output.msg')('backing up database %s' % self.dbname)
     integrity = True
     cur = self.dbconn.cursor()
     cur.execute('PRAGMA integrity_check')
@@ -421,7 +436,7 @@ class Sqldb(object):
       integrity = False
 
     if not integrity:
-      api.get('output.msg')('Integrity check failed, aborting backup', 'sqlite')
+      self.api.get('output.msg')('Integrity check failed, aborting backup')
       return
     self.close()
     try:
@@ -437,7 +452,7 @@ class Sqldb(object):
     try:
       shutil.copy(self.dbfile, backupfile)
     except IOError:
-      api.get('output.msg')('backup failed, could not copy file', 'sqlite')
+      self.api.get('output.msg')('backup failed, could not copy file')
       return success
 
     try:
@@ -445,10 +460,9 @@ class Sqldb(object):
         myzip.write(backupfile)
       os.remove(backupfile)
       success = True
-      api.get('output.msg')('%s was backed up to %s' % (self.dbfile, backupzipfile),
-                                          'sqlite')
+      self.api.get('output.msg')('%s was backed up to %s' % (self.dbfile, backupzipfile))
     except IOError:
-      api.get('output.msg')('could not zip backupfile', 'sqlite')
+      self.api.get('output.msg')('could not zip backupfile')
       return success
 
     return success

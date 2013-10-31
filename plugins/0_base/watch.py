@@ -31,43 +31,71 @@ class Plugin(BasePlugin):
     self.regexlookup = {}
     self.watchcmds = {}
 
-    self.api.get('api.add')('add', self.addwatch)
-    self.api.get('api.add')('remove', self.removewatch)
+    self.api.get('api.add')('add', self.api_addwatch)
+    self.api.get('api.add')('remove', self.api_removewatch)
+    self.api.get('api.add')('removeplugin', self.api_removeplugin)
 
     self.api.get('events.register')('from_client_event', self.checkcmd)
 
-  # add a cmd to watch for
-  def addwatch(self, cmdname, args):
-    """
-    add a watch
-    """
-    if not ('regex' in args):
-      self.api.get('output.msg')('cmdwatch %s has no regex, not adding' % cmdnamd)
-      return
-    if args['regex'] in self.regexlookup:
+  # add a command watch
+  def api_addwatch(self, watchname, regex, plugin, **kwargs):
+    """  add a command watch
+    @Ywatchname@w   = name
+    @Yregex@w    = the regular expression that matches this trigger
+    @Yplugin@w   = the plugin this comes from, added
+          automatically if using the api through BaseClass
+    @Ykeyword args@w arguments:
+      None as of now
+
+    this function returns no values"""
+    if regex in self.regexlookup:
       self.api.get('output.msg')(
-          'cmdwatch %s tried to add a regex that already existed for %s' % \
-                      (cmdname, self.regexlookup[args['regex']]))
+          'watch %s tried to add a regex that already existed for %s' % \
+                      (watchname, self.regexlookup[regex]))
       return
+    args = kwargs.copy()
+    args['regex'] = regex
+    args['plugin'] = plugin
+    args['eventname'] = 'watch_' + watchname
     try:
-      self.watchcmds[cmdname] = args
-      self.watchcmds[cmdname]['compiled'] = re.compile(args['regex'])
-      self.regexlookup[args['regex']] = cmdname
+      self.watchcmds[watchname] = args
+      self.watchcmds[watchname]['compiled'] = re.compile(args['regex'])
+      self.regexlookup[args['regex']] = watchname
     except:
       self.api.get('output.traceback')(
           'Could not compile regex for cmd watch: %s : %s' % \
-                (cmdname, args['regex']))
+                (watchname, regex))
 
-  # remove a command to watch for
-  def removewatch(self, cmdname):
-    """
-    remove a watch
-    """
-    if cmdname in self.watchcmds:
-      del self.regexlookup[self.watchcmds[cmdname]['regex']]
-      del self.watchcmds[cmdname]
+  # remove a command watch
+  def api_removewatch(self, watchname, force=False):
+    """  remove a command watch
+    @Ywatchname@w   = The trigger name
+
+    this function returns no values"""
+    if watchname in self.watchcmds:
+      event = self.api.get('events.gete')(self.watchcmds[watchname]['eventname'])
+      if event:
+        if len(event['pluginlist']) > 0 and not force:
+          self.api.get('output.msg')('removewatch: watch %s has functions registered' % \
+                      watchname)
+          return False
+      del self.regexlookup[self.watchcmds[watchname]['regex']]
+      del self.watchcmds[watchname]
+      self.api.get('output.msg')('removed watch %s' % watchname)
     else:
-      self.api.get('output.msg')('removewatch: watch %s does not exist' % cmdname)
+      self.api.get('output.msg')('removewatch: watch %s does not exist' % watchname)
+
+  # remove all watches related to a plugin
+  def api_removeplugin(self, plugin):
+    """  remove all watches related to a plugin
+    @Ywatchname@w   = The trigger name
+
+    this function returns no values"""
+    self.api.get('output.msg')('removing watches for plugin %s' % plugin)
+    tkeys = self.watchcmds.keys()
+    for i in tkeys:
+      if self.watchcmds[i]['plugin'] == plugin:
+        self.api.get('watch.remove')(i)
 
   def checkcmd(self, data):
     """
@@ -82,7 +110,7 @@ class Plugin(BasePlugin):
         targs['cmdname'] = 'cmd_' + i
         targs['data'] = tdat
         self.api.get('output.msg')('raising %s' % targs['cmdname'])
-        tdata = self.api.get('events.eraise')('cmd_' + i, targs)
+        tdata = self.api.get('events.eraise')('watch_' + i, targs)
         if 'changed' in tdata:
           data['nfromdata'] = tdata['changed']
 
