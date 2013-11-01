@@ -60,7 +60,7 @@ class Plugin(BasePlugin):
     if regex in self.regexlookup:
       self.api.get('output.msg')(
           'watch %s tried to add a regex that already existed for %s' % \
-                      (watchname, self.regexlookup[regex]))
+                      (watchname, self.regexlookup[regex]), secondary=plugin)
       return
     args = kwargs.copy()
     args['regex'] = regex
@@ -70,6 +70,9 @@ class Plugin(BasePlugin):
       self.watchcmds[watchname] = args
       self.watchcmds[watchname]['compiled'] = re.compile(args['regex'])
       self.regexlookup[args['regex']] = watchname
+      self.api.get('output.msg')(
+          'added watch %s for plugin %s' % \
+                      (watchname, plugin), secondary=plugin)
     except:
       self.api.get('output.traceback')(
           'Could not compile regex for cmd watch: %s : %s' % \
@@ -83,14 +86,16 @@ class Plugin(BasePlugin):
     this function returns no values"""
     if watchname in self.watchcmds:
       event = self.api.get('events.gete')(self.watchcmds[watchname]['eventname'])
+      plugin = self.watchcmds[watchname]['plugin']
       if event:
         if len(event['pluginlist']) > 0 and not force:
-          self.api.get('output.msg')('removewatch: watch %s has functions registered' % \
-                      watchname)
+          self.api.get('output.msg')('removewatch: watch %s for plugin has functions registered' % \
+                      (watchname, plugin), secondary=plugin)
           return False
       del self.regexlookup[self.watchcmds[watchname]['regex']]
       del self.watchcmds[watchname]
-      self.api.get('output.msg')('removed watch %s' % watchname)
+      self.api.get('output.msg')('removed watch %s' % watchname,
+                                    secondary=plugin)
     else:
       self.api.get('output.msg')('removewatch: watch %s does not exist' % watchname)
 
@@ -100,7 +105,8 @@ class Plugin(BasePlugin):
     @Ywatchname@w   = The trigger name
 
     this function returns no values"""
-    self.api.get('output.msg')('removing watches for plugin %s' % plugin)
+    self.api.get('output.msg')('removing watches for plugin %s' % plugin,
+                               secondary=plugin)
     tkeys = self.watchcmds.keys()
     for i in tkeys:
       if self.watchcmds[i]['plugin'] == plugin:

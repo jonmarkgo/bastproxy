@@ -56,7 +56,7 @@ class Plugin(BasePlugin):
                                  shelp='show trigger stats')
 
     self.api.get('events.register')('from_mud_event', self.checktrigger, prio=1)
-    
+
   # add a trigger
   def api_addtrigger(self, triggername, regex, plugin, **kwargs):
     """  add a trigger
@@ -97,6 +97,9 @@ class Plugin(BasePlugin):
         if not (args['group'] in self.triggergroups):
           self.triggergroups[args['group']] = []
         self.triggergroups[args['group']].append(triggername)
+      self.api.get('output.msg')(
+            'added trigger %s for plugin %s' % \
+                    (triggername, plugin), secondary=plugin)
     except:
       self.api.get('output.traceback')(
               'Could not compile regex for trigger: %s : %s' % \
@@ -112,14 +115,17 @@ class Plugin(BasePlugin):
     this function returns True if the trigger was removed, False if it wasn't"""
     if triggername in self.triggers:
       event = self.api.get('events.gete')(self.triggers[triggername]['eventname'])
+      plugin = self.triggers[triggername]['plugin']
       if event:
         if len(event['pluginlist']) > 0 and not force:
           self.api.get('output.msg')('deletetrigger: trigger %s has functions registered' % \
-                      triggername)
+                      triggername, secondary=plugin)
           return False
+      plugin = self.triggers[triggername]['plugin']
       del self.regexlookup[self.triggers[triggername]['regex']]
       del self.triggers[triggername]
-      self.api.get('output.msg')('removed trigger %s' % triggername)
+      self.api.get('output.msg')('removed trigger %s' % triggername,
+                                 secondary=plugin)
       return True
     else:
       self.api.get('output.msg')('deletetrigger: trigger %s does not exist' % \
@@ -132,7 +138,8 @@ class Plugin(BasePlugin):
     @Yplugin@w   = The plugin name
 
     this function returns no values"""
-    self.api.get('output.msg')('removing triggers for plugin %s' % plugin)
+    self.api.get('output.msg')('removing triggers for plugin %s' % plugin,
+                                secondary=plugin)
     tkeys = self.triggers.keys()
     for i in tkeys:
       if self.triggers[i]['plugin'] == plugin:

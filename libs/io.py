@@ -10,17 +10,19 @@ from libs.api import API
 from libs import color
 
 # send a message
-def api_msg(tmsg, datatype='default'):
+def api_msg(tmsg, primary='default', secondary='None'):
   """  send a message through the logger
     @Ymsg@w        = This message to send
-    @Ydatatype@w   = the datatype of the message (default: 'default')
+    @Yprimary@w    = the primary datatype of the message (default: 'default')
+    @Ysecondary@w  = the secondary datatype of the message
+                        (default: 'None')
 
   this function returns no values"""
   try:
-    api.get('logger.msg')({'msg':tmsg}, datatype)
+    api.get('logger.msg')({'msg':tmsg}, {'primary':primary, 'secondary':secondary})
   except AttributeError: #%s - %-10s :
     print '%s - %-10s : %s' % (time.strftime(api.timestring,
-                                          time.localtime()), datatype, tmsg)
+                                          time.localtime()), primary, tmsg)
 
 # write and format a traceback
 def api_traceback(message=""):

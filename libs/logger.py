@@ -75,39 +75,51 @@ class Logger(object):
       self.sendtoclient[datatype] = False
       self.sendtoconsole[datatype] = False
 
-  # process a message, use output.msg instead for the api
-  def api_msg(self, args, dtype='default'):
-    """  send a message
-    @Ymsg@w        = This message to send
-    @Ydatatype@w   = the type to toggle
-
-    this function returns no values"""
-    if 'dtype' in args:
-      dtype = args['dtype']
-
+  def process_msg(self, msg, dtype, priority='primary'):
+    """
+    process a message
+    """
     tstring = '%s - %-10s : ' % (
                 time.strftime('%a %b %d %Y %H:%M:%S', time.localtime()),
                 dtype)
     if dtype in self.colors:
       tstring = color.convertcolors(self.colors[dtype] + tstring)
     tmsg = [tstring]
-    tmsg.append(args['msg'])
+    tmsg.append(msg)
 
     timestampmsg = ''.join(tmsg)
-    nontimestamp = args['msg']
+    nontimestamp = msg
 
     if dtype in self.sendtoclient and self.sendtoclient[dtype]:
       self.api.get('output.client')(timestampmsg)
 
-    if dtype in self.sendtofile and self.sendtofile[dtype]['file']:
-      self.logtofile(color.strip_ansi(nontimestamp), dtype)
-
-
     if dtype in self.sendtoconsole and self.sendtoconsole[dtype]:
       print(timestampmsg, file=sys.stderr)
 
-    if 'default' in self.sendtofile:
-      self.logtofile(timestampmsg, 'default')
+    if priority == 'primary':
+      if dtype in self.sendtofile and self.sendtofile[dtype]['file']:
+        self.logtofile(color.strip_ansi(nontimestamp), dtype)
+
+      if 'default' in self.sendtofile:
+        self.logtofile(timestampmsg, 'default')
+
+  # process a message, use output.msg instead for the api
+  def api_msg(self, args, dtypedict={'primary':'default'}):
+    """  send a message
+    @Ymsg@w        = This message to send
+    @Ydatatype@w   = the type to toggle
+
+    this function returns no values"""
+    dtype = dtypedict['primary']
+    if 'dtype' in args:
+      dtype = args['dtype']
+
+    self.process_msg(args['msg'], dtype)
+
+    if 'secondary' in dtypedict \
+        and dtypedict['secondary'] != 'None' \
+        and dtypedict['secondary'] != 'default':
+      self.process_msg(args['msg'], dtypedict['secondary'], priority='secondary')
 
   # archive a log fle
   def archivelog(self, dtype):

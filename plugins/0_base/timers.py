@@ -230,7 +230,7 @@ class Plugin(BasePlugin):
             timer.nextcall = timer.nextcall + timer.seconds
             self._addtimer(timer)
           else:
-            self.removetimer(timer.name)
+            self.api.get('timers.remove')(timer.name)
           if len(self.timerevents[i]) == 0:
             del self.timerevents[i]
 

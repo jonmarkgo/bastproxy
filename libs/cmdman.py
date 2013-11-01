@@ -167,8 +167,9 @@ class CmdMgr(object):
     args = kwargs.copy()
     lname = None
     if not func:
-      self.api.get('output.msg')('cmd %s.%s has no function, not adding' % \
-                                                (sname, cmdname), self.sname)
+      self.api.get('output.msg')('cmd %s has no function, not adding' % \
+                                                (cmdname),
+                                          primary=self.sname)
       return
     try:
       sname = func.im_self.sname
@@ -186,8 +187,15 @@ class CmdMgr(object):
 
     if not ('lname' in args):
       self.api.get('output.msg')('cmd %s.%s has no long name, not adding' % \
-                                                (sname, cmdname), self.sname)
+                                                (sname, cmdname),
+                                            primary=self.sname,
+                                            secondary=sname)
       return
+    self.api.get('output.msg')('added cmd %s.%s' % \
+                                              (sname, cmdname),
+                                          primary=self.sname,
+                                          secondary=sname)
+
     if not (sname in self.cmds):
       self.cmds[sname] = {}
     args['func'] = func
@@ -204,7 +212,14 @@ class CmdMgr(object):
       del self.cmds[sname][cmdname]
     else:
       self.api.get('output.msg')('removecmd: cmd %s.%s does not exist' % \
-                                                (sname, cmdname), self.sname)
+                                                (sname, cmdname),
+                                            primary=self.sname,
+                                            secondary=sname)
+
+    self.api.get('output.msg')('removed cmd %s.%s' % \
+                                                (sname, cmdname),
+                                            primary=self.sname,
+                                            secondary=sname)
 
   # set the default command for a plugin
   def api_setdefault(self, sname, cmd):

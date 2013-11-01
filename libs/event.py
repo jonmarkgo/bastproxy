@@ -111,7 +111,7 @@ class EventMgr(object):
     if self.events[eventname][prio].count(func) == 0:
       self.events[eventname][prio].append(func)
       self.api.get('output.msg')('adding function %s (plugin: %s) to event %s' % (func, plugin, eventname),
-                     self.sname)
+                     primary=self.sname, secondary=plugin)
     if plugin:
       if not (plugin in self.pluginlookup):
         self.pluginlookup[plugin] = {}
@@ -142,7 +142,7 @@ class EventMgr(object):
       for i in keys:
         if self.events[eventname][i].count(func) == 1:
           self.api.get('output.msg')('removing function %s from event %s' % (
-                func, eventname), self.sname)
+                func, eventname), primary=self.sname, secondary=plugin)
           self.events[eventname][i].remove(func)
           if len(self.events[eventname][i]) == 0:
             del(self.events[eventname][i])
@@ -157,7 +157,8 @@ class EventMgr(object):
     """  remove all registered functions that are specific to a plugin
     @Yplugin@w   = The plugin to remove events for
     this function returns no values"""
-    self.api.get('output.msg')('removing plugin %s' % plugin, self.sname)
+    self.api.get('output.msg')('removing plugin %s' % plugin, primary=self.sname,
+                                 secondary=plugin)
     if plugin and plugin in self.pluginlookup:
       tkeys = self.pluginlookup[plugin]['events'].keys()
       for func in tkeys:
