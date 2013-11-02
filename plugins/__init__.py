@@ -375,7 +375,7 @@ class PluginMgr(object):
         plugin.unload()
       except:
         self.api.get('output.traceback')(
-                      "unload: had problems running the unload method for %s." % fullimploc)
+                      "unload: had problems running the unload method for %s." % plugin.sname)
         return False
 
       del self.plugins[plugin.sname]
