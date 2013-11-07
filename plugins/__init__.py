@@ -68,6 +68,7 @@ class PluginMgr(object):
     self.plugins = {}
     self.pluginl = {}
     self.pluginm = {}
+    self.options = {}
     self.api = API()
     self.savefile = os.path.join(self.api.BASEPATH, 'data',
                                           'plugins', 'loadedplugins.txt')
@@ -77,11 +78,21 @@ class PluginMgr(object):
 
     self.api.add(self.sname, 'isinstalled', self.api_isinstalled)
     self.api.add(self.sname, 'getp', self.api_getp)
+    self.api.add(self.sname, 'module', self.api_getmodule)
+
+  # get a plugin instance
+  def api_getmodule(self, pluginname):
+    """  returns the module of a plugin
+    @Ypluginname@w  = the plugin to check for"""
+    if pluginname in self.pluginm:
+      return self.pluginm[pluginname]
+
+    return None
 
   # get a plugin instance
   def api_getp(self, pluginname):
     """  get a plugin instance
-    @Ypluginname@w  = the plugin to check for"""
+    @Ypluginname@w  = the plugin to get for"""
 
     if type(pluginname) == str:
       if pluginname in self.plugins:
@@ -371,7 +382,8 @@ class PluginMgr(object):
     self.api.get('output.msg')('loaded %s (%s: %s)' % (plugin.fullimploc,
                                     plugin.sname, plugin.name), self.sname)
 
-    self.api.get('events.eraise')('%s_plugin_load' % plugin.sname, {})
+    self.api.get('events.eraise')('%s_plugin_loaded' % plugin.sname, {})
+    self.api.get('events.eraise')('plugin_loaded', {'plugin':plugin.sname})
 
   def add_plugin(self, module, fullname, basepath, fullimploc, load=True):
     """
@@ -404,7 +416,7 @@ class PluginMgr(object):
         return False
     self.pluginl[plugin.name] = plugin
     self.plugins[plugin.sname] = plugin
-    self.pluginm[plugin.name] = module
+    self.pluginm[plugin.sname] = module
     self.loadedplugins[fullname] = True
     self.loadedplugins.sync()
 
@@ -426,7 +438,7 @@ class PluginMgr(object):
 
       del self.plugins[plugin.sname]
       del self.pluginl[plugin.name]
-      del self.pluginm[plugin.name]
+      del self.pluginm[plugin.sname]
       del self.loadedplugins[plugin.fullname]
       self.loadedplugins.sync()
 

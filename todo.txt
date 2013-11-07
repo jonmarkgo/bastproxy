@@ -5,7 +5,7 @@ Overall:
   #TODO: move all api interactions into the load function instead of the plugin __init__ (except api.add)
   #TODO: anytime an action is performed, (Trigger matched, timer goes off, function is called from an event, command called, variable changed)
               send output.msg with the owning plugins sname
-  #TODO: move option plugins into the plugin folders and load from there
+  #TODO: add ability to see memory usage of python process (psutil?)
 
 Python3:
   #TODO: convert to run under python3

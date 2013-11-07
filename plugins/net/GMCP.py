@@ -3,15 +3,17 @@ $Id$
 
 This plugin will show information about connections to the proxy
 """
+from libs.net._basetelnetoption import BaseTelnetOption
 from plugins._baseplugin import BasePlugin
 from libs.net.telnetlib import WILL, DO, IAC, SE, SB
 from libs.utils import DotDict
+from libs.utils import convert
 
 GMCP = chr(201)
 
 NAME = 'GMCP'
 SNAME = 'GMCP'
-PURPOSE = 'GMCP'
+PURPOSE = 'Handle telnet option 201, GMCP'
 AUTHOR = 'Bast'
 VERSION = 1
 PRIORITY = 35
@@ -237,4 +239,81 @@ class Plugin(BasePlugin):
       else:
         self.api.get('GMCP.sendpacket')(data)
 
+# Server
+class SERVER(BaseTelnetOption):
+  """
+  a class to handle gmcp data from the server
+  """
+  def __init__(self, telnetobj):
+    """
+    initialize the instance
+    """
+    BaseTelnetOption.__init__(self, telnetobj, GMCP)
+    #self.telnetobj.debug_types.append('GMCP')
 
+  def handleopt(self, command, sbdata):
+    """
+    handle the gmcp option
+    """
+    self.telnetobj.msg('GMCP:', ord(command), '- in handleopt',
+                              level=2, mtype='GMCP')
+    if command == WILL:
+      self.telnetobj.msg('GMCP: sending IAC DO GMCP', level=2, mtype='GMCP')
+      self.telnetobj.send(IAC + DO + GMCP)
+      self.telnetobj.options[ord(GMCP)] = True
+      self.api.get('events.eraise')('GMCP:server-enabled', {})
+
+    elif command == SE:
+      if not self.telnetobj.options[ord(GMCP)]:
+        # somehow we missed negotiation
+        self.telnetobj.msg('##BUG: Enabling GMCP, missed negotiation',
+                                                  level=2, mtype='GMCP')
+        self.telnetobj.options[ord(GMCP)] = True
+        self.api.get('events.eraise')('GMCP:server-enabled', {})
+
+      data = sbdata
+      modname, data = data.split(" ", 1)
+      try:
+        import json
+        newdata = json.loads(data.decode('utf-8','ignore'), object_hook=convert)
+      except (UnicodeDecodeError, ValueError) as e:
+        newdata = {}
+        self.api.get('output.traceback')('Could not decode: %s' % data)
+      self.telnetobj.msg(modname, data, level=2, mtype='GMCP')
+      self.telnetobj.msg(type(newdata), newdata, level=2, mtype='GMCP')
+      tdata = {}
+      tdata['data'] = newdata
+      tdata['module'] = modname
+      tdata['server'] = self.telnetobj
+      self.api.get('events.eraise')('to_client_event', {'todata':'%s%s%s%s%s%s' % \
+                      (IAC, SB, GMCP, sbdata.replace(IAC, IAC+IAC), IAC, SE),
+                      'raw':True, 'dtype':GMCP})
+      self.api.get('events.eraise')('GMCP_raw', tdata)
+
+# Client
+class CLIENT(BaseTelnetOption):
+  """
+  a class to handle gmcp data from a client
+  """
+  def __init__(self, telnetobj):
+    """
+    initalize the instance
+    """
+    BaseTelnetOption.__init__(self, telnetobj, GMCP)
+    #self.telnetobj.debug_types.append('GMCP')
+    self.telnetobj.msg('GMCP: sending IAC WILL GMCP', mtype='GMCP')
+    self.telnetobj.addtooutbuffer(IAC + WILL + GMCP, True)
+    self.cmdqueue = []
+
+  def handleopt(self, command, sbdata):
+    """
+    handle gmcp data from a client
+    """
+    self.telnetobj.msg('GMCP:', ord(command), '- in handleopt', mtype='GMCP')
+    if command == DO:
+      self.telnetobj.msg('GMCP:setting options["GMCP"] to True',
+                                    mtype='GMCP')
+      self.telnetobj.options[ord(GMCP)] = True
+    elif command == SE:
+      self.api.get('events.eraise')('GMCP_from_client',
+                      {'data': sbdata, 'client':self.telnetobj})

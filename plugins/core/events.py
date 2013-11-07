@@ -46,7 +46,8 @@ class Plugin(BasePlugin):
 
     this function returns a dictionary of format
       pluginslist = list of plugins that use this event
-      funclist = a dictionary of funcnames, with their plugin, function name, and prio as values in a dictionary
+      funclist = a dictionary of funcnames, with their plugin,
+              function name, and prio as values in a dictionary
     """
     pluginlist = []
     funcdict = {}
@@ -94,8 +95,9 @@ class Plugin(BasePlugin):
       self.events[eventname][prio] = []
     if self.events[eventname][prio].count(func) == 0:
       self.events[eventname][prio].append(func)
-      self.api.get('output.msg')('adding function %s (plugin: %s) to event %s' % (func, plugin, eventname),
-                     secondary=plugin)
+      self.api.get('output.msg')(
+                  'adding function %s (plugin: %s) to event %s' \
+                          % (func, plugin, eventname), secondary=plugin)
     if plugin:
       if not (plugin in self.pluginlookup):
         self.pluginlookup[plugin] = {}
