@@ -8,7 +8,7 @@ from libs.net.telnetlib import WILL, DO, IAC, SE, SB, DONT, NOOPT
 from plugins._baseplugin import BasePlugin
 
 NAME = 'Terminal Type Telnet Option'
-SNAME = 'ttype'
+SNAME = 'TTYPE'
 PURPOSE = 'Handle telnet option 24, terminal type'
 AUTHOR = 'Bast'
 VERSION = 1
@@ -30,6 +30,12 @@ class Plugin(BasePlugin):
     BasePlugin.__init__(self, tname, tsname, filename, directory, importloc)
 
     self.canreload = False
+
+  def load(self):
+    BasePlugin.load(self)
+
+    self.api.get('options.addserveroption')(self.sname, SERVER)
+    self.api.get('options.addclientoption')(self.sname, CLIENT)
 
 class SERVER(BaseTelnetOption):
   """

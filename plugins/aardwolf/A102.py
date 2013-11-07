@@ -90,6 +90,9 @@ class Plugin(BasePlugin):
     self.api.get('events.register')('A102:server-enabled', self.a102request)
     self.api.get('events.register')('muddisconnect', self.disconnect)
 
+    self.api.get('options.addserveroption')(self.sname, SERVER)
+    self.api.get('options.addclientoption')(self.sname, CLIENT)
+
   # Send an A102 packet
   def api_sendpacket(self, message):
     """  send an A102 packet

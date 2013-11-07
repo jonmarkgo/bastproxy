@@ -33,9 +33,7 @@ class Proxy(Telnet):
     self.banned = {}
     self.connectedtime = None
     self.api.get('events.register')('to_mud_event', self.addtooutbuffer, prio=99)
-    optionmgr = self.api.get('managers.getm')('options')
-
-    optionmgr.addtoserver(self)
+    self.api.get('options.prepareserver')(self)
 
   def handle_read(self):
     """

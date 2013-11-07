@@ -64,6 +64,9 @@ class Plugin(BasePlugin):
     self.api.get('events.register')('GMCP:server-enabled', self.gmcprequest)
     self.api.get('events.register')('muddisconnect', self.disconnect)
 
+    self.api.get('options.addserveroption')(self.sname, SERVER)
+    self.api.get('options.addclientoption')(self.sname, CLIENT)
+
   # send a GMCP packet
   def api_sendpacket(self, message):
     """  send a GMCP packet

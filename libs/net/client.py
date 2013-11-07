@@ -39,9 +39,8 @@ class ProxyClient(Telnet):
     self.api.get('events.register')('to_client_event', self.addtooutbufferevent,
                                                       prio=99)
 
-    optionmgr = self.api.get('managers.getm')('options')
+    self.api.get('options.prepareclient')(self)
 
-    optionmgr.addtoclient(self)
     self.state = PASSWORD
     self.addtooutbufferevent({'todata':convertcolors(
                   '@R#BP@w: @RPlease enter the proxy password:@w'),

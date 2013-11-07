@@ -11,7 +11,7 @@ from plugins._baseplugin import BasePlugin
 MCCP2 = chr(86)  # Mud Compression Protocol, v2
 
 NAME = 'MCCP'
-SNAME = 'mccp'
+SNAME = 'MCCP'
 PURPOSE = 'Handle telnet option 86, MCCP'
 AUTHOR = 'Bast'
 VERSION = 1
@@ -29,6 +29,12 @@ class Plugin(BasePlugin):
     BasePlugin.__init__(self, tname, tsname, filename, directory, importloc)
 
     self.canreload = False
+
+  def load(self):
+    BasePlugin.load(self)
+
+    self.api.get('options.addserveroption')(self.sname, SERVER)
+    self.api.get('options.addclientoption')(self.sname, CLIENT)
 
 class SERVER(BaseTelnetOption):
   """
