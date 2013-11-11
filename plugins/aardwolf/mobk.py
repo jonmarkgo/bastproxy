@@ -86,7 +86,7 @@ class Plugin(AardwolfBasePlugin):
               "^You receive (?P<blessxp>\d+) bonus " \
                 "experience points from your daily blessing.$")
     self.api.get('triggers.add')('mobbonusxp',
-              "^You receive (?P<bonxp>\d+) bonus experience points.$")
+              "^You receive (?P<bonxp>\d+) bonus experience points.+\.$")
     self.api.get('triggers.add')('mobgold',
               "^You get (?P<gold>.+) gold coins " \
                 "from .+ corpse of (?P<name>.+)\.$")
