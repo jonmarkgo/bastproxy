@@ -49,7 +49,7 @@ class TimerEvent(Event):
     if 'time' in kwargs:
       self.time = kwargs['time']
 
-    self.nextcall = self.getnext()
+    self.nextcall = self.getnext() or -1
 
   def getnext(self):
     """
@@ -80,8 +80,9 @@ class TimerEvent(Event):
     """
     return a string representation of the timer
     """
-    return 'Timer - %-10s : %-15s : %05d : %-6s : %d' % (self.name, self.plugin,
-                                  self.seconds, self.enabled, self.nextcall)
+    return 'Timer - %-10s : %-15s : %05d : %-6s : %s' % (self.name, self.plugin,
+                                  self.seconds, self.enabled, time.strftime('%a %b %d %Y %H:%M:%S',
+                                             time.localtime(self.nextcall)))
 
 class Plugin(BasePlugin):
   """
@@ -97,6 +98,7 @@ class Plugin(BasePlugin):
 
     self.timerevents = {}
     self.timerlookup = {}
+    self.overallfire = 0
     self.lasttime = int(time.time())
 
     self.api.get('api.add')('add', self.api_addtimer)
@@ -112,6 +114,90 @@ class Plugin(BasePlugin):
 
     self.api.get('events.register')('global_timer', self.checktimerevents, prio=1)
     self.api.get('output.msg')('lasttime:  %s' % self.lasttime)
+
+    self.api.get('commands.add')('list', self.cmd_list,
+                                 shelp='list timers')
+    self.api.get('commands.add')('detail', self.cmd_detail,
+                                 shelp='get details for a timer')
+    self.api.get('commands.add')('stats', self.cmd_stats,
+                                 shelp='get overall timer stats')
+
+  def cmd_stats(self, args):
+    """
+    @G%(name)s@w - @B%(cmdname)s@w
+      show timer stats
+      @CUsage@w: detail
+    """
+    tmsg = []
+
+    disabled = 0
+    enabled = 0
+
+    for i in self.timerlookup:
+      if self.timerlookup[i].enabled:
+        enabled = enabled + 1
+      else:
+        disabled = disabled + 1
+
+    tmsg.append('%-20s : %s' % ('Total Timers', len(self.timerlookup)))
+    tmsg.append('%-20s : %s' % ('Timers Fired', self.overallfire))
+    tmsg.append('%-20s : %s' % ('Enabled', enabled))
+    tmsg.append('%-20s : %s' % ('Disabled', disabled))
+
+    return True, tmsg
+
+  def cmd_list(self, args):
+    """
+    @G%(name)s@w - @B%(cmdname)s@w
+      list triggers and the plugins they are defined in
+      @CUsage@w: list
+    """
+    tmsg = []
+
+    match = None
+    if len(args) > 0:
+      match = args[0]
+
+    tmsg.append('Local time is: %s' % time.strftime('%a %b %d %Y %H:%M:%S',
+                                             time.localtime()))
+
+    tmsg.append('%-20s : %-13s %-9s %-8s %s' % ('Name', 'Defined in', 'Enabled', 'Fired', 'Next Fire'))
+    for i in self.timerlookup:
+      if not match or match in i:
+        timerc = self.timerlookup[i]
+        tmsg.append('%-20s : %-13s %-9s %-8s %s' % (timerc.name, timerc.plugin.sname,
+                                          timerc.enabled, timerc.timesfired,
+                                          time.strftime('%a %b %d %Y %H:%M:%S',
+                                             time.localtime(timerc.nextcall))))
+
+    return True, tmsg
+
+  def cmd_detail(self, args):
+    """
+    @G%(name)s@w - @B%(cmdname)s@w
+      list the details of a timer
+      @CUsage@w: detail
+    """
+    tmsg = []
+    if len(args) > 0:
+      for timer in args:
+        if timer in self.timerlookup:
+          timerc = self.timerlookup[timer]
+          tmsg.append('%-13s : %s' % ('Name', timer))
+          tmsg.append('%-13s : %s' % ('Enabled', timerc.enabled))
+          tmsg.append('%-13s : %s' % ('Plugin', timerc.plugin.sname))
+          tmsg.append('%-13s : %s' % ('Onetime', timerc.onetime))
+          tmsg.append('%-13s : %s' % ('Time', timerc.time))
+          tmsg.append('%-13s : %s' % ('Seconds', timerc.seconds))
+          tmsg.append('%-13s : %s' % ('Times Fired', timerc.timesfired))
+          tmsg.append('%-13s : %s' % ('Next Fire', time.strftime('%a %b %d %Y %H:%M:%S',
+                                             time.localtime(timerc.nextcall))))
+          tmsg.append('')
+
+    else:
+      tmsg.append('Please specify a timer name')
+
+    return True, tmsg
 
   # add a timer
   def api_addtimer(self, name, func, seconds, **kwargs):
@@ -217,12 +303,14 @@ class Plugin(BasePlugin):
     ntime = int(time.time())
     if ntime - self.lasttime > 1:
       self.api.get('output.msg')('timer had to check multiple seconds')
-    for i in range(self.lasttime + 1, ntime + 1):
+    for i in range(self.lasttime, ntime + 1):
       if i in self.timerevents and len(self.timerevents[i]) > 0:
         for timer in self.timerevents[i]:
           if timer.enabled:
             try:
               timer.execute()
+              timer.timesfired = timer.timesfired + 1
+              self.overallfire = self.overallfire + 1
               self.api.get('output.msg')('Timer fired: %s' % timer,
                                          secondary=timer.plugin.sname)
             except:
@@ -230,6 +318,10 @@ class Plugin(BasePlugin):
           self.timerevents[i].remove(timer)
           if not timer.onetime:
             timer.nextcall = timer.nextcall + timer.seconds
+            self.api.get('output.msg')('Re adding timer %s for %s' % (timer.name,
+                                    time.strftime('%a %b %d %Y %H:%M:%S',
+                                             time.localtime(timer.nextcall))),
+                                    secondary=timer.plugin.sname)
             self._addtimer(timer)
           else:
             self.api.get('timers.remove')(timer.name)

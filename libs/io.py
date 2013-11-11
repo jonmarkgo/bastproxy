@@ -6,6 +6,7 @@ handle output functions
 import time
 import sys
 import traceback
+import re
 from libs.api import API
 from libs import color
 
@@ -82,24 +83,32 @@ def api_client(text, raw=False, preamble=True):
     api.get('output.msg')("couldn't send msg to client: %s" % '\n'.join(text), primary='error')
 
 # execute a command throgh the interpreter
-def api_execute(cmd):
+def api_execute(command):
   """  execute a command through the interpreter
   It will first check to see if it is an internal command, and then
   send to the mud if not.
-    @Ycmd@w      = the command to send through the interpreter
+    @Ycommand@w      = the command to send through the interpreter
 
   this function returns no values"""
   data = None
-  if cmd[-1] != '\n':
-    cmd = cmd + '\n'
 
-  newdata = api.get('events.eraise')('from_client_event', {'fromdata':cmd})
+  newdata = api.get('events.eraise')('from_client_event', {'fromdata':command})
 
   if 'fromdata' in newdata:
     data = newdata['fromdata']
 
   if data:
-    api.get('events.eraise')('to_mud_event', {'data':data, 'dtype':'fromclient'})
+    datalist = re.split(api.splitre, data)
+    if len(datalist) > 1:
+      api.get('output.msg')('broke %s into %s' % (data, datalist), primary='inputparse')
+      for cmd in datalist:
+        api_execute(cmd)
+    else:
+      data = data.replace('||', '|')
+      if data[-1] != '\n':
+        data = data + '\n'
+      api.get('output.msg')('sending %s to the mud' % data.strip(), primary='inputparse')
+      api.get('events.eraise')('to_mud_event', {'data':data, 'dtype':'fromclient'})
 
 api = API()
 api.add('output', 'msg', api_msg)

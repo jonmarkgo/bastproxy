@@ -153,6 +153,7 @@ def main():
 
   api.get('log.adddtype')('net')
   api.get('log.console')('net')
+  api.get('log.adddtype')('inputparse')
 
   def guard(func, message):
     """

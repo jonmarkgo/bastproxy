@@ -6,6 +6,7 @@ Overall:
   #TODO: anytime an action is performed, (Trigger matched, timer goes off, function is called from an event, command called, variable changed)
               send output.msg with the owning plugins sname
   #TODO: add ability to see memory usage of python process (psutil?)
+  #TODO: add a debug event (in a debug plugin, summary command), so we can get all stats for various plugins
 
 Python3:
   #TODO: convert to run under python3
@@ -13,10 +14,9 @@ Python3:
 
 New Plugins:
   Base Plugins:
-    #TODO: create an alias plugin
     #TODO: create a help plugin
-    #TODO: create a variable plugin, change ${varname} in any input
     #TODO: create a plugin to search log files (or maybe a seperate process that is a webserver?)
+    #TODO: create a generic mapper plugin
   Aardwolf Plugins:
     #TODO: create an autohunt plugin
     #TODO: create a plugin to parse eq events
@@ -24,10 +24,15 @@ New Plugins:
     #TODO: create a potion manager plugin
     #TODO: create a moonbot plugin
 
+alias:
+  #TODO: add stats
+
+vars:
+  #TODO: add stats
+  #TODO: add api for get, set, etc.
+
 timers:
   #TODO: add ability to manually add timers from #bp.timers.add
-  #TODO: add command to show timer info, lists, specific info
-  #TODO: add command to show stats
   #TODO: make reloadable, either have original plugins reload or copy the structures somewhere
   #TODO: add a end time for a timer that starts at a specific time (or a setting for a specific # of times to execute)
 
@@ -62,7 +67,7 @@ gmcp:
   #BUG: errors when decoding ansi data when rawcolors is off
 
 mccp:
-  #BUG: mccp doesn't reset correctly on a ice age in Aardwolf
+  #BUG: mccp doesn't reset correctly on an ice age in Aardwolf
 
 afk:
   #TODO: Make this search all comms for player's name and add them to the queue

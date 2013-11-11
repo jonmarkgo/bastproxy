@@ -44,6 +44,7 @@ class Plugin(BasePlugin):
     self.api.get('api.add')('addclientoption', self.api_addclientoption)
     self.api.get('api.add')('prepareclient', self.api_prepareclient)
     self.api.get('api.add')('prepareserver', self.api_prepareserver)
+    self.api.get('api.add')('resetoptions', self.api_resetoptions)
 
   # add a telnet option to the server
   def api_addserveroption(self, optionname, serveroption):
@@ -117,7 +118,8 @@ class Plugin(BasePlugin):
       except AttributeError:
         self.api.get('output.msg')('Did not add option to server: %s' % i, 'telopt')
 
-  def resetoptions(self, server, onclose=False):
+  # reset options
+  def api_resetoptions(self, server, onclose=False):
     """
     reset options
     """

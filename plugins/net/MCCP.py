@@ -114,7 +114,7 @@ class SERVER(BaseTelnetOption):
     self.telnetobj.rawq = self.zlib_decomp.decompress(self.telnetobj.rawq)
     setattr(self.telnetobj, 'readdatafromsocket',
                                 self.orig_readdatafromsocket)
-    TelnetOption.reset(self)
+    BaseTelnetOption.reset(self)
 
 class CLIENT(BaseTelnetOption):
   """
@@ -178,4 +178,4 @@ class CLIENT(BaseTelnetOption):
     setattr(self.telnetobj, 'convert_outdata', self.orig_convert_outdata)
     self.telnetobj.outbuffer = \
                         self.zlib_comp.uncompress(self.telnetobj.outbuffer)
-    TelnetOption.reset(self)
+    BaseTelnetOption.reset(self)

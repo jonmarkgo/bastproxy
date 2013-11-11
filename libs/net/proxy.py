@@ -124,7 +124,7 @@ class Proxy(Telnet):
     self.api.get('events.eraise')('to_client_event',
         {'todata':convertcolors('@R#BP@w: The mud closed the connection'),
         'dtype':'fromproxy'})
-    TELOPTMGR.resetoptions(self, True)
+    self.api.get('options.resetoptions')(self, True)
     Telnet.handle_close(self)
     self.connectedtime = None
     self.api.get('events.eraise')('muddisconnect', {})

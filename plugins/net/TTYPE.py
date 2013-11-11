@@ -103,4 +103,4 @@ class CLIENT(BaseTelnetOption):
     self.telnetobj.msg('TTYPE: resetting', mtype='TTYPE')
     if not onclose:
       self.telnetobj.addtooutbuffer(IAC + DONT + TTYPE, True)
-    TelnetOption.reset(self)
+    BaseTelnetOption.reset(self)

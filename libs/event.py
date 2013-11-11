@@ -18,6 +18,7 @@ class Event(object):
     """
     self.name = name
     self.plugin = plugin
+    self.timesfired = 0
 
   def execute(self):
     """

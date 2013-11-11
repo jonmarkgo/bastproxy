@@ -134,8 +134,8 @@ class Plugin(BasePlugin):
 
     this function returns no values"""
     dtype = dtypedict['primary']
-    if 'dtype' in args:
-      dtype = args['dtype']
+    if 'primary' in args:
+      dtype = args['primary']
 
     self.process_msg(args['msg'], dtype)
 
@@ -386,7 +386,7 @@ class Plugin(BasePlugin):
     load external stuff
     """
     BasePlugin.load(self)
-    
+
     #print('log api before adding', self.api.api)
     self.api.get('managers.add')('log', self)
 

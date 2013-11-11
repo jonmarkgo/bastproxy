@@ -5,6 +5,7 @@ this module holds the proxy client class
 """
 from ConfigParser import NoOptionError
 import time
+import re
 
 from libs.api import API
 from libs.net.telnetlib import Telnet
@@ -92,19 +93,9 @@ class ProxyClient(Telnet):
         else:
           if not proxy.connected:
             proxy.connectmud()
-          newdata = {}
+
           if len(data) > 0:
-            # can transform data here
-            newdata = self.api.get('events.eraise')('from_client_event',
-                                                {'fromdata':data})
-
-          if 'fromdata' in newdata:
-            data = newdata['fromdata']
-
-          if data:
-            # cannot transform data
-            self.api.get('events.eraise')('to_mud_event',
-                                  {'data':data, 'dtype':'fromclient'})
+            self.api.get('input.execute')(data)
 
       elif self.state == PASSWORD:
         data = data.strip()

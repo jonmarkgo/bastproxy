@@ -243,11 +243,16 @@ class Plugin(BasePlugin):
     tmsg = []
     tkeys = self.triggers.keys()
     tkeys.sort()
+    match = None
+    if len(args) > 0:
+      match = args[0]
+
     tmsg.append('%-25s : %-13s %-9s %s' % ('Name', 'Defined in', 'Enabled', 'Hits'))
     tmsg.append('@B' + '-' * 60 + '@w')
     for i in tkeys:
-      trigger = self.triggers[i]
-      tmsg.append('%-25s : %-13s %-9s %s' % (i, trigger['plugin'], trigger['enabled'], trigger['hits']))
+      if not match or match in i or trigger['plugin'] == match:
+        trigger = self.triggers[i]
+        tmsg.append('%-25s : %-13s %-9s %s' % (i, trigger['plugin'], trigger['enabled'], trigger['hits']))
 
     return True, tmsg
 
@@ -281,8 +286,8 @@ class Plugin(BasePlugin):
   def cmd_detail(self, args):
     """
     @G%(name)s@w - @B%(cmdname)s@w
-      list triggers and the plugins registered with them
-      @CUsage@w: list
+      list the details of a trigger
+      @CUsage@w: detail
     """
     tmsg = []
     if len(args) > 0:
