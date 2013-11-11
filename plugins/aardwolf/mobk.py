@@ -306,7 +306,10 @@ class Plugin(AardwolfBasePlugin):
     get gold from the mobkill
     """
     gold = args['gold'].replace(',', '')
-    self.kill_info['gold'] = int(gold)
+    try:
+      self.kill_info['gold'] = int(gold)
+    except ValueError:
+      self.api.get('output.msg')('got an invalid value for gold in mobgold: %s' % args)
     if not self.kill_info['name']:
       self.kill_info['name'] = strip_ansi(args['name'])
 
