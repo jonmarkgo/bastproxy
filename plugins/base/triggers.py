@@ -250,8 +250,8 @@ class Plugin(BasePlugin):
     tmsg.append('%-25s : %-13s %-9s %s' % ('Name', 'Defined in', 'Enabled', 'Hits'))
     tmsg.append('@B' + '-' * 60 + '@w')
     for i in tkeys:
+      trigger = self.triggers[i]
       if not match or match in i or trigger['plugin'] == match:
-        trigger = self.triggers[i]
         tmsg.append('%-25s : %-13s %-9s %s' % (i, trigger['plugin'], trigger['enabled'], trigger['hits']))
 
     return True, tmsg
