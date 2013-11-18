@@ -177,7 +177,7 @@ def main():
     try:
       start(listen_port, server_address, server_port)
     except KeyboardInterrupt:
-      api.get('event.eraise')('savestate', {})
+      api.get('event.eraise')('shutdown', {})
   else:
     os.close(0)
     os.close(1)
