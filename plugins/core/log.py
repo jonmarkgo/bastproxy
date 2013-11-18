@@ -3,6 +3,8 @@ $Id$
 
 This module will do both debugging and logging, didn't know what
 else to name it
+
+#TODO: fix so that full paths aren't saved in sendtofile
 """
 from __future__ import print_function
 import sys
@@ -84,7 +86,7 @@ class Plugin(BasePlugin):
     self.api.get('log.console')('default')
     self.api.get('log.console')('startup')
 
-    self.api.get('log.file')('default')
+    #self.api.get('log.file')('default')
 
 
   # add a datatype to the log
@@ -152,9 +154,9 @@ class Plugin(BasePlugin):
     tfile = os.path.split(self.currentlogs[dtype])[-1]
     self.openlogs[self.currentlogs[dtype]].close()
     curfile = self.currentlogs[dtype]
-    backupfile = os.path.join(self.sendtofile[dtype]['logdir'],
+    backupfile = os.path.join(self.logdir, dtype,
                           tfile)
-    backupzipfile = os.path.join(self.sendtofile[dtype]['logdir'], 'archive',
+    backupzipfile = os.path.join(self.logdir, dtype, 'archive',
                           tfile + '.zip')
     with zipfile.ZipFile(backupzipfile, 'w', zipfile.ZIP_DEFLATED) as myzip:
       myzip.write(backupfile, arcname=self.currentlogs[dtype])
@@ -167,11 +169,11 @@ class Plugin(BasePlugin):
     send a message to a log file
     """
     #print('logging', dtype)
-    tfile = os.path.join(self.sendtofile[dtype]['logdir'],
+    tfile = os.path.join(self.logdir, dtype,
                   time.strftime(self.sendtofile[dtype]['file'],
                   time.localtime()))
-    if not os.path.exists(self.sendtofile[dtype]['logdir']):
-      os.makedirs(os.path.join(self.sendtofile[dtype]['logdir'], 'archive'))
+    if not os.path.exists(os.path.join(self.logdir, dtype)):
+      os.makedirs(os.path.join(self.logdir, dtype, 'archive'))
     if (not (dtype in self.currentlogs)) or \
        (dtype in self.currentlogs and not self.currentlogs[dtype]):
       self.currentlogs[dtype] = tfile
@@ -288,7 +290,6 @@ class Plugin(BasePlugin):
       tfile = '%a-%b-%d-%Y.log'
 
       self.sendtofile[datatype] = {'file':tfile,
-                                'logdir':os.path.join(self.logdir, datatype),
                                 'timestamp':timestamp}
       self.api.get('output.msg')('setting %s to log to %s' % \
                       (datatype, self.sendtofile[datatype]['file']), self.sname)
