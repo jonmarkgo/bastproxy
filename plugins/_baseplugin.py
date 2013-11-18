@@ -112,9 +112,10 @@ class BasePlugin(object):
     else:
       self.api.get('events.register')('firstactive', self.afterfirstactive)
 
+    self.api.get('events.register')('shutdown', self.unload)
 
 
-  def unload(self):
+  def unload(self, _=None):
     """
     unload stuff
     """
