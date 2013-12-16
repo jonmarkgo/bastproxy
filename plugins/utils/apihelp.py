@@ -5,6 +5,8 @@ This plugin will show information about connections to the proxy
 #TODO: add overload vs regular info and file locations
 """
 import inspect
+import argparse
+
 from libs import utils
 from plugins._baseplugin import BasePlugin
 
@@ -35,10 +37,16 @@ class Plugin(BasePlugin):
     """
     BasePlugin.load(self)
 
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='list functions in the api')
+    parser.add_argument('toplevel', help='the top level api to show (optional)', default='', nargs='?')
     self.api.get('commands.add')('list', self.cmd_list,
-                                 shelp='list functions in the api')
+                                 parser=parser)
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='detail a function in the api')
+    parser.add_argument('api', help='the api to detail (optional)', default='', nargs='?')
     self.api.get('commands.add')('detail', self.cmd_detail,
-                                 shelp='detail a function in the api')
+                                 parser=parser)
 
 
   def cmd_detail(self, args):
@@ -53,8 +61,8 @@ class Plugin(BasePlugin):
     apio = None
     apiapath = None
     apiopath = None
-    if len(args) > 0:
-      apiname = args[0]
+    if args.api:
+      apiname = args.api
       name, cmdname = apiname.split('.')
       tdict = {'name':name, 'cmdname':cmdname, 'apiname':apiname}
       try:
@@ -129,8 +137,8 @@ class Plugin(BasePlugin):
     """
     tmsg = []
     apilist = {}
-    if len(args) == 1:
-      i = args[0]
+    if args.toplevel:
+      i = args.toplevel
       if i in self.api.api:
         apilist[i] = {}
         for k in self.api.api[i]:

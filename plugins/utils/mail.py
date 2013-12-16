@@ -5,7 +5,9 @@ This plugin sends mail
 """
 import smtplib
 import os
+import argparse
 from datetime import datetime
+
 from plugins._baseplugin import BasePlugin
 
 
@@ -39,12 +41,24 @@ class Plugin(BasePlugin):
     BasePlugin.load(self)
 
     self.api.get('events.register')('client_connected', self.checkpassword)
+
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='set the password for the mail account')
+    parser.add_argument('password', help='the top level api to show (optional)', default='', nargs='?')
     self.api.get('commands.add')('password', self.cmd_pw,
-                                        shelp='set the password')
+                                        parser=parser)
+
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='send a test email')
+    parser.add_argument('subject', help='the subject of the test email (optional)', default='Test subject from bastproxy', nargs='?')
+    parser.add_argument('message', help='the message of the test email (optional)', default='Msg from bastproxy', nargs='?')
     self.api.get('commands.add')('test', self.cmd_test,
-                                        shelp='send a test email')
+                                        parser=parser)
+
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='check to make sure all settings are applied')
     self.api.get('commands.add')('check', self.cmd_check,
-                      shelp='check to make sure all settings are applied')
+                      parser=parser)
 
     self.api.get('setting.add')('server', '', str, 'the smtp server to send mail through')
     self.api.get('setting.add')('port', '', int, 'the port to use when sending mail')
@@ -139,9 +153,11 @@ X-Mailer: My-Mail
     @CUsage@w: pw @Y<password>@w
       @Ypassword@w    = the password for the smtp server
     """
-    if len(args) == 1:
-      self.password = args[0]
+    if args.password:
+      self.password = args.password
       return True, ['Password is set']
+    else:
+      return False, ['@RPlease specify a password@x']
 
   def cmd_check(self, _=None):
     """
@@ -176,15 +192,14 @@ X-Mailer: My-Mail
       @Ysubject@w    = the subject of the email
       @Ymessage@w    = the message to put in the email
     """
-    if len(args) == 2:
-      subject = args[0]
-      msg = args[1]
-      if self.check():
-        self.api.get('mail.send')(subject, msg)
-        return True, ['Attempted to send test message',
-                                'Please check your email']
-      else:
-        msg = []
-        msg.append('There is not enough information to send mail')
-        msg.append('Please check all info')
-        return True, msg
+    subject = args.subject
+    msg = args.message
+    if self.check():
+      self.api.get('mail.send')(subject, msg)
+      return True, ['Attempted to send test message',
+                              'Please check your email']
+    else:
+      msg = []
+      msg.append('There is not enough information to send mail')
+      msg.append('Please check all info')
+      return True, msg
