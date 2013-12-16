@@ -13,6 +13,8 @@ Two types of aliases:
 import os
 import re
 import shlex
+import argparse
+
 from string import Template
 from plugins._baseplugin import BasePlugin
 from libs.persistentdict import PersistentDict
@@ -48,13 +50,26 @@ class Plugin(BasePlugin):
     """
     BasePlugin.load(self)
 
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='add an alias')
+    parser.add_argument('original', help='the input to replace', default='', nargs='?')
+    parser.add_argument('replacement', help='the string to replace it with', default='', nargs='?')
     self.api.get('commands.add')('add', self.cmd_add,
-                                 shelp='Add an alias')
+                                 parser=parser)
+
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='remove an alias')
+    parser.add_argument('alias', help='the alias to remove', default='', nargs='?')
     self.api.get('commands.add')('remove', self.cmd_remove,
-                                 shelp='Remove an alias')
+                                 parser=parser)
+
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='list aliases')
+    parser.add_argument('match', help='list only aliases that have this argument in them', default='', nargs='?')
     self.api.get('commands.add')('list', self.cmd_list,
-                                 shelp='List aliases')
-    self.api.get('commands.default')('add')
+                                 parser=parser)
+
+    self.api.get('commands.default')('list')
     self.api.get('events.register')('from_client_event', self.checkalias, prio=5)
 
   def checkalias(self, args):
@@ -92,14 +107,13 @@ class Plugin(BasePlugin):
         @Mreplacementstring@w = The new string
     """
     tmsg = []
-    if len(args) == 2 and args[0] and args[1]:
+    if args.original and args.replacement:
       tmsg.append("@GAdding alias@w : '%s' will be replaced by '%s'" % \
-                                              (args[0], args[1]))
-      self.addalias(args[0], args[1])
+                                              (args.original, args.replacement))
+      self.addalias(args.original, args.replacement)
       return True, tmsg
     else:
-      tmsg.append("@RWrong number of arguments")
-      return False, tmsg
+      return False, ['@RPlease include all arguments@w']
 
   def cmd_remove(self, args):
     """
@@ -109,12 +123,12 @@ class Plugin(BasePlugin):
         @Yoriginalstring@w    = The original string
     """
     tmsg = []
-    if len(args) > 0 and args[0]:
-      tmsg.append("@GRemoving alias@w : '%s'" % (args[0]))
-      self.removealias(args[0])
+    if args.alias:
+      tmsg.append("@GRemoving alias@w : '%s'" % (args.alias))
+      self.removealias(args.alias)
       return True, tmsg
     else:
-      return False, tmsg
+      return False, ['@RPlease include an alias to remove@w']
 
   def cmd_list(self, args):
     """
@@ -122,11 +136,8 @@ class Plugin(BasePlugin):
       List aliases
       @CUsage@w: list
     """
-    if len(args) >= 1:
-      return False, []
-    else:
-      tmsg = self.listaliases()
-      return True, tmsg
+    tmsg = self.listaliases(args.match)
+    return True, tmsg
 
   def addalias(self, item, alias):
     """
@@ -143,20 +154,21 @@ class Plugin(BasePlugin):
       del self._aliases[item]
       self._aliases.sync()
 
-  def listaliases(self):
+  def listaliases(self, match):
     """
-    return a table of strings that list subs
+    return a table of strings that list aliases
     """
     tmsg = []
     for item in self._aliases:
-      tmsg.append("%-20s : %s@w" % (item, self._aliases[item]['alias']))
+      if not match or match in item:
+        tmsg.append("%-20s : %s@w" % (item, self._aliases[item]['alias']))
     if len(tmsg) == 0:
       tmsg = ['None']
     return tmsg
 
   def clearaliases(self):
     """
-    clear all subs
+    clear all aliases
     """
     self._aliases.clear()
     self._aliases.sync()

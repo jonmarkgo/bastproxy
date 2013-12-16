@@ -5,6 +5,7 @@ This plugin will show information about connections to the proxy
 """
 import time
 import datetime
+import argparse
 from plugins._baseplugin import BasePlugin
 from libs.timing import timeit
 from libs.color import convertcolors
@@ -115,12 +116,22 @@ class Plugin(BasePlugin):
     self.api.get('events.register')('global_timer', self.checktimerevents, prio=1)
     self.api.get('output.msg')('lasttime:  %s' % self.lasttime)
 
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='list timers')
+    parser.add_argument('match', help='list only events that have this argument in their name', default='', nargs='?')
     self.api.get('commands.add')('list', self.cmd_list,
-                                 shelp='list timers')
+                                 parser=parser)
+
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='get details for timers')
+    parser.add_argument('timers', help='a list of timers to get details', default=[], nargs='*')
     self.api.get('commands.add')('detail', self.cmd_detail,
-                                 shelp='get details for a timer')
+                                 parser=parser)
+
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='get overall timer stats')
     self.api.get('commands.add')('stats', self.cmd_stats,
-                                 shelp='get overall timer stats')
+                                 parser=parser)
 
   def cmd_stats(self, args):
     """
@@ -154,9 +165,7 @@ class Plugin(BasePlugin):
     """
     tmsg = []
 
-    match = None
-    if len(args) > 0:
-      match = args[0]
+    match = args.match
 
     tmsg.append('Local time is: %s' % time.strftime('%a %b %d %Y %H:%M:%S',
                                              time.localtime()))
@@ -179,8 +188,8 @@ class Plugin(BasePlugin):
       @CUsage@w: detail
     """
     tmsg = []
-    if len(args) > 0:
-      for timer in args:
+    if len(args.timers) > 0:
+      for timer in args.timers:
         if timer in self.timerlookup:
           timerc = self.timerlookup[timer]
           tmsg.append('%-13s : %s' % ('Name', timer))

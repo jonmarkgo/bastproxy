@@ -7,6 +7,8 @@ TODO: add api for get, set, etc
 """
 import os
 import re
+import argparse
+
 from string import Template
 from plugins._baseplugin import BasePlugin
 from libs.persistentdict import PersistentDict
@@ -35,6 +37,8 @@ class Plugin(BasePlugin):
 
     self.variablefile = os.path.join(self.savedir, 'variables.txt')
     self._variables = PersistentDict(self.variablefile, 'c', format='json')
+    self.api.get('api.add')('getv', self.api_getv)
+    self.api.get('api.add')('setv', self.api_setv)
 
   def load(self):
     """
@@ -42,14 +46,52 @@ class Plugin(BasePlugin):
     """
     BasePlugin.load(self)
 
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='add a variable')
+    parser.add_argument('name', help='the name of the variable', default='', nargs='?')
+    parser.add_argument('value', help='the value of the variable', default='', nargs='?')
     self.api.get('commands.add')('add', self.cmd_add,
-                                 shelp='Add an variable')
+                                 parser=parser)
+
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='remove a variable')
+    parser.add_argument('name', help='the variable to remove', default='', nargs='?')
     self.api.get('commands.add')('remove', self.cmd_remove,
-                                 shelp='Remove an variable')
+                                 parser=parser)
+
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='list variables')
+    parser.add_argument('match', help='list only variables that have this argument in their name', default='', nargs='?')
     self.api.get('commands.add')('list', self.cmd_list,
-                                 shelp='List variables')
+                                 parser=parser)
+
     self.api.get('commands.default')('add')
     self.api.get('events.register')('from_client_event', self.checkvariable, prio=99)
+
+  def api_getv(self, varname):
+    """  get the variable with a specified name
+    @Yvarname@w  = the variable to get
+
+    this function returns the value of variable with the name of the argument
+    """
+    if varname in self._variables:
+      return self._variables[varname]
+
+    return None
+
+  def api_setv(self, varname, value):
+    """  set the variable with a specified name to the specified value
+    @Yvarname@w  = the variable to get
+    @Yvalue@w  = the value to set
+
+    this function returns True if the value was set, False if an error was
+    encountered
+    """
+    try:
+      self._variables[varname] = value
+      return True
+    except:
+      return False
 
   def checkvariable(self, args):
     """
@@ -73,13 +115,13 @@ class Plugin(BasePlugin):
         @Mreplacementstring@w = The new string
     """
     tmsg = []
-    if len(args) == 2 and args[0] and args[1]:
+    if args.name and args.value:
       tmsg.append("@GAdding variable@w : '%s' will be replaced by '%s'" % \
-                                              (args[0], args[1]))
-      self.addvariable(args[0], args[1])
+                                              (args.name, args.value))
+      self.addvariable(args.name, args.value)
       return True, tmsg
     else:
-      tmsg.append("@RWrong number of arguments")
+      tmsg.append("@RPlease include all arguments@w")
       return False, tmsg
 
   def cmd_remove(self, args):
@@ -90,12 +132,12 @@ class Plugin(BasePlugin):
         @Yoriginalstring@w    = The original string
     """
     tmsg = []
-    if len(args) > 0 and args[0]:
-      tmsg.append("@GRemoving variable@w : '%s'" % (args[0]))
-      self.removevariable(args[0])
+    if args.name:
+      tmsg.append("@GRemoving variable@w : '%s'" % (args.name))
+      self.removevariable(args.name)
       return True, tmsg
     else:
-      return False, tmsg
+      return False, ['@RPlease specifiy a variable to remove@w']
 
   def cmd_list(self, args):
     """
@@ -103,11 +145,8 @@ class Plugin(BasePlugin):
       List variables
       @CUsage@w: list
     """
-    if len(args) >= 1:
-      return False, []
-    else:
-      tmsg = self.listvariables()
-      return True, tmsg
+    tmsg = self.listvariables(args.match)
+    return True, tmsg
 
   def addvariable(self, item, value):
     """
@@ -124,13 +163,14 @@ class Plugin(BasePlugin):
       del self._variables[item]
       self._variables.sync()
 
-  def listvariables(self):
+  def listvariables(self, match):
     """
     return a table of strings that list subs
     """
     tmsg = []
     for item in self._variables:
-      tmsg.append("%-20s : %s@w" % (item, self._variables[item]))
+      if not match or match in item:
+        tmsg.append("%-20s : %s@w" % (item, self._variables[item]))
     if len(tmsg) == 0:
       tmsg = ['None']
     return tmsg
