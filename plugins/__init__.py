@@ -9,6 +9,7 @@ import os
 import sys
 import inspect
 import operator
+import argparse
 
 from libs.utils import find_files, verify, convert
 from libs.persistentdict import PersistentDict
@@ -133,19 +134,15 @@ class PluginMgr(object):
       @CUsage@w: list
     """
     msg = []
-    if len(args) > 0:
-      #TODO: check for the name here
-      pass
-    else:
-      tkeys = self.plugins.keys()
-      tkeys.sort()
+    tkeys = self.plugins.keys()
+    tkeys.sort()
+    msg.append("%-10s : %-25s %-10s %-5s %s@w" % \
+                        ('Short Name', 'Name', 'Author', 'Vers', 'Purpose'))
+    msg.append('-' * 75)
+    for plugin in tkeys:
+      tpl = self.plugins[plugin]
       msg.append("%-10s : %-25s %-10s %-5s %s@w" % \
-                          ('Short Name', 'Name', 'Author', 'Vers', 'Purpose'))
-      msg.append('-' * 75)
-      for plugin in tkeys:
-        tpl = self.plugins[plugin]
-        msg.append("%-10s : %-25s %-10s %-5s %s@w" % \
-                    (plugin, tpl.name, tpl.author, tpl.version, tpl.purpose))
+                  (plugin, tpl.name, tpl.author, tpl.version, tpl.purpose))
     return True, msg
 
   def cmd_load(self, args):
@@ -157,7 +154,8 @@ class PluginMgr(object):
                use the name without the .py
     """
     tmsg = []
-    if len(args) == 1:
+    plugin = args.plugin
+    if plugin:
       basepath = ''
       index = __file__.rfind(os.sep)
       if index == -1:
@@ -165,14 +163,14 @@ class PluginMgr(object):
       else:
         basepath = __file__[:index]
 
-      fname = args[0].replace('.', os.sep)
+      fname = plugin.replace('.', os.sep)
       _module_list = find_files( basepath, fname + ".py")
 
       if len(_module_list) > 1:
         tmsg.append('There is more than one module that matches: %s' % \
-                                                              args[0])
+                                                              plugin)
       elif len(_module_list) == 0:
-        tmsg.append('There are no modules that match: %s' % args[0])
+        tmsg.append('There are no modules that match: %s' % plugin)
       else:
         sname, reason = self.load_module(_module_list[0], basepath, True)
         if sname:
@@ -182,10 +180,10 @@ class PluginMgr(object):
             tmsg.append('Load complete: %s - %s' % \
                                           (sname, self.plugins[sname].name))
         else:
-          tmsg.append('Could not load: %s' % args[0])
+          tmsg.append('Could not load: %s' % plugin)
       return True, tmsg
     else:
-      return False, tmsg
+      return False, ['@Rplease specify a plugin@w']
 
   def cmd_unload(self, args):
     """
@@ -195,17 +193,21 @@ class PluginMgr(object):
         @Yplugin@w    = the shortname of the plugin to load
     """
     tmsg = []
-    if len(args) == 1 and args[0] in self.plugins:
-      if self.plugins[args[0]].canreload:
-        if self.unload_module(self.plugins[args[0]].fullimploc):
-          tmsg.append("Unloaded: %s" % args[0])
+    plugin = args.plugin
+    if plugin and plugin in self.plugins:
+      if self.plugins[plugin].canreload:
+        if self.unload_module(self.plugins[plugin].fullimploc):
+          tmsg.append("Unloaded: %s" % plugin)
         else:
-          tmsg.append("Could not unload:: %s" % args[0])
+          tmsg.append("Could not unload:: %s" % plugin)
       else:
         tmsg.append("That plugin can not be unloaded")
       return True, tmsg
+    elif plugin:
+      tmsg.append('plugin %s does not exist' % plugin)
+      return True, tmsg
 
-    return False
+    return False, ['@Rplease specify a plugin@w']
 
   def cmd_reload(self, args):
     """
@@ -215,12 +217,13 @@ class PluginMgr(object):
         @Yplugin@w    = the shortname of the plugin to reload
     """
     tmsg = []
-    if len(args) == 0:
-      return True, ['Please specify a plugin']
+    plugin = args.plugin
+    if not plugin:
+      return False, ['@Rplease specify a plugin@w']
 
-    if args[0] and args[0] in self.plugins:
-      if self.plugins[args[0]].canreload:
-        tret, _ = self.reload_module(args[0], True)
+    if plugin and plugin in self.plugins:
+      if self.plugins[plugin].canreload:
+        tret, _ = self.reload_module(plugin, True)
         if tret and tret != True:
           tmsg.append("Reload complete: %s" % self.plugins[tret].fullimploc)
           return True, tmsg
@@ -228,8 +231,10 @@ class PluginMgr(object):
         tmsg.append("That plugin cannot be reloaded")
         return True, tmsg
     else:
-      tmsg.append("That plugin does not exist")
+      tmsg.append('plugin %s does not exist' % plugin)
       return True, tmsg
+
+    return False, tmsg
 
   def load_modules(self, tfilter):
     """
@@ -465,14 +470,28 @@ class PluginMgr(object):
 
     self.load_modules("*.py")
 
+    parser = argparse.ArgumentParser(add_help=False,
+                description="list plugins")
     self.api.get('commands.add')('list', self.cmd_list,
-                        lname='Plugin Manager', shelp='List plugins')
+                        lname='Plugin Manager', parser=parser)
+
+    parser = argparse.ArgumentParser(add_help=False,
+                description="load a plugin")
+    parser.add_argument('plugin', help='the plugin to load, don\'t include the .py', default='', nargs='?')
     self.api.get('commands.add')('load', self.cmd_load,
-                        lname='Plugin Manager', shelp='Load a plugin')
+                        lname='Plugin Manager', parser=parser)
+
+    parser = argparse.ArgumentParser(add_help=False,
+                description="unload a plugin")
+    parser.add_argument('plugin', help='the plugin to unload', default='', nargs='?')
     self.api.get('commands.add')('unload', self.cmd_unload,
-                        lname='Plugin Manager', shelp='Unload a plugin')
+                        lname='Plugin Manager', parser=parser)
+
+    parser = argparse.ArgumentParser(add_help=False,
+                description="reload a plugin")
+    parser.add_argument('plugin', help='the plugin to reload', default='', nargs='?')
     self.api.get('commands.add')('reload', self.cmd_reload,
-                        lname='Plugin Manager', shelp='Reload a plugin')
+                        lname='Plugin Manager', parser=parser)
 
     self.api.get('commands.default')(self.sname, 'list')
     self.api.get('events.register')('savestate', self.savestate, plugin=self.sname)
