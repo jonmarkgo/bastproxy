@@ -9,6 +9,7 @@ import shutil
 import inspect
 import time
 import zipfile
+import argparse
 
 
 def dict_factory(cursor, row):
@@ -104,22 +105,33 @@ class Sqldb(object):
     """
     add commands to the plugin to use the database
     """
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='backup the database')
     self.api.get('commands.add')('dbbackup', self.cmd_backup,
-                                          shelp='backup the database',
                                            sname=self.plugin.sname,
-                                           lname=self.plugin.name)
+                                           lname=self.plugin.name,
+                                           parser=parser)
+
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='close the database')
     self.api.get('commands.add')('dbclose', self.cmd_close,
-                                          shelp='close the database',
                                            sname=self.plugin.sname,
-                                           lname=self.plugin.name)
+                                           lname=self.plugin.name,
+                                           parser=parser)
+
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='vacuum the database')
     self.api.get('commands.add')('dbvac', self.cmd_vac,
-                                          shelp='vacuum the database',
                                            sname=self.plugin.sname,
-                                           lname=self.plugin.name)
+                                           lname=self.plugin.name,
+                                           parser=parser)
+
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='run a sql statement against the database')
     self.api.get('commands.add')('runselect', self.cmd_runselect,
-                                          shelp='run a select sql statement against the database',
                                            sname=self.plugin.sname,
-                                           lname=self.plugin.name)
+                                           lname=self.plugin.name,
+                                           parser=parser)
 
   def cmd_runselect(self, args=None):
     """
