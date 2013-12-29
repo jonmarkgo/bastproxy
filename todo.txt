@@ -6,6 +6,8 @@ Overall:
               send output.msg with the owning plugins sname
   #TODO: add ability to see memory usage of python process (psutil?)
   #TODO: add a debug event (in a debug plugin, summary command), so we can get all stats for various plugins
+  #TODO: add sys.getsizeof to stats for plugins (either the pluginclass or module, etc)
+  #TODO: save errors in a queue to show later
 
 Python3:
   #TODO: convert to run under python3
@@ -28,7 +30,6 @@ alias:
 
 vars:
   #TODO: add stats
-  #TODO: add api for get, set, etc.
 
 timers:
   #TODO: add ability to manually add timers from #bp.timers.add
