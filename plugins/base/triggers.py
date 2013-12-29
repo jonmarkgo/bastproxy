@@ -4,6 +4,8 @@ $Id$
 This plugin will show information about connections to the proxy
 """
 import re
+import sys
+import argparse
 from plugins._baseplugin import BasePlugin
 from libs.timing import timeit
 from libs.color import convertcolors
@@ -49,14 +51,40 @@ class Plugin(BasePlugin):
     """
     BasePlugin.load(self)
 
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='get details of a trigger')
+    parser.add_argument('trigger', help='the trigger to detail', default=[], nargs='*')
     self.api.get('commands.add')('detail', self.cmd_detail,
-                                 shelp='details of a trigger')
+                                 parser=parser)
+
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='list triggers')
+    parser.add_argument('match', help='list only triggers that have this argument in them', default='', nargs='?')
     self.api.get('commands.add')('list', self.cmd_list,
-                                 shelp='list triggers')
-    self.api.get('commands.add')('stats', self.cmd_stats,
-                                 shelp='show trigger stats')
+                                 parser=parser)
+
+    #self.api.get('commands.add')('stats', self.cmd_stats,
+    #                             shelp='show trigger stats')
 
     self.api.get('events.register')('from_mud_event', self.checktrigger, prio=1)
+#    self.api.get('events.register')('plugin_stats', self.getpluginstats)
+
+  def plugin_stats(self, args=None):
+    """
+    get stats for a specific plugin
+    """
+    if not args:
+      args = {}
+    if not ('plugin' in args):
+      return {}
+
+    stats = {}
+    totaltriggers = 0
+    enabledtriggers = 0
+    totalhits = 0
+    for i in self.triggers:
+      pass
+
 
   # add a trigger
   def api_addtrigger(self, triggername, regex, plugin, **kwargs):
@@ -243,9 +271,7 @@ class Plugin(BasePlugin):
     tmsg = []
     tkeys = self.triggers.keys()
     tkeys.sort()
-    match = None
-    if len(args) > 0:
-      match = args[0]
+    match = args.match
 
     tmsg.append('%-25s : %-13s %-9s %s' % ('Name', 'Defined in', 'Enabled', 'Hits'))
     tmsg.append('@B' + '-' * 60 + '@w')
@@ -255,6 +281,34 @@ class Plugin(BasePlugin):
         tmsg.append('%-25s : %-13s %-9s %s' % (i, trigger['plugin'], trigger['enabled'], trigger['hits']))
 
     return True, tmsg
+
+  def getstats(self):
+    """
+    return stats for this plugin
+    """
+    stats = BasePlugin.getstats(self)
+
+    totalhits = 0
+    totalenabled = 0
+    totaldisabled = 0
+    for trigger in self.triggers:
+      totalhits = totalhits + self.triggers[trigger]['hits']
+      if self.triggers[trigger]['enabled']:
+        totalenabled = totalenabled + 1
+      else:
+        totaldisabled = totaldisabled + 1
+
+    totaltriggers = len(self.triggers)
+
+    stats['Triggers'] = {}
+    stats['Triggers']['showorder'] = ['Total', 'Enabled', 'Disabled',
+                                      'Total Hits', 'Memory Usage']
+    stats['Triggers']['Total'] = totaltriggers
+    stats['Triggers']['Enabled'] = totalenabled
+    stats['Triggers']['Disabled'] = totaldisabled
+    stats['Triggers']['Total Hits'] = totalhits
+    stats['Triggers']['Memory Usage'] = sys.getsizeof(self.triggers)
+    return stats
 
   def cmd_stats(self, args):
     """
@@ -290,8 +344,8 @@ class Plugin(BasePlugin):
       @CUsage@w: detail
     """
     tmsg = []
-    if len(args) > 0:
-      for trigger in args:
+    if len(args.trigger) > 0:
+      for trigger in args.trigger:
         if trigger in self.triggers:
           eventname = self.triggers[trigger]['eventname']
           eventstuff = self.api.get('events.detail')(eventname)
