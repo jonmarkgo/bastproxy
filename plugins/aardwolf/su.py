@@ -2,10 +2,15 @@
 $Id$
 
 This plugin keeps up spells/skills for Aardwolf
+
+#TODO: add clanskills
+#TODO: add spells that are not designated spellups by the mud
+#TODO: add export
 """
 import copy
 import time
 import os
+import argparse
 from plugins.aardwolf._aardwolfbaseplugin import AardwolfBasePlugin
 from libs.timing import timeit
 from libs.persistentdict import PersistentDict
@@ -65,14 +70,35 @@ class Plugin(AardwolfBasePlugin):
                       'the current room',
                       readonly=True)
 
-    self.api.get('commands.add')('sadd', self.cmd_sadd,
-              shelp='add a spellup to the self list')
-    self.api.get('commands.add')('slist', self.cmd_slist,
-              shelp='list spellups')
-    self.api.get('commands.add')('srem', self.cmd_srem,
-              shelp='remove a spellup from self list')
-    self.api.get('commands.add')('sen', self.cmd_sen,
-              shelp='enable a spellup on self')
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='add a spellup to the self list')
+    parser.add_argument('spell', help='the spells to add, use \'all\' to add all practiced spellups', default=[], nargs='*')
+    parser.add_argument('-o', "--override", help="add even if the spell is not flagged as a spellup by the mud",
+              action="store_true")
+    self.api.get('commands.add')('add', self.cmd_sadd,
+              parser=parser)
+
+    parser = argparse.ArgumentParser(add_help=False,
+              description='list spellups for self')
+    parser.add_argument('match', help='list only spellups that have this argument in them', default='', nargs='?')
+    self.api.get('commands.add')('list', self.cmd_slist,
+              parser=parser)
+
+    parser = argparse.ArgumentParser(add_help=False,
+              description='remove a spellup from the self list')
+    parser.add_argument('spell', help='the spells to remove, use \'all\' to remove all spellups', default=[], nargs='*')
+    self.api.get('commands.add')('rem', self.cmd_srem,
+              parser=parser)
+
+    parser = argparse.ArgumentParser(add_help=False,
+              description='enable spellups on self')
+    parser.add_argument('spell', help='the spells to enable, use \'all\' to enable all spellups', default=[], nargs='*')
+    self.api.get('commands.add')('en', self.cmd_sen,
+              parser=parser)
+
+    parser = argparse.ArgumentParser(add_help=False,
+              description='disable spell son self')
+    parser.add_argument('spell', help='the spells to disable, use \'all\' to disable all spellups', default=[], nargs='*')
     self.api.get('commands.add')('sdis', self.cmd_sdis,
               shelp='disable a spellup on self')
 
@@ -309,12 +335,12 @@ class Plugin(AardwolfBasePlugin):
     """
     add a spellup
     """
-    #self.api.get('output.client')('%s' % args)
+    #self.api.get('output.client')('sadd arguments: %s' % args)
     msg = []
-    if len(args) < 1:
+    if len(args.spell) < 1:
       return False, ['Please supply a spell']
 
-    if args[0] == 'all':
+    if args.spell[0] == 'all':
       spellups = self.api.get('skills.getspellups')()
       for spell in spellups:
         if spell['percent'] > 1:
@@ -323,25 +349,8 @@ class Plugin(AardwolfBasePlugin):
 
       self.nextspell()
 
-    elif len(args) == 2 and 'override' in args:
-      self.api.get('output.client')('got override')
-      aspell = args[0]
-      tspell = aspell
-      place = -1
-      if ':' in aspell:
-        tlist = aspell.split(':')
-        tspell = tlist[0]
-        place = int(tlist[1])
-
-      tmsg = self._addselfspell(tspell, place, True)
-      msg.extend(tmsg)
-
-      self.nextspell()
-
     else:
-      for aspell in args:
-        if aspell == 'override':
-          continue
+      for aspell in args.spell:
         tspell = aspell
         place = -1
         if ':' in aspell:
@@ -349,7 +358,7 @@ class Plugin(AardwolfBasePlugin):
           tspell = tlist[0]
           place = int(tlist[1])
 
-        tmsg = self._addselfspell(tspell, place)
+        tmsg = self._addselfspell(tspell, place, args.override)
         msg.extend(tmsg)
 
         self.nextspell()
@@ -362,6 +371,7 @@ class Plugin(AardwolfBasePlugin):
     list the spellups
     """
     msg = []
+    match = args.match
     if len(self.spellups['sorder']) > 0:
       #P  B  D  NP  NL
       msg.append('%-3s - %-30s : %2s %2s %2s %2s  %-2s  %-2s' % (
@@ -369,7 +379,8 @@ class Plugin(AardwolfBasePlugin):
       msg.append('@B' + '-'* 60)
       for i in self.spellups['sorder']:
         skill = self.api.get('skills.gets')(i)
-        msg.append('%-3s - %-30s : %2s %2s %2s %2s  %-2s  %-2s' % (
+        if not match or match in skill['name']:
+          msg.append('%-3s - %-30s : %2s %2s %2s %2s  %-2s  %-2s' % (
                   self.spellups['sorder'].index(i),
                   skill['name'],
                   'A' if self.api.get('skills.isaffected')(i) else '',
@@ -386,18 +397,18 @@ class Plugin(AardwolfBasePlugin):
     """
     remove a spellup
     """
-    if len(args) < 1:
+    if len(args.spell) < 1:
       return True, ['Please supply a spell/skill to remove']
 
     msg = []
-    if args[0].lower() == 'all':
+    if args.spell[0].lower() == 'all':
       del self.spellups['sorder']
       del self.spellups['self']
       self.initspellups()
       msg.append('All spellups to be cast on self cleared')
 
     else:
-      for spella in args:
+      for spella in args.spell:
         spell = self.api.get('skills.gets')(spella)
 
         if not spell:
@@ -419,9 +430,19 @@ class Plugin(AardwolfBasePlugin):
     """
     enable a spellup
     """
+    if len(args.spell) < 1:
+      return True, ['Please supply a spell/skill to enable']
+
     msg = []
-    if len(args) > 0:
-      for sn in args:
+
+    if args.spell[0].lower() == 'all':
+      for i in self.spellups['self']:
+        self.spellups['self'][i]['enabled'] = True
+
+      msg.append('All spellups enabled')
+
+    else:
+      for sn in args.spell:
         skill = self.api.get('skills.gets')(sn)
         if skill:
           if skill['sn'] in self.spellups['sorder']:
@@ -440,9 +461,18 @@ class Plugin(AardwolfBasePlugin):
     """
     enable a spellup
     """
+    if len(args.spell) < 1:
+      return True, ['Please supply a spell/skill to enable']
+
     msg = []
-    if len(args) > 0:
-      for sn in args:
+    if args.spell[0].lower() == 'all':
+      for i in self.spellups['self']:
+        self.spellups['self'][i]['enabled'] = False
+
+      msg.append('All spellups disabled')
+
+    else:
+      for sn in args.spell:
         skill = self.api.get('skills.gets')(sn)
         if skill:
           if skill['sn'] in self.spellups['sorder']:

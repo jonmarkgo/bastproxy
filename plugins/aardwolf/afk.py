@@ -3,11 +3,12 @@ $Id$
 
 This plugin holds a afk plugin
 """
-from libs import utils
-from plugins.aardwolf._aardwolfbaseplugin import AardwolfBasePlugin
 import time
 import re
 import copy
+import argparse
+from libs import utils
+from plugins.aardwolf._aardwolfbaseplugin import AardwolfBasePlugin
 
 NAME = 'AFK plugin'
 SNAME = 'afk'
@@ -49,12 +50,20 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('setting.add')('queue', [], list, 'the tell queue', readonly=True)
     self.api.get('setting.add')('isafk', False, bool, 'AFK flag', readonly=True)
 
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='show the communication queue')
     self.api.get('commands.add')('show', self.cmd_show,
-                                  shelp='Show the afk comm queue')
+                                  parser=parser)
+
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='clear the communication queue')
     self.api.get('commands.add')('clear', self.cmd_clear,
-                                  shelp='Clear the afk comm queue')
+                                  parser=parser)
+
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='toggle afk')
     self.api.get('commands.add')('toggle', self.cmd_toggle,
-                                  shelp='toggle afk')
+                                  parser=parser)
 
     self.api.get('watch.add')('titleset', '^(tit|titl|title) (?P<title>.*)$')
 

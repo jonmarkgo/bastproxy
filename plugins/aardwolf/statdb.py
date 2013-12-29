@@ -5,6 +5,7 @@ This plugin holds a stat database for quests/cp/gqs/mobkills
 """
 import copy
 import time
+import argparse
 from plugins.aardwolf._aardwolfbaseplugin import AardwolfBasePlugin
 from libs.sqldb import Sqldb
 from libs.utils import readablenumber, format_time
@@ -513,16 +514,35 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('setting.add')('backupinterval', 60*60*4, int,
                       'the interval to backup the db, default every 4 hours')
 
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='show quests stats')
+    parser.add_argument('count', help='the number of quests to show', default=0, nargs='?')
     self.api.get('commands.add')('quests', self.cmd_quests,
-                                shelp='show quest stats')
+                                parser=parser)
+
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='show level stats')
+    parser.add_argument('count', help='the number of levels to show', default=0, nargs='?')
     self.api.get('commands.add')('levels', self.cmd_levels,
-                                shelp='show level stats')
+                                parser=parser)
+
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='show cp stats')
+    parser.add_argument('count', help='the number of cps to show', default=0, nargs='?')
     self.api.get('commands.add')('cps', self.cmd_cps,
-                                shelp='show cp stats')
+                                parser=parser)
+
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='show gq stats')
+    parser.add_argument('count', help='the number of gqs to show', default=0, nargs='?')
     self.api.get('commands.add')('gqs', self.cmd_gqs,
-                                shelp='show gq stats')
+                                parser=parser)
+
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='show mob stats')
+    parser.add_argument('count', help='the number of mobkills to show', default=0, nargs='?')
     self.api.get('commands.add')('mobs', self.cmd_mobs,
-                                shelp='show mob stats')
+                                parser=parser)
 
     self.api.get('triggers.add')('dead',
       "^You die.$",
@@ -598,8 +618,9 @@ class Plugin(AardwolfBasePlugin):
     """
     show quest stats
     """
-    if not args:
-      args = {}
+    count = 0
+    if args and args.count:
+      count = args.count
 
     msg = []
 
@@ -680,8 +701,8 @@ class Plugin(AardwolfBasePlugin):
     msg.append(self._format_row("Pracs", stats['pracs'],
         format_float(stats['pracsave'], "/quest")))
 
-    if len(args) > 0 and int(args[0]) > 0:
-      lastitems = self.statdb.getlast('quests', int(args[0]))
+    if int(count) > 0:
+      lastitems = self.statdb.getlast('quests', int(count))
       if len(lastitems) > 0:
         msg.append('')
         msg.append("@G%-6s %-2s %-2s %-2s %-2s %-3s" \
@@ -716,8 +737,9 @@ class Plugin(AardwolfBasePlugin):
     """
     show level stats
     """
-    if not args:
-      args = {}
+    count = 0
+    if args:
+      count = args.count
 
     msg = []
     pups = {}
@@ -816,8 +838,8 @@ class Plugin(AardwolfBasePlugin):
 
     msg.append(self._format_row("Time", lavetime, pavetime))
 
-    if len(args) > 0 and int(args[0]) > 0:
-      lastitems = self.statdb.getlast('levels', int(args[0]))
+    if int(count) > 0:
+      lastitems = self.statdb.getlast('levels', int(count))
 
       if len(lastitems) > 0:
         msg.append('')
@@ -855,8 +877,9 @@ class Plugin(AardwolfBasePlugin):
     """
     show cp stats
     """
-    if not args:
-      args = {}
+    count = 0
+    if args:
+      count = args.count
 
     msg = []
     stats = {}
@@ -942,8 +965,8 @@ class Plugin(AardwolfBasePlugin):
                 stats['totalpracs'] or 0,
                 format_float(stats['avepracs'], "/CP")))
 
-    if len(args) > 0 and int(args[0]) > 0:
-      lastitems = self.statdb.getlast('campaigns', int(args[0]))
+    if int(count) > 0:
+      lastitems = self.statdb.getlast('campaigns', int(count))
 
       mobc = self.statdb.runselectbykeyword(
           'SELECT cp_id, count(*) as mobcount from cpmobs group by cp_id',
@@ -981,8 +1004,9 @@ class Plugin(AardwolfBasePlugin):
     """
     show gq stats
     """
-    if not args:
-      args = {}
+    count = 0
+    if args:
+      count = args.count
 
     msg = []
     stats = {}
@@ -1082,8 +1106,8 @@ class Plugin(AardwolfBasePlugin):
                 stats['lost']['totalqp'],
                 format_float(stats['lost']['aveqp'], "/GQ")))
 
-    if len(args) > 0 and int(args[0]) > 0:
-      lastitems = self.statdb.getlast('gquests', int(args[0]))
+    if int(count) > 0:
+      lastitems = self.statdb.getlast('gquests', int(count))
 
       mobc = self.statdb.runselectbykeyword(
           'SELECT gq_id, SUM(num) as mobcount from gqmobs group by gq_id',
@@ -1118,8 +1142,9 @@ class Plugin(AardwolfBasePlugin):
     """
     show mobs stats
     """
-    if not args:
-      args = {}
+    count = 0
+    if args:
+      count = args.count
 
     msg = []
     stats = {}
@@ -1219,9 +1244,8 @@ class Plugin(AardwolfBasePlugin):
                 stats['disintegrate'],
                 format_float(avetype, "/kill") or ""))
 
-
-    if len(args) > 0 and int(args[0]) > 0:
-      lastitems = self.statdb.getlast('mobkills', int(args[0]))
+    if int(count) > 0:
+      lastitems = self.statdb.getlast('mobkills', int(count))
 
       if len(lastitems) > 0:
         msg.append('')

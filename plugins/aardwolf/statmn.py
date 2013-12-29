@@ -3,10 +3,11 @@ $Id$
 
 This plugin shows stats for events on Aardwolf
 """
-from libs import utils
-from plugins.aardwolf._aardwolfbaseplugin import AardwolfBasePlugin
 import time
 import copy
+import argparse
+from libs import utils
+from plugins.aardwolf._aardwolfbaseplugin import AardwolfBasePlugin
 
 NAME = 'StatMonitor'
 SNAME = 'statmn'
@@ -50,8 +51,11 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('setting.add')('exppermin', 20, int,
                 'the threshhold for showing exp per minute')
 
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='show report')
+    parser.add_argument('minutes', help='the number of minutes in the report', default=60, nargs='?')
     self.api.get('commands.add')('rep', self.cmd_rep,
-              shelp='show report')
+              parser=parser, noformat=True, preamble=False)
 
     self.api.get('timers.add')('statrep', self.timershow,
                                5*60, nodupe=True)
@@ -72,7 +76,11 @@ class Plugin(AardwolfBasePlugin):
     """
     show the report
     """
-    self.cmd_rep([])
+    self.api.get('input.execute')('#bp.statmn.rep')
+    #retval, msg = self.cmd_rep()
+
+    #self.api.get('output.client')('\n'.join(msg), preamble=False)
+
 
   def compquest(self, args):
     """
@@ -426,20 +434,15 @@ class Plugin(AardwolfBasePlugin):
     msg.append('')
     return msg
 
-  def cmd_rep(self, args):
+  def cmd_rep(self, args=None):
     """
     do a cmd report
     """
-    reportminutes = self.api.get('setting.gets')('reportminutes')
-    minutes = None
-    if len(args) > 0:
-      minutes = int(args[0])
-    else:
-      minutes = reportminutes
+    minutes = self.api.get('setting.gets')('reportminutes')
+    if args and args.minutes:
+      minutes = int(args.minutes)
 
     msg = self.statreport(minutes)
 
-    self.api.get('output.client')('\n'.join(msg), preamble=False)
-
-    return True, []
+    return True, msg
 
