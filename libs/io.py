@@ -72,7 +72,7 @@ def api_client(text, raw=False, preamble=True):
     test = []
     for i in text:
       if preamble:
-        i = '@R#BP@w: ' + i
+        i = '@C#BP@w: ' + i
       test.append(color.convertcolors(i))
     text = test
 
