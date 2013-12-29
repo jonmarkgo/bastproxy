@@ -4,6 +4,7 @@ $Id$
 This plugin shows how to use colors and contains a command that shows
 what the colors are
 """
+import argparse
 from plugins._baseplugin import BasePlugin
 
 #these 5 are required
@@ -33,10 +34,14 @@ class Plugin(BasePlugin):
     """
     BasePlugin.load(self)
 
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='show colors')
     self.api.get('commands.add')('show', self.cmd_show,
-                                    shelp='Show colors')
+                                    parser=parser)
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='show color examples')
     self.api.get('commands.add')('example', self.cmd_example,
-                                    shelp='Show colors')
+                                    parser=parser)
 
   def cmd_show(self, args):
     """

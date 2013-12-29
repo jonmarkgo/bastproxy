@@ -12,6 +12,7 @@ This plugin is an example plugin to show how to use gmcp
 #BP:     self.msg('\n'.join(msg))
 #BP: TypeError: sequence item 1: expected string, DotDict found
 """
+import argparse
 from plugins._baseplugin import BasePlugin
 
 NAME = 'GMCP Test'
@@ -41,8 +42,12 @@ class Plugin(BasePlugin):
     self.api.get('events.register')('GMCP', self.test)
     self.api.get('events.register')('GMCP:char', self.testchar)
     self.api.get('events.register')('GMCP:char.status', self.testcharstatus)
+
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='print what is in a module in the gmcp cache')
+    parser.add_argument('module', help='the module to show', default='', nargs='?')
     self.api.get('commands.add')('get', self.cmd_get,
-                         shelp='print what is in the gmcp cache')
+                         parser=parser)
 
   def cmd_get(self, args):
     """
@@ -51,8 +56,8 @@ class Plugin(BasePlugin):
       @CUsage@w: rem @Y<gmcpmod>@w
         @Ygmcpmod@w    = The gmcp module to print, such as char.status
     """
-    if len(args) > 0:
-      return True, ['%s' % self.api.get('GMCP.getv')(args[0])]
+    if args.module:
+      return True, ['%s' % self.api.get('GMCP.getv')(args.module)]
 
     return False
 
@@ -71,10 +76,10 @@ class Plugin(BasePlugin):
     msg = []
     msg.append('testchar --------------------------')
     tchar = getv('char')
-    msg.append(tchar)
+    msg.append('%s' % tchar)
     if tchar and tchar.status:
       msg.append('char.status.state from tchar')
-      msg.append(tchar.status.state)
+      msg.append('%s' % tchar.status.state)
     else:
       msg.append('Do not have status')
     msg.append('char.status.state with getting full')
@@ -84,11 +89,11 @@ class Plugin(BasePlugin):
     else:
       msg.append('did not get state')
     msg.append('getting a module that doesn\'t exist')
-    msg.append(getv('char.test'))
+    msg.append('%s' % getv('char.test'))
     msg.append('getting a variable that doesn\'t exist')
-    msg.append(getv('char.status.test'))
-    self.msg('\n'.join(msg))
+    msg.append('%s' % getv('char.status.test'))
 
+    self.api.get('output.msg')('\n'.join(msg))
     self.api.get('output.client')('@CEvent@w - @GGMCP:char@w: %s' % args['module'])
 
   def testcharstatus(self, _=None):
