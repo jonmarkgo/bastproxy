@@ -266,7 +266,13 @@ class PluginMgr(object):
     if not load:
       testsort = sorted(self.plugins.values(), key=operator.attrgetter('priority'))
       for i in testsort:
-        self.loadplugin(i)
+        try:
+          #check dependencies here
+          self.loadplugin(i)
+        except:
+          self.api.get('output.traceback')(
+                        "load: had problems running the load method for %s." % i.fullimploc)
+          del sys.modules[i.fullimploc]
 
   def load_module(self, fullname, basepath, force=False, runload=True):
     """
@@ -418,6 +424,7 @@ class PluginMgr(object):
       except:
         self.api.get('output.traceback')(
                       "load: had problems running the load method for %s." % fullimploc)
+        del sys.modules[fullimploc]
         return False
     self.pluginl[plugin.name] = plugin
     self.plugins[plugin.sname] = plugin
