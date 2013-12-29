@@ -7,7 +7,7 @@ from libs.net._basetelnetoption import BaseTelnetOption
 from libs.net.telnetlib import WILL, DO, IAC, SE, SB, DONT, NOOPT
 from plugins._baseplugin import BasePlugin
 
-NAME = 'Terminal Type Telnet Option'
+NAME = 'Term Type Telnet Option'
 SNAME = 'TTYPE'
 PURPOSE = 'Handle telnet option 24, terminal type'
 AUTHOR = 'Bast'
