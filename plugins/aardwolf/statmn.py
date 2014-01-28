@@ -55,7 +55,7 @@ class Plugin(AardwolfBasePlugin):
                  description='show report')
     parser.add_argument('minutes', help='the number of minutes in the report', default=60, nargs='?')
     self.api.get('commands.add')('rep', self.cmd_rep,
-              parser=parser, noformat=True, preamble=False)
+              parser=parser, format=False, preamble=False)
 
     self.api.get('timers.add')('statrep', self.timershow,
                                5*60, nodupe=True)
