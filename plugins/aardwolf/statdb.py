@@ -68,7 +68,7 @@ class Statdb(Sqldb):
           time INT default 0,
           milestone TEXT,
           redos INT default 0
-        );""", {'keyfield':'stat_id'})
+        );""", keyfield='stat_id')
 
     self.addtable('quests', """CREATE TABLE quests(
           quest_id INTEGER NOT NULL PRIMARY KEY autoincrement,
@@ -90,12 +90,12 @@ class Statdb(Sqldb):
           pracs INT default 0,
           level INT default -1,
           failed INT default 0
-        );""", {'keyfield':'quest_id'})
+        );""", keyfield='quest_id')
 
     self.addtable('classes', """CREATE TABLE classes(
             class TEXT NOT NULL PRIMARY KEY,
             remort INTEGER
-          );""", {'keyfield':'class', 'postcreate':self.initclasses})
+          );""", keyfield='class', postcreate=self.initclasses)
 
     self.addtable('levels', """CREATE TABLE levels(
           level_id INTEGER NOT NULL PRIMARY KEY autoincrement,
@@ -116,7 +116,7 @@ class Statdb(Sqldb):
           trains INT default 0,
           bonustrains INT default 0,
           blessingtrains INT default 0
-        )""", {'keyfield':'level_id'})
+        )""", keyfield='level_id')
 
     self.addtable('campaigns', """CREATE TABLE campaigns(
           cp_id INTEGER NOT NULL PRIMARY KEY autoincrement,
@@ -130,14 +130,14 @@ class Statdb(Sqldb):
           pracs INT default 0,
           level INT default -1,
           failed INT default 0
-        );""", {'keyfield':'cp_id'})
+        );""", keyfield='cp_id')
 
     self.addtable('cpmobs', """CREATE TABLE cpmobs(
           cpmob_id INTEGER NOT NULL PRIMARY KEY autoincrement,
           cp_id INT NOT NULL,
           name TEXT default "Unknown",
           location TEXT default "Unknown"
-        )""", {'keyfield':'cpmob_id'})
+        )""", keyfield='cpmob_id')
 
     self.addtable('mobkills', """CREATE TABLE mobkills(
           mk_id INTEGER NOT NULL PRIMARY KEY autoincrement,
@@ -159,7 +159,7 @@ class Statdb(Sqldb):
           second_weapon TEXT default '',
           room_id INT default 0,
           level INT default -1
-        )""", {'keyfield':'mk_id'})
+        )""", keyfield='mk_id')
 
     self.addtable('gquests', """CREATE TABLE gquests(
           gq_id INTEGER NOT NULL PRIMARY KEY autoincrement,
@@ -174,7 +174,7 @@ class Statdb(Sqldb):
           level INT default -1,
           won INT default 0,
           completed INT default 0
-        )""", {'keyfield':'gq_id'})
+        )""", keyfield='gq_id')
 
 
     self.addtable('gqmobs', """CREATE TABLE gqmobs(
@@ -183,7 +183,7 @@ class Statdb(Sqldb):
           num INT,
           name TEXT default "Unknown",
           location TEXT default "Unknown"
-        )""", {'keyfield':'gqmob_id'})
+        )""", keyfield='gqmob_id')
 
     # Need to do this after adding tables
     self.postinit()
