@@ -10,6 +10,7 @@ import inspect
 import time
 import zipfile
 import argparse
+import copy
 
 
 def dict_factory(cursor, row):
@@ -201,12 +202,21 @@ class Sqldb(object):
     """
     pass
 
-  def addtable(self, tablename, sql, args=None):
+  def addtable(self, tablename, sql, **kwargs):
     """
     add a table to the database
+
+    keyword args:
+     precreate
+     postcreate
+     keyfield
+
     """
-    if args == None:
+    if not kwargs:
       args = {}
+    else:
+      args = copy.copy(kwargs)
+
 
     if not ('precreate' in args):
       args['precreate'] = None
