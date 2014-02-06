@@ -160,7 +160,7 @@ class Plugin(BasePlugin):
       import json
       tdata = json.dumps(data)
       tpack = '%s %s' % (modname, tdata)
-      self.api.get('events.eraise')('to_client_event', {'todata':'%s%s%s%s%s%s' % \
+      self.api.get('events.eraise')('to_client_event', {'original':'%s%s%s%s%s%s' % \
               (IAC, SB, GMCP, tpack.replace(IAC, IAC+IAC), IAC, SE),
               'raw':True, 'dtype':GMCP})
 
@@ -304,7 +304,7 @@ class SERVER(BaseTelnetOption):
       tdata['data'] = newdata
       tdata['module'] = modname
       tdata['server'] = self.telnetobj
-      self.api.get('events.eraise')('to_client_event', {'todata':'%s%s%s%s%s%s' % \
+      self.api.get('events.eraise')('to_client_event', {'original':'%s%s%s%s%s%s' % \
                       (IAC, SB, GMCP, sbdata.replace(IAC, IAC+IAC), IAC, SE),
                       'raw':True, 'dtype':GMCP})
       self.api.get('events.eraise')('GMCP_raw', tdata)
