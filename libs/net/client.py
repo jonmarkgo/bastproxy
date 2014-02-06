@@ -43,7 +43,7 @@ class ProxyClient(Telnet):
     self.api.get('options.prepareclient')(self)
 
     self.state = PASSWORD
-    self.addtooutbufferevent({'todata':convertcolors(
+    self.addtooutbufferevent({'original':convertcolors(
                   '@R#BP@w: @RPlease enter the proxy password:@w'),
                   'dtype':'passwd'})
 
@@ -51,7 +51,7 @@ class ProxyClient(Telnet):
     """
     this function adds to the output buffer
     """
-    outbuffer = args['todata']
+    outbuffer = args['original']
     dtype = None
     raw = False
     if 'dtype' in args:

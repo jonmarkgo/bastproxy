@@ -5,7 +5,7 @@ This file holds the class that connects to the mud
 """
 import time
 from libs.net.telnetlib import Telnet
-from libs.color import strip_ansi, convertcolors
+from libs.color import strip_ansi, convertcolors, convertansi
 from libs.api import API
 
 
@@ -49,18 +49,24 @@ class Proxy(Telnet):
       self.lastmsg = ndatal[-1]
       for i in ndatal[:-1]:
         tosend = i
+        tnoansi = strip_ansi(tosend)
+        tconvertansi = convertansi(tosend)
         newdata = self.api.get('events.eraise')('from_mud_event',
-            {'fromdata':tosend, 'dtype':'frommud',
-                    'nocolordata':strip_ansi(tosend)})
+            {'original':tosend, 'dtype':'frommud',
+                    'noansi':tnoansi,
+                    'convertansi':tconvertansi})
 
-        if 'fromdata' in newdata:
-          tosend = newdata['fromdata']
+        if 'original' in newdata:
+          tosend = newdata['original']
 
         if tosend != None:
           #data cannot be transformed here
+          tnoansi = strip_ansi(tosend)
+          tconvertansi = convertansi(tosend)
           self.api.get('events.eraise')('to_client_event',
-             {'todata':tosend, 'dtype':'frommud',
-                'nocolordata':strip_ansi(tosend)})
+             {'original':tosend, 'dtype':'frommud',
+                'noansi':tnoansi,
+                'convertansi':tconvertansi})
 
   def addclient(self, client):
     """
@@ -122,7 +128,7 @@ class Proxy(Telnet):
     """
     self.api.get('output.msg')('Disconnected from mud', 'net')
     self.api.get('events.eraise')('to_client_event',
-        {'todata':convertcolors('@R#BP@w: The mud closed the connection'),
+        {'original':convertcolors('@R#BP@w: The mud closed the connection'),
         'dtype':'fromproxy'})
     self.api.get('options.resetoptions')(self, True)
     Telnet.handle_close(self)
