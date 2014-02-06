@@ -23,8 +23,10 @@ Reset      @k        @D
 import re
 
 # for finding ANSI color sequences
-ANSI_COLOR_REGEXP = re.compile(chr(27) + '\[[0-9;]*[m]')
-XTERM_COLOR_REGEXP = re.compile('^@[xz](?P<num>[\d]{1,3})$')
+XTERM_COLOR_REGEX = re.compile('^@[xz](?P<num>[\d]{1,3})$')
+ANSI_COLOR_REGEX = re.compile(chr(27) + r'\[(?P<arg_1>\d+)(;(?P<arg_2>\d+)(;(?P<arg_3>\d+))?)?m')
+
+CONVERTANSI = {}
 
 CONVERTCOLORS = {
   'k' : '0;30',
@@ -43,15 +45,21 @@ CONVERTCOLORS = {
   'M' : '1;35',
   'C' : '1;36',
   'W' : '1;37',
+  'x' : '0',
 }
 
+for i in CONVERTCOLORS.keys():
+  CONVERTANSI[CONVERTCOLORS[i]] = i
+
+for i in xrange(0,255):
+  CONVERTANSI['38;5;%d' % i] = 'x%d' % i
+  CONVERTANSI['39;5;%d' % i] = 'z%d' % i
 
 def genrepl(match):
   """
   a general replace function
   """
   return match.group(1)
-
 
 def fixstring(tstr):
   """
@@ -83,7 +91,7 @@ def iscolor(color):
   if re.match('^@[cmyrgbwCMYRGBWD]$', color):
     return True
   else:
-    mat = XTERM_COLOR_REGEXP.match( color)
+    mat = XTERM_COLOR_REGEX.match( color)
     if mat:
       num = int(mat.groupdict()['num'])
       if num > 0 and num < 257:
@@ -93,7 +101,7 @@ def iscolor(color):
 
 def convertcolors(tstr):
   """
-  convert colors in a string
+  convert @ colors in a string
   """
   test = False
   if '@' in tstr:
@@ -128,6 +136,26 @@ def convertcolors(tstr):
   tstr = re.sub("\0", "@", tstr)    # put @ back in
   return tstr
 
+def convertansi(text):
+  """
+  convert ansi color escape sequences to @colors
+  """
+  def single_sub(match):
+      argsdict = match.groupdict()
+      tstr = ''
+      tstr = tstr + argsdict['arg_1']
+      if argsdict['arg_2']:
+        tstr = tstr + ';%d' % int(argsdict['arg_2'])
+
+      if argsdict['arg_3']:
+        tstr = tstr + ';%d' % int(argsdict['arg_3'])
+
+      try:
+        return '@%s' % CONVERTANSI[tstr]
+      except KeyError:
+        print 'could not lookup color %s for text %s' % (tstr, repr(text))
+
+  return ANSI_COLOR_REGEX.sub(single_sub, text)
 
 def ansicode(color, data):
   """
@@ -138,6 +166,6 @@ def ansicode(color, data):
 
 def strip_ansi(text):
   """
-  string all ansi from a sstring
+  strip all ansi from a string
   """
-  return ANSI_COLOR_REGEXP.sub('', text)
+  return ANSI_COLOR_REGEX.sub('', text)
