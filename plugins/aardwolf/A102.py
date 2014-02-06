@@ -236,7 +236,7 @@ class SERVER(BaseTelnetOption):
       self.telnetobj.msg('A102: got %s,%s from server' % \
               (tdata['option'], tdata['flag']), level=2, mtype='A102')
       self.api.get('events.eraise')('to_client_event',
-                  {'todata':'%s%s%s%s%s%s' % (IAC, SB, A102,
+                  {'original':'%s%s%s%s%s%s' % (IAC, SB, A102,
                   sbdata.replace(IAC, IAC+IAC), IAC, SE),
                   'raw':True, 'dtype':A102})
       self.api.get('events.eraise')('A102_from_server', tdata)
