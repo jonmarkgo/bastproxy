@@ -65,20 +65,20 @@ class Plugin(BasePlugin):
                                  parser=parser)
 
     self.api.get('commands.default')('list')
-    self.api.get('events.register')('to_client_event', self.findsub)
+    self.api.get('events.register')('from_mud_event', self.findsub)
 
   def findsub(self, args):
     """
     this function finds subs in mud data
     """
-    data = args['todata']
+    data = args['original']
     dtype = args['dtype']
     if dtype != 'fromproxy':
       for mem in self._substitutes.keys():
         if mem in data:
           data = data.replace(mem,
                     color.convertcolors(self._substitutes[mem]['sub']))
-      args['todata'] = data
+      args['original'] = data
       return args
 
   def cmd_add(self, args):

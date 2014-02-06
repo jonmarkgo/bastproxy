@@ -93,7 +93,7 @@ class Plugin(BasePlugin):
     @Yregex@w    = the regular expression that matches this trigger
     @Yplugin@w   = the plugin this comes from, added
           automatically if using the api through BaseClass
-    @Ykeyword args@w arguments:
+    @Ykeyword@w arguments:
       @Yenabled@w  = (optional) whether the trigger is enabled (default: True)
       @Ygroup@w    = (optional) the group the trigger is a member of
       @Yomit@w     = (optional) True to omit the line from the client, False otherwise
@@ -218,7 +218,8 @@ class Plugin(BasePlugin):
     check a line of text from the mud
     the is called whenever the from_mud_event is raised
     """
-    data = args['nocolordata']
+    data = args['noansi']
+    colordata = args['convertansi']
 
     self.raisetrigger('beall', {'line':data, 'triggername':'all'}, args)
 
@@ -229,7 +230,10 @@ class Plugin(BasePlugin):
       for i in self.triggers:
         if self.triggers[i]['enabled']:
           trigre = self.triggers[i]['compiled']
-          mat = trigre.match(data)
+          if 'matchcolor' in self.triggers[i] and self.triggers[i]['matchcolor']:
+            mat = trigre.match(colordata)
+          else:
+            mat = trigre.match(data)
           if mat:
             targs = mat.groupdict()
             if 'argtypes' in self.triggers[i]:

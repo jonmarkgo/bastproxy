@@ -1,9 +1,8 @@
 """
 $Id$
 
-This plugin is an variable plugin
+This plugin is a variable plugin
 
-TODO: add api for get, set, etc
 """
 import os
 import re
@@ -103,7 +102,7 @@ class Plugin(BasePlugin):
     datan = templ.safe_substitute(self._variables)
     if datan != data:
       self.api.get('output.msg')('replacing "%s" with "%s"' % (data.strip(), datan.strip()))
-      args['fromdata'] = datan
+      args['original'] = datan
     return args
 
   def cmd_add(self, args):
