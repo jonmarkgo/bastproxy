@@ -6,7 +6,7 @@ This module handles colors
 Color Codes:
 xterm 256
 @x154 - make text color xterm 154
-@z154 - make background color xterm154
+@z154 - make background color xterm 154
 
 regular ansi:
          regular    bold
@@ -48,12 +48,22 @@ CONVERTCOLORS = {
   'x' : '0',
 }
 
+
 for i in CONVERTCOLORS.keys():
   CONVERTANSI[CONVERTCOLORS[i]] = i
 
-for i in xrange(0,255):
+#xterm colors
+for i in xrange(0,256):
   CONVERTANSI['38;5;%d' % i] = 'x%d' % i
   CONVERTANSI['39;5;%d' % i] = 'z%d' % i
+
+#backgrounds
+for i in xrange(40,48):
+  CONVERTANSI['%s' % i] = CONVERTANSI['39;5;%d'% (i - 40)]
+
+#foregrounds
+for i in xrange(30,38):
+  CONVERTANSI['%s' % i] = CONVERTANSI['0;%d' % i]
 
 def genrepl(match):
   """
@@ -162,7 +172,6 @@ def ansicode(color, data):
   return an ansicoded string
   """
   return "%c[%sm%s" % (chr(27), color, data)
-
 
 def strip_ansi(text):
   """
