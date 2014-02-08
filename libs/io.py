@@ -114,25 +114,25 @@ def api_execute(command):
 
   commands = command.split('\r\n')
 
-  for command in commands:
-    newdata = api.get('events.eraise')('from_client_event', {'fromdata':command})
+  for tcommand in commands:
+    newdata = api.get('events.eraise')('from_client_event', {'fromdata':tcommand})
 
     if 'fromdata' in newdata:
-      command = newdata['fromdata']
-      command = command.strip()
+      tcommand = newdata['fromdata']
+      tcommand = tcommand.strip()
 
-    if command:
-      datalist = re.split(api.splitre, command)
+    if tcommand:
+      datalist = re.split(api.splitre, tcommand)
       if len(datalist) > 1:
-        api.get('output.msg')('broke %s into %s' % (command, datalist), primary='inputparse')
+        api.get('output.msg')('broke %s into %s' % (tcommand, datalist), primary='inputparse')
         for cmd in datalist:
           api_execute(cmd)
       else:
-        command = command.replace('||', '|')
-        if command[-1] != '\n':
-          command = command + '\n'
-        api.get('output.msg')('sending %s to the mud' % command.strip(), primary='inputparse')
-        api.get('events.eraise')('to_mud_event', {'data':command, 'dtype':'fromclient'})
+        tcommand = tcommand.replace('||', '|')
+        if tcommand[-1] != '\n':
+          tcommand = tcommand + '\n'
+        api.get('output.msg')('sending %s to the mud' % tcommand.strip(), primary='inputparse')
+        api.get('events.eraise')('to_mud_event', {'data':tcommand, 'dtype':'fromclient'})
 
 # send data directly to the mud
 def api_tomud(data):
