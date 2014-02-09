@@ -84,7 +84,7 @@ class Plugin(AardwolfBasePlugin):
 
   def scanline(self, args):
     """
-    parse a recovery line
+    parse a scan line
     """
     cptextcolor = self.api.get('setting.gets')('cptextcolor')
     cpbackcolor = self.api.get('setting.gets')('cpbackcolor')
