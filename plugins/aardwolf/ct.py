@@ -142,7 +142,7 @@ class Plugin(AardwolfBasePlugin):
 
     self.api.get('events.unregister')('trigger_emptyline', self.showmessages)
     for i in self.msgs:
-      self.api.get('output.client')(i, preamble=False)
+      self.api.get('send.client')(i, preamble=False)
 
     self.msgs = []
 

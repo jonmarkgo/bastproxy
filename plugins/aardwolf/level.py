@@ -144,12 +144,12 @@ class Plugin(AardwolfBasePlugin):
     """
     look for a new base when we remort
     """
-    self.api.get('output.client')('called char.base')
+    self.api.get('send.client')('called char.base')
     state = self.api.get('GMCP.getv')('char.status.state')
     tiering = self.api.get('setting.gets')('tiering')
     seen2 = self.api.get('setting.gets')('seen2')
     if tiering and seen2 and state == 3:
-      self.api.get('output.client')('in char.base')
+      self.api.get('send.client')('in char.base')
       self.api.get('events.unregister')('GMCP:char.base', self._gmcpstatus)
       self._lvl({'level':1})
 
@@ -158,7 +158,7 @@ class Plugin(AardwolfBasePlugin):
     about to tier
     """
     self.api.get('setting.change')('tiering', True)
-    self.api.get('output.client')('tiering')
+    self.api.get('send.client')('tiering')
     self.api.get('events.register')('GMCP:char.status', self._gmcpstatus)
 
   def _remortcomp(self, _=None):
@@ -180,7 +180,7 @@ class Plugin(AardwolfBasePlugin):
     """
     figure out what is done when superhero is typed
     """
-    self.api.get('output.client')('superhero was typed')
+    self.api.get('send.client')('superhero was typed')
     self.api.get('triggers.togglegroup')('superhero', True)
     self._lvl({'level':201})
 
@@ -188,7 +188,7 @@ class Plugin(AardwolfBasePlugin):
     """
     undo things that we typed if we didn't really superhero
     """
-    self.api.get('output.client')('didn\'t sh though')
+    self.api.get('send.client')('didn\'t sh though')
     self.api.get('triggers.togglegroup')('superhero', False)
     self.api.get('triggers.togglegroup')('linfo', False)
     self.api.get('events.unregister')('trigger_emptyline', self._finish)

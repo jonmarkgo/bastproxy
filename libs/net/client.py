@@ -115,7 +115,7 @@ class ProxyClient(Telnet):
           self.viewonly = False
           proxy.addclient(self)
           self.api.get('events.eraise')('client_connected', {'client':self})
-          self.api.get('output.client')("%s - %s: Client Connected" % \
+          self.api.get('send.client')("%s - %s: Client Connected" % \
                                       (self.host, self.port))
           if not proxy.connected:
             proxy.connectmud()
@@ -132,7 +132,7 @@ class ProxyClient(Telnet):
           proxy.addclient(self)
           self.api.get('events.eraise')('client_connected_view',
                                           {'client':self})
-          self.api.get('output.client')("%s - %s: Client Connected (View Mode)" % \
+          self.api.get('send.client')("%s - %s: Client Connected (View Mode)" % \
                                       (self.host, self.port))
         else:
           self.pwtries += 1
@@ -153,7 +153,7 @@ class ProxyClient(Telnet):
     """
     handle a close
     """
-    self.api.get('output.client')("%s - %s: Client Disconnected" % \
+    self.api.get('send.client')("%s - %s: Client Disconnected" % \
                                 (self.host, self.port))
     self.api.get('managers.getm')('proxy').removeclient(self)
     self.api.get('events.eraise')('client_disconnected', {'client':self})

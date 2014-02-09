@@ -345,10 +345,10 @@ class PluginMgr(object):
                     "unload: module %s didn't unload properly." % fullimploc)
 
           if not self.remove_plugin(_module.SNAME):
-            self.api.get('output.client')('could not remove plugin %s' % fullimploc)
+            self.api.get('send.client')('could not remove plugin %s' % fullimploc)
 
         del sys.modules[fullimploc]
-        self.api.get('output.client')("unload: unloaded %s." % fullimploc)
+        self.api.get('send.client')("unload: unloaded %s." % fullimploc)
 
       except:
         self.api.get('output.traceback')(
@@ -384,11 +384,11 @@ class PluginMgr(object):
     """
     self.api.get('output.msg')('loading dependencies for %s' % plugin.fullimploc, self.sname)
     self.loaddependencies(plugin.sname, plugin.dependencies)
-    self.api.get('output.client')("load: loading %s" % plugin.fullimploc)
+    self.api.get('send.client')("load: loading %s" % plugin.fullimploc)
     self.api.get('output.msg')('loading %s (%s: %s)' % (plugin.fullimploc,
                                     plugin.sname, plugin.name), self.sname)
     plugin.load()
-    self.api.get('output.client')("load: loaded %s" % plugin.fullimploc)
+    self.api.get('send.client')("load: loaded %s" % plugin.fullimploc)
     self.api.get('output.msg')('loaded %s (%s: %s)' % (plugin.fullimploc,
                                     plugin.sname, plugin.name), self.sname)
 

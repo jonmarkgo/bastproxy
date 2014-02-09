@@ -3,9 +3,14 @@ $Id$
 
 This plugin keeps up spells/skills for Aardwolf
 
+#TODO: add a summary command that has an output like the brief command from my mushclient plugin
 #TODO: add clanskills
 #TODO: add spells that are not designated spellups by the mud
 #TODO: add export
+togglespellup   : toggle a spell to be a spellup regardless of what the mud says
+toggleclan      : toggle a spell/skill to be a clan skill
+searg           : add an argument to be cast with a spell
+
 """
 import copy
 import time
@@ -189,7 +194,7 @@ class Plugin(AardwolfBasePlugin):
       elif args['reason'] == 'alreadyaff':
         self.api.get('setting.change')('waiting', -1)
         skill = self.api.get('skills.gets')(sn)
-        self.api.get('output.client')(
+        self.api.get('send.client')(
           "@BSpellup - disabled %s because you are already affected" % \
                                   skill['name'])
         if sn in self.spellups['self']:
@@ -212,7 +217,7 @@ class Plugin(AardwolfBasePlugin):
       elif args['reason'] == 'disabled':
         self.api.get('setting.change')('waiting', -1)
         skill = self.api.get('skills.gets')(sn)
-        self.api.get('output.client')(
+        self.api.get('send.client')(
           "@BSpellup - disabled %s because it is disabled mudside" % \
                                   skill['name'])
         if sn in self.spellups['self']:
@@ -335,7 +340,7 @@ class Plugin(AardwolfBasePlugin):
     """
     add a spellup
     """
-    #self.api.get('output.client')('sadd arguments: %s' % args)
+    #self.api.get('send.client')('sadd arguments: %s' % args)
     msg = []
     if len(args.spell) < 1:
       return False, ['Please supply a spell']

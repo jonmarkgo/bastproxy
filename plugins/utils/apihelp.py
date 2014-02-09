@@ -2,7 +2,7 @@
 $Id$
 
 This plugin will show information about connections to the proxy
-#TODO: add overload vs regular info and file locations
+
 """
 import inspect
 import argparse

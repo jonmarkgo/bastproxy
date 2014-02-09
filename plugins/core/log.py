@@ -116,7 +116,7 @@ class Plugin(BasePlugin):
     nontimestamp = msg
 
     if dtype in self.sendtoclient and self.sendtoclient[dtype]:
-      self.api.get('output.client')(timestampmsg)
+      self.api.get('send.client')(timestampmsg)
 
     if dtype in self.sendtoconsole and self.sendtoconsole[dtype]:
       print(timestampmsg, file=sys.stderr)

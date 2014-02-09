@@ -70,7 +70,7 @@ class Plugin(AardwolfBasePlugin):
                 int(args['newvalue']) * 60,
                 nodupe=True)
     else:
-      self.api.get('output.client')('Turning off the statmon report')
+      self.api.get('send.client')('Turning off the statmon report')
 
   def timershow(self):
     """
@@ -79,7 +79,7 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('input.execute')('#bp.statmn.rep')
     #retval, msg = self.cmd_rep()
 
-    #self.api.get('output.client')('\n'.join(msg), preamble=False)
+    #self.api.get('send.client')('\n'.join(msg), preamble=False)
 
 
   def compquest(self, args):
@@ -306,7 +306,7 @@ class Plugin(AardwolfBasePlugin):
     """
     self.api.get('events.unregister')('trigger_emptyline', self.showmessages)
     for i in self.msgs:
-      self.api.get('output.client')(i, preamble=False)
+      self.api.get('send.client')(i, preamble=False)
 
     self.msgs = []
 

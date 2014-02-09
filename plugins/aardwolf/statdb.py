@@ -294,7 +294,7 @@ class Statdb(Sqldb):
     trows = self.runselect('SELECT * FROM stats WHERE milestone = "%s"' \
                                                           % milestone)
     if len(trows) > 0:
-      self.api.get('output.client')('@RMilestone %s already exists' % milestone)
+      self.api.get('send.client')('@RMilestone %s already exists' % milestone)
       return -1
 
     stats = self.runselect('SELECT * FROM stats WHERE milestone = "current"')

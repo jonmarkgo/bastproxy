@@ -149,6 +149,6 @@ def api_tomud(data):
 api.add('output', 'msg', api_msg)
 api.add('output', 'error', api_error)
 api.add('output', 'traceback', api_traceback)
-api.add('output', 'client', api_client)
+api.add('send', 'client', api_client)
 api.add('output', 'tomud', api_tomud)
 api.add('input', 'execute', api_execute)

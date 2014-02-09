@@ -88,7 +88,7 @@ class BasePlugin(object):
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='show plugin stats')
-    self.api.get('commands.add')('bstats', self.cmd_bstats,
+    self.api.get('commands.add')('stats', self.cmd_stats,
                                  parser=parser)
 
     proxy = self.api.get('managers.getm')('proxy')
@@ -141,15 +141,15 @@ class BasePlugin(object):
     get the stats for the plugin
     """
     stats = {}
-    stats['Base'] = {}
-    stats['Base']['showorder'] = ['Class', 'Variables', 'Api']
-    stats['Base']['Variables'] = sys.getsizeof(self.settingvalues)
-    stats['Base']['Class'] = sys.getsizeof(self)
-    stats['Base']['Api'] = sys.getsizeof(self.api)
+    stats['Base Sizes'] = {}
+    stats['Base Sizes']['showorder'] = ['Class', 'Variables', 'Api']
+    stats['Base Sizes']['Variables'] = '%s bytes' % sys.getsizeof(self.settingvalues)
+    stats['Base Sizes']['Class'] = '%s bytes' % sys.getsizeof(self)
+    stats['Base Sizes']['Api'] = '%s bytes' % sys.getsizeof(self.api)
 
     return stats
 
-  def cmd_bstats(self, args=None):
+  def cmd_stats(self, args=None):
     """
     @G%(name)s@w - @B%(cmdname)s@w
     show stats, memory, profile, etc.. for this plugin

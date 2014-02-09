@@ -137,7 +137,7 @@ class Plugin(AardwolfBasePlugin):
     """
     handle a new cp
     """
-    self.api.get('output.client')('cpnew: %s' % args)
+    self.api.get('send.client')('cpnew: %s' % args)
     self._cpreset()
 
   def _cpnone(self, _=None):
@@ -152,7 +152,7 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('triggers.togglegroup')('cpdone', False)
     #check(EnableTimer("cp_timer", false))
     self.cpinfotimer = {}
-    self.api.get('output.client')('cpnone')
+    self.api.get('send.client')('cpnone')
 
   def _cptime(self, _=None):
     """
@@ -201,7 +201,7 @@ class Plugin(AardwolfBasePlugin):
     location = args['location']
 
     if not name or not location:
-      self.api.get('output.client')("error parsing line: %s" % args['line'])
+      self.api.get('send.client')("error parsing line: %s" % args['line'])
     else:
       #self.mobsleft.append({'name':name, 'location':location,
       #'clean':cleanname(name), 'mobdead':mobdead})

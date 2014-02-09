@@ -187,8 +187,8 @@ class Plugin(AardwolfBasePlugin):
     queue = self.api.get('setting.gets')('queue')
 
     if len(queue) > 0:
-      self.api.get('output.client')("@BAFK Queue")
-      self.api.get('output.client')("@BYou have %s tells in the queue" % \
+      self.api.get('send.client')("@BAFK Queue")
+      self.api.get('send.client')("@BYou have %s tells in the queue" % \
                 len(queue))
 
 

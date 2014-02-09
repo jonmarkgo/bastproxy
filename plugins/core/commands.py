@@ -67,7 +67,7 @@ class Plugin(BasePlugin):
     args = DotDict(vars(args))
     if args.help:
       msg = cmd['parser'].format_help().split('\n')
-      self.api.get('output.client')('\n'.join(self.formatretmsg(
+      self.api.get('send.client')('\n'.join(self.formatretmsg(
                                                   msg, cmd['sname'],
                                                   cmd['commandname'])))
 
@@ -83,14 +83,14 @@ class Plugin(BasePlugin):
       if retval == False:
         msg.append('')
         msg.extend(cmd['parser'].format_help().split('\n'))
-        self.api.get('output.client')('\n'.join(self.formatretmsg(
+        self.api.get('send.client')('\n'.join(self.formatretmsg(
                                                   msg, cmd['sname'],
                                                   cmd['commandname'])))
       else:
         if not cmd['format']:
-          self.api.get('output.client')(msg, preamble=cmd['preamble'])
+          self.api.get('send.client')(msg, preamble=cmd['preamble'])
         else:
-          self.api.get('output.client')('\n'.join(self.formatretmsg(
+          self.api.get('send.client')('\n'.join(self.formatretmsg(
                                                   msg, cmd['sname'],
                                                   cmd['commandname'])),
                                         preamble=cmd['preamble'])
@@ -132,10 +132,10 @@ class Plugin(BasePlugin):
           if cmd:
             self.runcmd(cmd, targs)
           else:
-            self.api.get('output.client')("@R%s.%s@W is not a command" % \
+            self.api.get('send.client')("@R%s.%s@W is not a command" % \
                                                   (sname, scmd))
         else:
-          self.api.get('output.client')("@R%s.%s@W is not a command." % \
+          self.api.get('send.client')("@R%s.%s@W is not a command." % \
                                                   (sname, scmd))
       else:
         try:

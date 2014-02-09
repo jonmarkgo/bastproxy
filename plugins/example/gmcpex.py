@@ -65,7 +65,7 @@ class Plugin(BasePlugin):
     """
     show the gmcp event
     """
-    self.api.get('output.client')('@x52@z192 Event @w- @GGMCP@w: @B%s@w : %s' % \
+    self.api.get('send.client')('@x52@z192 Event @w- @GGMCP@w: @B%s@w : %s' % \
                          (args['module'], args['data']))
 
   def testchar(self, args):
@@ -94,12 +94,12 @@ class Plugin(BasePlugin):
     msg.append('%s' % getv('char.status.test'))
 
     self.api.get('output.msg')('\n'.join(msg))
-    self.api.get('output.client')('@CEvent@w - @GGMCP:char@w: %s' % args['module'])
+    self.api.get('send.client')('@CEvent@w - @GGMCP:char@w: %s' % args['module'])
 
   def testcharstatus(self, _=None):
     """
     show the gmcp char.status event
     """
-    self.api.get('output.client')('@CEvent@w - @GGMCP:char.status@w')
+    self.api.get('send.client')('@CEvent@w - @GGMCP:char.status@w')
 
 
