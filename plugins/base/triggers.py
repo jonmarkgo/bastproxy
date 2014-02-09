@@ -227,6 +227,7 @@ class Plugin(BasePlugin):
       self.raisetrigger('emptyline',
                         {'line':'', 'triggername':'emptyline'}, args)
     else:
+
       for i in self.triggers:
         if self.triggers[i]['enabled']:
           trigre = self.triggers[i]['compiled']
@@ -261,9 +262,9 @@ class Plugin(BasePlugin):
     self.api.get('output.msg')('trigger raiseevent returned: %s' % tdat)
     if tdat and 'newline' in tdat:
       self.api.get('output.msg')('changing line from trigger')
-      origargs['fromdata'] = convertcolors(tdat['newline'])
+      origargs['original'] = convertcolors(tdat['newline'])
     if triggername in self.triggers and self.triggers[triggername]['omit']:
-      origargs['fromdata'] = ''
+      origargs['original'] = ''
     return
 
   def cmd_list(self, args):
