@@ -89,7 +89,7 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.load(self)
 
-    self.api.get('output.msg')('running load function of skills')
+    self.api.get('send.msg')('running load function of skills')
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='refresh skills and spells')
@@ -221,7 +221,7 @@ class Plugin(AardwolfBasePlugin):
     """
     state = self.api.get('GMCP.getv')('char.status.state')
     if state == 3:
-      self.api.get('output.msg')('refreshing skills')
+      self.api.get('send.msg')('refreshing skills')
       self.api.get('events.unregister')('GMCP:char.status', self.checkskills)
       self.api.get('A102.toggle')('SPELLUPTAGS', True)
       self.api.get('A102.toggle')('SKILLGAINTAGS', True)
@@ -258,7 +258,7 @@ class Plugin(AardwolfBasePlugin):
     ndict = {'sn': int(args['sn']), 'reason':FAILREASON[int(args['reason'])],
             'target':FAILTARG[int(args['target'])],
             'recovery':int(args['recovery'])}
-    self.api.get('output.msg')('raising skillfail: %s' % ndict)
+    self.api.get('send.msg')('raising skillfail: %s' % ndict)
     self.api.get('events.eraise')('skill_fail_%s' % args['sn'], ndict)
     self.api.get('events.eraise')('skill_fail', ndict)
 
@@ -325,7 +325,7 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('triggers.togglegroup')('recoveries', False)
     if self.current == '' or self.current == 'affected':
       self.isuptodatef = True
-      self.api.get('output.msg')('sending skills_affected_update')
+      self.api.get('send.msg')('sending skills_affected_update')
       self.api.get('events.eraise')('skills_affected_update', {})
     self.savestate()
 
@@ -416,7 +416,7 @@ class Plugin(AardwolfBasePlugin):
     """
     get a skill
     """
-    self.api.get('output.msg')('looking for %s' % tsn)
+    self.api.get('send.msg')('looking for %s' % tsn)
     sn = -1
     name = tsn
     try:
@@ -426,16 +426,16 @@ class Plugin(AardwolfBasePlugin):
 
     tskill = None
     if sn >= 1:
-      self.api.get('output.msg')('%s >= 0' % sn)
+      self.api.get('send.msg')('%s >= 0' % sn)
       if sn in self.skills:
-        self.api.get('output.msg')('found sn')
+        self.api.get('send.msg')('found sn')
         tskill = copy.deepcopy(self.skills[sn])
         #tskill = self.skills[sn]
       else:
-        self.api.get('output.msg')('did not find skill for int')
+        self.api.get('send.msg')('did not find skill for int')
 
     if not tskill and name:
-      self.api.get('output.msg')('trying name')
+      self.api.get('send.msg')('trying name')
       tlist = utils.checklistformatch(name, self.skillsnamelookup.keys())
       if len(tlist) == 1:
         tskill = copy.deepcopy(self.skills[self.skillsnamelookup[tlist[0]]])
@@ -455,11 +455,11 @@ class Plugin(AardwolfBasePlugin):
     skill = self.api.get('skills.gets')(sn)
     if skill:
       if skill['type'] == 'spell':
-        self.api.get('output.msg')('casting %s' % skill['name'])
+        self.api.get('send.msg')('casting %s' % skill['name'])
         self.api.get('send.execute')('cast %s' % skill['sn'])
       else:
         name = skill['name'].split()[0]
-        self.api.get('output.msg')('sending skill %s' % skill['name'])
+        self.api.get('send.msg')('sending skill %s' % skill['name'])
         self.api.get('send.execute')(name)
 
   def api_canuse(self, sn):

@@ -120,7 +120,7 @@ class PluginMgr(object):
       if i in self.plugins or i in self.pluginl:
         continue
 
-      self.api.get('output.msg')('%s: loading dependency %s' % (pluginname, i), pluginname)
+      self.api.get('send.msg')('%s: loading dependency %s' % (pluginname, i), pluginname)
 
       name, path = findplugin(i)
       if name:
@@ -290,10 +290,10 @@ class PluginMgr(object):
       if fullimploc in sys.modules:
         return sys.modules[fullimploc].SNAME, 'already'
 
-      self.api.get('output.msg')('importing %s' % fullimploc, self.sname)
+      self.api.get('send.msg')('importing %s' % fullimploc, self.sname)
       _module = __import__(fullimploc)
       _module = sys.modules[fullimploc]
-      self.api.get('output.msg')('imported %s' % fullimploc, self.sname)
+      self.api.get('send.msg')('imported %s' % fullimploc, self.sname)
       load = True
 
       if 'AUTOLOAD' in _module.__dict__ and not force:
@@ -307,7 +307,7 @@ class PluginMgr(object):
           self.add_plugin(_module, fullname, basepath, fullimploc, runload)
 
         else:
-          self.api.get('output.msg')('Module %s has no Plugin class' % \
+          self.api.get('send.msg')('Module %s has no Plugin class' % \
                                               _module.NAME, self.sname)
 
         _module.__dict__["proxy_import"] = 1
@@ -316,7 +316,7 @@ class PluginMgr(object):
       else:
         if fullimploc in sys.modules:
           del sys.modules[fullimploc]
-        self.api.get('output.msg')('Not loading %s (%s) because autoload is False' % \
+        self.api.get('send.msg')('Not loading %s (%s) because autoload is False' % \
                                     (_module.NAME, fullimploc), self.sname)
       return True, 'not autoloaded'
     except:
@@ -382,14 +382,14 @@ class PluginMgr(object):
     """
     check dependencies and run the load function
     """
-    self.api.get('output.msg')('loading dependencies for %s' % plugin.fullimploc, self.sname)
+    self.api.get('send.msg')('loading dependencies for %s' % plugin.fullimploc, self.sname)
     self.loaddependencies(plugin.sname, plugin.dependencies)
     self.api.get('send.client')("load: loading %s" % plugin.fullimploc)
-    self.api.get('output.msg')('loading %s (%s: %s)' % (plugin.fullimploc,
+    self.api.get('send.msg')('loading %s (%s: %s)' % (plugin.fullimploc,
                                     plugin.sname, plugin.name), self.sname)
     plugin.load()
     self.api.get('send.client')("load: loaded %s" % plugin.fullimploc)
-    self.api.get('output.msg')('loaded %s (%s: %s)' % (plugin.fullimploc,
+    self.api.get('send.msg')('loaded %s (%s: %s)' % (plugin.fullimploc,
                                     plugin.sname, plugin.name), self.sname)
 
     self.api.get('events.eraise')('%s_plugin_loaded' % plugin.sname, {})
@@ -410,10 +410,10 @@ class PluginMgr(object):
     except AttributeError:
       pass
     if plugin.name in self.pluginl:
-      self.api.get('output.msg')('Plugin %s already exists' % plugin.name, self.sname)
+      self.api.get('send.msg')('Plugin %s already exists' % plugin.name, self.sname)
       return False
     if plugin.sname in self.plugins:
-      self.api.get('output.msg')('Plugin %s already exists' % plugin.sname, self.sname)
+      self.api.get('send.msg')('Plugin %s already exists' % plugin.sname, self.sname)
       return False
 
     if load:

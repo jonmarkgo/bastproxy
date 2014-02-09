@@ -93,7 +93,7 @@ class Plugin(BasePlugin):
     msg.append('getting a variable that doesn\'t exist')
     msg.append('%s' % getv('char.status.test'))
 
-    self.api.get('output.msg')('\n'.join(msg))
+    self.api.get('send.msg')('\n'.join(msg))
     self.api.get('send.client')('@CEvent@w - @GGMCP:char@w: %s' % args['module'])
 
   def testcharstatus(self, _=None):

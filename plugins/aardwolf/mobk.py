@@ -309,7 +309,7 @@ class Plugin(AardwolfBasePlugin):
     try:
       self.kill_info['gold'] = int(gold)
     except ValueError:
-      self.api.get('output.msg')('got an invalid value for gold in mobgold: %s' % args)
+      self.api.get('send.msg')('got an invalid value for gold in mobgold: %s' % args)
     if not self.kill_info['name']:
       self.kill_info['name'] = strip_ansi(args['name'])
 
@@ -334,7 +334,7 @@ class Plugin(AardwolfBasePlugin):
                                   self.kill_info['bonusxp'] + \
                                   self.kill_info['blessingxp']
 
-      self.api.get('output.msg')('raising a mobkill')
+      self.api.get('send.msg')('raising a mobkill')
       self.api.get('events.eraise')('aard_mobkill', copy.deepcopy(self.kill_info))
 
     self.reset_kill()

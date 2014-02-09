@@ -101,7 +101,7 @@ class Plugin(BasePlugin):
     """
     disconnect
     """
-    self.api.get('output.msg')('setting reconnect to true')
+    self.api.get('send.msg')('setting reconnect to true')
     self.reconnecting = True
 
   # toggle a GMCP module
@@ -116,7 +116,7 @@ class Plugin(BasePlugin):
 
     if mstate:
       if self.modstates[modname] == 0:
-        self.api.get('output.msg')('Enabling GMCP module: %s' % modname)
+        self.api.get('send.msg')('Enabling GMCP module: %s' % modname)
         cmd = 'Core.Supports.Set [ "%s %s" ]' % (modname, 1)
         self.api.get('GMCP.sendpacket')(cmd)
       self.modstates[modname] = self.modstates[modname] + 1
@@ -124,7 +124,7 @@ class Plugin(BasePlugin):
     else:
       self.modstates[modname] = self.modstates[modname] - 1
       if self.modstates[modname] == 0:
-        self.api.get('output.msg')('Disabling GMCP module: %s' % modname)
+        self.api.get('send.msg')('Disabling GMCP module: %s' % modname)
         cmd = 'Core.Supports.Set [ "%s %s" ]' % (modname, 0)
         self.api.get('GMCP.sendpacket')(cmd)
 
@@ -199,7 +199,7 @@ class Plugin(BasePlugin):
           msg.append('args[data]: %s' % args['data'])
           self.api.get('send.traceback')('\n'.join(msg))
 
-    self.api.get('output.msg')('%s : %s' % (args['module'], args['data']))
+    self.api.get('send.msg')('%s : %s' % (args['module'], args['data']))
     self.api.get('events.eraise')('GMCP', args)
     self.api.get('events.eraise')('GMCP:%s' % modname, args)
     self.api.get('events.eraise')('GMCP:%s' % mods[0], args)
@@ -217,7 +217,7 @@ class Plugin(BasePlugin):
       for i in self.modstates:
         tnum = self.modstates[i]
         if tnum > 0:
-          self.api.get('output.msg')('Re-Enabling GMCP module %s' % i)
+          self.api.get('send.msg')('Re-Enabling GMCP module %s' % i)
           cmd = 'Core.Supports.Set [ "%s %s" ]' % (i, 1)
           self.api.get('GMCP.sendpacket')(cmd)
 

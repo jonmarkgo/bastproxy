@@ -128,7 +128,7 @@ class Plugin(BasePlugin):
       if 'default' in self.sendtofile:
         self.logtofile(timestampmsg, 'default')
 
-  # process a message, use output.msg instead for the api
+  # process a message, use send.msg instead for the api
   def api_msg(self, args, dtypedict={'primary':'default'}):
     """  send a message
     @Ymsg@w        = This message to send
@@ -201,7 +201,7 @@ class Plugin(BasePlugin):
     if datatype in self.sendtoclient and datatype != 'frommud':
       self.sendtoclient[datatype] = flag
 
-    self.api.get('output.msg')('setting %s to log to client' % \
+    self.api.get('send.msg')('setting %s to log to client' % \
                       datatype)
 
     self.sendtoclient.sync()
@@ -244,7 +244,7 @@ class Plugin(BasePlugin):
     if datatype in self.sendtoconsole and datatype != 'frommud':
       self.sendtoconsole[datatype] = flag
 
-    self.api.get('output.msg')('setting %s to log to console' % \
+    self.api.get('send.msg')('setting %s to log to console' % \
                       datatype, self.sname)
 
     self.sendtoconsole.sync()
@@ -291,7 +291,7 @@ class Plugin(BasePlugin):
 
       self.sendtofile[datatype] = {'file':tfile,
                                 'timestamp':timestamp}
-      self.api.get('output.msg')('setting %s to log to %s' % \
+      self.api.get('send.msg')('setting %s to log to %s' % \
                       (datatype, self.sendtofile[datatype]['file']), self.sname)
       self.sendtofile.sync()
 

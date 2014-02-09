@@ -67,7 +67,7 @@ class Plugin(AardwolfBasePlugin):
     process the quest event
     """
     questi = args['data']
-    self.api.get('output.msg')('quest: %s' % questi)
+    self.api.get('send.msg')('quest: %s' % questi)
     if questi['action'] == 'ready':
       self.api.get('events.eraise')('aard_quest_ready', {})
     elif questi['action'] == 'start':

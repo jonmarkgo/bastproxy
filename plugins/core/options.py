@@ -52,7 +52,7 @@ class Plugin(BasePlugin):
     @Yserveroption@w  = server option to add, must be of class BaseTelnetOption
     """
     if issubclass(serveroption, BaseTelnetOption):
-      self.api.get('output.msg')('adding telnet option %s to server' % optionname)
+      self.api.get('send.msg')('adding telnet option %s to server' % optionname)
       self.serveroptions[optionname] = serveroption
       return True
     return False
@@ -63,7 +63,7 @@ class Plugin(BasePlugin):
     @Yclientoption@w  = client option to add, must be of class BaseTelnetOption
     """
     if issubclass(clientoption, BaseTelnetOption):
-      self.api.get('output.msg')('adding telnet option %s to client' % optionname)
+      self.api.get('send.msg')('adding telnet option %s to client' % optionname)
       self.clientoptions[optionname] = clientoption
       return True
     return False
@@ -87,7 +87,7 @@ class Plugin(BasePlugin):
       module.SERVER
       self.options[plugin] = True
       self.optionsmod[plugin] = module
-      self.api.get('output.msg')('adding %s as a telnet option' % plugin,
+      self.api.get('send.msg')('adding %s as a telnet option' % plugin,
                                         secondary=plugin)
     except AttributeError:
       pass
@@ -106,7 +106,7 @@ class Plugin(BasePlugin):
       try:
         self.clientoptions[i](client)
       except AttributeError:
-        self.api.get('output.msg')('Did not add option to client: %s' % i, 'telopt')
+        self.api.get('send.msg')('Did not add option to client: %s' % i, 'telopt')
 
   def api_prepareserver(self, server):
     """
@@ -116,7 +116,7 @@ class Plugin(BasePlugin):
       try:
         self.serveroptions[i](server)
       except AttributeError:
-        self.api.get('output.msg')('Did not add option to server: %s' % i, 'telopt')
+        self.api.get('send.msg')('Did not add option to server: %s' % i, 'telopt')
 
   # reset options
   def api_resetoptions(self, server, onclose=False):

@@ -54,6 +54,6 @@ class Plugin(BasePlugin):
       self.api.get('events.unregister')('GMCP:char.status', self._charstatus)
       self.connected = True
       self.firstactive = True
-      self.api.get('output.msg')('sending first active')
+      self.api.get('send.msg')('sending first active')
       self.api.get('events.eraise')('firstactive', {})
 

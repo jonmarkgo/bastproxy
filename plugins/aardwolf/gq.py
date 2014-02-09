@@ -222,7 +222,7 @@ class Plugin(AardwolfBasePlugin):
     """
     this will be registered to the mobkill hook
     """
-    self.api.get('output.msg')('checking kill %s' % args['name'])
+    self.api.get('send.msg')('checking kill %s' % args['name'])
     self.api.get('events.register')('aard_mobkill', self._mobkillevent)
 
     found = False
@@ -230,7 +230,7 @@ class Plugin(AardwolfBasePlugin):
     for i in range(len(self.mobsleft)):
       tmob = self.mobsleft[i]
       if tmob['name'] == args['name']:
-        self.api.get('output.msg')('found %s' % tmob['name'])
+        self.api.get('send.msg')('found %s' % tmob['name'])
         found = True
         if tmob['num'] == 1:
           removeitem = i
@@ -244,7 +244,7 @@ class Plugin(AardwolfBasePlugin):
       self.api.get('events.eraise')('aard_gq_mobsleft',
                         copy.deepcopy({'mobsleft':self.mobsleft}))
     else:
-      self.api.get('output.msg')("GQ: could not find mob: %s" % args['name'])
+      self.api.get('send.msg')("GQ: could not find mob: %s" % args['name'])
       self.api.get('send.execute')("gq check")
 
   def _gqwon(self, _=None):

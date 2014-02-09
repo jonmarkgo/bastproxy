@@ -96,7 +96,7 @@ class Plugin(BasePlugin):
       self.events[eventname][prio] = []
     if self.events[eventname][prio].count(func) == 0:
       self.events[eventname][prio].append(func)
-      self.api.get('output.msg')(
+      self.api.get('send.msg')(
                   'adding function %s (plugin: %s) to event %s' \
                           % (func, plugin, eventname), secondary=plugin)
     if plugin:
@@ -128,7 +128,7 @@ class Plugin(BasePlugin):
       keys.sort()
       for i in keys:
         if self.events[eventname][i].count(func) == 1:
-          self.api.get('output.msg')('removing function %s from event %s' % (
+          self.api.get('send.msg')('removing function %s from event %s' % (
                 func, eventname), secondary=plugin)
           self.events[eventname][i].remove(func)
           if len(self.events[eventname][i]) == 0:
@@ -144,7 +144,7 @@ class Plugin(BasePlugin):
     """  remove all registered functions that are specific to a plugin
     @Yplugin@w   = The plugin to remove events for
     this function returns no values"""
-    self.api.get('output.msg')('removing plugin %s' % plugin,
+    self.api.get('send.msg')('removing plugin %s' % plugin,
                                  secondary=plugin)
     if plugin and plugin in self.pluginlookup:
       tkeys = self.pluginlookup[plugin]['events'].keys()
@@ -162,7 +162,7 @@ class Plugin(BasePlugin):
     @Yargs@w        = A table of arguments
 
     this function returns no values"""
-    self.api.get('output.msg')('raiseevent %s' % eventname)
+    self.api.get('send.msg')('raiseevent %s' % eventname)
     nargs = args.copy()
     nargs['eventname'] = eventname
     if eventname in self.events:
@@ -178,10 +178,10 @@ class Plugin(BasePlugin):
                 plugin = ''
               tnargs = i(nargs)
               if eventname != 'global_timer':
-                self.api.get('output.msg')('event %s : function %s, plugin %s called with args %s, returned %s' % \
+                self.api.get('send.msg')('event %s : function %s, plugin %s called with args %s, returned %s' % \
                                          (eventname, i.__name__, plugin or 'Unknown', nargs, tnargs),
                                          secondary=plugin)
-              #self.api.get('output.msg')('%s: returned %s' % (eventname, tnargs), self.sname)
+              #self.api.get('send.msg')('%s: returned %s' % (eventname, tnargs), self.sname)
               if tnargs:
                 nargs = tnargs
             except:
@@ -189,8 +189,8 @@ class Plugin(BasePlugin):
                       "error when calling function for event %s" % eventname)
     else:
       pass
-      #self.api.get('output.msg')('nothing to process for %s' % eventname)
-    #self.api.get('output.msg')('returning', nargs)
+      #self.api.get('send.msg')('nothing to process for %s' % eventname)
+    #self.api.get('send.msg')('returning', nargs)
     return nargs
 
   # get the details of an event

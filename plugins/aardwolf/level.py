@@ -288,19 +288,19 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('events.unregister')('trigger_emptyline', self._finish)
     self.api.get('events.eraise')('aard_level_gain', copy.deepcopy(self.levelinfo))
     if self.levelinfo['level'] == 200 and self.levelinfo['type'] == 'level':
-      self.api.get('output.msg')('raising hero event', 'level')
+      self.api.get('send.msg')('raising hero event', 'level')
       self.api.get('events.eraise')('aard_level_hero', {})
     elif self.levelinfo['level'] == 201 and self.levelinfo['type'] == 'level':
-      self.api.get('output.msg')('raising superhero event', 'level')
+      self.api.get('send.msg')('raising superhero event', 'level')
       self.api.get('events.eraise')('aard_level_superhero', {})
     elif self.levelinfo['level'] == 1:
       if self.api.get('setting.gets')('tiering'):
-        self.api.get('output.msg')('raising tier event', 'level')
+        self.api.get('send.msg')('raising tier event', 'level')
         self.api.get('setting.change')('tiering', False)
         self.api.get('setting.change')('seen2', False)
         self.api.get('events.eraise')('aard_level_tier', {})
       else:
-        self.api.get('output.msg')('raising remort event', 'level')
+        self.api.get('send.msg')('raising remort event', 'level')
         self.api.get('setting.change')('remortcomp', False)
         self.api.get('events.eraise')('aard_level_remort', {})
 

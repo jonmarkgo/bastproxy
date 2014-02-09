@@ -169,7 +169,7 @@ class Plugin(AardwolfBasePlugin):
     """
     catch a skill fail event
     """
-    self.api.get('output.msg')('skillfail: %s' % args)
+    self.api.get('send.msg')('skillfail: %s' % args)
     sn = args['sn']
     waiting = self.api.get('setting.gets')('waiting')
     if args['reason'] == 'nomana':
@@ -270,8 +270,8 @@ class Plugin(AardwolfBasePlugin):
     proxy = self.api.get('managers.getm')('proxy')
     if not proxy:
       return False
-    self.api.get('output.msg')('waiting type: %s' % type(self.api.get('setting.gets')('waiting')))
-    self.api.get('output.msg')('currentstatus = %s' % self.api.get('GMCP.getv')('char.status.state'))
+    self.api.get('send.msg')('waiting type: %s' % type(self.api.get('setting.gets')('waiting')))
+    self.api.get('send.msg')('currentstatus = %s' % self.api.get('GMCP.getv')('char.status.state'))
 
     if self.api.get('setting.gets')('nomoves') \
         or self.api.get('setting.gets')('nomana') \
@@ -280,10 +280,10 @@ class Plugin(AardwolfBasePlugin):
         or not self.api.get('setting.gets')('enabled') \
         or not self.api.get('skills.isuptodate')() or \
        self.api.get('GMCP.getv')('char.status.state') != 3:
-      self.api.get('output.msg')('checked returned False')
+      self.api.get('send.msg')('checked returned False')
       return False
 
-    self.api.get('output.msg')('checked returned True')
+    self.api.get('send.msg')('checked returned True')
     return True
 
   @timeit
@@ -291,7 +291,7 @@ class Plugin(AardwolfBasePlugin):
     """
     try to cast the next spell
     """
-    self.api.get('output.msg')('nextspell')
+    self.api.get('send.msg')('nextspell')
     if self.check():
       for i in self.spellups['sorder']:
         if self.spellups['self'][i]['enabled']:

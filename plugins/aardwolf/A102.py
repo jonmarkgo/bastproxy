@@ -111,7 +111,7 @@ class Plugin(BasePlugin):
     """
     this function is registered with the muddisconnect hook
     """
-    self.api.get('output.msg')('setting reconnect to true')
+    self.api.get('send.msg')('setting reconnect to true')
     self.reconnecting = True
 
   # toggle an a102 option
@@ -141,7 +141,7 @@ class Plugin(BasePlugin):
     if mstate:
       mstate = 1
       if self.optionstates[aoption] == 0:
-        self.api.get('output.msg')('Enabling A102 option: %s' % AOPTIONREV[aoption])
+        self.api.get('send.msg')('Enabling A102 option: %s' % AOPTIONREV[aoption])
         cmd = '%s%s' % (chr(aoption), ON)
         self.api.get('A102.sendpacket')(cmd)
       self.optionstates[aoption] = self.optionstates[aoption] + 1
@@ -150,7 +150,7 @@ class Plugin(BasePlugin):
       mstate = 2
       self.optionstates[aoption] = self.optionstates[aoption] - 1
       if self.optionstates[aoption] == 0:
-        self.api.get('output.msg')('Disabling A102 option: %s' % AOPTIONREV[aoption])
+        self.api.get('send.msg')('Disabling A102 option: %s' % AOPTIONREV[aoption])
         cmd = '%s%s' % (chr(aoption), OFF)
         self.api.get('A102.sendpacket')(cmd)
 
@@ -165,7 +165,7 @@ class Plugin(BasePlugin):
     """
     this function is called when the a102 option is enabled
     """
-    self.api.get('output.msg')('cleaning a102 queues')
+    self.api.get('send.msg')('cleaning a102 queues')
     if not self.reconnecting:
       for i in self.a102optionqueue:
         self.a102toggleoption(i['option'], i['toggle'])
@@ -174,11 +174,11 @@ class Plugin(BasePlugin):
       for i in self.optionstates:
         tnum = self.optionstates[i]
         if tnum > 0:
-          self.api.get('output.msg')('Re-Enabling A102 option: %s' % AOPTIONREV[i])
+          self.api.get('send.msg')('Re-Enabling A102 option: %s' % AOPTIONREV[i])
           cmd = '%s%s' % (i, 1)
           self.api.get('A102.sendpacket')(cmd)
         else:
-          self.api.get('output.msg')('Re-Disabling A102 option: %s' % AOPTIONREV[i])
+          self.api.get('send.msg')('Re-Disabling A102 option: %s' % AOPTIONREV[i])
           cmd = '%s%s' % (i, 2)
           self.api.get('A102.sendpacket')(cmd)
 

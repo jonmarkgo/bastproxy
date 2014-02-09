@@ -256,7 +256,7 @@ class Telnet(asyncore.dispatcher):
     if 'mtype' in kwargs:
       mtype = kwargs['mtype']
     if kwargs['level'] >= self.debuglevel or mtype in self.debug_types:
-      self.api.get('output.msg')('Telnet(%-15s - %-5s %-7s %-5s): ' % \
+      self.api.get('send.msg')('Telnet(%-15s - %-5s %-7s %-5s): ' % \
                           (self.host, self.port, self.ttype, mtype), mtype)
 
   def set_debuglevel(self, debuglevel):

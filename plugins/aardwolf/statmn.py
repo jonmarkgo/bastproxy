@@ -145,7 +145,7 @@ class Plugin(AardwolfBasePlugin):
     """
     handle a cp completion
     """
-    self.api.get('output.msg')('compcp: %s' % args)
+    self.api.get('send.msg')('compcp: %s' % args)
     infocolor = self.api.get('setting.gets')('infocolor')
     statcolor = self.api.get('setting.gets')('statcolor')
     msg = []
@@ -182,7 +182,7 @@ class Plugin(AardwolfBasePlugin):
     """
     handle a gq completion
     """
-    self.api.get('output.msg')('compgq: %s' % args)
+    self.api.get('send.msg')('compgq: %s' % args)
     infocolor = self.api.get('setting.gets')('infocolor')
     statcolor = self.api.get('setting.gets')('statcolor')
     msg = []
@@ -214,7 +214,7 @@ class Plugin(AardwolfBasePlugin):
     """
     handle a level or pup gain
     """
-    self.api.get('output.msg')('levelgain: %s' % args)
+    self.api.get('send.msg')('levelgain: %s' % args)
     infocolor = self.api.get('setting.gets')('infocolor')
     statcolor = self.api.get('setting.gets')('statcolor')
     exppermin = self.api.get('setting.gets')('exppermin')

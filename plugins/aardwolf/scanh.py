@@ -78,7 +78,7 @@ class Plugin(AardwolfBasePlugin):
     """
     show that the trigger fired
     """
-    self.api.get('output.msg')('found {scan}')
+    self.api.get('send.msg')('found {scan}')
     self.api.get('triggers.togglegroup')('scan', True)
     self.api.get('events.register')('trigger_all', self.scanline)
 
@@ -93,26 +93,26 @@ class Plugin(AardwolfBasePlugin):
     questtextcolor = self.api.get('setting.gets')('questtextcolor')
     questbackcolor = self.api.get('setting.gets')('questbackcolor')
     line = args['line'].lower().strip()
-    self.api.get('output.msg')('scanline: %s' % line)
+    self.api.get('send.msg')('scanline: %s' % line)
     if 'cp' in self.mobs:
       for i in self.mobs['cp']:
         if i['nocolorname'].lower() in line:
           args['newline'] = cptextcolor + \
                   cpbackcolor + args['line'] + ' - (CP)@x'
-          self.api.get('output.msg')('cp newline: %s' % args['newline'])
+          self.api.get('send.msg')('cp newline: %s' % args['newline'])
           break
     if 'gq' in self.mobs:
       for i in self.mobs['gq']:
         if i['name'].lower() in line:
           args['newline'] = gqtextcolor + \
                   gqbackcolor + args['line'] + ' - (GQ)@x'
-          self.api.get('output.msg')('gq newline: %s' % args['newline'])
+          self.api.get('send.msg')('gq newline: %s' % args['newline'])
           break
     if 'quest' in self.mobs:
       if self.mobs['quest'].lower() in line:
         args['newline'] = questtextcolor + \
               questbackcolor + args['line'] + ' - (Quest)@x'
-        self.api.get('output.msg')('quest newline: %s' % args['newline'])
+        self.api.get('send.msg')('quest newline: %s' % args['newline'])
 
     return args
 
@@ -120,7 +120,7 @@ class Plugin(AardwolfBasePlugin):
     """
     reset current when seeing a spellheaders ending
     """
-    self.api.get('output.msg')('found {/scan}')
+    self.api.get('send.msg')('found {/scan}')
     self.api.get('events.unregister')('trigger_all', self.scanline)
     self.api.get('triggers.togglegroup')('scan', False)
 
@@ -128,7 +128,7 @@ class Plugin(AardwolfBasePlugin):
     """
     get cp mobs left
     """
-    self.api.get('output.msg')('got cpmobs')
+    self.api.get('send.msg')('got cpmobs')
     if 'mobsleft' in args:
       self.mobs['cp'] = args['mobsleft']
 
@@ -136,14 +136,14 @@ class Plugin(AardwolfBasePlugin):
     """
     clear the cp mobs
     """
-    self.api.get('output.msg')('clearing cp mobs')
+    self.api.get('send.msg')('clearing cp mobs')
     del(self.mobs['cp'])
 
   def gqmobs(self, args):
     """
     get gq mobs left
     """
-    self.api.get('output.msg')('got gqmobs')
+    self.api.get('send.msg')('got gqmobs')
     if 'mobsleft' in args:
       self.mobs['gq'] = args['mobsleft']
 
@@ -151,19 +151,19 @@ class Plugin(AardwolfBasePlugin):
     """
     clear the gq mob
     """
-    self.api.get('output.msg')('clearing gq mobs')
+    self.api.get('send.msg')('clearing gq mobs')
     del(self.mobs['gq'])
 
   def questmob(self, args):
     """
     get quest mob
     """
-    self.api.get('output.msg')('got quest mob')
+    self.api.get('send.msg')('got quest mob')
     self.mobs['quest'] = args['mobname']
 
   def questclear(self, args):
     """
     clear the quest mob
     """
-    self.api.get('output.msg')('clearing quest mob')
+    self.api.get('send.msg')('clearing quest mob')
     del(self.mobs['quest'])

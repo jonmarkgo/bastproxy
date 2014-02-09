@@ -49,7 +49,7 @@ class Plugin(AardwolfBasePlugin):
             direction = i
         newdict = {'from':self.lastroom,
             'to': room, 'direction':direction, 'roominfo':copy.deepcopy(dict(room))}
-        self.api.get('output.msg')('raising moved_room, %s' % (newdict))
+        self.api.get('send.msg')('raising moved_room, %s' % (newdict))
         self.api.get('events.eraise')('moved_room', newdict)
         self.lastroom = copy.deepcopy(dict(room))
 
@@ -59,5 +59,5 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.afterfirstactive(self)
 
-    self.api.get('output.msg')('requesting room')
+    self.api.get('send.msg')('requesting room')
     self.api.get('GMCP.sendpacket')('request room')

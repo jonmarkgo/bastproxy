@@ -109,7 +109,7 @@ class ProxyClient(Telnet):
           vpw = None
 
         if dpw and  data == dpw:
-          self.api.get('output.msg')('Successful password from %s : %s' % \
+          self.api.get('send.msg')('Successful password from %s : %s' % \
                                             (self.host, self.port), 'net')
           self.state = CONNECTED
           self.viewonly = False
@@ -123,7 +123,7 @@ class ProxyClient(Telnet):
             self.addtooutbufferevent({'original':convertcolors(
                     '@R#BP@W: @GThe proxy is already connected to the mud@w')})
         elif vpw and data == vpw:
-          self.api.get('output.msg')('Successful view password from %s : %s' % \
+          self.api.get('send.msg')('Successful view password from %s : %s' % \
                               (self.host, self.port), 'net')
           self.state = CONNECTED
           self.viewonly = True
@@ -140,7 +140,7 @@ class ProxyClient(Telnet):
             self.addtooutbufferevent({'original':convertcolors(
                         '@R#BP@w: @RYou have been BANNED for 10 minutes:@w'),
                         'dtype':'passwd'})
-            self.api.get('output.msg')('%s has been banned.' % self.host, 'net')
+            self.api.get('send.msg')('%s has been banned.' % self.host, 'net')
             proxy.removeclient(self)
             proxy.addbanned(self.host)
             self.close()

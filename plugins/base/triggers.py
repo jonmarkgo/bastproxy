@@ -101,7 +101,7 @@ class Plugin(BasePlugin):
 
     this function returns no values"""
     if regex in self.regexlookup:
-      self.api.get('output.msg')(
+      self.api.get('send.msg')(
             'trigger %s tried to add a regex that already existed for %s' % \
                     (triggername, self.regexlookup[regex]))
       return
@@ -126,7 +126,7 @@ class Plugin(BasePlugin):
         if not (args['group'] in self.triggergroups):
           self.triggergroups[args['group']] = []
         self.triggergroups[args['group']].append(triggername)
-      self.api.get('output.msg')(
+      self.api.get('send.msg')(
             'added trigger %s for plugin %s' % \
                     (triggername, plugin), secondary=plugin)
     except:
@@ -147,17 +147,17 @@ class Plugin(BasePlugin):
       plugin = self.triggers[triggername]['plugin']
       if event:
         if len(event['pluginlist']) > 0 and not force:
-          self.api.get('output.msg')('deletetrigger: trigger %s has functions registered' % \
+          self.api.get('send.msg')('deletetrigger: trigger %s has functions registered' % \
                       triggername, secondary=plugin)
           return False
       plugin = self.triggers[triggername]['plugin']
       del self.regexlookup[self.triggers[triggername]['regex']]
       del self.triggers[triggername]
-      self.api.get('output.msg')('removed trigger %s' % triggername,
+      self.api.get('send.msg')('removed trigger %s' % triggername,
                                  secondary=plugin)
       return True
     else:
-      self.api.get('output.msg')('deletetrigger: trigger %s does not exist' % \
+      self.api.get('send.msg')('deletetrigger: trigger %s does not exist' % \
                         triggername)
       return False
 
@@ -167,7 +167,7 @@ class Plugin(BasePlugin):
     @Yplugin@w   = The plugin name
 
     this function returns no values"""
-    self.api.get('output.msg')('removing triggers for plugin %s' % plugin,
+    self.api.get('send.msg')('removing triggers for plugin %s' % plugin,
                                 secondary=plugin)
     tkeys = self.triggers.keys()
     for i in tkeys:
@@ -184,7 +184,7 @@ class Plugin(BasePlugin):
     if triggername in self.triggers:
       self.triggers[triggername]['enabled'] = flag
     else:
-      self.api.get('output.msg')('toggletrigger: trigger %s does not exist' % \
+      self.api.get('send.msg')('toggletrigger: trigger %s does not exist' % \
                         triggername)
 
   # toggle the omit flag for a trigger
@@ -197,7 +197,7 @@ class Plugin(BasePlugin):
     if triggername in self.triggers:
       self.triggers[triggername]['omit'] = flag
     else:
-      self.api.get('output.msg')('toggletriggeromit: trigger %s does not exist' % \
+      self.api.get('send.msg')('toggletriggeromit: trigger %s does not exist' % \
                         triggername)
 
   # toggle a trigger group
@@ -207,7 +207,7 @@ class Plugin(BasePlugin):
     @Yflag@w        = (optional) True to enable, False otherwise
 
     this function returns no values"""
-    self.api.get('output.msg')('toggletriggergroup: %s to %s' % (triggroup, flag))
+    self.api.get('send.msg')('toggletriggergroup: %s to %s' % (triggroup, flag))
     if triggroup in self.triggergroups:
       for i in self.triggergroups[triggroup]:
         self.api.get('triggers.toggle')(i, flag)
@@ -259,9 +259,9 @@ class Plugin(BasePlugin):
     except KeyError:
       eventname = 'trigger_' + triggername
     tdat = self.api.get('events.eraise')(eventname, args)
-    self.api.get('output.msg')('trigger raiseevent returned: %s' % tdat)
+    self.api.get('send.msg')('trigger raiseevent returned: %s' % tdat)
     if tdat and 'newline' in tdat:
-      self.api.get('output.msg')('changing line from trigger')
+      self.api.get('send.msg')('changing line from trigger')
       origargs['original'] = convertcolors(tdat['newline'])
     if triggername in self.triggers and self.triggers[triggername]['omit']:
       origargs['original'] = ''

@@ -27,7 +27,7 @@ def setuppaths():
   else:
     tpath = npath[:index]
 
-  api.get('output.msg')('setting basepath to: %s'% tpath, 'startup')
+  api.get('send.msg')('setting basepath to: %s'% tpath, 'startup')
   API.BASEPATH = tpath
 
   try:
@@ -60,7 +60,7 @@ class Listener(asyncore.dispatcher):
     self.proxy = None
     self.server_address = server_address
     self.server_port = server_port
-    api.get('output.msg')("Listener bound on: %s" % listen_port, 'startup')
+    api.get('send.msg')("Listener bound on: %s" % listen_port, 'startup')
 
   def handle_error(self):
     """
@@ -83,13 +83,13 @@ class Listener(asyncore.dispatcher):
     try:
       ipaddress = source_addr[0]
       if self.proxy.checkbanned(ipaddress):
-        api.get('output.msg')("HOST: %s is banned" % ipaddress, 'net')
+        api.get('send.msg')("HOST: %s is banned" % ipaddress, 'net')
         client_connection.close()
       elif len(self.proxy.clients) == 5:
-        api.get('output.msg')("Only 5 clients can be connected at the same time", 'net')
+        api.get('send.msg')("Only 5 clients can be connected at the same time", 'net')
         client_connection.close()
       else:
-        api.get('output.msg')("Accepted connection from %s : %s" %
+        api.get('send.msg')("Accepted connection from %s : %s" %
                                       (source_addr[0], source_addr[1]), 'net')
 
         #Proxy client keeps up with itself
@@ -116,7 +116,7 @@ def start(listen_port, server_address, server_port):
   except KeyboardInterrupt:
     pass
 
-  api.get('output.msg')("Shutting down...", 'shutdown')
+  api.get('send.msg')("Shutting down...", 'shutdown')
 
 def main():
   """
@@ -136,20 +136,20 @@ def main():
     sys.exit(1)
 
   try:
-    api.get('output.msg')('Config - loading', 'startup')
+    api.get('send.msg')('Config - loading', 'startup')
     CONFIG = ConfigParser.RawConfigParser()
     api.get('managers.add')('config', CONFIG)
     CONFIG.read(config)
-    api.get('output.msg')('Config - loaded', 'startup')
+    api.get('send.msg')('Config - loaded', 'startup')
   except:
     api.get('send.traceback')('Error parsing config!')
     sys.exit(1)
 
-  api.get('output.msg')('Plugin Manager - loading', 'startup')
+  api.get('send.msg')('Plugin Manager - loading', 'startup')
   from plugins import PluginMgr
   PLUGINMGR = PluginMgr()
   PLUGINMGR.load()
-  api.get('output.msg')('Plugin Manager - loaded', 'startup')
+  api.get('send.msg')('Plugin Manager - loaded', 'startup')
 
   api.get('log.adddtype')('net')
   api.get('log.console')('net')

@@ -176,7 +176,7 @@ class Plugin(BasePlugin):
 
     lname = None
     if not func:
-      self.api.get('output.msg')('cmd %s has no function, not adding' % \
+      self.api.get('send.msg')('cmd %s has no function, not adding' % \
                                                 (cmdname))
       return
     try:
@@ -185,13 +185,13 @@ class Plugin(BasePlugin):
       if 'sname' in args:
         sname = args['sname']
       else:
-        self.api.get('output.msg')('Function is not part of a plugin class: %s' % cmdname)
+        self.api.get('send.msg')('Function is not part of a plugin class: %s' % cmdname)
         return
 
     if 'parser' in args:
       tparser = args['parser']
     else:
-      self.api.get('output.msg')('adding default parser to command %s.%s' % (sname, cmdname))
+      self.api.get('send.msg')('adding default parser to command %s.%s' % (sname, cmdname))
       if not ('shelp' in args):
         args['shelp'] = 'there is no help for this command'
       tparser = argparse.ArgumentParser(add_help=False,
@@ -210,12 +210,12 @@ class Plugin(BasePlugin):
       pass
 
     if not ('lname' in args):
-      self.api.get('output.msg')('cmd %s.%s has no long name, not adding' % \
+      self.api.get('send.msg')('cmd %s.%s has no long name, not adding' % \
                                             (sname, cmdname),
                                             secondary=sname)
       return
 
-    self.api.get('output.msg')('added cmd %s.%s' % \
+    self.api.get('send.msg')('added cmd %s.%s' % \
                                             (sname, cmdname),
                                             secondary=sname)
 
@@ -241,11 +241,11 @@ class Plugin(BasePlugin):
     if sname in self.cmds and cmdname in self.cmds[sname]:
       del self.cmds[sname][cmdname]
     else:
-      self.api.get('output.msg')('remove cmd: cmd %s.%s does not exist' % \
+      self.api.get('send.msg')('remove cmd: cmd %s.%s does not exist' % \
                                                 (sname, cmdname),
                                             secondary=sname)
 
-    self.api.get('output.msg')('removed cmd %s.%s' % \
+    self.api.get('send.msg')('removed cmd %s.%s' % \
                                                 (sname, cmdname),
                                             secondary=sname)
 
@@ -271,7 +271,7 @@ class Plugin(BasePlugin):
     if plugin in self.cmds:
       del self.cmds[plugin]
     else:
-      self.api.get('output.msg')('removeplugin: plugin %s does not exist' % plugin)
+      self.api.get('send.msg')('removeplugin: plugin %s does not exist' % plugin)
 
   def cmd_list(self, args):
     """

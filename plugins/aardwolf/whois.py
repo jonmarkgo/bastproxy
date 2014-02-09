@@ -156,7 +156,7 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('triggers.togglegroup')('whois', False)
     self.api.get('triggers.toggle')('whoisend', False)
     self.api.get('events.eraise')('aard_whois', copy.deepcopy(self.whois))
-    self.api.get('output.msg')('whois: %s' % self.whois)
+    self.api.get('send.msg')('whois: %s' % self.whois)
 
   def savestate(self):
     """

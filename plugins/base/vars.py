@@ -101,7 +101,7 @@ class Plugin(BasePlugin):
     templ = Template(data)
     datan = templ.safe_substitute(self._variables)
     if datan != data:
-      self.api.get('output.msg')('replacing "%s" with "%s"' % (data.strip(), datan.strip()))
+      self.api.get('send.msg')('replacing "%s" with "%s"' % (data.strip(), datan.strip()))
       args['fromdata'] = datan
     return args
 

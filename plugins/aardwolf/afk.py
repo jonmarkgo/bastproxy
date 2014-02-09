@@ -84,7 +84,7 @@ class Plugin(AardwolfBasePlugin):
     """
     check for stuff when the title command is seen
     """
-    self.api.get('output.msg')('saw title set command %s' % args)
+    self.api.get('send.msg')('saw title set command %s' % args)
     self.temptitle = args['title']
     self.api.get('events.register')('trigger_all', self.titlesetline)
 
@@ -99,9 +99,9 @@ class Plugin(AardwolfBasePlugin):
         newtitle = tmatch.groupdict()['title']
         if newtitle != self.api.get('setting.gets')('afktitle'):
           self.api.get('setting.change')('lasttitle', self.temptitle)
-          self.api.get('output.msg')('lasttitle is "%s"' % self.temptitle)
+          self.api.get('send.msg')('lasttitle is "%s"' % self.temptitle)
       else:
-        self.api.get('output.msg')('unregistering trigger_all from titlesetline')
+        self.api.get('send.msg')('unregistering trigger_all from titlesetline')
         self.api.get('events.unregister')('trigger_all', self.titlesetline)
 
   def cmd_show(self, _=None):
@@ -198,7 +198,7 @@ class Plugin(AardwolfBasePlugin):
     """
     proxy = self.api.get('managers.getm')('proxy')
     if len(proxy.clients) == 1:
-      self.api.get('output.msg')('disabling afk mode')
+      self.api.get('send.msg')('disabling afk mode')
       self.disableafk()
 
 
@@ -208,6 +208,6 @@ class Plugin(AardwolfBasePlugin):
     """
     proxy = self.api.get('managers.getm')('proxy')
     if len(proxy.clients) == 0:
-      self.api.get('output.msg')('enabling afk mode')
+      self.api.get('send.msg')('enabling afk mode')
       self.enableafk()
 

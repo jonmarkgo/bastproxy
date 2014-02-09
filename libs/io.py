@@ -88,7 +88,7 @@ def api_client(text, raw=False, preamble=True):
     api.get('events.eraise')('to_client_event', {'original':'\n'.join(text),
                                     'raw':raw, 'dtype':'fromproxy'})
   except (NameError, TypeError, AttributeError):
-    api.get('output.msg')("couldn't send msg to client: %s" % '\n'.join(text), primary='error')
+    api.get('send.msg')("couldn't send msg to client: %s" % '\n'.join(text), primary='error')
 
 # execute a command throgh the interpreter
 def api_execute(command):
@@ -99,18 +99,18 @@ def api_execute(command):
 
   this function returns no values"""
   data = None
-  api.get('output.msg')('got command %s from client' % repr(command), primary='inputparse')
+  api.get('send.msg')('got command %s from client' % repr(command), primary='inputparse')
 
   if command == '\r\n':
-    api.get('output.msg')('sending %s to the mud' % repr(command), primary='inputparse')
+    api.get('send.msg')('sending %s to the mud' % repr(command), primary='inputparse')
     api.get('events.eraise')('to_mud_event', {'data':command, 'dtype':'fromclient'})
     return
 
   command = command.strip()
   #if '\r\n' in command:
-    #api.get('output.msg')('(has rn) got command %s from client' % repr(command), primary='inputparse')
+    #api.get('send.msg')('(has rn) got command %s from client' % repr(command), primary='inputparse')
   #else:
-    #api.get('output.msg')('got command %s from client' % repr(command), primary='inputparse')
+    #api.get('send.msg')('got command %s from client' % repr(command), primary='inputparse')
 
   commands = command.split('\r\n')
 
@@ -124,14 +124,14 @@ def api_execute(command):
     if tcommand:
       datalist = re.split(api.splitre, tcommand)
       if len(datalist) > 1:
-        api.get('output.msg')('broke %s into %s' % (tcommand, datalist), primary='inputparse')
+        api.get('send.msg')('broke %s into %s' % (tcommand, datalist), primary='inputparse')
         for cmd in datalist:
           api_execute(cmd)
       else:
         tcommand = tcommand.replace('||', '|')
         if tcommand[-1] != '\n':
           tcommand = tcommand + '\n'
-        api.get('output.msg')('sending %s to the mud' % tcommand.strip(), primary='inputparse')
+        api.get('send.msg')('sending %s to the mud' % tcommand.strip(), primary='inputparse')
         api.get('events.eraise')('to_mud_event', {'data':tcommand, 'dtype':'fromclient'})
 
 # send data directly to the mud
@@ -146,7 +146,7 @@ def api_tomud(data):
   api.get('events.eraise')('to_mud_event', {'data':data, 'dtype':'fromclient'})
 
 
-api.add('output', 'msg', api_msg)
+api.add('send', 'msg', api_msg)
 api.add('send', 'error', api_error)
 api.add('send', 'traceback', api_traceback)
 api.add('send', 'client', api_client)

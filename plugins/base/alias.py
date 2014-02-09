@@ -106,10 +106,10 @@ class Plugin(BasePlugin):
         datan = data
         if '(.*)' in mem:
           if re.match(mem, data):
-            self.api.get('output.msg')('matched input on %s' % mem)
+            self.api.get('send.msg')('matched input on %s' % mem)
             tlist = shlex.split(data)
             tlistn = ['"%s"' % i for i in tlist]
-            self.api.get('output.msg')('args: %s' % tlistn)
+            self.api.get('send.msg')('args: %s' % tlistn)
             try:
               datan = self._aliases[mem]['alias'].format(*tlistn)
             except:
@@ -122,10 +122,10 @@ class Plugin(BasePlugin):
             self._aliases[mem]['hits'] = 0
           if not mem in self.sessionhits:
             self.sessionhits[mem] = 0
-          self.api.get('output.msg')('incrementing hits for %s' % mem)
+          self.api.get('send.msg')('incrementing hits for %s' % mem)
           self._aliases[mem]['hits'] = self._aliases[mem]['hits'] + 1
           self.sessionhits[mem] = self.sessionhits[mem] + 1
-          self.api.get('output.msg')('replacing "%s" with "%s"' % (data.strip(), datan.strip()))
+          self.api.get('send.msg')('replacing "%s" with "%s"' % (data.strip(), datan.strip()))
           args['fromdata'] = datan
 
     return args

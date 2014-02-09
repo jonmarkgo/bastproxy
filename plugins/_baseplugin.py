@@ -48,7 +48,7 @@ class BasePlugin(object):
     self.settingvalues = PersistentDictEvent(self, self.savefile,
                             'c', format='json')
 
-    self.api.overload('output', 'msg', self.api_outputmsg)
+    self.api.overload('send', 'msg', self.api_outputmsg)
     self.api.overload('commands', 'default', self.api_commandsdefault)
     self.api.overload('dependency', 'add', self.api_dependencyadd)
     self.api.overload('setting', 'add', self.api_settingadd)
@@ -168,7 +168,7 @@ class BasePlugin(object):
     """
     unload stuff
     """
-    self.api.get('output.msg')('unloading %s' % self.name)
+    self.api.get('send.msg')('unloading %s' % self.name)
 
     #clear all commands for this plugin
     self.api.get('commands.removeplugin')(self.sname)
@@ -196,7 +196,7 @@ class BasePlugin(object):
     """
     an internal function to send msgs
     """
-    self.api.get('output.msg', True)(msg, self.sname, secondary)
+    self.api.get('send.msg', True)(msg, self.sname, secondary)
 
   def api_triggersadd(self, triggername, regex, **kwargs):
     """

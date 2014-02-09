@@ -158,14 +158,14 @@ class Plugin(AardwolfBasePlugin):
     """
     handle cp time
     """
-    self.api.get('output.msg')('handling cp time')
-    self.api.get('output.msg')('%s' % self.cpinfo)
+    self.api.get('send.msg')('handling cp time')
+    self.api.get('send.msg')('%s' % self.cpinfo)
     if not self.cpinfo['mobs']:
-      self.api.get('output.msg')('copying mobsleft')
+      self.api.get('send.msg')('copying mobsleft')
       self.cpinfo['mobs'] = self.mobsleft[:]
       self.savestate()
 
-    self.api.get('output.msg')('raising aard_cp_mobsleft %s' % self.mobsleft)
+    self.api.get('send.msg')('raising aard_cp_mobsleft %s' % self.mobsleft)
     self.api.get('events.eraise')('aard_cp_mobsleft',
                     copy.deepcopy({'mobsleft':self.mobsleft}))
     self.api.get('triggers.togglegroup')("cpcheck", False)
@@ -277,7 +277,7 @@ class Plugin(AardwolfBasePlugin):
     """
     this will be registered to the mobkill hook
     """
-    self.api.get('output.msg')('checking kill %s' % args['name'])
+    self.api.get('send.msg')('checking kill %s' % args['name'])
     self.api.get('events.unregister')('aard_mobkill', self._mobkillevent)
 
     found = False
@@ -285,7 +285,7 @@ class Plugin(AardwolfBasePlugin):
     for i in range(len(self.mobsleft)):
       tmob = self.mobsleft[i]
       if tmob['name'] == args['name']:
-        self.api.get('output.msg')('found %s' % tmob['name'])
+        self.api.get('send.msg')('found %s' % tmob['name'])
         found = True
         removeitem = i
 
@@ -296,7 +296,7 @@ class Plugin(AardwolfBasePlugin):
       self.api.get('events.eraise')('aard_cp_mobsleft',
                         copy.deepcopy({'mobsleft':self.mobsleft}))
     else:
-      self.api.get('output.msg')("CP: could not find mob: %s" % args['name'])
+      self.api.get('send.msg')("CP: could not find mob: %s" % args['name'])
       self.api.get('send.execute')("cp check")
 
   def savestate(self):

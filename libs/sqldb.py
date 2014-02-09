@@ -58,7 +58,7 @@ class Sqldb(object):
     """
     close the database
     """
-    self.api.get('output.msg')('close: called by - %s' % inspect.stack()[1][3])
+    self.api.get('send.msg')('close: called by - %s' % inspect.stack()[1][3])
     try:
       self.dbconn.close()
     except:
@@ -72,7 +72,7 @@ class Sqldb(object):
     funcname = inspect.stack()[1][3]
     if funcname == '__getattribute__':
       funcname = inspect.stack()[2][3]
-    self.api.get('output.msg')('open: called by - %s' % funcname)
+    self.api.get('send.msg')('open: called by - %s' % funcname)
     self.dbconn = sqlite3.connect(self.dbfile, detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
     self.dbconn.row_factory = dict_factory
     # only return byte strings so is easier to send to a client or the mud
@@ -365,18 +365,18 @@ class Sqldb(object):
     """
     update a database from oldversion to newversion
     """
-    self.api.get('output.msg')('updating %s from version %s to %s' % (self.dbfile,
+    self.api.get('send.msg')('updating %s from version %s to %s' % (self.dbfile,
                                             oldversion, newversion))
     self.backupdb(oldversion)
     for i in range(oldversion + 1, newversion + 1):
       try:
         self.versionfuncs[i]()
-        self.api.get('output.msg')('updated to version %s' % i)
+        self.api.get('send.msg')('updated to version %s' % i)
       except:
         self.api.get('send.traceback')('could not upgrade db: %s' % self.dbloc)
         return
     self.setversion(newversion)
-    self.api.get('output.msg')('Done upgrading!')
+    self.api.get('send.msg')('Done upgrading!')
 
   def runselect(self, selectstmt):
     """
@@ -415,7 +415,7 @@ class Sqldb(object):
     """
     results = {}
     if not (ttable in self.tables):
-      self.api.get('output.msg')('table %s does not exist in getlast' % ttable)
+      self.api.get('send.msg')('table %s does not exist in getlast' % ttable)
       return
 
     colid = self.tables[ttable]['keyfield']
@@ -449,7 +449,7 @@ class Sqldb(object):
     """
     success = False
     #self.cmd_vac()
-    self.api.get('output.msg')('backing up database %s' % self.dbname)
+    self.api.get('send.msg')('backing up database %s' % self.dbname)
     integrity = True
     cur = self.dbconn.cursor()
     cur.execute('PRAGMA integrity_check')
@@ -458,7 +458,7 @@ class Sqldb(object):
       integrity = False
 
     if not integrity:
-      self.api.get('output.msg')('Integrity check failed, aborting backup')
+      self.api.get('send.msg')('Integrity check failed, aborting backup')
       return
     self.close()
     try:
@@ -474,7 +474,7 @@ class Sqldb(object):
     try:
       shutil.copy(self.dbfile, backupfile)
     except IOError:
-      self.api.get('output.msg')('backup failed, could not copy file')
+      self.api.get('send.msg')('backup failed, could not copy file')
       return success
 
     try:
@@ -482,9 +482,9 @@ class Sqldb(object):
         myzip.write(backupfile)
       os.remove(backupfile)
       success = True
-      self.api.get('output.msg')('%s was backed up to %s' % (self.dbfile, backupzipfile))
+      self.api.get('send.msg')('%s was backed up to %s' % (self.dbfile, backupzipfile))
     except IOError:
-      self.api.get('output.msg')('could not zip backupfile')
+      self.api.get('send.msg')('could not zip backupfile')
       return success
 
     return success
