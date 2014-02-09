@@ -18,6 +18,7 @@ import argparse
 from string import Template
 from plugins._baseplugin import BasePlugin
 from libs.persistentdict import PersistentDict
+from libs.color import strip_ansi
 
 #these 5 are required
 NAME = 'Alias'
@@ -43,6 +44,8 @@ class Plugin(BasePlugin):
 
     self.aliasfile = os.path.join(self.savedir, 'aliases.txt')
     self._aliases = PersistentDict(self.aliasfile, 'c', format='json')
+
+    self.sessionhits = {}
 
   def load(self):
     """
@@ -80,6 +83,12 @@ class Plugin(BasePlugin):
     self.api.get('commands.add')('toggle', self.cmd_toggle,
                                  parser=parser)
 
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='toggle enabled flag')
+    parser.add_argument('alias', help='the alias to get details for', default='', nargs='?')
+    self.api.get('commands.add')('detail', self.cmd_detail,
+                                 parser=parser)
+
     self.api.get('commands.default')('list')
     self.api.get('events.register')('from_client_event', self.checkalias, prio=5)
 
@@ -109,6 +118,13 @@ class Plugin(BasePlugin):
           p = re.compile('^%s' % mem)
           datan = p.sub(self._aliases[mem]['alias'], data)
         if datan != data:
+          if not 'hits' in self._aliases[mem]:
+            self._aliases[mem]['hits'] = 0
+          if not mem in self.sessionhits:
+            self.sessionhits[mem] = 0
+          self.api.get('output.msg')('incrementing hits for %s' % mem)
+          self._aliases[mem]['hits'] = self._aliases[mem]['hits'] + 1
+          self.sessionhits[mem] = self.sessionhits[mem] + 1
           self.api.get('output.msg')('replacing "%s" with "%s"' % (data.strip(), datan.strip()))
           args['fromdata'] = datan
 
@@ -188,6 +204,35 @@ class Plugin(BasePlugin):
     else:
       return False, ['@RPlease include an alias to toggle@w']
 
+  def cmd_detail(self, args):
+    """
+    @G%(name)s@w - @B%(cmdname)s@w
+      Add a alias
+      @CUsage@w: add @Y<originalstring>@w @M<replacementstring>@w
+        @Yoriginalstring@w    = The original string to be replaced
+        @Mreplacementstring@w = The new string
+    """
+    tmsg = []
+    if args.alias:
+      alias = self.lookup_alias(args.alias)
+      if alias:
+        if not ('hits' in self._aliases[alias]):
+          self._aliases[alias]['hits'] = 0
+        if not (alias in self.sessionhits):
+          self.sessionhits[alias] = 0
+        tmsg.append('%-12s : %d' % ('Num', self._aliases[alias]['num']))
+        tmsg.append('%-12s : %s' % ('Enabled', 'Y' if self._aliases[alias]['enabled'] else 'N'))
+        tmsg.append('%-12s : %d' % ('Total Hits', self._aliases[alias]['hits']))
+        tmsg.append('%-12s : %d' % ('Session Hits', self.sessionhits[alias]))
+        tmsg.append('%-12s : %s' % ('Alias', alias))
+        tmsg.append('%-12s : %s' % ('Replacement', self._aliases[alias]['alias']))
+      else:
+        return True, ['@RAlias does not exits@w : \'%s\'' % (args.alias)]
+
+      return True, tmsg
+    else:
+      return False, ['@RPlease include all arguments@w']
+
   def cmd_list(self, args):
     """
     @G%(name)s@w - @B%(cmdname)s@w
@@ -232,10 +277,13 @@ class Plugin(BasePlugin):
     for s in sorted(self._aliases.iteritems(), key=lambda (x, y): y['num']):
       item = s[0]
       if not match or match in item:
+        lalias = strip_ansi(self._aliases[item]['alias'])
+        if len(lalias) > 30:
+          lalias = lalias[:27] + '...'
         tmsg.append("%4s %2s  %-20s : %s@w" % (self._aliases[item]['num'],
                       'Y' if self._aliases[item]['enabled'] else 'N',
                       item,
-                      self._aliases[item]['alias']))
+                      lalias))
     if len(tmsg) == 0:
       tmsg = ['None']
     else:
