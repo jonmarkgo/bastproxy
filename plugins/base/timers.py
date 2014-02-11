@@ -165,7 +165,7 @@ class Plugin(BasePlugin):
     """
     tmsg = []
 
-    match = args.match
+    match = args['match']
 
     tmsg.append('Local time is: %s' % time.strftime('%a %b %d %Y %H:%M:%S',
                                              time.localtime()))
@@ -188,8 +188,8 @@ class Plugin(BasePlugin):
       @CUsage@w: detail
     """
     tmsg = []
-    if len(args.timers) > 0:
-      for timer in args.timers:
+    if len(args['timers']) > 0:
+      for timer in args['timers']:
         if timer in self.timerlookup:
           timerc = self.timerlookup[timer]
           tmsg.append('%-13s : %s' % ('Name', timer))

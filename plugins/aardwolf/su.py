@@ -342,10 +342,10 @@ class Plugin(AardwolfBasePlugin):
     """
     #self.api.get('send.client')('sadd arguments: %s' % args)
     msg = []
-    if len(args.spell) < 1:
+    if len(args['spell']) < 1:
       return False, ['Please supply a spell']
 
-    if args.spell[0] == 'all':
+    if args['spell'][0] == 'all':
       spellups = self.api.get('skills.getspellups')()
       for spell in spellups:
         if spell['percent'] > 1:
@@ -355,7 +355,7 @@ class Plugin(AardwolfBasePlugin):
       self.nextspell()
 
     else:
-      for aspell in args.spell:
+      for aspell in args['spell']:
         tspell = aspell
         place = -1
         if ':' in aspell:
@@ -363,7 +363,7 @@ class Plugin(AardwolfBasePlugin):
           tspell = tlist[0]
           place = int(tlist[1])
 
-        tmsg = self._addselfspell(tspell, place, args.override)
+        tmsg = self._addselfspell(tspell, place, args['override'])
         msg.extend(tmsg)
 
         self.nextspell()
@@ -376,7 +376,7 @@ class Plugin(AardwolfBasePlugin):
     list the spellups
     """
     msg = []
-    match = args.match
+    match = args['match']
     if len(self.spellups['sorder']) > 0:
       #P  B  D  NP  NL
       msg.append('%-3s - %-30s : %2s %2s %2s %2s  %-2s  %-2s' % (
@@ -402,18 +402,18 @@ class Plugin(AardwolfBasePlugin):
     """
     remove a spellup
     """
-    if len(args.spell) < 1:
+    if len(args['spell']) < 1:
       return True, ['Please supply a spell/skill to remove']
 
     msg = []
-    if args.spell[0].lower() == 'all':
+    if args['spell'][0].lower() == 'all':
       del self.spellups['sorder']
       del self.spellups['self']
       self.initspellups()
       msg.append('All spellups to be cast on self cleared')
 
     else:
-      for spella in args.spell:
+      for spella in args['spell']:
         spell = self.api.get('skills.gets')(spella)
 
         if not spell:
@@ -435,19 +435,19 @@ class Plugin(AardwolfBasePlugin):
     """
     enable a spellup
     """
-    if len(args.spell) < 1:
+    if len(args['spell']) < 1:
       return True, ['Please supply a spell/skill to enable']
 
     msg = []
 
-    if args.spell[0].lower() == 'all':
+    if args['spell'][0].lower() == 'all':
       for i in self.spellups['self']:
         self.spellups['self'][i]['enabled'] = True
 
       msg.append('All spellups enabled')
 
     else:
-      for sn in args.spell:
+      for sn in args['spell']:
         skill = self.api.get('skills.gets')(sn)
         if skill:
           if skill['sn'] in self.spellups['sorder']:
@@ -466,18 +466,18 @@ class Plugin(AardwolfBasePlugin):
     """
     enable a spellup
     """
-    if len(args.spell) < 1:
+    if len(args['spell']) < 1:
       return True, ['Please supply a spell/skill to enable']
 
     msg = []
-    if args.spell[0].lower() == 'all':
+    if args['spell'][0].lower() == 'all':
       for i in self.spellups['self']:
         self.spellups['self'][i]['enabled'] = False
 
       msg.append('All spellups disabled')
 
     else:
-      for sn in args.spell:
+      for sn in args['spell']:
         skill = self.api.get('skills.gets')(sn)
         if skill:
           if skill['sn'] in self.spellups['sorder']:

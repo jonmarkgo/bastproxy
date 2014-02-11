@@ -439,8 +439,8 @@ class Plugin(AardwolfBasePlugin):
     do a cmd report
     """
     minutes = self.api.get('setting.gets')('reportminutes')
-    if args and args.minutes:
-      minutes = int(args.minutes)
+    if args and args['minutes']:
+      minutes = int(args['minutes'])
 
     msg = self.statreport(minutes)
 

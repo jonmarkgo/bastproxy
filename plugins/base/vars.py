@@ -114,10 +114,10 @@ class Plugin(BasePlugin):
         @Mreplacementstring@w = The new string
     """
     tmsg = []
-    if args.name and args.value:
+    if args['name'] and args['value']:
       tmsg.append("@GAdding variable@w : '%s' will be replaced by '%s'" % \
-                                              (args.name, args.value))
-      self.addvariable(args.name, args.value)
+                                              (args['name'], args['value']))
+      self.addvariable(args['name'], args['value'])
       return True, tmsg
     else:
       tmsg.append("@RPlease include all arguments@w")
@@ -131,9 +131,9 @@ class Plugin(BasePlugin):
         @Yoriginalstring@w    = The original string
     """
     tmsg = []
-    if args.name:
-      tmsg.append("@GRemoving variable@w : '%s'" % (args.name))
-      self.removevariable(args.name)
+    if args['name']:
+      tmsg.append("@GRemoving variable@w : '%s'" % (args['name']))
+      self.removevariable(args['name'])
       return True, tmsg
     else:
       return False, ['@RPlease specifiy a variable to remove@w']
@@ -144,7 +144,7 @@ class Plugin(BasePlugin):
       List variables
       @CUsage@w: list
     """
-    tmsg = self.listvariables(args.match)
+    tmsg = self.listvariables(args['match'])
     return True, tmsg
 
   def addvariable(self, item, value):

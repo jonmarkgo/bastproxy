@@ -276,7 +276,7 @@ class Plugin(BasePlugin):
     tmsg = []
     tkeys = self.triggers.keys()
     tkeys.sort()
-    match = args.match
+    match = args['match']
 
     tmsg.append('%-25s : %-13s %-9s %s' % ('Name', 'Defined in', 'Enabled', 'Hits'))
     tmsg.append('@B' + '-' * 60 + '@w')
@@ -349,8 +349,8 @@ class Plugin(BasePlugin):
       @CUsage@w: detail
     """
     tmsg = []
-    if len(args.trigger) > 0:
-      for trigger in args.trigger:
+    if len(args['trigger']) > 0:
+      for trigger in args['trigger']:
         if trigger in self.triggers:
           eventname = self.triggers[trigger]['eventname']
           eventstuff = self.api.get('events.detail')(eventname)

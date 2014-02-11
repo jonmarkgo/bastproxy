@@ -158,10 +158,10 @@ class Plugin(BasePlugin):
         @Mreplacementstring@w = The new string
     """
     tmsg = []
-    if args.original and args.replacement:
+    if args['original'] and args['replacement']:
       tmsg.append("@GAdding alias@w : '%s' will be replaced by '%s'" % \
-                                              (args.original, args.replacement))
-      self.addalias(args.original, args.replacement, args.disable)
+                                              (args['original'], args['replacement']))
+      self.addalias(args['original'], args['replacement'], args['disable'])
       return True, tmsg
     else:
       return False, ['@RPlease include all arguments@w']
@@ -174,12 +174,12 @@ class Plugin(BasePlugin):
         @Yoriginalstring@w    = The original string
     """
     tmsg = []
-    if args.alias:
-      retval = self.removealias(args.alias)
+    if args['alias']:
+      retval = self.removealias(args['alias'])
       if retval:
         tmsg.append("@GRemoving alias@w : '%s'" % (retval))
       else:
-        tmsg.append("@GCould not remove alias@w : '%s'" % (args.alias))
+        tmsg.append("@GCould not remove alias@w : '%s'" % (args['alias']))
 
       return True, tmsg
     else:
@@ -190,15 +190,15 @@ class Plugin(BasePlugin):
     toggle the enabled flag
     """
     tmsg = []
-    if args.alias:
-      retval = self.togglealias(args.alias)
+    if args['alias']:
+      retval = self.togglealias(args['alias'])
       if retval:
         if self._aliases[retval]['enabled']:
           tmsg.append("@GEnabled alias@w : '%s'" % (retval))
         else:
           tmsg.append("@GDisabled alias@w : '%s'" % (retval))
       else:
-        tmsg.append("@GDoes not exist@w : '%s'" % (args.alias))
+        tmsg.append("@GDoes not exist@w : '%s'" % (args['alias']))
       return True, tmsg
 
     else:
@@ -213,8 +213,8 @@ class Plugin(BasePlugin):
         @Mreplacementstring@w = The new string
     """
     tmsg = []
-    if args.alias:
-      alias = self.lookup_alias(args.alias)
+    if args['alias']:
+      alias = self.lookup_alias(args['alias'])
       if alias:
         if not ('hits' in self._aliases[alias]):
           self._aliases[alias]['hits'] = 0
@@ -227,7 +227,7 @@ class Plugin(BasePlugin):
         tmsg.append('%-12s : %s' % ('Alias', alias))
         tmsg.append('%-12s : %s' % ('Replacement', self._aliases[alias]['alias']))
       else:
-        return True, ['@RAlias does not exits@w : \'%s\'' % (args.alias)]
+        return True, ['@RAlias does not exits@w : \'%s\'' % (args['alias'])]
 
       return True, tmsg
     else:
@@ -239,7 +239,7 @@ class Plugin(BasePlugin):
       List aliases
       @CUsage@w: list
     """
-    tmsg = self.listaliases(args.match)
+    tmsg = self.listaliases(args['match'])
     return True, tmsg
 
   def addalias(self, item, alias, disabled):

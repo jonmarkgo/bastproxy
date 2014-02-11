@@ -619,8 +619,8 @@ class Plugin(AardwolfBasePlugin):
     show quest stats
     """
     count = 0
-    if args and args.count:
-      count = args.count
+    if args and args['count']:
+      count = args['count']
 
     msg = []
 
@@ -739,7 +739,7 @@ class Plugin(AardwolfBasePlugin):
     """
     count = 0
     if args:
-      count = args.count
+      count = args['count']
 
     msg = []
     pups = {}
@@ -879,7 +879,7 @@ class Plugin(AardwolfBasePlugin):
     """
     count = 0
     if args:
-      count = args.count
+      count = args['count']
 
     msg = []
     stats = {}
@@ -1006,7 +1006,7 @@ class Plugin(AardwolfBasePlugin):
     """
     count = 0
     if args:
-      count = args.count
+      count = args['count']
 
     msg = []
     stats = {}
@@ -1144,7 +1144,7 @@ class Plugin(AardwolfBasePlugin):
     """
     count = 0
     if args:
-      count = args.count
+      count = args['count']
 
     msg = []
     stats = {}

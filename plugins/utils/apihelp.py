@@ -61,8 +61,8 @@ class Plugin(BasePlugin):
     apio = None
     apiapath = None
     apiopath = None
-    if args.api:
-      apiname = args.api
+    if args['api']:
+      apiname = args['api']
       name, cmdname = apiname.split('.')
       tdict = {'name':name, 'cmdname':cmdname, 'apiname':apiname}
       try:
@@ -137,8 +137,8 @@ class Plugin(BasePlugin):
     """
     tmsg = []
     apilist = {}
-    if args.toplevel:
-      i = args.toplevel
+    if args['toplevel']:
+      i = args['toplevel']
       if i in self.api.api:
         apilist[i] = {}
         for k in self.api.api[i]:

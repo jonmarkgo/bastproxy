@@ -178,7 +178,7 @@ class Plugin(AardwolfBasePlugin):
     cmd to lookup a spell
     """
     msg = []
-    skill = self.api.get('skills.gets')(args.skill)
+    skill = self.api.get('skills.gets')(args['skill'])
     if skill:
       msg.append('%-8s : %s' % ('SN', skill['sn']))
       msg.append('%-8s : %s' % ('Name', skill['name']))
@@ -200,7 +200,7 @@ class Plugin(AardwolfBasePlugin):
         else:
           msg.append('%-8s : %s' % ('Recovery', recov['name']))
     else:
-      msg.append('Could not find: %s' % args.skill)
+      msg.append('Could not find: %s' % args['skill'])
 
     return True, msg
 

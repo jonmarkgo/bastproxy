@@ -56,8 +56,8 @@ class Plugin(BasePlugin):
       @CUsage@w: rem @Y<gmcpmod>@w
         @Ygmcpmod@w    = The gmcp module to print, such as char.status
     """
-    if args.module:
-      return True, ['%s' % self.api.get('GMCP.getv')(args.module)]
+    if args['module']:
+      return True, ['%s' % self.api.get('GMCP.getv')(args['module'])]
 
     return False
 

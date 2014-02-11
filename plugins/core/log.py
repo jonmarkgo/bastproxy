@@ -214,8 +214,8 @@ class Plugin(BasePlugin):
     @Ydatatype@w  = the type to toggle
     if no arguments, list types that are sent to client"""
     tmsg = []
-    if len(args.datatype) > 0:
-      for i in args.datatype:
+    if len(args['datatype']) > 0:
+      for i in args['datatype']:
         if i in self.sendtoclient and i != 'frommud':
           self.sendtoclient[i] = not self.sendtoclient[i]
           if self.sendtoclient[i]:
@@ -257,8 +257,8 @@ class Plugin(BasePlugin):
     @Ydatatype@w  = the type to toggle, can be multiple (list)
     if no arguments, list types that are sent to console"""
     tmsg = []
-    if len(args.datatype) > 0:
-      for i in args.datatype:
+    if len(args['datatype']) > 0:
+      for i in args['datatype']:
         if i in self.sendtoconsole and i != 'frommud':
           self.sendtoconsole[i] = not self.sendtoconsole[i]
           if self.sendtoconsole[i]:
@@ -310,9 +310,9 @@ class Plugin(BasePlugin):
     if no arguments, list types that are sent to file"""
     tmsg = []
     timestamp = True
-    if args.datatype != 'list':
-      dtype = args.datatype
-      timestamp = args.notimestamp
+    if args['datatype'] != 'list':
+      dtype = args['datatype']
+      timestamp = args['notimestamp']
 
       if dtype in self.sendtofile:
         del self.sendtofile[dtype]
@@ -362,7 +362,7 @@ class Plugin(BasePlugin):
     tmsg = []
     tmsg.append('Data Types')
     tmsg.append('-' *  30)
-    match = args.match
+    match = args['match']
     tkeys = self.dtypes.keys()
     tkeys.sort()
     for i in tkeys:

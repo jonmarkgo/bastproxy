@@ -227,11 +227,11 @@ class BasePlugin(object):
       it will list the settings for the plugin
     """
     msg = []
-    if args.name == 'list':
+    if args['name'] == 'list':
       return True, self.listvars()
-    elif args.name and args.value:
-      var = args.name
-      val = args.value
+    elif args['name'] and args['value']:
+      var = args['name']
+      val = args['value']
       if var in self.settings:
         if 'readonly' in self.settings[var] \
               and self.settings[var]['readonly']:

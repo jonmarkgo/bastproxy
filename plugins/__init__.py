@@ -153,7 +153,7 @@ class PluginMgr(object):
                use the name without the .py
     """
     tmsg = []
-    plugin = args.plugin
+    plugin = args['plugin']
     if plugin:
       basepath = ''
       index = __file__.rfind(os.sep)
@@ -192,7 +192,7 @@ class PluginMgr(object):
         @Yplugin@w    = the shortname of the plugin to load
     """
     tmsg = []
-    plugin = args.plugin
+    plugin = args['plugin']
     if plugin and plugin in self.plugins:
       if self.plugins[plugin].canreload:
         if self.unload_module(self.plugins[plugin].fullimploc):
@@ -216,7 +216,7 @@ class PluginMgr(object):
         @Yplugin@w    = the shortname of the plugin to reload
     """
     tmsg = []
-    plugin = args.plugin
+    plugin = args['plugin']
     if not plugin:
       return False, ['@Rplease specify a plugin@w']
 

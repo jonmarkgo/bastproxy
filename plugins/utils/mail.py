@@ -153,8 +153,8 @@ X-Mailer: My-Mail
     @CUsage@w: pw @Y<password>@w
       @Ypassword@w    = the password for the smtp server
     """
-    if args.password:
-      self.password = args.password
+    if args['password']:
+      self.password = args['password']
       return True, ['Password is set']
     else:
       return False, ['@RPlease specify a password@x']
@@ -192,8 +192,8 @@ X-Mailer: My-Mail
       @Ysubject@w    = the subject of the email
       @Ymessage@w    = the message to put in the email
     """
-    subject = args.subject
-    msg = args.message
+    subject = args['subject']
+    msg = args['message']
     if self.check():
       self.api.get('mail.send')(subject, msg)
       return True, ['Attempted to send test message',

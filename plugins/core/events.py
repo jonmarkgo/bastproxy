@@ -227,8 +227,8 @@ class Plugin(BasePlugin):
         @Yeventname@w  = the eventname to get info for
     """
     tmsg = []
-    if len(args.event) > 0:
-      for eventname in args.event:
+    if len(args['event']) > 0:
+      for eventname in args['event']:
         tmsg.extend(self.api.get('events.detail')(eventname))
         tmsg.append('')
     else:
@@ -243,7 +243,7 @@ class Plugin(BasePlugin):
       @CUsage@w: list
     """
     tmsg = []
-    match = args.match
+    match = args['match']
     for name in self.events:
       if not match or match in name:
         if len(self.events[name]) > 0:

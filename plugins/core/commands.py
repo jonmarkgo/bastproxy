@@ -63,9 +63,8 @@ class Plugin(BasePlugin):
 
     args, other_args = cmd['parser'].parse_known_args(targs)
 
-    #TODO: change this to just be a dictionary
-    args = DotDict(vars(args))
-    if args.help:
+    args = vars(args)
+    if args['help']:
       msg = cmd['parser'].format_help().split('\n')
       self.api.get('send.client')('\n'.join(self.formatretmsg(
                                                   msg, cmd['sname'],
@@ -278,8 +277,8 @@ class Plugin(BasePlugin):
     list commands
     """
     tmsg = []
-    category = args.category
-    cmd = args.cmd
+    category = args['category']
+    cmd = args['cmd']
     if category:
       if category in self.cmds:
         if cmd and cmd in self.cmds[category]:

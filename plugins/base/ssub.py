@@ -90,10 +90,10 @@ class Plugin(BasePlugin):
         @Mreplacementstring@w = The new string
     """
     tmsg = []
-    if args.original and args.replacement:
+    if args['original'] and args['replacement']:
       tmsg.append("@GAdding substitute@w : '%s' will be replaced by '%s'" % \
-                                              (args.original, args.replacement))
-      self.addsub(args.original, args.replacement)
+                                              (args['original'], args['replacement']))
+      self.addsub(args['original'], args['replacement'])
       return True, tmsg
     else:
       tmsg.append("@RPlease specify all arguments@w")
@@ -107,9 +107,9 @@ class Plugin(BasePlugin):
         @Yoriginalstring@w    = The original string
     """
     tmsg = []
-    if args.substitute:
-      tmsg.append("@GRemoving substitute@w : '%s'" % (args.substitute))
-      self.removesub(args.substitute)
+    if args['substitute']:
+      tmsg.append("@GRemoving substitute@w : '%s'" % (args['substitute']))
+      self.removesub(args['substitute'])
       return True, tmsg
     else:
       return False, tmsg
@@ -120,7 +120,7 @@ class Plugin(BasePlugin):
       List substitutes
       @CUsage@w: list
     """
-    tmsg = self.listsubs(args.match)
+    tmsg = self.listsubs(args['match'])
     return True, tmsg
 
   def cmd_clear(self, args):
