@@ -6,7 +6,6 @@ This plugin will show information about connections to the proxy
 from libs.net._basetelnetoption import BaseTelnetOption
 from plugins._baseplugin import BasePlugin
 from libs.net.telnetlib import WILL, DO, IAC, SE, SB
-from libs.utils import DotDict
 from libs.utils import convert
 
 GMCP = chr(201)

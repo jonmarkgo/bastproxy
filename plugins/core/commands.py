@@ -9,7 +9,6 @@ This module handles commands and parsing input
 import shlex
 import argparse
 
-from libs.utils import DotDict
 from plugins._baseplugin import BasePlugin
 
 NAME = 'Commands'
