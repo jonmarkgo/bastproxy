@@ -15,7 +15,7 @@ class BasePlugin(object):
   """
   a base class for plugins
   """
-  def __init__(self, name, sname, fullname, basepath, fullimploc):
+  def __init__(self, name, sname, modpath, basepath, fullimploc):
     """
     initialize the instance
     The following things should not be done in __init__ in a plugin
@@ -40,7 +40,7 @@ class BasePlugin(object):
       pass
     self.savefile = os.path.join(self.api.BASEPATH, 'data',
                                     'plugins', self.sname, 'settingvalues.txt')
-    self.fullname = fullname
+    self.modpath = modpath
     self.basepath = basepath
     self.fullimploc = fullimploc
 

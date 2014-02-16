@@ -16,17 +16,17 @@ from libs.persistentdict import PersistentDict
 from libs.api import API
 from plugins._baseplugin import BasePlugin
 
-
-def get_module_name(path, filename):
+def get_module_name(modpath):
   """
   get a module name
   """
-  filename = filename.replace(path, "")
-  path, filename = os.path.split(filename)
-  tpath = path.split(os.sep)
-  path = '.'.join(tpath)
-  return path, os.path.splitext(filename)[0]
-
+  tpath = os.path.split(modpath)
+  base = os.path.basename(tpath[0])
+  mod = os.path.splitext(tpath[1])[0]
+  if not base:
+    return '.'.join([mod]), mod
+  else:
+    return '.'.join([base, mod]), mod
 
 def findplugin(name):
   """
@@ -124,7 +124,8 @@ class PluginMgr(object):
 
       name, path = findplugin(i)
       if name:
-        self.load_module(name, path, force=True)
+        modpath = name.replace(path, '')
+        self.load_module(modpath, path, force=True)
 
   def cmd_list(self, args):
     """
@@ -171,7 +172,8 @@ class PluginMgr(object):
       elif len(_module_list) == 0:
         tmsg.append('There are no modules that match: %s' % plugin)
       else:
-        sname, reason = self.load_module(_module_list[0], basepath, True)
+        modpath = _module_list[0].replace(basepath, '')
+        sname, reason = self.load_module(modpath, basepath, True)
         if sname:
           if reason == 'already':
             tmsg.append('Module %s is already loaded' % sname)
@@ -252,11 +254,12 @@ class PluginMgr(object):
 
     load = False
 
-    for fullname in _module_list:
+    for fullpath in _module_list:
+      modpath = fullpath.replace(basepath, '')
       force = False
-      if fullname in self.loadedplugins:
+      if modpath in self.loadedplugins:
         force = True
-      modname, status = self.load_module(fullname, basepath, force=force, runload=load)
+      modname, status = self.load_module(modpath, basepath, force=force, runload=load)
 
       if modname == 'log':
         self.api.get('log.adddtype')(self.sname)
@@ -273,20 +276,20 @@ class PluginMgr(object):
                         "load: had problems running the load method for %s." % i.fullimploc)
           del sys.modules[i.fullimploc]
 
-  def load_module(self, fullname, basepath, force=False, runload=True):
+  def load_module(self, modpath, basepath, force=False, runload=True):
     """
     load a single module
     """
-    imploc, modname = get_module_name(basepath, fullname)
+    if basepath in modpath:
+      modpath = modpath.replace(basepath, '')
+
+    imploc, modname = get_module_name(modpath)
 
     if modname.startswith("_"):
       return False, 'dev'
 
     try:
-      if imploc == '.':
-        fullimploc = "plugins" + imploc + modname
-      else:
-        fullimploc = "plugins" + imploc + '.' + modname
+      fullimploc = "plugins" + '.' + imploc
       if fullimploc in sys.modules:
         return sys.modules[fullimploc].SNAME, 'already'
 
@@ -304,7 +307,7 @@ class PluginMgr(object):
 
       if load:
         if "Plugin" in _module.__dict__:
-          self.add_plugin(_module, fullname, basepath, fullimploc, runload)
+          self.add_plugin(_module, modpath, basepath, fullimploc, runload)
 
         else:
           self.api.get('send.msg')('Module %s has no Plugin class' % \
@@ -367,13 +370,13 @@ class PluginMgr(object):
       plugin = self.plugins[modname]
       fullimploc = plugin.fullimploc
       basepath = plugin.basepath
-      fullname = plugin.fullname
+      modpath = plugin.modpath
       plugin = None
       if not self.unload_module(fullimploc):
         return False, ''
 
-      if fullname and basepath:
-        return self.load_module(fullname, basepath, force)
+      if modpath and basepath:
+        return self.load_module(modpath, basepath, force)
 
     else:
       return False, ''
@@ -395,13 +398,13 @@ class PluginMgr(object):
     self.api.get('events.eraise')('%s_plugin_loaded' % plugin.sname, {})
     self.api.get('events.eraise')('plugin_loaded', {'plugin':plugin.sname})
 
-  def add_plugin(self, module, fullname, basepath, fullimploc, load=True):
+  def add_plugin(self, module, modpath, basepath, fullimploc, load=True):
     """
     add a plugin to be managed
     """
     module.__dict__["lyntin_import"] = 1
     plugin = module.Plugin(module.NAME, module.SNAME,
-                                    fullname, basepath, fullimploc)
+                                    modpath, basepath, fullimploc)
     plugin.author = module.AUTHOR
     plugin.purpose = module.PURPOSE
     plugin.version = module.VERSION
@@ -428,7 +431,7 @@ class PluginMgr(object):
     self.pluginl[plugin.name] = plugin
     self.plugins[plugin.sname] = plugin
     self.pluginm[plugin.sname] = module
-    self.loadedplugins[fullname] = True
+    self.loadedplugins[modpath] = True
     self.loadedplugins.sync()
 
     return True
@@ -450,7 +453,7 @@ class PluginMgr(object):
       del self.plugins[plugin.sname]
       del self.pluginl[plugin.name]
       del self.pluginm[plugin.sname]
-      del self.loadedplugins[plugin.fullname]
+      del self.loadedplugins[plugin.modpath]
       self.loadedplugins.sync()
 
       self.api.get('events.eraise')('%s_plugin_unload' % plugin.sname, {})
