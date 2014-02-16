@@ -1,7 +1,8 @@
 """
 $Id$
 
-#TODO: make all functions that add things use kwargs instead of a table
+This module holds the class BasePlugin, from which all plugins should have as
+their base class.
 """
 import os
 import sys

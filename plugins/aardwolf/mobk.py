@@ -255,7 +255,6 @@ class Plugin(AardwolfBasePlugin):
     vopaled a mob
     """
     self.kill_info['vorpal'] = 1
-    #TODO: set primary and secondary weapons
 
   def mobassassin(self, args):
     """

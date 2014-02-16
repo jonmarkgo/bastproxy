@@ -8,6 +8,7 @@ Overall:
   #TODO: add a debug command
   #TODO: add a debug event (in a debug plugin, summary command), so we can get all stats for various plugins
   #TODO: add sys.getsizeof to stats for plugins (either the pluginclass or module, etc)
+  #TODO: make all functions that add things use kwargs instead of a table
 
 Python3:
   #TODO: convert to run under python3
@@ -18,6 +19,9 @@ New Plugins:
     #TODO: create a help plugin
     #TODO: create a plugin to search log files (or maybe a seperate process that is a webserver?)
     #TODO: create a generic mapper plugin
+    #TODO: make the config editable in a plugin
+        have an event attached to the mudname/port that will autoconnect when they change
+        or a command to do it manually
   Aardwolf Plugins:
     #TODO: create an autohunt plugin
     #TODO: create a plugin to parse eq events
@@ -25,11 +29,15 @@ New Plugins:
     #TODO: create a potion manager plugin
     #TODO: create a moonbot plugin
 
-io:
-  change api to send.*
+api:
+  #TODO: decorator function to set attributes on a function for the api (short description)?
+
+commands:
+  #TODO: use decorators to handle the adding of commands?
+  #TODO: group commands
 
 client:
-  #TODO: change from_client_event to work like from_mud_event, use original instead of fromdata for dictionary key
+  #TODO: change from_client_event to use clientdata instead of fromdata
 
 alias:
   #TODO: add stats
@@ -54,8 +62,7 @@ Events:
   #TODO: add onetime flag to registering events
 
 CmdMan:
-  #TODO: use fnmatch to match commands
-    count them so that duplicate commands are not run
+  #TODO: count them so that duplicate commands are not run
 
 sqlitedb:
   #TODO: load the db into memory and then when adding something, fork and save
@@ -82,7 +89,7 @@ statdb:
   #TODO: create commands to get specific info for a cp/gq/quest/mobk
 
 mobk:
-  #TODO: get weapon for vorpals
+  #TODO: get weapon for vorpals, primary and secondary
 
 skills:
   #TODO: reset all when tiering and remorting
@@ -95,3 +102,17 @@ su:
   #TODO: add ability to spellup others
   #TODO: add ability to have spell blockers
   #TODO: spellups stop if client isn't connected, investigate
+  #TODO: add a summary command that has an output like the brief command from my mushclient plugin
+  #TODO: add clanskills
+    toggleclan      : toggle a spell/skill to be a clan skill
+  #TODO: add spells that are not designated spellups by the mud
+    togglespellup   : toggle a spell to be a spellup regardless of what the mud says
+  #TODO: add export
+  #TODO: add spell arguments
+    searg           : add an argument to be cast with a spell
+
+
+Reloading plugins:
+  Copy data into a dict in PluginManager (something like self.pluginreload)
+  on reload check this dict for any data and load it
+  check for a version difference and run a version function if available

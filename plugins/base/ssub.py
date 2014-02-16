@@ -128,10 +128,6 @@ class Plugin(BasePlugin):
     @G%(name)s@w - @B%(cmdname)s@w
       List substitutes
       @CUsage@w: list"""
-    #if len(args) > 0:
-      #TODO check for subs that match args and remove them
-    #  pass
-    #else:
     self.clearsubs()
     return True, ['Substitutes cleared']
 

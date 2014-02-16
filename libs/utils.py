@@ -244,7 +244,7 @@ def center(tstr, fillerc, length):
 
   return tstr
 
-#TODO: This is slow, how can we speed it up?
+@timeit
 def checklistformatch(arg, tlist):
   """
   check a list for a match of arg

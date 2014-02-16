@@ -2,8 +2,6 @@
 $Id$
 
 this module handles the api for all other modules
-
-#TODO: decorator function to set attributes on a function for the api (short description)?
 """
 import sys
 import time

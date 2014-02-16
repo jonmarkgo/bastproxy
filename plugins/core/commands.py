@@ -2,9 +2,6 @@
 $Id$
 
 This module handles commands and parsing input
-
-#TODO: use decorators to handle the adding of commands?
-#TODO: group commands
 """
 import shlex
 import argparse
