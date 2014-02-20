@@ -31,6 +31,7 @@ class API(object):
     self.overload('managers', 'getm', self.getmanager)
     self.overload('api', 'add', self.add)
     self.overload('api', 'remove', self.remove)
+    self.overload('api', 'getchildren', self.api_getchildren)
 
   # add a function to the api
   def add(self, ptype, name, function):
@@ -115,6 +116,20 @@ class API(object):
       pass
 
     raise AttributeError('%s is not in the api' % apiname)
+
+  def api_getchildren(self, toplevel):
+    """
+    return a list of apis in a toplevel api
+    """
+    apilist = []
+    if toplevel in self.api:
+      apilist.extend(self.api[toplevel].keys())
+
+    if toplevel in self.overloadedapi:
+      apilist.extend(self.overloadedapi[toplevel].keys())
+
+    return list(set(apilist))
+
 
 if __name__ == '__main__':
   def testapi():
