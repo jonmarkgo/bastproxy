@@ -54,7 +54,7 @@ class Plugin(BasePlugin):
     BasePlugin.load(self)
 
     self.api.get('setting.add')('nextnum', 0, int,
-                                'the number of the next alias addded',
+                                'the number of the next alias added',
                                 readonly=True)
 
     parser = argparse.ArgumentParser(add_help=False,
