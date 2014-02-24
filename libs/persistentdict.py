@@ -175,3 +175,11 @@ class PersistentDictEvent(PersistentDict):
     if not self.plugin.resetflag:
       self.api.get('events.eraise')(eventname, {'var':key,
                                         'newvalue':val})
+
+  def sync(self):
+    """
+    always put plugin version in here
+    """
+    self['_version'] = self.plugin.version
+
+    PersistentDict.sync(self)
