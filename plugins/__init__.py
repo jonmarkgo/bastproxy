@@ -39,7 +39,9 @@ class PluginMgr(object):
     self.plugins = {}
     self.pluginl = {}
     self.pluginm = {}
+    self.pluginp = {}
     self.options = {}
+    self.plugininfo = {}
 
     index = __file__.rfind(os.sep)
     if index == -1:
@@ -149,7 +151,28 @@ class PluginMgr(object):
     msg = []
 
     if args['notloaded']:
-      return True, ['unimplemented']
+      badplugins = self.updateallplugininfo()
+      for modpath in sorted(self.plugininfo.keys()):
+        sname = self.plugininfo[modpath]['sname']
+        fullimploc = self.plugininfo[modpath]['fullimploc']
+        if not (sname in self.plugins):
+          msg.append("%-20s : %-25s %-10s %-5s %s@w" % \
+                    (fullimploc.replace('plugins.',''),
+                     self.plugininfo[modpath]['name'],
+                     self.plugininfo[modpath]['author'],
+                     self.plugininfo[modpath]['version'],
+                     self.plugininfo[modpath]['purpose']))
+      if len(msg) > 0:
+        msg.insert(0, '-' * 75)
+        msg.insert(0, "%-20s : %-25s %-10s %-5s %s@w" % \
+                           ('Location', 'Name', 'Author', 'Vers', 'Purpose'))
+        msg.insert(0, 'The following plugins are not loaded')
+
+      if badplugins:
+        msg.append('')
+        msg.append('The following files would not import')
+        for bad in badplugins:
+          msg.append(bad.replace('plugins.', ''))
     else:
       tkeys = self.plugins.keys()
       tkeys.sort()
@@ -160,7 +183,7 @@ class PluginMgr(object):
         tpl = self.plugins[plugin]
         msg.append("%-10s : %-25s %-10s %-5s %s@w" % \
                     (plugin, tpl.name, tpl.author, tpl.version, tpl.purpose))
-      return True, msg
+    return True, msg
 
   def cmd_load(self, args):
     """
@@ -264,8 +287,6 @@ class PluginMgr(object):
     _module_list = find_files( self.basepath, tfilter)
     _module_list.sort()
 
-    pluginlist = {}
-
     load = False
 
     for fullpath in _module_list:
@@ -289,6 +310,52 @@ class PluginMgr(object):
           self.api.get('send.traceback')(
                         "load: had problems running the load method for %s." % i.fullimploc)
           del sys.modules[i.fullimploc]
+
+  def updateallplugininfo(self):
+    """
+    find plugins that are not in self.plugininfo
+    """
+    _module_list = find_files( self.basepath, '*.py')
+    _module_list.sort()
+
+    self.plugininfo = {}
+    badplugins = []
+
+    for fullpath in _module_list:
+      modpath = fullpath.replace(self.basepath, '')
+
+      imploc, modname = get_module_name(modpath)
+      
+      if not modname.startswith("_"):
+        fullimploc = "plugins" + '.' + imploc
+        if fullimploc in sys.modules:
+          self.plugininfo[modpath] = {}
+          self.plugininfo[modpath]['sname'] = self.pluginp[modpath].sname
+          self.plugininfo[modpath]['name'] = self.pluginp[modpath].name
+          self.plugininfo[modpath]['purpose'] = self.pluginp[modpath].purpose
+          self.plugininfo[modpath]['author'] = self.pluginp[modpath].author
+          self.plugininfo[modpath]['version'] = self.pluginp[modpath].version
+          self.plugininfo[modpath]['fullimploc'] = fullimploc
+
+        else:
+          try:
+            _module = __import__(fullimploc)
+            _module = sys.modules[fullimploc]
+
+            self.plugininfo[modpath] = {}
+            self.plugininfo[modpath]['sname'] = _module.SNAME
+            self.plugininfo[modpath]['name'] = _module.NAME
+            self.plugininfo[modpath]['purpose'] = _module.PURPOSE
+            self.plugininfo[modpath]['author'] = _module.AUTHOR
+            self.plugininfo[modpath]['version'] = _module.VERSION
+            self.plugininfo[modpath]['fullimploc'] = fullimploc
+
+            del sys.modules[fullimploc]
+
+          except:
+            badplugins.append(fullimploc)
+
+    return badplugins
 
   def load_module(self, modpath, basepath, force=False, runload=True):
     """
@@ -318,6 +385,15 @@ class PluginMgr(object):
           load = False
       elif not ('AUTOLOAD' in _module.__dict__):
         load = False
+
+      if not (modpath in self.plugininfo):
+        self.plugininfo[modpath] = {}
+        self.plugininfo[modpath]['sname'] = _module.SNAME
+        self.plugininfo[modpath]['name'] = _module.NAME
+        self.plugininfo[modpath]['purpose'] = _module.PURPOSE
+        self.plugininfo[modpath]['author'] = _module.AUTHOR
+        self.plugininfo[modpath]['version'] = _module.VERSION
+        self.plugininfo[modpath]['fullimploc'] = fullimploc
 
       if load:
         if "Plugin" in _module.__dict__:
@@ -445,6 +521,7 @@ class PluginMgr(object):
     self.pluginl[plugin.name] = plugin
     self.plugins[plugin.sname] = plugin
     self.pluginm[plugin.sname] = module
+    self.pluginp[modpath] = plugin
     self.loadedplugins[modpath] = True
     self.loadedplugins.sync()
 
@@ -495,6 +572,8 @@ class PluginMgr(object):
 
     parser = argparse.ArgumentParser(add_help=False,
                 description="list plugins")
+    parser.add_argument('-n', "--notloaded", help="list plugins that are not loaded",
+              action="store_true")
     self.api.get('commands.add')('list', self.cmd_list,
                         lname='Plugin Manager', parser=parser)
 
