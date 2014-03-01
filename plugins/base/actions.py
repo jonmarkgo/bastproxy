@@ -98,6 +98,13 @@ class Plugin(BasePlugin):
     self.api.get('commands.add')('detail', self.cmd_detail,
                                  parser=parser)
 
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='toggle all actions in a group')
+    parser.add_argument('group', help='the group to toggle', default='', nargs='?')
+    parser.add_argument('-d', "--disable", help="disable the group", action="store_true")
+    self.api.get('commands.add')('groupt', self.cmd_grouptoggle,
+                                 parser=parser)
+
     #self.api.get('commands.add')('stats', self.cmd_stats,
     #                             shelp='show action stats')
 
@@ -240,6 +247,30 @@ class Plugin(BasePlugin):
 
     else:
       return False, ['@RPlease include an action to toggle@w']
+
+  def cmd_grouptoggle(self, args):
+    """
+    toggle all actions in a group
+    """
+    tmsg = []
+    togglea = []
+    state = not args['disable']
+    if args['group']:
+      for i in self.actions:
+        if self.actions[i]['group'] == args['group']:
+          self.actions[i]['enabled'] = state
+          togglea.append('%s' % self.actions[i]['num'])
+
+      if togglea:
+        tmsg.append('The following actions were %s: %s' % (
+                        'enabled' if state else 'disabled',
+                        ','.join(togglea)))
+      else:
+        tmsg.append('No actions were modified')
+
+      return True, tmsg
+    else:
+      return False, ['@RPlease include a group to toggle@w']
 
   def cmd_detail(self, args):
     """
