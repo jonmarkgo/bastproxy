@@ -145,6 +145,27 @@ def api_tomud(data):
   """
   api.get('events.eraise')('to_mud_event', {'data':data, 'dtype':'fromclient'})
 
+# get the errors that have been seen
+def api_geterrors():
+  """ get errors
+
+  this function has no arguments
+
+  this function returns the list of errors
+  """
+  return errors
+
+# clear errors
+def api_clearerrors():
+  """ clear errors
+
+  this function has no arguments
+
+  this function returns no values
+  """
+  global errors
+
+  errors = []
 
 api.add('send', 'msg', api_msg)
 api.add('send', 'error', api_error)
@@ -152,3 +173,5 @@ api.add('send', 'traceback', api_traceback)
 api.add('send', 'client', api_client)
 api.add('send', 'mud', api_tomud)
 api.add('send', 'execute', api_execute)
+api.add('errors', 'gete', api_geterrors)
+api.add('errors', 'clear', api_clearerrors)
