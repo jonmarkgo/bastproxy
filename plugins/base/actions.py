@@ -1,7 +1,8 @@
 """
 $Id$
 
-This plugin will show information about connections to the proxy
+This plugin adds the ability to do user defined actions when text is
+seen from the mud
 """
 import re
 import sys

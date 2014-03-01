@@ -1,7 +1,7 @@
 """
 $Id$
 
-This plugin will show information about connections to the proxy
+This plugin handles internal triggers for the proxy
 """
 import re
 import sys
