@@ -61,7 +61,9 @@ class Plugin(BasePlugin):
                  description='add an alias')
     parser.add_argument('original', help='the input to replace', default='', nargs='?')
     parser.add_argument('replacement', help='the string to replace it with', default='', nargs='?')
+    parser.add_argument('-o', "--overwrite", help="overwrite an alias if it already exists", action="store_true")
     parser.add_argument('-d', "--disable", help="disable the alias", action="store_true")
+    parser.add_argument('-g', "--group", help="the alias group", default="")
     self.api.get('commands.add')('add', self.cmd_add,
                                  parser=parser)
 
@@ -81,6 +83,13 @@ class Plugin(BasePlugin):
                  description='toggle enabled flag')
     parser.add_argument('alias', help='the alias to toggle', default='', nargs='?')
     self.api.get('commands.add')('toggle', self.cmd_toggle,
+                                 parser=parser)
+
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='toggle all aliases in a group')
+    parser.add_argument('group', help='the group to toggle', default='', nargs='?')
+    parser.add_argument('-d', "--disable", help="disable the group", action="store_true")
+    self.api.get('commands.add')('groupt', self.cmd_grouptoggle,
                                  parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
@@ -159,9 +168,12 @@ class Plugin(BasePlugin):
     """
     tmsg = []
     if args['original'] and args['replacement']:
-      tmsg.append("@GAdding alias@w : '%s' will be replaced by '%s'" % \
-                                              (args['original'], args['replacement']))
-      self.addalias(args['original'], args['replacement'], args['disable'])
+      if args['original'] in self._aliases and not args['overwrite']:
+        return True, ['Alias: %s already exists.' % args['original']]
+      else:
+        tmsg.append("@GAdding alias@w : '%s' will be replaced by '%s'" % \
+                                                (args['original'], args['replacement']))
+        self.addalias(args['original'], args['replacement'], args['disable'], args['group'])
       return True, tmsg
     else:
       return False, ['@RPlease include all arguments@w']
@@ -226,6 +238,7 @@ class Plugin(BasePlugin):
         tmsg.append('%-12s : %d' % ('Session Hits', self.sessionhits[alias]))
         tmsg.append('%-12s : %s' % ('Alias', alias))
         tmsg.append('%-12s : %s' % ('Replacement', self._aliases[alias]['alias']))
+        tmsg.append('%-12s : %s' % ('Group', self._aliases[alias]['group']))
       else:
         return True, ['@RAlias does not exits@w : \'%s\'' % (args['alias'])]
 
@@ -242,12 +255,40 @@ class Plugin(BasePlugin):
     tmsg = self.listaliases(args['match'])
     return True, tmsg
 
-  def addalias(self, item, alias, disabled):
+  def cmd_grouptoggle(self, args):
+    """
+    toggle all aliases in a group
+    """
+    tmsg = []
+    togglea = []
+    state = not args['disable']
+    if args['group']:
+      for i in self._aliases:
+        if not ('group' in self._aliases[i]):
+          self._aliases[i]['group'] = ''
+
+        if self._aliases[i]['group'] == args['group']:
+          self._aliases[i]['enabled'] = state
+          togglea.append('%s' % self._aliases[i]['num'])
+
+      if togglea:
+        tmsg.append('The following aliases were %s: %s' % (
+                        'enabled' if state else 'disabled',
+                        ','.join(togglea)))
+      else:
+        tmsg.append('No aliases were modified')
+
+      return True, tmsg
+    else:
+      return False, ['@RPlease include a group to toggle@w']
+
+  def addalias(self, item, alias, disabled, group):
     """
     internally add a alias
     """
     num = self.api.get('setting.gets')('nextnum')
-    self._aliases[item] = {'alias':alias, 'enabled':not disabled, 'num':num}
+    self._aliases[item] = {'alias':alias, 'enabled':not disabled,
+                           'num':num, 'group':group}
     self._aliases.sync()
     self.api.get('setting.change')('nextnum', num + 1)
 
@@ -280,14 +321,15 @@ class Plugin(BasePlugin):
         lalias = strip_ansi(self._aliases[item]['alias'])
         if len(lalias) > 30:
           lalias = lalias[:27] + '...'
-        tmsg.append("%4s %2s  %-20s : %s@w" % (self._aliases[item]['num'],
+        tmsg.append("%4s %2s  %-10s %-20s : %s@w" % (self._aliases[item]['num'],
                       'Y' if self._aliases[item]['enabled'] else 'N',
+                      self._aliases[item]['group'],
                       item,
                       lalias))
     if len(tmsg) == 0:
       tmsg = ['None']
     else:
-      tmsg.insert(0, "%4s %2s  %-20s : %s@w" % ('#', 'E', 'Alias', 'Replacement'))
+      tmsg.insert(0, "%4s %2s  %-10s %-20s : %s@w" % ('#', 'E', 'Group', 'Alias', 'Replacement'))
       tmsg.insert(1, '@B' + '-' * 60 + '@w')
 
     return tmsg
