@@ -317,14 +317,15 @@ class Plugin(BasePlugin):
         action = strip_ansi(item['action'])
         if len(action) > 30:
           action = action[:27] + '...'
-        tmsg.append("%4s %2s  %-32s : %s@w" % (item['num'],
+        tmsg.append("%4s %2s  %-10s %-32s : %s@w" % (item['num'],
                       'Y' if item['enabled'] else 'N',
+                      item['group'],
                       regex,
                       action))
     if len(tmsg) == 0:
       tmsg = ['None']
     else:
-      tmsg.insert(0, "%4s %2s  %-32s : %s@w" % ('#', 'E', 'Regex', 'Action'))
+      tmsg.insert(0, "%4s %2s  %-10s %-32s : %s@w" % ('#', 'E', 'Group', 'Regex', 'Action'))
       tmsg.insert(1, '@B' + '-' * 60 + '@w')
 
     return tmsg
