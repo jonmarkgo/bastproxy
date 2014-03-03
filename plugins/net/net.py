@@ -39,6 +39,11 @@ class Plugin(BasePlugin):
                               shelp='list clients that are connected')
     self.api.get('commands.default')('clients')
 
+    self.api.get('commands.add')('disconnect', self.cmd_disconnect,
+                              shelp='disconnect from the mud')
+
+    self.api.get('commands.default')('clients')
+
   def cmd_clients(self, _):
     """
     @G%(name)s@w - @B%(cmdname)s@w
@@ -73,4 +78,13 @@ class Plugin(BasePlugin):
                                           i.ttype[:17], ttime))
 
     return True, tmsg
+
+  def cmd_disconnect(self, _=None):
+    """
+    disconnect from the mud
+    """
+    proxy = self.api.get('managers.getm')('proxy')
+    proxy.handle_close()
+
+    return True, ['Attempted to close the connection to the mud']
 
