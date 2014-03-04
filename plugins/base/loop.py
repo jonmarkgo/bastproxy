@@ -54,12 +54,14 @@ class Plugin(BasePlugin):
     loop a command count times
     """
     tmsg = []
+    count = int(args['count'])
+    if count < 1 or count > 50:
+      return True, ['Count has to be between 1 and 50']
     if args['cmd']:
-      count = int(args['count'])
       start = 1
       templ = Template(args['cmd'])
       for i in xrange(1, count + 1):
-        datan = templ.safe_substitute({'num':i})
+        datan = templ.safe_substitute({'num':i, 'count':i})
         self.api.get('send.msg')('sending cmd: %s' % datan)
         self.api.get('send.execute')(datan)
       return True, ['"%s" was sent %s times' % (args['cmd'], count)]
