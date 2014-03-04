@@ -1,7 +1,7 @@
 """
 $Id$
 
-This plugin is a variable plugin
+This plugin loops commands for a specified number of times
 
 """
 import os
