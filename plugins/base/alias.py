@@ -15,7 +15,6 @@ import re
 import shlex
 import argparse
 
-from string import Template
 from plugins._baseplugin import BasePlugin
 from libs.persistentdict import PersistentDict
 from libs.color import strip_ansi
