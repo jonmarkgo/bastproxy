@@ -192,6 +192,7 @@ class Plugin(BasePlugin):
       @Ylhelp@w    = a longer description of what the command does
       @Ypreamble@w = show the preamble for this command (default: True)
       @Yformat@w   = format this command (default: True)
+      @Ygroup@w    = the group this command is in
 
     The command will be added as sname.cmdname
 
@@ -230,6 +231,9 @@ class Plugin(BasePlugin):
                   action="store_true")
 
     tparser.prog='@B#bp.%s.%s@w' % (sname, cmdname)
+
+    if not ('group' in args):
+      args['group'] = 'Default'
 
     try:
       lname = func.im_self.name
@@ -301,6 +305,19 @@ class Plugin(BasePlugin):
     else:
       self.api.get('send.msg')('removeplugin: plugin %s does not exist' % plugin)
 
+  def format_cmdlist(self, category, cmdlist):
+    """
+    format a list of commands
+    """
+    tmsg = []
+    for i in cmdlist:
+      tlist = self.cmds[category][i]['parser'].description.split('\n')
+      if not tlist[0]:
+        tlist.pop(0)
+      tmsg.append('  @B%-10s@w : %s' % (i, tlist[0]))
+
+    return tmsg
+
   def cmd_list(self, args):
     """
     list commands
@@ -315,14 +332,32 @@ class Plugin(BasePlugin):
           tmsg.extend(msg)
         else:
           tmsg.append('Commands in %s:' % category)
+          tmsg.append('@G' + '-' * 60 + '@w')
           tkeys = self.cmds[category].keys()
           tkeys.sort()
+          groups = {}
           for i in tkeys:
+
             if i != 'default':
-              tlist = self.cmds[category][i]['parser'].description.split('\n')
-              if not tlist[0]:
-                tlist.pop(0)
-              tmsg.append('  %-10s : %s' % (i, tlist[0]))
+              if not (self.cmds[category][i]['group'] in groups):
+                groups[self.cmds[category][i]['group']] = []
+
+              groups[self.cmds[category][i]['group']].append(i)
+
+          if len(groups) == 1:
+            tmsg.extend(self.format_cmdlist(category, tkeys))
+          else:
+            gkeys = groups.keys()
+            gkeys.sort()
+            for group in gkeys:
+              if group != 'Default':
+                tmsg.append('@M' + '-' * 5 + ' ' +  group + ' ' + '-' * 5)
+                tmsg.extend(self.format_cmdlist(category, groups[group]))
+                tmsg.append('')
+
+            tmsg.append('@M' + '-' * 5 + ' ' +  'Default' + ' ' + '-' * 5)
+            tmsg.extend(self.format_cmdlist(category, groups['Default']))
+
       else:
         tmsg.append('There is no category %s' % category)
     else:
