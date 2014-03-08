@@ -72,36 +72,36 @@ class Plugin(AardwolfBasePlugin):
     parser.add_argument('-o', "--override", help="add even if the spell is not flagged as a spellup by the mud",
               action="store_true")
     self.api.get('commands.add')('add', self.cmd_sadd,
-              parser=parser)
+              parser=parser, group='Spellups on Self')
 
     parser = argparse.ArgumentParser(add_help=False,
               description='list spellups for self')
     parser.add_argument('match', help='list only spellups that have this argument in them', default='', nargs='?')
     self.api.get('commands.add')('list', self.cmd_slist,
-              parser=parser)
+              parser=parser, group='Spellups on Self')
 
     parser = argparse.ArgumentParser(add_help=False,
               description='remove a spellup from the self list')
     parser.add_argument('spell', help='the spells to remove, use \'all\' to remove all spellups', default=[], nargs='*')
     self.api.get('commands.add')('rem', self.cmd_srem,
-              parser=parser)
+              parser=parser, group='Spellups on Self')
 
     parser = argparse.ArgumentParser(add_help=False,
               description='enable spellups on self')
     parser.add_argument('spell', help='the spells to enable, use \'all\' to enable all spellups', default=[], nargs='*')
     self.api.get('commands.add')('en', self.cmd_sen,
-              parser=parser)
+              parser=parser, group='Spellups on Self')
 
     parser = argparse.ArgumentParser(add_help=False,
               description='disable spell son self')
     parser.add_argument('spell', help='the spells to disable, use \'all\' to disable all spellups', default=[], nargs='*')
     self.api.get('commands.add')('sdis', self.cmd_sdis,
-              shelp='disable a spellup on self')
+              shelp='disable a spellup on self', group='Spellups on Self')
 
     parser = argparse.ArgumentParser(add_help=False,
               description='check all information to cast spells')
     self.api.get('commands.add')('check', self.cmd_check,
-              shelp='check data status for casting')
+              shelp='check data status for casting', group='Spellups on Self')
 
     self.api.get('events.register')('GMCP:char.vitals', self._charvitals)
     self.api.get('events.register')('GMCP:char.status', self._charstatus)
