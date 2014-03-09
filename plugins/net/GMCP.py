@@ -1,7 +1,7 @@
 """
 $Id$
 
-This plugin will show information about connections to the proxy
+This plugins handles TCP option 201, GMCP (aardwolf implementation)
 """
 from libs.net._basetelnetoption import BaseTelnetOption
 from plugins._baseplugin import BasePlugin
@@ -23,7 +23,7 @@ AUTOLOAD = True
 # Plugin
 class Plugin(BasePlugin):
   """
-  a plugin to handle external gmcp actions
+  a plugin to handle gmcp
   """
   def __init__(self, *args, **kwargs):
     """

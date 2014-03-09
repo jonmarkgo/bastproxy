@@ -1,7 +1,7 @@
 """
 $Id$
 
-this module holds the termtype option
+this module handles telnet option 25, Terminal Type
 """
 from libs.net._basetelnetoption import BaseTelnetOption
 from libs.net.telnetlib import WILL, DO, IAC, SE, SB, DONT, NOOPT
@@ -21,7 +21,7 @@ TTYPE = chr(24)  # Terminal Type
 # Plugin
 class Plugin(BasePlugin):
   """
-  the plugin to handle external a102 stuff
+  the plugin to handle the Terminal Type telnet option
   """
   def __init__(self, tname, tsname, filename, directory, importloc):
     """

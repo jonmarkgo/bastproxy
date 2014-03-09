@@ -1,7 +1,7 @@
 """
 $Id$
 
-This module handles mccp
+This module handles telnet option 86, MCCP v2
 """
 import zlib
 from libs.net._basetelnetoption import BaseTelnetOption
@@ -22,7 +22,7 @@ AUTOLOAD = True
 # Plugin
 class Plugin(BasePlugin):
   """
-  the plugin to handle external a102 stuff
+  the plugin to handle MCCP
   """
   def __init__(self, tname, tsname, filename, directory, importloc):
     """
