@@ -26,7 +26,9 @@ AUTOLOAD = True
 
 class Plugin(BasePlugin):
   """
-  a plugin to do simple substitution
+  a plugin to handle global variables, if something goes through
+   send.execute (this includes from the client), a variable
+   can be specified with $varname and will be substituted.
   """
   def __init__(self, *args, **kwargs):
     """
@@ -94,7 +96,7 @@ class Plugin(BasePlugin):
 
   def checkvariable(self, args):
     """
-    this function finds subs in mud data
+    this function checks for variables in input
     """
     data = args['fromdata'].strip()
 
@@ -164,7 +166,7 @@ class Plugin(BasePlugin):
 
   def listvariables(self, match):
     """
-    return a table of strings that list subs
+    return a table of variables
     """
     tmsg = []
     for item in self._variables:

@@ -48,7 +48,7 @@ class Plugin(BasePlugin):
 
   def load(self):
     """
-    load the plugins
+    load the plugin
     """
     BasePlugin.load(self)
 

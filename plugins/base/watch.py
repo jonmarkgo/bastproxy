@@ -1,7 +1,7 @@
 """
 $Id$
 
-This plugin will show information about connections to the proxy
+This plugin will handle watching for commands coming from the client
 """
 import re
 from plugins._baseplugin import BasePlugin
@@ -19,7 +19,7 @@ AUTOLOAD = True
 
 class Plugin(BasePlugin):
   """
-  a plugin to show connection information
+  a plugin to watch for commands coming from the client
   """
   def __init__(self, *args, **kwargs):
     """

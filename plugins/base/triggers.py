@@ -215,7 +215,7 @@ class Plugin(BasePlugin):
   @timeit
   def checktrigger(self, args):
     """
-    check a line of text from the mud
+    check a line of text from the mud to see if it matches any triggers
     the is called whenever the from_mud_event is raised
     """
     data = args['noansi']

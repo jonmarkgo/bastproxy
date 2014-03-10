@@ -160,7 +160,7 @@ class Plugin(BasePlugin):
   def cmd_list(self, args):
     """
     @G%(name)s@w - @B%(cmdname)s@w
-      list triggers and the plugins they are defined in
+      list timers and the plugins they are defined in
       @CUsage@w: list
     """
     tmsg = []
