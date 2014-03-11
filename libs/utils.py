@@ -1,7 +1,7 @@
 """
 $Id$
 
-this module hold utility functions that are seperate from the internal
+this module holds utility functions that are seperate from the internal
 """
 import fnmatch
 import os

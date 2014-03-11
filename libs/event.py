@@ -1,8 +1,7 @@
 """
 $Id$
 
-This plugin handles events.
-  You can register/unregister with events, raise events
+This plugin has the base event class
 """
 import inspect
 from libs.api import API
