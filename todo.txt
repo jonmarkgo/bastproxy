@@ -9,6 +9,7 @@ Overall:
   #TODO: add a debug event (in a debug plugin, summary command), so we can get all stats for various plugins
   #TODO: add sys.getsizeof to stats for plugins (either the pluginclass or module, etc)
   #TODO: make all functions that add things use kwargs instead of a table
+  #TODO: make #bp dynamic, and change command checking to check for that setting
 
 Python3:
   #TODO: convert to run under python3
@@ -22,6 +23,8 @@ New Plugins:
     #TODO: make the config editable in a plugin
         have an event attached to the mudname/port that will autoconnect when they change
         or a command to do it manually
+    #TODO: plugin to show last x lines in log or buffer
+    #TODO: add a note plugin (like bast_notes)
   Aardwolf Plugins:
     #TODO: create an autohunt plugin
     #TODO: create a plugin to parse eq events
@@ -34,10 +37,12 @@ api:
 
 commands:
   #TODO: use decorators to handle the adding of commands?
-  #TODO: group commands
 
 client:
   #TODO: change from_client_event to use clientdata instead of fromdata
+
+actions:
+  #TODO: add stats
 
 alias:
   #TODO: add stats
@@ -51,7 +56,6 @@ timers:
   #TODO: add a end time for a timer that starts at a specific time (or a setting for a specific # of times to execute)
 
 triggers:
-  #TODO: add ability to manually add triggers from #bp.triggers.add
   #TODO: make reloadable, either have original plugins reload or copy the structures somewhere
 
 watch:
@@ -60,9 +64,6 @@ watch:
 
 Events:
   #TODO: add onetime flag to registering events
-
-CmdMan:
-  #TODO: count them so that duplicate commands are not run
 
 sqlitedb:
   #TODO: load the db into memory and then when adding something, fork and save
@@ -81,6 +82,7 @@ mccp:
 afk:
   #TODO: Make this search all comms for player's name and add them to the queue
   #TODO: keep a record of players who send tells and then reply appropriately
+  #TODO: update title with length of afk
 
 ct:
   #TODO: add dodges
