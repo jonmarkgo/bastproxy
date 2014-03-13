@@ -31,7 +31,7 @@ class Plugin(BasePlugin):
 
   def load(self):
     """
-    load the plugins
+    load the plugin
     """
     BasePlugin.load(self)
 
@@ -48,7 +48,7 @@ class Plugin(BasePlugin):
   def cmd_show(self, args=None):
     """
     @G%(name)s@w - @B%(cmdname)s@w
-      show the tell queue
+      show the error queue
       @CUsage@w: show
     """
     msg = []
