@@ -42,20 +42,25 @@ class Plugin(BasePlugin):
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='add a simple substitute')
-    parser.add_argument('original', help='the output to substitute', default='', nargs='?')
-    parser.add_argument('replacement', help='the string to replace it with', default='', nargs='?')
+    parser.add_argument('original', help='the output to substitute',
+                        default='', nargs='?')
+    parser.add_argument('replacement', help='the string to replace it with',
+                        default='', nargs='?')
     self.api.get('commands.add')('add', self.cmd_add,
                                  parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='remove a substitute')
-    parser.add_argument('substitute', help='the substitute to remove', default='', nargs='?')
+    parser.add_argument('substitute', help='the substitute to remove',
+                        default='', nargs='?')
     self.api.get('commands.add')('remove', self.cmd_remove,
                                  parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='list substitutes')
-    parser.add_argument('match', help='list only substitutes that have this argument in them', default='', nargs='?')
+    parser.add_argument('match',
+              help='list only substitutes that have this argument in them',
+              default='', nargs='?')
     self.api.get('commands.add')('list', self.cmd_list,
                                  parser=parser)
 
@@ -92,7 +97,7 @@ class Plugin(BasePlugin):
     tmsg = []
     if args['original'] and args['replacement']:
       tmsg.append("@GAdding substitute@w : '%s' will be replaced by '%s'" % \
-                                              (args['original'], args['replacement']))
+                                      (args['original'], args['replacement']))
       self.addsub(args['original'], args['replacement'])
       return True, tmsg
     else:
