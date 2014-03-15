@@ -82,6 +82,8 @@ class Plugin(AardwolfBasePlugin):
               "^You flee from combat!$")
     self.api.get('triggers.add')('mobretreat',
               "^You retreat from the combat!$")
+    self.api.get('triggers.add')('mobrarexp',
+              "^You receive (?P<rarexp>\d+) 'rare kill' experience bonus.$")
     self.api.get('triggers.add')('mobblessxp',
               "^You receive (?P<blessxp>\d+) bonus " \
                 "experience points from your daily blessing.$")
@@ -127,6 +129,7 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('events.register')('trigger_mobflee', self.mobnone)
     self.api.get('events.register')('trigger_mobretreat', self.mobnone)
     self.api.get('events.register')('trigger_mobblessxp', self.mobblessxp)
+    self.api.get('events.register')('trigger_mobrarexp', self.mobrarexp)
     self.api.get('events.register')('trigger_mobbonusxp', self.mobbonusxp)
     self.api.get('events.register')('trigger_mobgold', self.mobgold)
     self.api.get('events.register')('trigger_mobsplitgold', self.mobgold)
@@ -170,6 +173,7 @@ class Plugin(AardwolfBasePlugin):
     self.kill_info['xp'] = 0
     self.kill_info['bonusxp'] = 0
     self.kill_info['blessingxp'] = 0
+    self.kill_info['rarexp'] = 0
     self.kill_info['totalxp'] = 0
     self.kill_info['gold'] = 0
     self.kill_info['tp'] = 0
@@ -226,6 +230,12 @@ class Plugin(AardwolfBasePlugin):
     add bonus xp
     """
     self.kill_info['bonusxp'] = int(args['bonxp'])
+
+  def mobrarexp(self, args):
+    """
+    add rare xp
+    """
+    self.kill_info['rarexp'] = int(args['rarexp'])
 
   def mobxp(self, args):
     """
@@ -333,7 +343,7 @@ class Plugin(AardwolfBasePlugin):
                                   self.kill_info['bonusxp'] + \
                                   self.kill_info['blessingxp']
 
-      self.api.get('send.msg')('raising a mobkill')
+      self.api.get('send.msg')('raising a mobkill: %s' % self.kill_info)
       self.api.get('events.eraise')('aard_mobkill', copy.deepcopy(self.kill_info))
 
     self.reset_kill()
