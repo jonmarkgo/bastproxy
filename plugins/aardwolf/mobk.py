@@ -340,6 +340,7 @@ class Plugin(AardwolfBasePlugin):
       if not self.kill_info['name']:
         self.kill_info['name'] = 'Unknown'
       self.kill_info['totalxp'] = self.kill_info['xp'] + \
+                                  self.kill_info['rarexp'] + \
                                   self.kill_info['bonusxp'] + \
                                   self.kill_info['blessingxp']
 
