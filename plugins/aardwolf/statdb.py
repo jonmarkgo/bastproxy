@@ -39,7 +39,9 @@ class Statdb(Sqldb):
     """
     Sqldb.__init__(self, plugin, 'stats')
 
-    self.version = 12
+    self.version = 13
+
+    self.versionfuncs[13] = self.addrarexp_v13
 
     self.addtable('stats', """CREATE TABLE stats(
           stat_id INTEGER NOT NULL PRIMARY KEY autoincrement,
@@ -143,6 +145,7 @@ class Statdb(Sqldb):
           mk_id INTEGER NOT NULL PRIMARY KEY autoincrement,
           name TEXT default "Unknown",
           xp INT default 0,
+          rarexp INT default 0,
           bonusxp INT default 0,
           blessingxp INT default 0,
           totalxp INT default 0,
@@ -476,6 +479,51 @@ class Statdb(Sqldb):
     rowid = self.getlastrowid('mobkills')
     cur.close()
     self.api.get('send.msg')('inserted mobkill: %s' % rowid)
+
+  def addrarexp_v13(self):
+    """
+    add rare xp into the database
+    """
+    oldmobst = self.runselect('SELECT * FROM mobkills ORDER BY mk_id ASC')
+
+    cur = self.dbconn.cursor()
+    cur.execute('DROP TABLE IF EXISTS mobkills;')
+    cur.close()
+    self.close()
+
+    self.open()
+    cur = self.dbconn.cursor()
+    cur.execute("""CREATE TABLE mobkills(
+          mk_id INTEGER NOT NULL PRIMARY KEY autoincrement,
+          name TEXT default "Unknown",
+          xp INT default 0,
+          rarexp INT default 0,
+          bonusxp INT default 0,
+          blessingxp INT default 0,
+          totalxp INT default 0,
+          gold INT default 0,
+          tp INT default 0,
+          time INT default -1,
+          vorpal INT default 0,
+          banishment INT default 0,
+          assassinate INT default 0,
+          slit INT default 0,
+          disintegrate INT default 0,
+          deathblow INT default 0,
+          wielded_weapon TEXT default '',
+          second_weapon TEXT default '',
+          room_id INT default 0,
+          level INT default -1
+        )""")
+    cur.close()
+
+    cur = self.dbconn.cursor()
+    stmt2 = """INSERT INTO mobkills VALUES (:mk_id, :name, :xp, 0,
+                  :bonusxp, :blessingxp, :totalxp, :gold, :tp, :time, :vorpal,
+                  :banishment, :assassinate, :slit, :disintegrate, :deathblow,
+                  :wielded_weapon, :second_weapon, :room_id, :level)"""
+    cur.executemany(stmt2, oldmobst)
+    cur.close()
 
 
 class Plugin(AardwolfBasePlugin):
@@ -1161,6 +1209,7 @@ class Plugin(AardwolfBasePlugin):
 
     trow = self.statdb.runselect(
         """SELECT SUM(xp) AS xp,
+                  SUM(rarexp) as rarexp,
                   SUM(bonusxp) AS bonusxp,
                   SUM(blessingxp) AS blessingxp,
                   SUM(totalxp) as totalxp,
@@ -1191,10 +1240,18 @@ class Plugin(AardwolfBasePlugin):
                  FROM mobkills where blessingxp > 0""")
     stats.update(trow[0])
 
+    trow = self.statdb.runselect(
+       """SELECT AVG(rarexp) as averarexp,
+                 COUNT(*) as raremobsindb
+                 FROM mobkills where rarexp > 0""")
+    stats.update(trow[0])
+
     msg.append(self._format_row('DB Stats', 'Total', 'In DB', '@G', '@G'))
     msg.append('@G--------------------------------------------')
     msg.append(self._format_row("Overall",
                 stats['monsterskilled'], stats['indb'] or 0))
+    msg.append(self._format_row("Rare Mobs",
+                "", stats['raremobsindb'] or 0))
     msg.append(self._format_row("Bonus Mobs",
                 "", stats['bonusmobsindb'] or 0))
     msg.append(self._format_row("Blessing Mobs",
@@ -1206,6 +1263,9 @@ class Plugin(AardwolfBasePlugin):
     msg.append(self._format_row("XP",
                 stats['xp'],
                 format_float(stats['avexp'], "/kill")))
+    msg.append(self._format_row("Rare XP",
+                stats['rarexp'],
+                format_float(stats['averarexp'], "/kill")))
     msg.append(self._format_row("Double XP",
                 stats['bonusxp'],
                 format_float(stats['avebonusxp'], "/kill")))
@@ -1249,8 +1309,8 @@ class Plugin(AardwolfBasePlugin):
 
       if len(lastitems) > 0:
         msg.append('')
-        msg.append("@G%3s %-18s %-3s %-3s %2s %1s %s" % (
-                  "Lvl", "Mob", "XP", "OXP", "TP", "S", "Gold"))
+        msg.append("@G%3s %-18s %-3s %-3s %-3s %-3s %2s %1s %s" % (
+                  "Lvl", "Mob", "TXP", "XP", "RXP", "OXP", "TP", "S", "Gold"))
         msg.append('@G----------------------------------------------------')
 
         for item in lastitems:
@@ -1281,8 +1341,9 @@ class Plugin(AardwolfBasePlugin):
           if int(item['tp']) == 1:
             mtp = '1'
 
-          msg.append("%3s %-18s %3s %-3s %2s %1s %s" \
-                     % (levelstr, item['name'][0:18], item['xp'], bonus, mtp,
+          msg.append("%3s %-18s %3s %3s %3s %-3s %2s %1s %s" \
+                     % (levelstr, item['name'][0:18], item['totalxp'],
+                          item['xp'], item['rarexp'], bonus, mtp,
                           spec, item['gold']))
     return True, msg
 

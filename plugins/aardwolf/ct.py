@@ -58,11 +58,14 @@ class Plugin(AardwolfBasePlugin):
               colorn=statcolor,
               colors=infocolor)
 
-    namestr = "{statcolor}{name}{infocolor} : {time}{infocolor}".format(
+    xpstr = '%s%s%sxp' % (statcolor, args['totalxp'], infocolor)
+
+    namestr = "{statcolor}{name}{infocolor} : {time}{infocolor} - {xp}".format(
             infocolor = infocolor,
             statcolor = statcolor,
             name = args['name'],
             time=timestr,
+            xp=xpstr
             )
     tstr = infocolor + utils.center(namestr, '-', linelen)
 
