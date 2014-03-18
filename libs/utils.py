@@ -8,9 +8,11 @@ import os
 import datetime
 import math
 import time
+import re
 from libs.color import iscolor, strip_ansi, convertcolors
 from libs.timing import timeit
 
+TIMELENGTH_REGEXP = re.compile(r"^(?P<days>\d+d)?:?(?P<hours>\d+h)?:?(?P<minutes>\d+m)?:?(?P<seconds>\d+s?)?$")
 
 class DotDict(dict):
   """
@@ -194,6 +196,18 @@ def verify_miltime(mtime):
   return mtime
 
 
+def verify_timelength(usertime):
+  """
+  verify a user time length
+  """
+  ttime = timelengthtosecs(usertime)
+
+  if not ttime:
+    raise ValueError
+
+  return ttime
+
+
 def verify(val, vtype):
   """
   verify values
@@ -202,6 +216,7 @@ def verify(val, vtype):
   vtab[bool] = verify_bool
   vtab['color'] = verify_color
   vtab['miltime'] = verify_miltime
+  vtab['timelength'] = verify_timelength
 
   if vtype in vtab:
     return vtab[vtype](val)
@@ -244,6 +259,7 @@ def center(tstr, fillerc, length):
 
   return tstr
 
+
 @timeit
 def checklistformatch(arg, tlist):
   """
@@ -270,4 +286,48 @@ def checklistformatch(arg, tlist):
     return tdict['part']
 
   return tdict
+
+
+def timelengthtosecs(timel):
+  """
+  converts a time length to seconds
+
+  Format is 1d:2h:30m:40s, any part can be missing
+  """
+  tmatch = TIMELENGTH_REGEXP.match(timel)
+
+  if not tmatch:
+    return None
+
+  timem = tmatch.groupdict()
+
+  if not timem["days"] and not timem["hours"] and not timem["minutes"] \
+          and not timem["seconds"]:
+    return None
+
+  days = timem["days"]
+  if not days:
+    days = 0
+  elif days.endswith("d"):
+    days = int(days[:-1])
+
+  hours = timem["hours"]
+  if not hours:
+    hours = 0
+  elif hours.endswith("h"):
+    hours = int(hours[:-1])
+
+  minutes = timem["minutes"]
+  if not minutes:
+    minutes = 0
+  elif minutes.endswith("m"):
+    minutes = int(minutes[:-1])
+
+  seconds = timem["seconds"]
+  if not seconds:
+    seconds = 0
+  elif seconds.endswith("s"):
+    seconds = int(seconds[:-1])
+
+  return days * 24 * 60 * 60 + hours * 60 * 60 + minutes * 60 + seconds
 
