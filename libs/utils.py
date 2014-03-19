@@ -200,9 +200,14 @@ def verify_timelength(usertime):
   """
   verify a user time length
   """
-  ttime = timelengthtosecs(usertime)
+  ttime = None
 
-  if not ttime:
+  try:
+    ttime = int(usertime)
+  except ValueError:
+    ttime = timelengthtosecs(usertime)
+
+  if ttime != 0 and not ttime:
     raise ValueError
 
   return ttime

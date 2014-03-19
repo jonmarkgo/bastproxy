@@ -8,7 +8,7 @@ import os
 import sys
 import argparse
 import textwrap
-from libs.utils import verify, convert, center
+from libs.utils import verify, convert, center, format_time
 from libs.persistentdict import PersistentDictEvent
 from libs.api import API
 
@@ -290,6 +290,8 @@ class BasePlugin(object):
           val = val.replace('@', '@@')
         elif self.settings[i]['stype'] == 'color':
           val = '%s%s@w' % (val, val.replace('@', '@@'))
+        elif self.settings[i]['stype'] == 'timelength':
+          val = format_time(verify(val, 'timelength'))
         tmsg.append(tform % (i, val, self.settings[i]['help']))
     return tmsg
 
