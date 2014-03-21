@@ -45,6 +45,7 @@ class Plugin(AardwolfBasePlugin):
     self.invitemcache = {}
     self.eqdata = {}
     self.invdata = {}
+    self.invdataserialmap = {}
 
     self.currentcontainer = None
 
@@ -185,6 +186,8 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('events.register')('trigger_eqdatastart', self.eqdatastart)
     self.api.get('events.register')('trigger_eqdataend', self.eqdataend)
     self.api.get('events.register')('trigger_invdatastart', self.invdatastart)
+    self.api.get('events.register')('trigger_invdataend', self.invdataend)
+    self.api.get('events.register')('trigger_invmon', self.invmon)
 
     #self.api.get('api.add')('runselect', self.api_runselect)
 
@@ -293,6 +296,29 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('triggers.togglegroup')('invdata', True)
     self.api.get('events.register')('trigger_all', self.invdataline)
     self.invdata[self.currentcontainer] = []
+    self.invdataserialmap[self.currentcontainer] = []
+
+  def additemtocontainer(self, container, item, place=-1):
+    """
+    add item to inventory
+    """
+    if place >= 0:
+      self.invdata[container].insert(place, item)
+      self.invdataserialmap[container].insert(place, item['serial'])
+    else:
+      self.invdata[container].append(item)
+      self.invdataserialmap[container].append(item['serial'])
+
+  def removeitemfromcontainer(self, container, serial):
+    """
+    remove an item from inventory
+    """
+    itemindex = self.invdataserialmap[container].index(serial)
+    item = self.invdata[container][itemindex]
+    del self.invdata[container][itemindex]
+    del self.invdataserialmap[container][itemindex]
+
+    return item
 
   def invdataline(self, args):
     """
@@ -305,7 +331,7 @@ class Plugin(AardwolfBasePlugin):
         titem = self.dataparse(line, 'eqdata')
         self.api.get('send.msg')('invdata parsed item: %s' % titem)
         titem['name'] = strip_ansi(titem['cname'])
-        self.invdata[self.currentcontainer].append(titem)
+        self.additemtocontainer(self.currentcontainer, titem)
       except IndexError:
         self.api.get('send.msg')('incorrect invdata line: %s' % line)
 
@@ -332,7 +358,7 @@ class Plugin(AardwolfBasePlugin):
     for i in xrange(len(self.layout[layoutname])):
       v = self.layout[layoutname][i]
       value = tlist[i]
-      if v == 'wearslot' or v == 'itemtype' or v == 'level':
+      if v == 'wearslot' or v == 'itemtype' or v == 'level' or v == 'serial':
         value = int(value)
 
       titem[v] = value
@@ -411,7 +437,6 @@ class Plugin(AardwolfBasePlugin):
       foundgroup = {}
 
       for item in self.invdata[container]:
-        print item
         #item = i
         stylekey = item['name'] + item['shortflags'] + str(item['level'])
         doit = True
@@ -489,8 +514,6 @@ class Plugin(AardwolfBasePlugin):
     """
     build the output of a worn item
     """
-    self.api.get('send.msg')('build_wornitem args: %s' % args)
-
     sitem = []
 
     wearlocs = self.api.get('aardu.wearlocs')()
@@ -600,14 +623,26 @@ class Plugin(AardwolfBasePlugin):
     msg.append('')
     return msg
 
-  #def checkaction(self, action, item, afterwait):
-    #if action == 1:
-      #if self.eqdata[int(item.wearloc)] != None:
-        #self.eqdata[int(item.wearloc)] = None
-        #self.invdata[item.objectid] = self.eqdata_cache[item.objectid]
-
-    #elif action == 2:
-      #self.eqdata[int(item.wearloc)] = self.eqdata_cache[item.objectid]
-      #if self.invdata:
-        #self.invdata[item.objectid] = None
+  def invmon(self, args):
+    """
+        self.api.get('triggers.add')('invmon',
+      "^\{invmon\}(?P<action>.*),(?P<serial>.*),(?P<container>.*),(?P<location>.*)$",
+    """
+    action = int(args['action'])
+    serial = int(args['serial'])
+    self.api.get('send.msg')('action: %s, item: %s' % (action, serial))
+    if action == 1: # Remove an item
+      if serial in self.eqdata:
+        self.additemtocontainer('Inventory', self.eqdata[serial], place=0)
+        del self.eqdata[serial]
+      else:
+        self.getdata('Inventory')
+        self.getdata('Worn')
+    elif action == 2: # Wear an item
+      if 'Inventory' in self.invdataserialmap and serial in self.invdataserialmap['Inventory']:
+        oitem = self.removeitemfromcontainer('Inventory', serial)
+        self.eqdata[oitem['serial']] = oitem
+      else:
+        self.getdata('Inventory')
+        self.getdata('Worn')
 
