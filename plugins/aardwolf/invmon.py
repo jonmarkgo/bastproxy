@@ -91,17 +91,6 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.load(self)
 
-    #self.api.get('watch.add')('sell',
-      #'^(se|sel|sell) (?P<stuff>.*)$')
-
-    #self.api.get('watch.add')('buy',
-      #'^(b|bu|buy) (?P<stuff>.*)$')
-
-    #self.api.get('setting.add')('backupstart', '0000', 'miltime',
-                      #'the time for a db backup, like 1200 or 2000')
-    #self.api.get('setting.add')('backupinterval', 60*60*4, int,
-                      #'the interval to backup the db, default every 4 hours')
-
     self.resetworneq()
 
     parser = argparse.ArgumentParser(add_help=False,
@@ -134,9 +123,9 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('commands.add')('sv', self.cmd_showinternal,
                                 parser=parser)
 
-    #self.api.get('triggers.add')('dead',
-      #"^You die.$",
-      #enabled=True, group='dead')
+    self.api.get('triggers.add')('dead',
+      "^You die.$",
+      enabled=True, group='dead')
 
     self.api.get('triggers.add')('badinvdata1',
       "^Syntax: invdata                - view all inv data.$",
@@ -148,6 +137,10 @@ class Plugin(AardwolfBasePlugin):
 
     self.api.get('triggers.add')('badinvdata3',
       "^      : invdata ansi           - remove color codes from output.$",
+      enabled=True, group='badinvdata')
+
+    self.api.get('triggers.add')('badinvdata4',
+      "^      : invdata <container> ansi - remove color codes from output.$",
       enabled=True, group='badinvdata')
 
     self.api.get('triggers.add')('invmon',
@@ -186,8 +179,7 @@ class Plugin(AardwolfBasePlugin):
       "\+-----------------------------------------------------------------\+",
       enabled=False, group='identify')
 
-    #self.api.get('events.register')('watch_sell', self.cmd_sell)
-    #self.api.get('events.register')('trigger_dead', self.dead)
+    self.api.get('events.register')('trigger_dead', self.dead)
     self.api.get('events.register')('trigger_invitem', self.trigger_invitem)
     self.api.get('events.register')('trigger_eqdatastart', self.eqdatastart)
     self.api.get('events.register')('trigger_eqdataend', self.eqdataend)
@@ -195,13 +187,21 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('events.register')('trigger_invdataend', self.invdataend)
     self.api.get('events.register')('trigger_invmon', self.invmon)
 
-    #self.api.get('api.add')('runselect', self.api_runselect)
+  def afterfirstactive(self, _=None):
+    """
+    do something on connect
+    """
+    AardwolfBasePlugin.afterfirstactive(self)
+    self.getdata('Worn')
+    self.getdata('Inventory')
 
-  #def dead(self, _):
-    #"""
-    #add to timeskilled when dead
-    #"""
-    #self.statdb.addtostat('timeskilled', 1)
+  def dead(self, _):
+    """
+    reset stuff on death
+    """
+    self.invdata = {}
+    self.waiting = {}
+    self.resetworneq()
 
   def cmd_showinternal(self, args):
     """
@@ -461,17 +461,17 @@ class Plugin(AardwolfBasePlugin):
 
     header.append('(')
     header.append("@G%3s@w" % 'Lvl')
-    header.append(')  ')
+    header.append(') ')
 
     if args['serial']:
       header.append('(@x136')
       header.append("%-12s" % "Serial")
-      header.append('@w)  ')
+      header.append('@w) ')
 
     if args['score']:
       header.append('(@C')
       header.append("%-5s" % 'Score')
-      header.append('@w)  ')
+      header.append('@w) ')
 
     header.append("%s" % 'Item Name')
 
@@ -536,7 +536,7 @@ class Plugin(AardwolfBasePlugin):
 
           sitem.append('(')
           sitem.append("@G%3s@w" % (item['level'] or ""))
-          sitem.append(')  ')
+          sitem.append(') ')
 
           if args['serial']:
             sitem.append('(@x136')
@@ -544,12 +544,12 @@ class Plugin(AardwolfBasePlugin):
             if not args['nogroup']:
               if stylekey in numstyles:
                 numstyles[stylekey]['serialcol'] = len(sitem) - 1
-            sitem.append('@w)  ')
+            sitem.append('@w) ')
 
           if args['score']:
             sitem.append('(@C')
             sitem.append("%5s" % (item['score'] if 'score' in item else 'Unkn'))
-            sitem.append('@w)  ')
+            sitem.append('@w) ')
 
           sitem.append(item['cname'])
           items.append(sitem)
@@ -606,17 +606,17 @@ class Plugin(AardwolfBasePlugin):
 
     sitem.append('(')
     sitem.append("@G%3s@w" % (item['level'] or ""))
-    sitem.append(')  ')
+    sitem.append(') ')
 
     if args['serial']:
       sitem.append('(@x136')
       sitem.append("%-12s" % (item['serial'] if 'serial' in item else ""))
-      sitem.append('@w)  ')
+      sitem.append('@w) ')
 
     if args['score']:
       sitem.append('(@C')
       sitem.append("%5s" % (item['score'] if 'score' in item else 'Unkn'))
-      sitem.append('@w)  ')
+      sitem.append('@w) ')
 
     sitem.append(item['cname'])
 
@@ -654,12 +654,12 @@ class Plugin(AardwolfBasePlugin):
     if args['serial']:
       header.append('(@x136')
       header.append("%-12s" % "Serial")
-      header.append('@w)  ')
+      header.append('@w) ')
 
     if args['score']:
       header.append('(@C')
       header.append("%-5s" % 'Score')
-      header.append('@w)  ')
+      header.append('@w) ')
 
     header.append("%s" % 'Item Name')
 
@@ -705,6 +705,10 @@ class Plugin(AardwolfBasePlugin):
     elif action == 3 or action == 7:
       # 3 = Removed from inventory, 7 = consumed
       if 'Inventory' in self.invdata and serial in self.invdata['Inventory']:
+        titem = self.itemcache[serial]
+        if titem['type'] == 11:
+          for item in self.invdata[serial]:
+            del self.itemcache[item]
         self.removeitemfromcontainer('Inventory', serial)
         del self.itemcache[serial]
       else:
@@ -713,6 +717,9 @@ class Plugin(AardwolfBasePlugin):
     # Added to inventory
       try:
         self.putitemincontainer('Inventory', serial, place=0)
+        titem = self.itemcache[serial]
+        if titem['type'] == 11:
+          self.getdata(serial)
       except KeyError:
         self.getdata('Inventory')
     elif action == 5:
