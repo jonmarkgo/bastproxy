@@ -32,6 +32,8 @@ flagaardcolours = {
  'I':'w',
 }
 
+optionallocs = [8, 9, 10, 11, 25, 28, 29, 30, 31, 32]
+
 class Plugin(AardwolfBasePlugin):
   """
   a plugin to monitor aardwolf events
@@ -626,6 +628,7 @@ class Plugin(AardwolfBasePlugin):
     """
     build the output of a container
     """
+    wearlocs = self.api.get('aardu.wearlocs')()
     self.api.get('send.msg')('build_worn args: %s' % args)
     msg = ['You are using:']
     header = []
@@ -669,10 +672,22 @@ class Plugin(AardwolfBasePlugin):
 
     msg.append('@B' + '-' * 80)
 
-    for serial in self.eqdata:
-      if serial != -1:
+    #for serial in self.eqdata:
+    for i in xrange(0, len(wearlocs)):
+      if self.eqdata[i] != -1:
+        serial = self.eqdata[i]
         item = self.itemcache[serial]
-        msg.append(self.build_wornitem(item, self.eqdata.index(serial), args))
+        msg.append(self.build_wornitem(item, i, args))
+      else:
+        doit = True
+        if i in optionallocs:
+          doit = False
+        if (i == 23 or i == 26) and self.eqdata[25] != -1:
+          doit = False
+        if doit:
+          item = {'cname':"@r< empty >@w", 'shortflags':"", 'level':'',
+                  'serial':''}
+          msg.append(self.build_wornitem(item, i, args))
 
     msg.append('')
     return msg
