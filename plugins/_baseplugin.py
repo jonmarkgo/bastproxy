@@ -106,6 +106,8 @@ class BasePlugin(object):
     self.api.get('events.register')('shutdown', self.unload)
     self.api.get('events.register')('muddisconnect', self.disconnect)
 
+    self.resetflag = False
+
   def disconnect(self, _=None):
     """
     re-register to firstactive on disconnect
@@ -256,6 +258,8 @@ class BasePlugin(object):
               tvar = tvar.replace('@', '@@')
             elif self.settings[var]['stype'] == 'color':
               tvar = '%s%s@w' % (val, val.replace('@', '@@'))
+            elif self.settings[var]['stype'] == 'timelength':
+              tvar = format_time(verify(val, 'timelength'))
             return True, ['set %s to %s' % (var, tvar)]
           except ValueError:
             msg = ['Cannot convert %s to %s' % \
