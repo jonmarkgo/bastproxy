@@ -1,11 +1,7 @@
 """
-$Id: statdb.py 272 2013-12-29 18:41:16Z endavis $
+$Id$
 
 This plugin reads and parses invmon data from Aardwolf
-
-{invitem}1183386700,KMH,Jade Elixir,60,8,1,-1,-1
-{invmon}4,1183386700,-1,-1
-
 """
 import copy
 import time
@@ -36,7 +32,8 @@ optionallocs = [8, 9, 10, 11, 25, 28, 29, 30, 31, 32]
 
 class Plugin(AardwolfBasePlugin):
   """
-  a plugin to monitor aardwolf events
+  a plugin to handle equipment related actions
+  invmon, eqdata, inv
   """
   def __init__(self, *args, **kwargs):
     """
@@ -468,8 +465,6 @@ class Plugin(AardwolfBasePlugin):
       header.append('@w) ')
 
     header.append("%s" % 'Item Name')
-
-    header.append('  ')
 
     return ''.join(header)
 
