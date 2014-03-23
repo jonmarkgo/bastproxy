@@ -416,7 +416,7 @@ class Plugin(AardwolfBasePlugin):
     """
     get a skill
     """
-    self.api.get('send.msg')('looking for %s' % tsn)
+    #self.api.get('send.msg')('looking for %s' % tsn)
     sn = -1
     name = tsn
     try:
@@ -426,16 +426,16 @@ class Plugin(AardwolfBasePlugin):
 
     tskill = None
     if sn >= 1:
-      self.api.get('send.msg')('%s >= 0' % sn)
+      #self.api.get('send.msg')('%s >= 0' % sn)
       if sn in self.skills:
-        self.api.get('send.msg')('found sn')
+        #self.api.get('send.msg')('found sn')
         tskill = copy.deepcopy(self.skills[sn])
         #tskill = self.skills[sn]
       else:
         self.api.get('send.msg')('did not find skill for int')
 
     if not tskill and name:
-      self.api.get('send.msg')('trying name')
+      #self.api.get('send.msg')('trying name')
       tlist = utils.checklistformatch(name, self.skillsnamelookup.keys())
       if len(tlist) == 1:
         tskill = copy.deepcopy(self.skills[self.skillsnamelookup[tlist[0]]])
