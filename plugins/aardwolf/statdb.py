@@ -557,9 +557,6 @@ class Plugin(AardwolfBasePlugin):
 
     self.statdb = Statdb(self)
 
-    self.api.get('timers.add')('stats_backup', self.backupdb,
-                                60*60*4, time='0000')
-
     self.api.get('setting.add')('backupstart', '0000', 'miltime',
                       'the time for a db backup, like 1200 or 2000')
     self.api.get('setting.add')('backupinterval', '4h', 'timelength',
@@ -614,10 +611,14 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('events.register')('aard_gq_done', self.gqevent)
     self.api.get('events.register')('aard_gq_won', self.gqevent)
     self.api.get('events.register')('GMCP:char.status', self.checkstats)
-    self.api.get('events.register')('statdb_backupstart', self.changetimer)
-    self.api.get('events.register')('statdb_backupinternval', self.changetimer)
+    self.api.get('events.register')('var_statdb_backupstart', self.changetimer)
+    self.api.get('events.register')('var_statdb_backupinternval', self.changetimer)
 
     self.api.get('events.register')('trigger_dead', self.dead)
+
+    self.api.get('timers.add')('stats_backup', self.backupdb,
+                                self.api.get('setting.gets')('backupinterval'),
+                                time=self.api.get('setting.gets')('backupstart'))
 
     self.api.get('api.add')('runselect', self.api_runselect)
 
