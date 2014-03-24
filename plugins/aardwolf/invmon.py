@@ -10,7 +10,7 @@ import shlex
 from plugins.aardwolf._aardwolfbaseplugin import AardwolfBasePlugin
 from libs.color import strip_ansi
 
-NAME = 'invmon'
+NAME = 'Aardwolf Inventory Events'
 SNAME = 'invmon'
 PURPOSE = 'Parse invmon'
 AUTHOR = 'Bast'
@@ -82,7 +82,7 @@ class Plugin(AardwolfBasePlugin):
     self.layout['light'] = ['duration']
     self.layout['portal'] = ['uses']
 
-    self.api.get('dependency.add')('aardu')
+    self.api.get('dependency.add')('itemu')
 
   def load(self):
     """
@@ -279,7 +279,7 @@ class Plugin(AardwolfBasePlugin):
     """
     reset worn eq
     """
-    wearlocs = self.api.get('aardu.wearlocs')()
+    wearlocs = self.api.get('itemu.wearlocs')()
     self.eqdata = []
     for i in xrange(0, len(wearlocs)):
       self.eqdata.append(-1)
@@ -315,7 +315,8 @@ class Plugin(AardwolfBasePlugin):
     line = args['line'].strip()
     if line != '{eqdata}':
       self.api.get('send.msg')('eqdata args: %s' % args)
-      titem = self.dataparse(line, 'eqdata')
+      titem = self.api.get('itemu.dataparse')(line, 'eqdata')
+      self.itemcache[titem['serial']] = titem
       self.api.get('send.msg')('eqdata parsed item: %s' % titem)
       self.wearitem(titem['serial'], titem['wearslot'])
 
@@ -366,7 +367,8 @@ class Plugin(AardwolfBasePlugin):
     if line != '{invdata}':
       self.api.get('send.msg')('invdata args: %s' % args)
       try:
-        titem = self.dataparse(line, 'eqdata')
+        titem = self.api.get('itemu.dataparse')(line, 'eqdata')
+        self.itemcache[titem['serial']] = titem
         self.api.get('send.msg')('invdata parsed item: %s' % titem)
         self.putitemincontainer(self.currentcontainer, titem['serial'])
         if titem['type'] == 11 and not (titem['serial'] in self.invdata):
@@ -387,30 +389,10 @@ class Plugin(AardwolfBasePlugin):
 
   def trigger_invitem(self, args):
     self.api.get('send.msg')('invitem args: %s' % args)
-    titem = self.dataparse(args['data'], 'eqdata')
+    titem = self.api.get('itemu.dataparse')(args['data'], 'eqdata')
+    self.itemcache[titem['serial']] = titem
     self.api.get('send.msg')('invitem parsed item: %s' % titem)
     self.itemcache[titem['serial']] = titem
-
-  def dataparse(self, line, layoutname):
-    """
-    parse a line of data
-    """
-    tlist = line.split(',')
-    titem = {}
-    for i in xrange(len(self.layout[layoutname])):
-      v = self.layout[layoutname][i]
-      value = tlist[i]
-      if v == 'wearslot' or v == 'itemtype' or v == 'level' or v == 'serial' \
-         or v == 'type':
-        value = int(value)
-
-      titem[v] = value
-
-    if layoutname == 'eqdata':
-      titem['name'] = strip_ansi(titem['cname'])
-      self.itemcache[titem['serial']] = titem
-
-    return titem
 
   def cmd_eq(self, args):
     """
@@ -573,7 +555,7 @@ class Plugin(AardwolfBasePlugin):
     """
     sitem = []
 
-    wearlocs = self.api.get('aardu.wearlocs')()
+    wearlocs = self.api.get('itemu.wearlocs')()
 
     sitem.append('@G[@w')
 
@@ -631,7 +613,7 @@ class Plugin(AardwolfBasePlugin):
     """
     build the output of a container
     """
-    wearlocs = self.api.get('aardu.wearlocs')()
+    wearlocs = self.api.get('itemu.wearlocs')()
     self.api.get('send.msg')('build_worn args: %s' % args)
     msg = ['You are using:']
     header = []
