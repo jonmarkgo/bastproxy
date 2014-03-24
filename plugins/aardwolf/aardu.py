@@ -235,13 +235,3 @@ class Plugin(AardwolfBasePlugin):
 
     this function returns a dictionary of rewards"""
     return REWARDTABLE
-
-  # get the wear locations table
-  def api_getwearlocs(self, rev=False):
-    """  get the wear locations table
-    @Yrev@w  = if True, return the reversed table
-    """
-    if rev:
-      return WEARLOCSREV
-    else:
-      return WEARLOCS
