@@ -64,7 +64,7 @@ class Plugin(AardwolfBasePlugin):
     """
     do something when show changes
     """
-    newtime = utils.verify(args['newvalue'], 'timelength')
+    newtime = args['newvalue']
     if newtime > 0:
       self.api.get('timers.remove')('statrep')
       self.api.get('timers.add')('statrep', self.timershow,
@@ -79,10 +79,6 @@ class Plugin(AardwolfBasePlugin):
     show the report
     """
     self.api.get('send.execute')('#bp.statmn.rep')
-    #retval, msg = self.cmd_rep()
-
-    #self.api.get('send.client')('\n'.join(msg), preamble=False)
-
 
   def compquest(self, args):
     """
