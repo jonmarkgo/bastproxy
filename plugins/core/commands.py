@@ -77,7 +77,7 @@ class Plugin(BasePlugin):
     msg.append('')
     return msg
 
-  def runcmd(self, cmd, targs):
+  def runcmd(self, cmd, targs, fullargs):
     """
     run a command that has an ArgParser
     """
@@ -86,6 +86,7 @@ class Plugin(BasePlugin):
     args, other_args = cmd['parser'].parse_known_args(targs)
 
     args = vars(args)
+    args['fullargs'] = fullargs
     if args['help']:
       msg = cmd['parser'].format_help().split('\n')
       self.api.get('send.client')('\n'.join(self.formatretmsg(
@@ -125,6 +126,11 @@ class Plugin(BasePlugin):
     tdat = data['fromdata']
     if tdat[0:3] == '#bp':
       targs = shlex.split(tdat.strip())
+      try:
+        tmpind = tdat.index(' ')
+        fullargs = tdat[tmpind+1:]
+      except ValueError:
+        fullargs = ''
       cmd = targs.pop(0)
       cmdsplit = cmd.split('.')
       sname = ''
@@ -141,7 +147,7 @@ class Plugin(BasePlugin):
         except ValueError:
           pass
         cmd = self.cmds[self.sname]['list']
-        self.runcmd(cmd, [sname, scmd])
+        self.runcmd(cmd, [sname, scmd], fullargs)
 
       elif sname and scmd:
         if sname in self.cmds:
@@ -151,7 +157,7 @@ class Plugin(BasePlugin):
           elif not scmd and 'default' in self.cmds[sname]:
             cmd = self.cmds[sname]['default']
           if cmd:
-            self.runcmd(cmd, targs)
+            self.runcmd(cmd, targs, fullargs)
           else:
             self.api.get('send.client')("@R%s.%s@W is not a command" % \
                                                   (sname, scmd))
@@ -164,7 +170,7 @@ class Plugin(BasePlugin):
         except ValueError:
           pass
         cmd = self.cmds[self.sname]['list']
-        self.runcmd(cmd, [sname, scmd])
+        self.runcmd(cmd, [sname, scmd], '')
 
       return {'fromdata':''}
     else:
@@ -178,6 +184,7 @@ class Plugin(BasePlugin):
           data['fromdata'] = ''
       else:
         self.api.get('setting.change')('cmdcount', 0)
+        self.api.get('send.msg')('resetting command to %s' % tdat.strip())
         self.lastcmd = tdat.strip()
 
       return data
