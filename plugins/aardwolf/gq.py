@@ -6,7 +6,6 @@ This plugin handles gquest events on Aardwolf
 import os
 import time
 import copy
-from libs.color import strip_ansi
 from libs.persistentdict import PersistentDict
 from plugins.aardwolf._aardwolfbaseplugin import AardwolfBasePlugin
 
@@ -186,7 +185,7 @@ class Plugin(AardwolfBasePlugin):
     if not name or not location or not num:
       self.api.get('ouput.client')("error parsing line: %s" % args['line'])
     else:
-      self.mobsleft.append({'name':name, 'nocolorname':strip_ansi(name),
+      self.mobsleft.append({'name':name, 'nocolorname':self.api.get('colors.stripansi')(name),
             'location':location, 'num':int(num)})
 
   def _notstarted(self, _=None):

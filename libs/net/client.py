@@ -9,7 +9,6 @@ import re
 
 from libs.api import API
 from libs.net.telnetlib import Telnet
-from libs.color import convertcolors
 
 PASSWORD = 0
 CONNECTED = 1
@@ -43,7 +42,7 @@ class ProxyClient(Telnet):
     self.api.get('options.prepareclient')(self)
 
     self.state = PASSWORD
-    self.addtooutbufferevent({'original':convertcolors(
+    self.addtooutbufferevent({'original':self.api.get('colors.convertcolors')(
                   '@R#BP@w: @RPlease enter the proxy password:@w'),
                   'dtype':'passwd'})
 
@@ -89,7 +88,7 @@ class ProxyClient(Telnet):
       if self.state == CONNECTED:
         if self.viewonly:
           self.addtooutbufferevent(
-               {'todata':convertcolors('@R#BP@w: @RYou are in view mode!@w')})
+               {'todata':self.api.get('color.convertcolors')('@R#BP@w: @RYou are in view mode!@w')})
         else:
           if not proxy.connected:
             proxy.connectmud()
@@ -120,14 +119,14 @@ class ProxyClient(Telnet):
           if not proxy.connected:
             proxy.connectmud()
           else:
-            self.addtooutbufferevent({'original':convertcolors(
+            self.addtooutbufferevent({'original':self.api.get('color.convertcolors')(
                     '@R#BP@W: @GThe proxy is already connected to the mud@w')})
         elif vpw and data == vpw:
           self.api.get('send.msg')('Successful view password from %s : %s' % \
                               (self.host, self.port), 'net')
           self.state = CONNECTED
           self.viewonly = True
-          self.addtooutbufferevent({'original':convertcolors(
+          self.addtooutbufferevent({'original':self.api.get('color.convertcolors')(
                             '@R#BP@W: @GYou are connected in view mode@w')})
           proxy.addclient(self)
           self.api.get('events.eraise')('client_connected_view',
@@ -137,7 +136,7 @@ class ProxyClient(Telnet):
         else:
           self.pwtries += 1
           if self.pwtries == 5:
-            self.addtooutbufferevent({'original':convertcolors(
+            self.addtooutbufferevent({'original':self.api.get('color.convertcolors')(
                         '@R#BP@w: @RYou have been BANNED for 10 minutes:@w'),
                         'dtype':'passwd'})
             self.api.get('send.msg')('%s has been banned.' % self.host, 'net')
@@ -145,7 +144,7 @@ class ProxyClient(Telnet):
             proxy.addbanned(self.host)
             self.close()
           else:
-            self.addtooutbufferevent({'original':convertcolors(
+            self.addtooutbufferevent({'original':self.api.get('color.convertcolors')(
                     '@R#BP@w: @RPlease try again! Proxy Password:@w'),
                     'dtype':'passwd'})
 

@@ -8,7 +8,6 @@ import time
 import argparse
 import shlex
 from plugins.aardwolf._aardwolfbaseplugin import AardwolfBasePlugin
-from libs.color import strip_ansi
 
 NAME = 'Aardwolf Eq commands and parsing'
 SNAME = 'eq'

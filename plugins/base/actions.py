@@ -12,10 +12,8 @@ from string import Template
 
 from plugins._baseplugin import BasePlugin
 from libs.timing import timeit
-from libs.color import convertcolors
 from libs.persistentdict import PersistentDict
 from libs import utils
-from libs.color import strip_ansi
 
 #these 5 are required
 NAME = 'Actions'
@@ -311,10 +309,10 @@ class Plugin(BasePlugin):
     for s in sorted(self.actions.keys()):
       item = self.actions[s]
       if not match or match in item:
-        regex = strip_ansi(item['regex'])
+        regex = self.api.get('colors.stripansi')(item['regex'])
         if len(regex) > 30:
           regex = regex[:27] + '...'
-        action = strip_ansi(item['action'])
+        action = self.api.get('colors.stripansi')(item['action'])
         if len(action) > 30:
           action = action[:27] + '...'
         tmsg.append("%4s %2s  %-10s %-32s : %s@w" % (item['num'],

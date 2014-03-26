@@ -8,7 +8,6 @@ import os
 import copy
 import re
 from libs import utils
-from libs.color import strip_ansi
 from libs.persistentdict import PersistentDict
 from plugins.aardwolf._aardwolfbaseplugin import AardwolfBasePlugin
 
@@ -205,7 +204,7 @@ class Plugin(AardwolfBasePlugin):
     else:
       #self.mobsleft.append({'name':name, 'location':location,
       #'clean':cleanname(name), 'mobdead':mobdead})
-      self.mobsleft.append({'name':name, 'nocolorname':strip_ansi(name),
+      self.mobsleft.append({'name':name, 'nocolorname':self.api.get('colors.stripansi')(name),
             'location':location, 'mobdead':mobdead})
 
   def _cpmobdead(self, _=None):

@@ -8,7 +8,6 @@ import sys
 import argparse
 from plugins._baseplugin import BasePlugin
 from libs.timing import timeit
-from libs.color import convertcolors
 from libs import utils
 
 #these 5 are required
@@ -262,7 +261,7 @@ class Plugin(BasePlugin):
     self.api.get('send.msg')('trigger raiseevent returned: %s' % tdat)
     if tdat and 'newline' in tdat:
       self.api.get('send.msg')('changing line from trigger')
-      origargs['original'] = convertcolors(tdat['newline'])
+      origargs['original'] = self.api.get('colors.convertcolors')(tdat['newline'])
     if triggername in self.triggers and self.triggers[triggername]['omit']:
       origargs['original'] = ''
     return

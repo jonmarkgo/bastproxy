@@ -13,7 +13,6 @@ import shutil
 import zipfile
 import argparse
 
-import libs.color as color
 from libs.persistentdict import PersistentDict
 from libs import utils
 from plugins._baseplugin import BasePlugin
@@ -107,8 +106,8 @@ class Plugin(BasePlugin):
     tstring = '%s - %-10s : ' % (
                 time.strftime('%a %b %d %Y %H:%M:%S', time.localtime()),
                 dtype)
-    if dtype in self.colors:
-      tstring = color.convertcolors(self.colors[dtype] + tstring)
+    if self.api.get('api.has')('colors.convertcolors') and dtype in self.colors:
+      tstring = self.api.get('colors.convertcolors')(self.colors[dtype] + tstring)
     tmsg = [tstring]
     tmsg.append(msg)
 
@@ -123,7 +122,10 @@ class Plugin(BasePlugin):
 
     if priority == 'primary':
       if dtype in self.sendtofile and self.sendtofile[dtype]['file']:
-        self.logtofile(color.strip_ansi(nontimestamp), dtype)
+        if self.api.get('api.has')('colors.stripansi'):
+          self.logtofile(self.api.get('colors.stripansi')(nontimestamp), dtype)
+        else:
+          self.logtofile(nontimestamp, dtype)
 
       if 'default' in self.sendtofile:
         self.logtofile(timestampmsg, 'default')
@@ -188,7 +190,12 @@ class Plugin(BasePlugin):
       tstring = '%s : ' % \
             (time.strftime(self.api.timestring, time.localtime()))
       msg = tstring + msg
-    self.openlogs[self.currentlogs[dtype]].write(color.strip_ansi(msg) + '\n')
+
+    if self.api.get('api.has')('colors.stripansi'):
+      self.openlogs[self.currentlogs[dtype]].write(
+          self.api.get('colors.stripansi')(msg) + '\n')
+    else:
+      self.openlogs[self.currentlogs[dtype]].write(msg + '\n')
     self.openlogs[self.currentlogs[dtype]].flush()
 
   # toggle logging a datatype to the clients

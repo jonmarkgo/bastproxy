@@ -8,7 +8,6 @@ import datetime
 import argparse
 from plugins._baseplugin import BasePlugin
 from libs.timing import timeit
-from libs.color import convertcolors
 from libs.event import Event
 from libs.utils import secondstodhms
 

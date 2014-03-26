@@ -17,7 +17,6 @@ import argparse
 
 from plugins._baseplugin import BasePlugin
 from libs.persistentdict import PersistentDict
-from libs.color import strip_ansi
 
 #these 5 are required
 NAME = 'Alias'
@@ -324,7 +323,7 @@ class Plugin(BasePlugin):
     for s in sorted(self._aliases.iteritems(), key=lambda (x, y): y['num']):
       item = s[0]
       if not match or match in item:
-        lalias = strip_ansi(self._aliases[item]['alias'])
+        lalias = self.api.get('colors.stripansi')(self._aliases[item]['alias'])
         if len(lalias) > 30:
           lalias = lalias[:27] + '...'
         tmsg.append("%4s %2s  %-10s %-20s : %s@w" % (self._aliases[item]['num'],

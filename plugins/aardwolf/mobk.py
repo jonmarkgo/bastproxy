@@ -6,7 +6,6 @@ This plugin handles mobkills on Aardwolf
 import copy
 import time
 from plugins.aardwolf._aardwolfbaseplugin import AardwolfBasePlugin
-from libs.color import strip_ansi
 
 NAME = 'Aardwolf Mobkill events'
 SNAME = 'mobk'
@@ -157,7 +156,7 @@ class Plugin(AardwolfBasePlugin):
     """
     status = args['data']
     if status['enemy'] != "" and self.kill_info['name'] == "":
-      self.kill_info['name'] = strip_ansi(status['enemy'])
+      self.kill_info['name'] = self.api.get('colors.stripansi')(status['enemy'])
       self.reset_damage()
 
   def reset_kill(self):
@@ -260,7 +259,7 @@ class Plugin(AardwolfBasePlugin):
     """
     switch mobs
     """
-    self.kill_info['name'] = strip_ansi(args['name'])
+    self.kill_info['name'] = self.api.get('colors.stripansi')(args['name'])
     self.reset_damage()
 
   def mobvorpal(self, _=None):
@@ -273,14 +272,14 @@ class Plugin(AardwolfBasePlugin):
     """
     assassinated mob
     """
-    self.kill_info['name'] = strip_ansi(args['name'])
+    self.kill_info['name'] = self.api.get('colors.stripansi')(args['name'])
     self.kill_info['assassinate'] = 1
 
   def mobslit(self, args):
     """
     slitted a mob
     """
-    self.kill_info['name'] = strip_ansi(args['name'])
+    self.kill_info['name'] = self.api.get('colors.stripansi')(args['name'])
     self.kill_info['slit'] = 1
     self.kill_info['raised'] = False
     self.kill_info['time'] = time.time()
@@ -290,7 +289,7 @@ class Plugin(AardwolfBasePlugin):
     """
     disintegrated a mob
     """
-    self.kill_info['name'] = strip_ansi(args['name'])
+    self.kill_info['name'] = self.api.get('colors.stripansi')(args['name'])
     self.kill_info['disintegrate'] = 1
     self.kill_info['raised'] = False
     self.kill_info['time'] = time.time()
@@ -300,7 +299,7 @@ class Plugin(AardwolfBasePlugin):
     """
     banished a mob
     """
-    self.kill_info['name'] = strip_ansi(args['name'])
+    self.kill_info['name'] = self.api.get('colors.stripansi')(args['name'])
     self.kill_info['banishment'] = 1
     self.kill_info['raised'] = False
     self.kill_info['time'] = time.time()
@@ -310,7 +309,7 @@ class Plugin(AardwolfBasePlugin):
     """
     deathblowed a mob
     """
-    self.kill_info['name'] = strip_ansi(args['name'])
+    self.kill_info['name'] = self.api.get('colors.stripansi')(args['name'])
     self.kill_info['deathblow'] = 1
 
   def mobgold(self, args):
@@ -323,7 +322,7 @@ class Plugin(AardwolfBasePlugin):
     except ValueError:
       self.api.get('send.msg')('got an invalid value for gold in mobgold: %s' % args)
     if not self.kill_info['name']:
-      self.kill_info['name'] = strip_ansi(args['name'])
+      self.kill_info['name'] = self.api.get('colors.stripansi')(args['name'])
 
   def mobtrivia(self, _=None):
     """
