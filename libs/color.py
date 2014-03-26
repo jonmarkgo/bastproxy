@@ -104,7 +104,7 @@ def iscolor(color):
     mat = XTERM_COLOR_REGEX.match( color)
     if mat:
       num = int(mat.groupdict()['num'])
-      if num > 0 and num < 257:
+      if num >= 0 and num < 257:
         return True
 
   return False
