@@ -10,6 +10,8 @@ Overall:
   #TODO: add sys.getsizeof to stats for plugins (either the pluginclass or module, etc)
   #TODO: make all functions that add things use kwargs instead of a table
   #TODO: make #bp dynamic, and change command checking to check for that setting
+  #TODO: make a command to show which plugins are different on disk compared
+     to its loaded counterpart
 
 Python3:
   #TODO: convert to run under python3
