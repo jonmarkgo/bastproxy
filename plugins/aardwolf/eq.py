@@ -9,7 +9,7 @@ import argparse
 import shlex
 from plugins.aardwolf._aardwolfbaseplugin import AardwolfBasePlugin
 
-NAME = 'Aardwolf Eq commands and parsing'
+NAME = 'Aardwolf Eq cmds, parser'
 SNAME = 'eq'
 PURPOSE = 'Eq Manipulation'
 AUTHOR = 'Bast'
