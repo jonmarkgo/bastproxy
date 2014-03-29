@@ -11,7 +11,7 @@ import inspect
 import operator
 import argparse
 
-from libs.utils import find_files, verify, convert
+from libs.utils import find_files
 from libs.persistentdict import PersistentDict
 from libs.api import API
 from plugins._baseplugin import BasePlugin
