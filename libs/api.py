@@ -6,11 +6,6 @@ this module handles the api for all other modules
 import sys
 import time
 #from decorator import decorator
-try:
-  from libs import color
-except ImportError:
-  pass
-
 
 class API(object):
   """

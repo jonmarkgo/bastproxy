@@ -8,7 +8,6 @@ import sys
 import traceback
 import re
 from libs.api import API
-from libs import color
 
 api = API()
 
@@ -54,7 +53,10 @@ def api_error(text):
   text = str(text)
   test = []
   for i in text.split('\n'):
-    test.append(color.convertcolors('@x136%s@w' % i))
+    if api.get('api.has')('colors.convertcolors'):
+      test.append(self.api.get('colors.convertcolors')('@x136%s@w' % i))
+    else:
+      test.append(i)
   tmsg = '\n'.join(test)
   errors.append({'timestamp':time.strftime(api.timestring,
                                           time.localtime()),
@@ -81,7 +83,7 @@ def api_client(text, raw=False, preamble=True):
     for i in text:
       if preamble:
         i = '@C#BP@w: ' + i
-      test.append(color.convertcolors(i))
+      test.append(self.api.get('colors.convertcolors')(i))
     text = test
 
   try:
