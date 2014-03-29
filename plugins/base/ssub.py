@@ -6,7 +6,6 @@ This plugin is a simple substition plugin
 import os
 import argparse
 
-from libs import color
 from plugins._baseplugin import BasePlugin
 from libs.persistentdict import PersistentDict
 
@@ -82,7 +81,7 @@ class Plugin(BasePlugin):
       for mem in self._substitutes.keys():
         if mem in data:
           data = data.replace(mem,
-                    color.convertcolors(self._substitutes[mem]['sub']))
+                    self.api.get('color.convertcolors')(self._substitutes[mem]['sub']))
       args['original'] = data
       return args
 
