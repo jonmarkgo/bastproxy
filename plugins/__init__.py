@@ -477,15 +477,35 @@ class PluginMgr(object):
       fullimploc = plugin.fullimploc
       basepath = plugin.basepath
       modpath = plugin.modpath
+      sname = plugin.sname
+      try:
+        reloaddependents = plugin.reloaddependents
+      except:
+        reloaddependents = False
       plugin = None
       if not self.unload_module(fullimploc):
         return False, ''
 
       if modpath and basepath:
-        return self.load_module(modpath, basepath, force)
+        retval = self.load_module(modpath, basepath, force)
+        if retval and reloaddependents:
+          self.reloaddependents(sname)
+        return retval
 
     else:
       return False, ''
+
+  def reloaddependents(self, reloadedplugin):
+    """
+    reload all dependents
+    """
+    plugins = self.plugins.keys()
+    for plugin in plugins:
+      if plugin != reloadedplugin:
+        if reloadedplugin in self.plugins[plugin].dependencies:
+          self.api.get('send.msg')('reloading dependent %s of %s' % (plugin,
+                                                          reloadedplugin))
+          self.reload_module(plugin, True)
 
   def loadplugin(self, plugin):
     """

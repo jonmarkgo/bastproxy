@@ -29,6 +29,7 @@ class BasePlugin(object):
     self.name = name
     self.sname = sname
     self.dependencies = []
+    self.reloaddependents = False
     self.canreload = True
     self.resetflag = True
     self.api = API()
