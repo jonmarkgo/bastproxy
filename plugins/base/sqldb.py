@@ -21,7 +21,6 @@ AUTHOR = 'Bast'
 VERSION = 1
 
 AUTOLOAD = True
-RELOADDEPENDENTS = True
 
 def dict_factory(cursor, row):
   """
@@ -129,23 +128,23 @@ class Sqldb(object):
                  description='backup the database')
     parser.add_argument('name', help='the name to backup to', default='', nargs='?')
     self.plugin.api.get('commands.add')('dbbackup', self.cmd_backup,
-                                           parser=parser)
+                                           parser=parser, group='DB')
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='close the database')
     self.plugin.api.get('commands.add')('dbclose', self.cmd_close,
-                                           parser=parser)
+                                           parser=parser, group='DB')
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='vacuum the database')
     self.plugin.api.get('commands.add')('dbvac', self.cmd_vac,
-                                           parser=parser)
+                                           parser=parser, group='DB')
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='run a sql statement against the database')
     parser.add_argument('stmt', help='the sql statement', default='', nargs='?')
     self.plugin.api.get('commands.add')('runselect', self.cmd_runselect,
-                                           parser=parser)
+                                           parser=parser, group='DB')
 
   def cmd_runselect(self, args=None):
     """
@@ -512,6 +511,8 @@ class Plugin(BasePlugin):
   """
   def __init__(self, *args, **kwargs):
     BasePlugin.__init__(self, *args, **kwargs)
+
+    self.reloaddependents = True
 
     self.api.get('api.add')('baseclass', self.api_baseclass)
 
