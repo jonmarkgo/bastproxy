@@ -7,7 +7,6 @@ import copy
 import time
 import argparse
 from plugins.aardwolf._aardwolfbaseplugin import AardwolfBasePlugin
-from libs.sqldb import Sqldb
 
 NAME = 'StatDB'
 SNAME = 'statdb'
@@ -27,505 +26,511 @@ def format_float(item, addto=""):
     tempt = 0
   return tempt
 
-
-class Statdb(Sqldb):
+def dbcreate(Sqldb, plugin, **kwargs):
   """
-  a class to manage a sqlite database for aardwolf events
+  create the statdb class, this is needed because the Sqldb baseclass
+  can be reloaded since it is a plugin
   """
-  def __init__(self, plugin, dbname=None, dbdir=None):
+  class Statdb(Sqldb):
     """
-    initialize the class
+    a class to manage a sqlite database for aardwolf events
     """
-    Sqldb.__init__(self, plugin, 'stats')
+    def __init__(self, plugin, **kwargs):
+      """
+      initialize the class
+      """
+      Sqldb.__init__(self, plugin, **kwargs)
 
-    self.version = 13
+      self.version = 13
 
-    self.versionfuncs[13] = self.addrarexp_v13
+      self.versionfuncs[13] = self.addrarexp_v13
 
-    self.addtable('stats', """CREATE TABLE stats(
-          stat_id INTEGER NOT NULL PRIMARY KEY autoincrement,
-          name TEXT NOT NULL,
-          level INT default 1,
-          totallevels INT default 1,
-          remorts INT default 1,
-          tiers INT default 0,
-          race TEXT default "",
-          sex TEXT default "",
-          subclass TEXT default "",
-          qpearned INT default 0,
-          questscomplete INT default 0 ,
-          questsfailed INT default 0,
-          campaignsdone INT default 0,
-          campaignsfld INT default 0,
-          gquestswon INT default 0,
-          duelswon INT default 0,
-          duelslost INT default 0,
-          timeskilled INT default 0,
-          monsterskilled INT default 0,
-          combatmazewins INT default 0,
-          combatmazedeaths INT default 0,
-          powerupsall INT default 0,
-          totaltrivia INT default 0,
-          time INT default 0,
-          milestone TEXT,
-          redos INT default 0
-        );""", keyfield='stat_id')
+      self.addtable('stats', """CREATE TABLE stats(
+            stat_id INTEGER NOT NULL PRIMARY KEY autoincrement,
+            name TEXT NOT NULL,
+            level INT default 1,
+            totallevels INT default 1,
+            remorts INT default 1,
+            tiers INT default 0,
+            race TEXT default "",
+            sex TEXT default "",
+            subclass TEXT default "",
+            qpearned INT default 0,
+            questscomplete INT default 0 ,
+            questsfailed INT default 0,
+            campaignsdone INT default 0,
+            campaignsfld INT default 0,
+            gquestswon INT default 0,
+            duelswon INT default 0,
+            duelslost INT default 0,
+            timeskilled INT default 0,
+            monsterskilled INT default 0,
+            combatmazewins INT default 0,
+            combatmazedeaths INT default 0,
+            powerupsall INT default 0,
+            totaltrivia INT default 0,
+            time INT default 0,
+            milestone TEXT,
+            redos INT default 0
+          );""", keyfield='stat_id')
 
-    self.addtable('quests', """CREATE TABLE quests(
-          quest_id INTEGER NOT NULL PRIMARY KEY autoincrement,
-          starttime INT default 0,
-          finishtime INT default 0,
-          mobname TEXT default "Unknown",
-          mobarea TEXT default "Unknown",
-          mobroom TEXT default "Unknown",
-          qp INT default 0,
-          double INT default 0,
-          daily INT default 0,
-          totqp INT default 0,
-          gold INT default 0,
-          tier INT default 0,
-          mccp INT default 0,
-          lucky INT default 0,
-          tp INT default 0,
-          trains INT default 0,
-          pracs INT default 0,
-          level INT default -1,
-          failed INT default 0
-        );""", keyfield='quest_id')
+      self.addtable('quests', """CREATE TABLE quests(
+            quest_id INTEGER NOT NULL PRIMARY KEY autoincrement,
+            starttime INT default 0,
+            finishtime INT default 0,
+            mobname TEXT default "Unknown",
+            mobarea TEXT default "Unknown",
+            mobroom TEXT default "Unknown",
+            qp INT default 0,
+            double INT default 0,
+            daily INT default 0,
+            totqp INT default 0,
+            gold INT default 0,
+            tier INT default 0,
+            mccp INT default 0,
+            lucky INT default 0,
+            tp INT default 0,
+            trains INT default 0,
+            pracs INT default 0,
+            level INT default -1,
+            failed INT default 0
+          );""", keyfield='quest_id')
 
-    self.addtable('classes', """CREATE TABLE classes(
-            class TEXT NOT NULL PRIMARY KEY,
-            remort INTEGER
-          );""", keyfield='class', postcreate=self.initclasses)
+      self.addtable('classes', """CREATE TABLE classes(
+              class TEXT NOT NULL PRIMARY KEY,
+              remort INTEGER
+            );""", keyfield='class', postcreate=self.initclasses)
 
-    self.addtable('levels', """CREATE TABLE levels(
-          level_id INTEGER NOT NULL PRIMARY KEY autoincrement,
-          type TEXT default "level",
-          level INT default -1,
-          str INT default 0,
-          int INT default 0,
-          wis INT default 0,
-          dex INT default 0,
-          con INT default 0,
-          luc INT default 0,
-          starttime INT default -1,
-          finishtime INT default -1,
-          hp INT default 0,
-          mp INT default 0,
-          mv INT default 0,
-          pracs INT default 0,
-          trains INT default 0,
-          bonustrains INT default 0,
-          blessingtrains INT default 0
-        )""", keyfield='level_id')
+      self.addtable('levels', """CREATE TABLE levels(
+            level_id INTEGER NOT NULL PRIMARY KEY autoincrement,
+            type TEXT default "level",
+            level INT default -1,
+            str INT default 0,
+            int INT default 0,
+            wis INT default 0,
+            dex INT default 0,
+            con INT default 0,
+            luc INT default 0,
+            starttime INT default -1,
+            finishtime INT default -1,
+            hp INT default 0,
+            mp INT default 0,
+            mv INT default 0,
+            pracs INT default 0,
+            trains INT default 0,
+            bonustrains INT default 0,
+            blessingtrains INT default 0
+          )""", keyfield='level_id')
 
-    self.addtable('campaigns', """CREATE TABLE campaigns(
-          cp_id INTEGER NOT NULL PRIMARY KEY autoincrement,
-          starttime INT default 0,
-          finishtime INT default 0,
-          qp INT default 0,
-          bonusqp INT default 0,
-          gold INT default 0,
-          tp INT default 0,
-          trains INT default 0,
-          pracs INT default 0,
-          level INT default -1,
-          failed INT default 0
-        );""", keyfield='cp_id')
+      self.addtable('campaigns', """CREATE TABLE campaigns(
+            cp_id INTEGER NOT NULL PRIMARY KEY autoincrement,
+            starttime INT default 0,
+            finishtime INT default 0,
+            qp INT default 0,
+            bonusqp INT default 0,
+            gold INT default 0,
+            tp INT default 0,
+            trains INT default 0,
+            pracs INT default 0,
+            level INT default -1,
+            failed INT default 0
+          );""", keyfield='cp_id')
 
-    self.addtable('cpmobs', """CREATE TABLE cpmobs(
-          cpmob_id INTEGER NOT NULL PRIMARY KEY autoincrement,
-          cp_id INT NOT NULL,
-          name TEXT default "Unknown",
-          location TEXT default "Unknown"
-        )""", keyfield='cpmob_id')
+      self.addtable('cpmobs', """CREATE TABLE cpmobs(
+            cpmob_id INTEGER NOT NULL PRIMARY KEY autoincrement,
+            cp_id INT NOT NULL,
+            name TEXT default "Unknown",
+            location TEXT default "Unknown"
+          )""", keyfield='cpmob_id')
 
-    self.addtable('mobkills', """CREATE TABLE mobkills(
-          mk_id INTEGER NOT NULL PRIMARY KEY autoincrement,
-          name TEXT default "Unknown",
-          xp INT default 0,
-          rarexp INT default 0,
-          bonusxp INT default 0,
-          blessingxp INT default 0,
-          totalxp INT default 0,
-          gold INT default 0,
-          tp INT default 0,
-          time INT default -1,
-          vorpal INT default 0,
-          banishment INT default 0,
-          assassinate INT default 0,
-          slit INT default 0,
-          disintegrate INT default 0,
-          deathblow INT default 0,
-          wielded_weapon TEXT default '',
-          second_weapon TEXT default '',
-          room_id INT default 0,
-          level INT default -1
-        )""", keyfield='mk_id')
+      self.addtable('mobkills', """CREATE TABLE mobkills(
+            mk_id INTEGER NOT NULL PRIMARY KEY autoincrement,
+            name TEXT default "Unknown",
+            xp INT default 0,
+            rarexp INT default 0,
+            bonusxp INT default 0,
+            blessingxp INT default 0,
+            totalxp INT default 0,
+            gold INT default 0,
+            tp INT default 0,
+            time INT default -1,
+            vorpal INT default 0,
+            banishment INT default 0,
+            assassinate INT default 0,
+            slit INT default 0,
+            disintegrate INT default 0,
+            deathblow INT default 0,
+            wielded_weapon TEXT default '',
+            second_weapon TEXT default '',
+            room_id INT default 0,
+            level INT default -1
+          )""", keyfield='mk_id')
 
-    self.addtable('gquests', """CREATE TABLE gquests(
-          gq_id INTEGER NOT NULL PRIMARY KEY autoincrement,
-          starttime INT default 0,
-          finishtime INT default 0,
-          qp INT default 0,
-          qpmobs INT default 0,
-          gold INT default 0,
-          tp INT default 0,
-          trains INT default 0,
-          pracs INT default 0,
-          level INT default -1,
-          won INT default 0,
-          completed INT default 0
-        )""", keyfield='gq_id')
+      self.addtable('gquests', """CREATE TABLE gquests(
+            gq_id INTEGER NOT NULL PRIMARY KEY autoincrement,
+            starttime INT default 0,
+            finishtime INT default 0,
+            qp INT default 0,
+            qpmobs INT default 0,
+            gold INT default 0,
+            tp INT default 0,
+            trains INT default 0,
+            pracs INT default 0,
+            level INT default -1,
+            won INT default 0,
+            completed INT default 0
+          )""", keyfield='gq_id')
 
 
-    self.addtable('gqmobs', """CREATE TABLE gqmobs(
-          gqmob_id INTEGER NOT NULL PRIMARY KEY autoincrement,
-          gq_id INT NOT NULL,
-          num INT,
-          name TEXT default "Unknown",
-          location TEXT default "Unknown"
-        )""", keyfield='gqmob_id')
+      self.addtable('gqmobs', """CREATE TABLE gqmobs(
+            gqmob_id INTEGER NOT NULL PRIMARY KEY autoincrement,
+            gq_id INT NOT NULL,
+            num INT,
+            name TEXT default "Unknown",
+            location TEXT default "Unknown"
+          )""", keyfield='gqmob_id')
 
-    # Need to do this after adding tables
-    self.postinit()
+      # Need to do this after adding tables
+      self.postinit()
 
-  def turnonpragmas(self):
-    #-- PRAGMA foreign_keys = ON;
-    self.dbconn.execute("PRAGMA foreign_keys=On;")
-    #-- PRAGMA journal_mode=WAL
-    self.dbconn.execute("PRAGMA journal_mode=WAL;")
+    def turnonpragmas(self):
+      #-- PRAGMA foreign_keys = ON;
+      self.dbconn.execute("PRAGMA foreign_keys=On;")
+      #-- PRAGMA journal_mode=WAL
+      self.dbconn.execute("PRAGMA journal_mode=WAL;")
 
-  def savequest(self, questinfo):
-    """
-    save a quest in the db
-    """
-    if questinfo['failed'] == 1:
-      self.addtostat('questsfailed', 1)
-    else:
-      self.addtostat('questscomplete', 1)
-      self.addtostat('questpoints', questinfo['totqp'])
-      self.addtostat('qpearned', questinfo['totqp'])
-      self.addtostat('triviapoints', questinfo['tp'])
-      self.addtostat('totaltrivia', questinfo['tp'])
+    def savequest(self, questinfo):
+      """
+      save a quest in the db
+      """
+      if questinfo['failed'] == 1:
+        self.addtostat('questsfailed', 1)
+      else:
+        self.addtostat('questscomplete', 1)
+        self.addtostat('questpoints', questinfo['totqp'])
+        self.addtostat('qpearned', questinfo['totqp'])
+        self.addtostat('triviapoints', questinfo['tp'])
+        self.addtostat('totaltrivia', questinfo['tp'])
 
-    cur = self.dbconn.cursor()
-    stmt = self.converttoinsert('quests', keynull=True)
-    cur.execute(stmt, questinfo)
-    rowid = cur.lastrowid
-    self.dbconn.commit()
-    cur.close()
-    self.api.get('send.msg')('added quest: %s' % rowid)
-    return rowid
-
-  def setstat(self, stat, value):
-    """
-    set a stat
-    """
-    cur = self.dbconn.cursor()
-    stmt = 'update stats set %s=%s where milestone = "current"' % (
-                                                      stat, value)
-    cur.execute(stmt)
-    self.dbconn.commit()
-    cur.close()
-    self.api.get('send.msg')('set %s to %s' % (stat, value))
-
-  def getstat(self, stat):
-    """
-    get a stat from the stats table
-    """
-    tstat = None
-    cur = self.dbconn.cursor()
-    cur.execute('SELECT * FROM stats WHERE milestone = "current"')
-    row = cur.fetchone()
-    if row and stat in row:
-      tstat = row[stat]
-    cur.close()
-    return tstat
-
-  def addtostat(self, stat, add):
-    """
-    add to  a stat in the stats table
-    """
-    if add <= 0:
-      return True
-
-    if self.checkcolumnexists('stats', stat):
       cur = self.dbconn.cursor()
-      cur.execute(
-          "UPDATE stats SET %s = %s + %s WHERE milestone = 'current'" \
-          % (stat, stat, add))
+      stmt = self.converttoinsert('quests', keynull=True)
+      cur.execute(stmt, questinfo)
+      rowid = cur.lastrowid
       self.dbconn.commit()
       cur.close()
+      self.api.get('send.msg')('added quest: %s' % rowid)
+      return rowid
 
-  def savewhois(self, whoisinfo):
-    """
-    save info into the stats table
-    """
-    cur = self.dbconn.cursor()
-    if self.getstat('totallevels'):
-      nokey = {}
-      nokey['stat_id'] = True
-      nokey['totaltrivia'] = True
-      whoisinfo['milestone'] = 'current'
-      whoisinfo['time'] = 0
-      stmt = self.converttoupdate('stats', 'milestone', nokey)
-      cur.execute(stmt, whoisinfo)
-    else:
-      whoisinfo['milestone'] = 'current'
-      whoisinfo['totaltrivia'] = 0
-      whoisinfo['time'] = 0
-      stmt = self.converttoinsert('stats', True)
-      cur.execute(stmt, whoisinfo)
-      #add a milestone here
-      self.addmilestone('start')
+    def setstat(self, stat, value):
+      """
+      set a stat
+      """
+      cur = self.dbconn.cursor()
+      stmt = 'update stats set %s=%s where milestone = "current"' % (
+                                                        stat, value)
+      cur.execute(stmt)
+      self.dbconn.commit()
+      cur.close()
+      self.api.get('send.msg')('set %s to %s' % (stat, value))
 
-    self.dbconn.commit()
-    cur.close()
-    self.api.get('send.msg')('updated stats')
-    # add classes here
-    self.addclasses(whoisinfo['classes'])
+    def getstat(self, stat):
+      """
+      get a stat from the stats table
+      """
+      tstat = None
+      cur = self.dbconn.cursor()
+      cur.execute('SELECT * FROM stats WHERE milestone = "current"')
+      row = cur.fetchone()
+      if row and stat in row:
+        tstat = row[stat]
+      cur.close()
+      return tstat
 
-  def addmilestone(self, milestone):
-    """
-    add a milestone
-    """
-    if not milestone:
-      return
+    def addtostat(self, stat, add):
+      """
+      add to  a stat in the stats table
+      """
+      if add <= 0:
+        return True
 
-    trows = self.runselect('SELECT * FROM stats WHERE milestone = "%s"' \
-                                                          % milestone)
-    if len(trows) > 0:
-      self.api.get('send.client')('@RMilestone %s already exists' % milestone)
+      if self.checkcolumnexists('stats', stat):
+        cur = self.dbconn.cursor()
+        cur.execute(
+            "UPDATE stats SET %s = %s + %s WHERE milestone = 'current'" \
+            % (stat, stat, add))
+        self.dbconn.commit()
+        cur.close()
+
+    def savewhois(self, whoisinfo):
+      """
+      save info into the stats table
+      """
+      cur = self.dbconn.cursor()
+      if self.getstat('totallevels'):
+        nokey = {}
+        nokey['stat_id'] = True
+        nokey['totaltrivia'] = True
+        whoisinfo['milestone'] = 'current'
+        whoisinfo['time'] = 0
+        stmt = self.converttoupdate('stats', 'milestone', nokey)
+        cur.execute(stmt, whoisinfo)
+      else:
+        whoisinfo['milestone'] = 'current'
+        whoisinfo['totaltrivia'] = 0
+        whoisinfo['time'] = 0
+        stmt = self.converttoinsert('stats', True)
+        cur.execute(stmt, whoisinfo)
+        #add a milestone here
+        self.addmilestone('start')
+
+      self.dbconn.commit()
+      cur.close()
+      self.api.get('send.msg')('updated stats')
+      # add classes here
+      self.addclasses(whoisinfo['classes'])
+
+    def addmilestone(self, milestone):
+      """
+      add a milestone
+      """
+      if not milestone:
+        return
+
+      trows = self.runselect('SELECT * FROM stats WHERE milestone = "%s"' \
+                                                            % milestone)
+      if len(trows) > 0:
+        self.api.get('send.client')('@RMilestone %s already exists' % milestone)
+        return -1
+
+      stats = self.runselect('SELECT * FROM stats WHERE milestone = "current"')
+      tstats = stats[0]
+
+      if tstats:
+        tstats['milestone'] = milestone
+        tstats['time'] = time.time()
+        stmt = self.converttoinsert('stats', True)
+        cur = self.dbconn.cursor()
+        cur.execute(stmt, tstats)
+        trow = cur.lastrowid
+        self.dbconn.commit()
+        cur.close()
+
+        self.api.get('send.msg')('inserted milestone %s with rowid: %s' % (
+                                              milestone, trow))
+        return trow
+
       return -1
 
-    stats = self.runselect('SELECT * FROM stats WHERE milestone = "current"')
-    tstats = stats[0]
-
-    if tstats:
-      tstats['milestone'] = milestone
-      tstats['time'] = time.time()
-      stmt = self.converttoinsert('stats', True)
+    def addclasses(self, classes):
+      """
+      add classes from whois
+      """
+      stmt = 'UPDATE CLASSES SET REMORT = :remort WHERE class = :class'
       cur = self.dbconn.cursor()
-      cur.execute(stmt, tstats)
-      trow = cur.lastrowid
+      cur.executemany(stmt, classes)
       self.dbconn.commit()
       cur.close()
 
-      self.api.get('send.msg')('inserted milestone %s with rowid: %s' % (
-                                            milestone, trow))
-      return trow
+    def getclasses(self):
+      """
+      get all classes
+      """
+      classes = []
+      tclasses = self.runselect('SELECT * FROM classes ORDER by remort ASC')
+      for i in tclasses:
+        if i['remort'] != -1:
+          classes.append(i['class'])
 
-    return -1
+      return classes
 
-  def addclasses(self, classes):
-    """
-    add classes from whois
-    """
-    stmt = 'UPDATE CLASSES SET REMORT = :remort WHERE class = :class'
-    cur = self.dbconn.cursor()
-    cur.executemany(stmt, classes)
-    self.dbconn.commit()
-    cur.close()
+    def initclasses(self):
+      """
+      initialize the class table
+      """
+      classabb = self.api.get('aardu.classabb')()
+      classes = []
+      for i in classabb:
+        classes.append({'class':i})
+      stmt = "INSERT INTO classes VALUES (:class, -1)"
+      cur = self.dbconn.cursor()
+      cur.executemany(stmt, classes)
+      self.dbconn.commit()
+      cur.close()
 
-  def getclasses(self):
-    """
-    get all classes
-    """
-    classes = []
-    tclasses = self.runselect('SELECT * FROM classes ORDER by remort ASC')
-    for i in tclasses:
-      if i['remort'] != -1:
-        classes.append(i['class'])
+    def resetclasses(self):
+      """
+      reset the class table
+      """
+      classabb = self.api.get('aardu.classabb')()
+      classes = []
+      for i in classabb:
+        classes.append({'class':i})
+      stmt = """UPDATE classes SET remort = -1
+                      WHERE class = :class"""
+      cur = self.dbconn.cursor()
+      cur.executemany(stmt, classes)
+      self.dbconn.commit()
+      cur.close()
 
-    return classes
-
-  def initclasses(self):
-    """
-    initialize the class table
-    """
-    classabb = self.api.get('aardu.classabb')()
-    classes = []
-    for i in classabb:
-      classes.append({'class':i})
-    stmt = "INSERT INTO classes VALUES (:class, -1)"
-    cur = self.dbconn.cursor()
-    cur.executemany(stmt, classes)
-    self.dbconn.commit()
-    cur.close()
-
-  def resetclasses(self):
-    """
-    reset the class table
-    """
-    classabb = self.api.get('aardu.classabb')()
-    classes = []
-    for i in classabb:
-      classes.append({'class':i})
-    stmt = """UPDATE classes SET remort = -1
-                    WHERE class = :class"""
-    cur = self.dbconn.cursor()
-    cur.executemany(stmt, classes)
-    self.dbconn.commit()
-    cur.close()
-
-  def savecp(self, cpinfo):
-    """
-    save cp information
-    """
-    if cpinfo['failed'] == 1:
-      self.addtostat('campaignsfld', 1)
-    else:
-      self.addtostat('campaignsdone', 1)
-      self.addtostat('questpoints', cpinfo['qp'])
-      self.addtostat('qpearned', cpinfo['qp'])
-      self.addtostat('triviapoints', cpinfo['tp'])
-      self.addtostat('totaltrivia', cpinfo['tp'])
-
-    stmt = self.converttoinsert('campaigns', keynull=True)
-    cur = self.dbconn.cursor()
-    cur.execute(stmt, cpinfo)
-    rowid = self.getlastrowid('campaigns')
-    self.dbconn.commit()
-    cur.close()
-    self.api.get('send.msg')('added cp: %s' % rowid)
-
-    for i in cpinfo['mobs']:
-      i['cp_id'] = rowid
-    stmt2 = self.converttoinsert('cpmobs', keynull=True)
-    cur = self.dbconn.cursor()
-    cur.executemany(stmt2, cpinfo['mobs'])
-    self.dbconn.commit()
-    cur.close()
-
-  def savegq(self, gqinfo):
-    """
-    save gq information
-    """
-    self.addtostat('questpoints', int(gqinfo['qp']) + int(gqinfo['qpmobs']))
-    self.addtostat('qpearned', int(gqinfo['qp']) + int(gqinfo['qpmobs']))
-    self.addtostat('triviapoints', gqinfo['tp'])
-    self.addtostat('totaltrivia', gqinfo['tp'])
-    if gqinfo['won'] == 1:
-      self.addtostat('gquestswon', 1)
-
-    stmt = self.converttoinsert('gquests', keynull=True)
-    cur = self.dbconn.cursor()
-    cur.execute(stmt, gqinfo)
-    rowid = self.getlastrowid('gquests')
-    self.dbconn.commit()
-    cur.close()
-    self.api.get('send.msg')('added gq: %s' % rowid)
-
-    for i in gqinfo['mobs']:
-      i['gq_id'] = rowid
-    stmt2 = self.converttoinsert('gqmobs', keynull=True)
-    cur = self.dbconn.cursor()
-    cur.executemany(stmt2, gqinfo['mobs'])
-    self.dbconn.commit()
-    cur.close()
-
-  def savelevel(self, levelinfo, first=False):
-    """
-    save a level
-    """
-    rowid = -1
-    if not first:
-      if levelinfo['type'] == 'level':
-        if levelinfo['totallevels'] and levelinfo['totallevels'] > 0:
-          self.setstat('totallevels', levelinfo['totallevels'])
-          self.setstat('level', levelinfo['level'])
-        else:
-          self.addtostat('totallevels', 1)
-          self.addtostat('level', 1)
-      elif levelinfo['type'] == 'pup':
-        self.addtostat('powerupsall', 1)
-      if levelinfo['totallevels'] and levelinfo['totallevels'] > 0:
-        levelinfo['level'] = levelinfo['totallevels']
+    def savecp(self, cpinfo):
+      """
+      save cp information
+      """
+      if cpinfo['failed'] == 1:
+        self.addtostat('campaignsfld', 1)
       else:
-        levelinfo['level'] = self.getstat('totallevels')
+        self.addtostat('campaignsdone', 1)
+        self.addtostat('questpoints', cpinfo['qp'])
+        self.addtostat('qpearned', cpinfo['qp'])
+        self.addtostat('triviapoints', cpinfo['tp'])
+        self.addtostat('totaltrivia', cpinfo['tp'])
 
-    levelinfo['finishtime'] = -1
-    cur = self.dbconn.cursor()
-    stmt = self.converttoinsert('levels', keynull=True)
-    cur.execute(stmt, levelinfo)
-    rowid = self.getlastrowid('levels')
-    self.api.get('send.msg')('inserted level %s' % rowid)
-    if rowid > 1:
-      stmt2 = "UPDATE levels SET finishtime = %s WHERE level_id = %d" % (
-                    levelinfo['starttime'], int(rowid) - 1)
-      cur.execute(stmt2)
-    self.dbconn.commit()
-    cur.close()
+      stmt = self.converttoinsert('campaigns', keynull=True)
+      cur = self.dbconn.cursor()
+      cur.execute(stmt, cpinfo)
+      rowid = self.getlastrowid('campaigns')
+      self.dbconn.commit()
+      cur.close()
+      self.api.get('send.msg')('added cp: %s' % rowid)
 
-    if levelinfo['type'] == 'level':
-      self.addmilestone(str(levelinfo['totallevels']))
+      for i in cpinfo['mobs']:
+        i['cp_id'] = rowid
+      stmt2 = self.converttoinsert('cpmobs', keynull=True)
+      cur = self.dbconn.cursor()
+      cur.executemany(stmt2, cpinfo['mobs'])
+      self.dbconn.commit()
+      cur.close()
 
-    return rowid
+    def savegq(self, gqinfo):
+      """
+      save gq information
+      """
+      self.addtostat('questpoints', int(gqinfo['qp']) + int(gqinfo['qpmobs']))
+      self.addtostat('qpearned', int(gqinfo['qp']) + int(gqinfo['qpmobs']))
+      self.addtostat('triviapoints', gqinfo['tp'])
+      self.addtostat('totaltrivia', gqinfo['tp'])
+      if gqinfo['won'] == 1:
+        self.addtostat('gquestswon', 1)
 
-  def savemobkill(self, killinfo):
-    """
-    save a mob kill
-    """
-    self.addtostat('totaltrivia', killinfo['tp'])
-    self.addtostat('monsterskilled', 1)
-    if not killinfo['name']:
-      killinfo['name'] = 'Unknown'
-    cur = self.dbconn.cursor()
-    stmt = self.converttoinsert('mobkills', keynull=True)
-    cur.execute(stmt, killinfo)
-    self.dbconn.commit()
-    rowid = self.getlastrowid('mobkills')
-    cur.close()
-    self.api.get('send.msg')('inserted mobkill: %s' % rowid)
+      stmt = self.converttoinsert('gquests', keynull=True)
+      cur = self.dbconn.cursor()
+      cur.execute(stmt, gqinfo)
+      rowid = self.getlastrowid('gquests')
+      self.dbconn.commit()
+      cur.close()
+      self.api.get('send.msg')('added gq: %s' % rowid)
 
-  def addrarexp_v13(self):
-    """
-    add rare xp into the database
-    """
-    if not self.checktableexists('mobkills'):
-      return
+      for i in gqinfo['mobs']:
+        i['gq_id'] = rowid
+      stmt2 = self.converttoinsert('gqmobs', keynull=True)
+      cur = self.dbconn.cursor()
+      cur.executemany(stmt2, gqinfo['mobs'])
+      self.dbconn.commit()
+      cur.close()
 
-    oldmobst = self.runselect('SELECT * FROM mobkills ORDER BY mk_id ASC')
+    def savelevel(self, levelinfo, first=False):
+      """
+      save a level
+      """
+      rowid = -1
+      if not first:
+        if levelinfo['type'] == 'level':
+          if levelinfo['totallevels'] and levelinfo['totallevels'] > 0:
+            self.setstat('totallevels', levelinfo['totallevels'])
+            self.setstat('level', levelinfo['level'])
+          else:
+            self.addtostat('totallevels', 1)
+            self.addtostat('level', 1)
+        elif levelinfo['type'] == 'pup':
+          self.addtostat('powerupsall', 1)
+        if levelinfo['totallevels'] and levelinfo['totallevels'] > 0:
+          levelinfo['level'] = levelinfo['totallevels']
+        else:
+          levelinfo['level'] = self.getstat('totallevels')
 
-    cur = self.dbconn.cursor()
-    cur.execute('DROP TABLE IF EXISTS mobkills;')
-    cur.close()
-    self.close()
+      levelinfo['finishtime'] = -1
+      cur = self.dbconn.cursor()
+      stmt = self.converttoinsert('levels', keynull=True)
+      cur.execute(stmt, levelinfo)
+      rowid = self.getlastrowid('levels')
+      self.api.get('send.msg')('inserted level %s' % rowid)
+      if rowid > 1:
+        stmt2 = "UPDATE levels SET finishtime = %s WHERE level_id = %d" % (
+                      levelinfo['starttime'], int(rowid) - 1)
+        cur.execute(stmt2)
+      self.dbconn.commit()
+      cur.close()
 
-    self.open()
-    cur = self.dbconn.cursor()
-    cur.execute("""CREATE TABLE mobkills(
-          mk_id INTEGER NOT NULL PRIMARY KEY autoincrement,
-          name TEXT default "Unknown",
-          xp INT default 0,
-          rarexp INT default 0,
-          bonusxp INT default 0,
-          blessingxp INT default 0,
-          totalxp INT default 0,
-          gold INT default 0,
-          tp INT default 0,
-          time INT default -1,
-          vorpal INT default 0,
-          banishment INT default 0,
-          assassinate INT default 0,
-          slit INT default 0,
-          disintegrate INT default 0,
-          deathblow INT default 0,
-          wielded_weapon TEXT default '',
-          second_weapon TEXT default '',
-          room_id INT default 0,
-          level INT default -1
-        )""")
-    cur.close()
+      if levelinfo['type'] == 'level':
+        self.addmilestone(str(levelinfo['totallevels']))
 
-    cur = self.dbconn.cursor()
-    stmt2 = """INSERT INTO mobkills VALUES (:mk_id, :name, :xp, 0,
-                  :bonusxp, :blessingxp, :totalxp, :gold, :tp, :time, :vorpal,
-                  :banishment, :assassinate, :slit, :disintegrate, :deathblow,
-                  :wielded_weapon, :second_weapon, :room_id, :level)"""
-    cur.executemany(stmt2, oldmobst)
-    cur.close()
+      return rowid
+
+    def savemobkill(self, killinfo):
+      """
+      save a mob kill
+      """
+      self.addtostat('totaltrivia', killinfo['tp'])
+      self.addtostat('monsterskilled', 1)
+      if not killinfo['name']:
+        killinfo['name'] = 'Unknown'
+      cur = self.dbconn.cursor()
+      stmt = self.converttoinsert('mobkills', keynull=True)
+      cur.execute(stmt, killinfo)
+      self.dbconn.commit()
+      rowid = self.getlastrowid('mobkills')
+      cur.close()
+      self.api.get('send.msg')('inserted mobkill: %s' % rowid)
+
+    def addrarexp_v13(self):
+      """
+      add rare xp into the database
+      """
+      if not self.checktableexists('mobkills'):
+        return
+
+      oldmobst = self.runselect('SELECT * FROM mobkills ORDER BY mk_id ASC')
+
+      cur = self.dbconn.cursor()
+      cur.execute('DROP TABLE IF EXISTS mobkills;')
+      cur.close()
+      self.close()
+
+      self.open()
+      cur = self.dbconn.cursor()
+      cur.execute("""CREATE TABLE mobkills(
+            mk_id INTEGER NOT NULL PRIMARY KEY autoincrement,
+            name TEXT default "Unknown",
+            xp INT default 0,
+            rarexp INT default 0,
+            bonusxp INT default 0,
+            blessingxp INT default 0,
+            totalxp INT default 0,
+            gold INT default 0,
+            tp INT default 0,
+            time INT default -1,
+            vorpal INT default 0,
+            banishment INT default 0,
+            assassinate INT default 0,
+            slit INT default 0,
+            disintegrate INT default 0,
+            deathblow INT default 0,
+            wielded_weapon TEXT default '',
+            second_weapon TEXT default '',
+            room_id INT default 0,
+            level INT default -1
+          )""")
+      cur.close()
+
+      cur = self.dbconn.cursor()
+      stmt2 = """INSERT INTO mobkills VALUES (:mk_id, :name, :xp, 0,
+                    :bonusxp, :blessingxp, :totalxp, :gold, :tp, :time, :vorpal,
+                    :banishment, :assassinate, :slit, :disintegrate, :deathblow,
+                    :wielded_weapon, :second_weapon, :room_id, :level)"""
+      cur.executemany(stmt2, oldmobst)
+      cur.close()
+
+  return Statdb(plugin, **kwargs)
 
 
 class Plugin(AardwolfBasePlugin):
@@ -538,7 +543,7 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.__init__(self, *args, **kwargs)
 
-    # backup the db every 4 hours
+    self.api.get('dependency.add')('sqldb')
     self.api.get('dependency.add')('whois')
     self.api.get('dependency.add')('level')
     self.api.get('dependency.add')('mobk')
@@ -554,7 +559,8 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.load(self)
 
-    self.statdb = Statdb(self)
+    self.statdb = dbcreate(self.api.get('sqldb.baseclass')(), self,
+                           dbname='stats')
 
     self.api.get('setting.add')('backupstart', '0000', 'miltime',
                       'the time for a db backup, like 1200 or 2000')
