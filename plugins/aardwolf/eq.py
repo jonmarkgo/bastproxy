@@ -59,6 +59,8 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('dependency.add')('itemu')
 
     self.api.get('api.add')('getitem', self.api_getitem)
+    self.api.get('api.add')('get', self.api_putininventory)
+    self.api.get('api.add')('put', self.api_putincontainer)
 
   def load(self):
     """
@@ -212,7 +214,7 @@ class Plugin(AardwolfBasePlugin):
     else:
       return False, ''
 
-  def api_putincontainer(self, serial, container):
+  def api_putincontainer(self, serial, container=None):
     """
     put an item in a container
     """
