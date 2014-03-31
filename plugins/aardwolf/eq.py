@@ -55,33 +55,10 @@ class Plugin(AardwolfBasePlugin):
     self.dropall = False
 
     self.waiting = {}
-    self.waitingforid = {}
-
-    self.layout = {}
-    self.layout['invheader'] = ["serial", "level", "type", "worth",
-                                "weight", "wearable", "flags", "owner",
-                                "fromclan", "timer", "u1", "u2", "u3",
-                                "score"]
-    self.layout['container'] = ["capacity", "heaviestitem", "holding",
-                                "itemsinside", "totalweight", "itemburden",
-                                "itemweightpercent"]
-    self.layout['statmod'] = ['stat', 'value']
-    self.layout['resistmod'] = ['resist', 'value']
-    self.layout['weapon'] = ["wtype", "avedam", "inflicts", "damtype",
-                             "special"]
-    self.layout['skillmod'] = ['skillnum', 'value']
-    self.layout['spells'] = ["uses", "level", "sn1", "sn2", "sn3", "sn4",
-                             "u1"]
-    self.layout['food'] = ['percent']
-    self.layout['drink'] = ["servings", "liquid", "liquidmax", "liquidleft",
-                            "thirstpercent", "hungerpercent", "u1"]
-    self.layout['furniture'] = ["hpregen", "manaregen", "u1"]
-    self.layout['eqdata'] = ["serial", "shortflags", "cname", "level",
-                             "type", "unique", "wearslot", "timer"]
-    self.layout['light'] = ['duration']
-    self.layout['portal'] = ['uses']
 
     self.api.get('dependency.add')('itemu')
+
+    self.api.get('api.add')('getitem', self.api_getitem)
 
   def load(self):
     """
@@ -204,6 +181,18 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('events.register')('trigger_invdatastart', self.invdatastart)
     self.api.get('events.register')('trigger_invdataend', self.invdataend)
     self.api.get('events.register')('trigger_invmon', self.invmon)
+
+  # get an item from the cache
+  def api_getitem(self, item):
+    """
+    get an item from the cache
+    """
+    nitem = self.find_item(item)
+
+    if nitem in self.itemcache:
+      return self.itemcache[nitem]
+    else:
+      return None
 
   def api_putininventory(self, serial):
     """
@@ -479,20 +468,6 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('events.unregister')('trigger_all', self.eqdataline)
     self.api.get('triggers.togglegroup')('eqdata', False)
 
-  def invdatastart(self, args):
-    """
-    show that the trigger fired
-    """
-    self.api.get('send.msg')('found {invdata}: %s' % args)
-    if not args['container']:
-      container = 'Inventory'
-    else:
-      container = int(args['container'])
-    self.currentcontainer = container
-    self.api.get('triggers.togglegroup')('invdata', True)
-    self.api.get('events.register')('trigger_all', self.invdataline)
-    self.invdata[self.currentcontainer] = []
-
   def putitemincontainer(self, container, serial, place=-1):
     """
     add item to a container
@@ -511,6 +486,20 @@ class Plugin(AardwolfBasePlugin):
     itemindex = self.invdata[container].index(serial)
     del self.invdata[container][itemindex]
 
+  def invdatastart(self, args):
+    """
+    show that the trigger fired
+    """
+    self.api.get('send.msg')('found {invdata}: %s' % args)
+    if not args['container']:
+      container = 'Inventory'
+    else:
+      container = int(args['container'])
+    self.currentcontainer = container
+    self.api.get('triggers.togglegroup')('invdata', True)
+    self.api.get('events.register')('trigger_all', self.invdataline)
+    self.invdata[self.currentcontainer] = []
+
   def invdataline(self, args):
     """
     parse a line of eqdata
@@ -527,7 +516,6 @@ class Plugin(AardwolfBasePlugin):
           self.getdata(titem['serial'])
       except (IndexError, ValueError):
         self.api.get('send.msg')('incorrect invdata line: %s' % line)
-
 
   def invdataend(self, args):
     """
