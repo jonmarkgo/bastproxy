@@ -118,6 +118,7 @@ class Plugin(BasePlugin):
     self.api.get('api.add')('convertansi', self.api_convertansi)
     self.api.get('api.add')('ansicode', self.api_ansicode)
     self.api.get('api.add')('stripansi', self.api_stripansi)
+    self.api.get('api.add')('stripcolor', self.api_stripcolor)
 
   def load(self):
     """
@@ -218,6 +219,12 @@ class Plugin(BasePlugin):
     strip all ansi from a string
     """
     return ANSI_COLOR_REGEX.sub('', text)
+
+  def api_stripcolor(self, text):
+    """
+    strip @colors
+    """
+    return self.api_stripansi(self.api_convertcolors(text))
 
   def cmd_show(self, args):
     """
