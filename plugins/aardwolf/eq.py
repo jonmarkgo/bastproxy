@@ -135,6 +135,12 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('commands.add')('put', self.cmd_put,
                                 parser=parser, format=False, preamble=False)
 
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='get an item')
+    parser.add_argument('item', help='the item to get', default='', nargs='?')
+    self.api.get('commands.add')('icache', self.cmd_icache,
+                                parser=parser)
+
     self.api.get('triggers.add')('dead',
       "^You die.$",
       enabled=True, group='dead')
@@ -209,6 +215,7 @@ class Plugin(AardwolfBasePlugin):
       if container == 'Worn':
         self.sendcmd('remove %s' % serial)
       elif container != 'Inventory':
+        self.itemcache[serial]['origcontainer'] = container
         self.sendcmd('get %s %s' % (serial, container))
       else:
         container = ''
@@ -221,6 +228,9 @@ class Plugin(AardwolfBasePlugin):
     put an item in a container
     """
     serial = int(serial)
+    if not container:
+      if serial in self.itemcache and 'origcontainer' in self.itemcache[serial]:
+        container = self.itemcache[serial]['origcontainer']
     container = int(container)
 
     self.api_putininventory(serial)
@@ -271,15 +281,34 @@ class Plugin(AardwolfBasePlugin):
 
     return True, msg
 
+  def cmd_icache(self, args):
+    """
+    show internal stuff
+    """
+    msg = []
+    item = args['item']
+    try:
+      item = int(item)
+      if item in self.itemcache:
+        msg.append('%s' % self.itemcache[item])
+      else:
+        msg.append('That item is not in the cache')
+
+    except ValueError:
+      msg.append('%s is not a serial number' % item)
+
+    return True, msg
+
   def find_item(self, item):
     """
     find and item by serial or identifier
     """
-    if type(item) == int:
+    try:
       item = int(item)
       if item in self.itemcache:
         return item
-    else:
+
+    except ValueError:
       #check for identifiers here
       if item == 'tokenbag':
         return 417249394
@@ -290,14 +319,10 @@ class Plugin(AardwolfBasePlugin):
     """
     get an item
     """
-    try:
-      item = self.find_item(args['item'])
-      if item in self.itemcache:
-        retval, container = self.api_putininventory(item)
-        return True, []
-
-    except ValueError:
-      pass
+    item = self.find_item(args['item'])
+    if item in self.itemcache:
+      retval, container = self.api_putininventory(item)
+      return True, []
 
     tlist = ['%s' % self.find_item(x) for x in args['otherargs']]
     tlist.insert(0, '%s' % self.find_item(args['item']))
@@ -314,16 +339,28 @@ class Plugin(AardwolfBasePlugin):
     put an item in something
     """
     item = self.find_item(args['item'])
-    if item in self.itemcache and self.itemcache[item] != 'Inventory':
-      self.api_putininventory(item)
+    origcontainer = False
+    destination = None
+    if len(args['otherargs']) == 0:
+      if item in self.itemcache and 'origcontainer' in self.itemcache[item]:
+        destination = self.itemcache[item]['origcontainer']
+        if destination != self.itemcache[item]['container']:
+          self.api_putincontainer(item, destination)
+          return True, []
 
-    tlist = ['%s' % self.find_item(x) for x in args['otherargs']]
-    tlist.insert(0, '%s' % item)
-    cmd = ' '.join(tlist)
+    if len(args['otherargs']) == 1:
+      destination = self.find_item(args['otherargs'][0])
 
-    # need to parse all items for identifiers
-    self.api.get('send.msg')('sending \'put %s\'' % cmd)
-    self.sendcmd('put %s' % cmd)
+    if item in self.itemcache and destination in self.itemcache and len(args['otherargs']) != 0:
+      self.api_putincontainer(item, destination)
+
+    else:
+      cmd = 'put %s %s' % (item,
+              ' '.join(['%s' % self.find_item(x) for x in args['otherargs']]))
+      self.api.get('send.msg')('sending \'put %s\'' % cmd)
+      self.sendcmd(cmd)
+
+    return True, []
 
   def sendcmd(self, cmd):
     self.api.get('send.msg')('sending cmd: %s' % cmd)
@@ -437,7 +474,7 @@ class Plugin(AardwolfBasePlugin):
     """
     reset current when seeing a spellheaders ending
     """
-    self.waiting['eqdata'] = False
+    self.waiting['Worn'] = False
     self.api.get('send.msg')('found {/eqdata}')
     self.api.get('events.unregister')('trigger_all', self.eqdataline)
     self.api.get('triggers.togglegroup')('eqdata', False)
