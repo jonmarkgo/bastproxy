@@ -222,7 +222,10 @@ class Plugin(AardwolfBasePlugin):
     if not container:
       if serial in self.itemcache and 'origcontainer' in self.itemcache[serial]:
         container = self.itemcache[serial]['origcontainer']
-    container = int(container)
+    try:
+      container = int(container)
+    except ValueError:
+      pass
 
     self.api_putininventory(serial)
 
