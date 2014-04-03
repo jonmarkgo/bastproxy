@@ -164,18 +164,6 @@ class Plugin(AardwolfBasePlugin):
       "^\{/invdata\}$",
       enabled=True, group='invdata')
 
-    self.api.get('triggers.add')('invdetailsstart',
-      "^\{invdetails\}$",
-      enabled=True)
-
-    self.api.get('triggers.add')('invdetailsend',
-      "^\{/invdetails\}$",
-      enabled=True, group='invdetails')
-
-    self.api.get('triggers.add')('identityon',
-      "\+-----------------------------------------------------------------\+",
-      enabled=False, group='identify')
-
     self.api.get('events.register')('trigger_dead', self.dead)
     self.api.get('events.register')('trigger_invitem', self.trigger_invitem)
     self.api.get('events.register')('trigger_eqdatastart', self.eqdatastart)
@@ -386,12 +374,6 @@ class Plugin(AardwolfBasePlugin):
     else:
       self.sendcmd('invdata ' + str(etype))
       self.waiting[etype] = True
-
-  def addmod(self, ltype, mod):
-    if not (ltype in self.invdetails):
-      self.invdetails[ltype] = []
-
-    self.invdetails[ltype][mod[0]] = int(mod[1])
 
   def cmd_sell(self, args):
     self.api.get('send.msg')('got sell with args: %s' % args)
