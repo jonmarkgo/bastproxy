@@ -90,7 +90,7 @@ class Plugin(BasePlugin):
       plugin = self.watchcmds[watchname]['plugin']
       if event:
         if len(event['pluginlist']) > 0 and not force:
-          self.api.get('send.msg')('removewatch: watch %s for plugin has functions registered' % \
+          self.api.get('send.msg')('removewatch: watch %s for plugin %s has functions registered' % \
                       (watchname, plugin), secondary=plugin)
           return False
       del self.regexlookup[self.watchcmds[watchname]['regex']]
