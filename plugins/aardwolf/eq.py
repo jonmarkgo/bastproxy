@@ -190,7 +190,7 @@ class Plugin(AardwolfBasePlugin):
     """
     serial = int(serial)
     if serial in self.itemcache:
-      container = self.itemcache[serial]['container']
+      container = self.itemcache[serial]['curcontainer']
       if container == 'Worn':
         self.sendcmd('remove %s' % serial)
       elif container != 'Inventory':
@@ -212,7 +212,7 @@ class Plugin(AardwolfBasePlugin):
         container = self.itemcache[serial]['origcontainer']
     try:
       container = int(container)
-    except ValueError, TypeError:
+    except (ValueError, TypeError):
       pass
 
     self.api_putininventory(serial)
@@ -326,7 +326,7 @@ class Plugin(AardwolfBasePlugin):
     if len(args['otherargs']) == 0:
       if item in self.itemcache and 'origcontainer' in self.itemcache[item]:
         destination = self.itemcache[item]['origcontainer']
-        if destination != self.itemcache[item]['container']:
+        if destination != self.itemcache[item]['curcontainer']:
           self.api_putincontainer(item, destination)
           return True, []
 
@@ -413,11 +413,11 @@ class Plugin(AardwolfBasePlugin):
     wear an item
     """
     del self.eqdata[wearloc]
-    self.itemcache[serial]['container'] = 'Worn'
+    self.itemcache[serial]['curcontainer'] = 'Worn'
     self.eqdata.insert(wearloc, serial)
 
   def takeoffitem(self, serial):
-    self.itemcache[serial]['container'] = None
+    self.itemcache[serial]['curcontainer'] = None
     try:
       location = self.eqdata.index(serial)
       del self.eqdata[location]
@@ -459,7 +459,7 @@ class Plugin(AardwolfBasePlugin):
     """
     add item to a container
     """
-    self.itemcache[serial]['container'] = container
+    self.itemcache[serial]['curcontainer'] = container
     if place >= 0:
       self.invdata[container].insert(place, serial)
     else:
@@ -469,7 +469,7 @@ class Plugin(AardwolfBasePlugin):
     """
     remove an item from inventory
     """
-    self.itemcache[serial]['container'] = ''
+    self.itemcache[serial]['curcontainer'] = ''
     itemindex = self.invdata[container].index(serial)
     del self.invdata[container][itemindex]
 
