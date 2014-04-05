@@ -19,8 +19,8 @@ class BasePlugin(object):
     """
     initialize the instance
     The following things should not be done in __init__ in a plugin
-      Interacting with anything in the api except api.add or api.overload
-          and dependency.add
+      Interacting with anything in the api except api.add, api.overload
+          or dependency.add
     """
     self.author = ''
     self.purpose = ''
@@ -44,6 +44,7 @@ class BasePlugin(object):
     self.modpath = modpath
     self.basepath = basepath
     self.fullimploc = fullimploc
+    self.package = fullimploc.split('.')[1]
 
     self.settings = {}
     self.settingvalues = PersistentDictEvent(self, self.savefile,
@@ -186,6 +187,9 @@ class BasePlugin(object):
     """
     self.api.get('send.msg')('unloading %s' % self.name)
 
+    # remove anything out of the api
+    self.api.get('api.remove')(self.sname)
+
     #clear all commands for this plugin
     self.api.get('commands.removeplugin')(self.sname)
 
@@ -203,9 +207,6 @@ class BasePlugin(object):
 
     #save the state
     self.savestate()
-
-    # remove anything out of the api
-    self.api.get('api.remove')(self.sname)
 
   # handle a message
   def api_outputmsg(self, msg, secondary='None'):
@@ -263,7 +264,7 @@ class BasePlugin(object):
             elif self.settings[var]['stype'] == 'timelength':
               tvar = self.api.get('utils.formattime')(
                           self.api.get('utils.verify')(val, 'timelength'))
-            return True, ['set %s to %s' % (var, tvar)]
+            return True, ['%s is now set to %s' % (var, tvar)]
           except ValueError:
             msg = ['Cannot convert %s to %s' % \
                                     (val, self.settings[var]['stype'])]
