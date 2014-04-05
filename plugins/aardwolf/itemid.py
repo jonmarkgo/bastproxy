@@ -168,7 +168,8 @@ class Plugin(AardwolfBasePlugin):
 
   def identifyon(self, args):
     """
-    start gathering the identify data
+    start gathering the identify data, this is also triggered by an
+    identify divider, the line with multiple ---- in it
     """
     self.dividercount = self.dividercount + 1
     if self.dividercount == 1:
@@ -258,7 +259,7 @@ class Plugin(AardwolfBasePlugin):
 
   # identify an item
   def api_identify(self, serial):
-    """  remove a command
+    """  identify an item
     @Yserial@w    = the serial # if the item to identify
 
     this function returns None if the identify data has to gathered,
