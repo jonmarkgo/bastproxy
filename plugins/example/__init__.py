@@ -1,3 +1,4 @@
 """
-here so we can import files
+example plugins
 """
+DESCRIPTION = 'example plugins'
