@@ -66,8 +66,8 @@ class Proxy(Telnet):
         if 'original' in newdata:
           tosend = newdata['original']
 
-        #if 'omit' in newdata and newdata['omit']:
-          #return
+        if 'omit' in newdata and newdata['omit']:
+          tosend = None
 
         if tosend != None:
           #data cannot be transformed here
