@@ -43,8 +43,8 @@ class Plugin(AardwolfBasePlugin):
     self.itemcache = {}
     self.eqdata = {}
     self.invdata = {}
-
     self.currentcontainer = None
+    self.waiting = False
 
     self.wearall = False
     self.removeall = False
@@ -54,7 +54,7 @@ class Plugin(AardwolfBasePlugin):
     self.buyall = False
     self.dropall = False
 
-    self.waiting = {}
+    self.queue = []
 
     self.api.get('dependency.add')('itemu')
 
@@ -150,19 +150,23 @@ class Plugin(AardwolfBasePlugin):
 
     self.api.get('triggers.add')('eqdatastart',
       "^\{eqdata\}$",
-      enabled=True)
+      enabled=False, group='eqdata', omit=True)
 
     self.api.get('triggers.add')('eqdataend',
       "^\{/eqdata\}$",
-      enabled=False, group='eqdata')
+      enabled=False, group='eqdata', omit=True)
+
+    self.api.get('triggers.add')('dataline',
+      "^(\d+),(.+),(.+),(.+),(.+),(.+),(.+),(.+)$",
+      enabled=False, group='dataline', omit=True)
 
     self.api.get('triggers.add')('invdatastart',
       "^\{invdata\s*(?P<container>.*)?\}$",
-      enabled=True)
+      enabled=False, group='invdata', omit=True)
 
     self.api.get('triggers.add')('invdataend',
       "^\{/invdata\}$",
-      enabled=True, group='invdata')
+      enabled=True, group='invdata', omit=True)
 
     self.api.get('events.register')('trigger_dead', self.dead)
     self.api.get('events.register')('trigger_invitem', self.trigger_invitem)
@@ -192,10 +196,10 @@ class Plugin(AardwolfBasePlugin):
     if serial in self.itemcache:
       container = self.itemcache[serial]['curcontainer']
       if container == 'Worn':
-        self.sendcmd('remove %s' % serial)
+        self.queue.append('remove %s' % serial)
       elif container != 'Inventory':
         self.itemcache[serial]['origcontainer'] = container
-        self.sendcmd('get %s %s' % (serial, container))
+        self.addtoqueue('get %s %s' % (serial, container))
       else:
         container = ''
       return True, container
@@ -218,7 +222,7 @@ class Plugin(AardwolfBasePlugin):
     self.api_putininventory(serial)
 
     if serial in self.itemcache and container in self.itemcache:
-      self.sendcmd('put %s %s' % (serial, container))
+      self.addtoqueue('put %s %s' % (serial, container))
       return True, container
 
     return False, ''
@@ -248,7 +252,7 @@ class Plugin(AardwolfBasePlugin):
     reset stuff on death
     """
     self.invdata = {}
-    self.waiting = {}
+    self.queue = []
     self.resetworneq()
 
   def cmd_showinternal(self, args):
@@ -256,6 +260,7 @@ class Plugin(AardwolfBasePlugin):
     show internal stuff
     """
     msg = []
+    msg.append('Queue     : %s' % self.queue)
     msg.append('Waiting   : %s' % self.waiting)
     msg.append('invdata   : %s' % self.invdata)
     msg.append('eqdata    : %s' % self.eqdata)
@@ -312,7 +317,7 @@ class Plugin(AardwolfBasePlugin):
 
     # need to parse all items for identifiers
     self.api.get('send.msg')('serial is not a number, sending \'get %s\'' % cmd)
-    self.sendcmd('get %s' % cmd)
+    self.addtoqueue('get %s' % cmd)
 
     return True, []
 
@@ -340,13 +345,33 @@ class Plugin(AardwolfBasePlugin):
       cmd = 'put %s %s' % (item,
               ' '.join(['%s' % self.find_item(x) for x in args['otherargs']]))
       self.api.get('send.msg')('sending \'put %s\'' % cmd)
-      self.sendcmd(cmd)
+      self.addtoqueue(cmd)
 
     return True, []
 
-  def sendcmd(self, cmd):
+  def checkqueue(self):
+    if len(self.queue) == 0 or self.waiting:
+      return
+
+    cmd = self.queue.pop(0)
     self.api.get('send.msg')('sending cmd: %s' % cmd)
+    if 'invdata' in cmd:
+      self.api.get('send.msg')('enabling invdata triggers')
+      self.api.get('triggers.togglegroup')('invdata', True)
+      self.api.get('triggers.togglegroup')('dataline', True)
+      self.api.get('events.register')('trigger_dataline', self.invdataline)
+    elif 'eqdata' in cmd:
+      self.api.get('send.msg')('enabling eqdata triggers')
+      self.api.get('triggers.togglegroup')('eqdata', True)
+      self.api.get('triggers.togglegroup')('dataline', True)
+      self.api.get('events.register')('trigger_dataline', self.eqdataline)
+
+    self.waiting = True
     self.api.get('send.execute')(cmd)
+
+  def addtoqueue(self, cmd):
+    if not (cmd in self.queue):
+      self.queue.append(cmd)
 
   def checkvaliditem(self, item):
     if item['serial'] == "" or \
@@ -362,18 +387,13 @@ class Plugin(AardwolfBasePlugin):
     """
     get container or worn data
     """
-    if etype in self.waiting and self.waiting[etype]:
-      return
-
     if etype == 'Inventory':
-      self.sendcmd('invdata')
-      self.waiting[etype] = True
+      self.addtoqueue('invdata')
     elif etype == 'Worn':
-      self.sendcmd('eqdata')
-      self.waiting[etype] = True
+      self.addtoqueue('eqdata')
     else:
-      self.sendcmd('invdata ' + str(etype))
-      self.waiting[etype] = True
+      self.addtoqueue('invdata %s' % etype)
+    self.checkqueue()
 
   def cmd_sell(self, args):
     self.api.get('send.msg')('got sell with args: %s' % args)
@@ -430,8 +450,6 @@ class Plugin(AardwolfBasePlugin):
     show that the trigger fired
     """
     self.api.get('send.msg')('found {eqdata}')
-    self.api.get('triggers.togglegroup')('eqdata', True)
-    self.api.get('events.register')('trigger_all', self.eqdataline)
     self.resetworneq()
 
   def eqdataline(self, args):
@@ -450,10 +468,12 @@ class Plugin(AardwolfBasePlugin):
     """
     reset current when seeing a spellheaders ending
     """
-    self.waiting['Worn'] = False
     self.api.get('send.msg')('found {/eqdata}')
-    self.api.get('events.unregister')('trigger_all', self.eqdataline)
     self.api.get('triggers.togglegroup')('eqdata', False)
+    self.api.get('triggers.togglegroup')('dataline', False)
+    self.api.get('events.unregister')('trigger_dataline', self.eqdataline)
+    self.waiting = False
+    self.checkqueue()
 
   def putitemincontainer(self, container, serial, place=-1):
     """
@@ -483,8 +503,6 @@ class Plugin(AardwolfBasePlugin):
     else:
       container = int(args['container'])
     self.currentcontainer = container
-    self.api.get('triggers.togglegroup')('invdata', True)
-    self.api.get('events.register')('trigger_all', self.invdataline)
     self.invdata[self.currentcontainer] = []
 
   def invdataline(self, args):
@@ -500,7 +518,7 @@ class Plugin(AardwolfBasePlugin):
         self.api.get('send.msg')('invdata parsed item: %s' % titem)
         self.putitemincontainer(self.currentcontainer, titem['serial'])
         if titem['type'] == 11 and not (titem['serial'] in self.invdata):
-          self.getdata(titem['serial'])
+          self.addtoqueue('invdata %s' % titem['serial'])
       except (IndexError, ValueError):
         self.api.get('send.msg')('incorrect invdata line: %s' % line)
 
@@ -508,11 +526,13 @@ class Plugin(AardwolfBasePlugin):
     """
     reset current when seeing a spellheaders ending
     """
-    self.waiting[self.currentcontainer] = False
     self.currentcontainer = None
     self.api.get('send.msg')('found {/invdata}')
-    self.api.get('events.unregister')('trigger_all', self.invdataline)
     self.api.get('triggers.togglegroup')('invdata', False)
+    self.api.get('triggers.togglegroup')('dataline', False)
+    self.api.get('events.unregister')('trigger_dataline', self.invdataline)
+    self.waiting = False
+    self.checkqueue()
 
   def trigger_invitem(self, args):
     self.api.get('send.msg')('invitem args: %s' % args)
@@ -864,4 +884,7 @@ class Plugin(AardwolfBasePlugin):
       except KeyError:
         self.getdata('Inventory')
         self.getdata(container)
+
+    self.waiting = False
+    self.checkqueue()
 
