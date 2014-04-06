@@ -214,7 +214,7 @@ class Plugin(BasePlugin):
   def checktrigger(self, args):
     """
     check a line of text from the mud to see if it matches any triggers
-    the is called whenever the from_mud_event is raised
+    called whenever the from_mud_event is raised
     """
     data = args['noansi']
     colordata = args['convertansi']
@@ -240,6 +240,7 @@ class Plugin(BasePlugin):
                 if arg in targs:
                   targs[arg] = self.triggers[i]['argtypes'][arg](targs[arg])
             targs['line'] = data
+            targs['colorline'] = colordata
             targs['triggername'] = i
             self.triggers[i]['hits'] = self.triggers[i]['hits'] + 1
             args = self.raisetrigger(i, targs, args)
@@ -261,8 +262,11 @@ class Plugin(BasePlugin):
     if tdat and 'newline' in tdat:
       self.api.get('send.msg')('changing line from trigger')
       origargs['original'] = self.api.get('colors.convertcolors')(tdat['newline'])
+    if tdat and 'omit' in tdat and tdat['omit']:
+      origargs['omit'] = True
     if triggername in self.triggers and self.triggers[triggername]['omit']:
       origargs['original'] = ''
+      origargs['omit'] = True
     return
 
   def cmd_list(self, args):
