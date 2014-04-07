@@ -143,6 +143,7 @@ class Plugin(AardwolfBasePlugin):
                              "type", "unique", "wearslot", "timer"]
     self.invlayout['light'] = ['duration']
     self.invlayout['portal'] = ['uses']
+    self.invlayout['tempmod'] = ['type', 'u1', 'u2', 'statmod', 'duration']
 
   def load(self):
     """
@@ -196,28 +197,31 @@ class Plugin(AardwolfBasePlugin):
 
     this function returns a dictionary"""
     tlist = [line]
-    if layoutname == 'eqdata':
+    if layoutname == 'eqdata' or layoutname == 'tempmod':
       tlist = line.split(',')
     else:
       tlist = line.split('|')
     titem = {}
-    for i in xrange(len(self.invlayout[layoutname])):
-      v = self.invlayout[layoutname][i]
-      value = tlist[i]
-      try:
-        value = int(value)
-      except ValueError:
-        pass
-
-      if layoutname == 'invheader' and v == 'type':
+    if layoutname in self.invlayout:
+      for i in xrange(len(self.invlayout[layoutname])):
+        v = self.invlayout[layoutname][i]
+        value = tlist[i]
         try:
-          value = value.lower()
-        except AttributeError:
+          value = int(value)
+        except ValueError:
           pass
 
-      titem[v] = value
+        if layoutname == 'invheader' and v == 'type':
+          try:
+            value = value.lower()
+          except AttributeError:
+            pass
 
-    if layoutname == 'eqdata':
-      titem['name'] = self.api.get('colors.stripcolor')(titem['cname'])
+        titem[v] = value
 
-    return titem
+      if layoutname == 'eqdata':
+        titem['name'] = self.api.get('colors.stripcolor')(titem['cname'])
+
+      return titem
+    else:
+      self.api.get('send.msg')('layout %s not found' % layoutname)
