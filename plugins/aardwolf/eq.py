@@ -437,7 +437,7 @@ class Plugin(AardwolfBasePlugin):
     self.eqdata.insert(wearloc, serial)
 
   def takeoffitem(self, serial):
-    self.itemcache[serial]['curcontainer'] = None
+    self.itemcache[serial]['curcontainer'] = 'Inventory'
     try:
       location = self.eqdata.index(serial)
       del self.eqdata[location]
@@ -489,7 +489,7 @@ class Plugin(AardwolfBasePlugin):
     """
     remove an item from inventory
     """
-    self.itemcache[serial]['curcontainer'] = ''
+    self.itemcache[serial]['curcontainer'] = 'Inventory'
     itemindex = self.invdata[container].index(serial)
     del self.invdata[container][itemindex]
 
@@ -835,8 +835,8 @@ class Plugin(AardwolfBasePlugin):
     if action == 1:
     # Remove an item
       if serial in self.eqdata:
-        self.putitemincontainer('Inventory', serial, place=0)
         self.takeoffitem(serial)
+        self.putitemincontainer('Inventory', serial, place=0)
       else:
         self.getdata('Inventory')
         self.getdata('Worn')
