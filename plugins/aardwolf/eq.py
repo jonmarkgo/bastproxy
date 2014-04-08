@@ -34,7 +34,7 @@ class Plugin(AardwolfBasePlugin):
     self.eqdata = {}
     self.invdata = {}
     self.currentcontainer = None
-    self.waiting = False
+    self.currentcmd = ''
 
     self.wearall = False
     self.removeall = False
@@ -237,6 +237,43 @@ class Plugin(AardwolfBasePlugin):
     self.getdata('Worn')
     self.getdata('Inventory')
 
+  def getdata(self, etype):
+    """
+    get container or worn data
+    """
+    if etype == 'Inventory':
+      self.addtoqueue('invdata')
+    elif etype == 'Worn':
+      self.addtoqueue('eqdata')
+    else:
+      self.addtoqueue('invdata %s' % etype)
+    self.checkqueue()
+
+  def checkqueue(self):
+    if len(self.queue) == 0 or self.currentcmd:
+      return
+
+    cmd = self.queue.pop(0)
+    self.api.get('send.msg')('sending cmd: %s' % cmd)
+    if 'invdata' in cmd:
+      self.api.get('send.msg')('enabling invdata triggers')
+      self.api.get('triggers.togglegroup')('invdata', True)
+      self.api.get('triggers.togglegroup')('dataline', True)
+      self.api.get('events.register')('trigger_dataline', self.invdataline)
+    elif 'eqdata' in cmd:
+      self.api.get('send.msg')('enabling eqdata triggers')
+      self.api.get('triggers.togglegroup')('eqdata', True)
+      self.api.get('triggers.togglegroup')('dataline', True)
+      self.api.get('events.register')('trigger_dataline', self.eqdataline)
+
+    self.currentcmd = cmd
+    self.api.get('send.execute')(cmd)
+
+  def addtoqueue(self, cmd):
+    if not (cmd in self.queue):
+      self.api.get('send.msg')('add %s to queue' % cmd)
+      self.queue.append(cmd)
+
   def dead(self, _):
     """
     reset stuff on death
@@ -251,7 +288,7 @@ class Plugin(AardwolfBasePlugin):
     """
     msg = []
     msg.append('Queue     : %s' % self.queue)
-    msg.append('Waiting   : %s' % self.waiting)
+    msg.append('Cur cmd   : %s' % self.currentcmd)
     msg.append('invdata   : %s' % self.invdata)
     msg.append('eqdata    : %s' % self.eqdata)
     msg.append('itemcache : %s' % self.itemcache)
@@ -339,30 +376,6 @@ class Plugin(AardwolfBasePlugin):
 
     return True, []
 
-  def checkqueue(self):
-    if len(self.queue) == 0 or self.waiting:
-      return
-
-    cmd = self.queue.pop(0)
-    self.api.get('send.msg')('sending cmd: %s' % cmd)
-    if 'invdata' in cmd:
-      self.api.get('send.msg')('enabling invdata triggers')
-      self.api.get('triggers.togglegroup')('invdata', True)
-      self.api.get('triggers.togglegroup')('dataline', True)
-      self.api.get('events.register')('trigger_dataline', self.invdataline)
-    elif 'eqdata' in cmd:
-      self.api.get('send.msg')('enabling eqdata triggers')
-      self.api.get('triggers.togglegroup')('eqdata', True)
-      self.api.get('triggers.togglegroup')('dataline', True)
-      self.api.get('events.register')('trigger_dataline', self.eqdataline)
-
-    self.waiting = True
-    self.api.get('send.execute')(cmd)
-
-  def addtoqueue(self, cmd):
-    if not (cmd in self.queue):
-      self.queue.append(cmd)
-
   def checkvaliditem(self, item):
     if item['serial'] == "" or \
       item['level'] == "" or \
@@ -372,18 +385,6 @@ class Plugin(AardwolfBasePlugin):
         return False
 
     return True
-
-  def getdata(self, etype):
-    """
-    get container or worn data
-    """
-    if etype == 'Inventory':
-      self.addtoqueue('invdata')
-    elif etype == 'Worn':
-      self.addtoqueue('eqdata')
-    else:
-      self.addtoqueue('invdata %s' % etype)
-    self.checkqueue()
 
   def cmd_sell(self, args):
     self.api.get('send.msg')('got sell with args: %s' % args)
@@ -462,7 +463,8 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('triggers.togglegroup')('eqdata', False)
     self.api.get('triggers.togglegroup')('dataline', False)
     self.api.get('events.unregister')('trigger_dataline', self.eqdataline)
-    self.waiting = False
+    if 'eqdata' in self.currentcmd:
+      self.currentcmd = ''
     self.checkqueue()
 
   def putitemincontainer(self, container, serial, place=-1):
@@ -521,7 +523,8 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('triggers.togglegroup')('invdata', False)
     self.api.get('triggers.togglegroup')('dataline', False)
     self.api.get('events.unregister')('trigger_dataline', self.invdataline)
-    self.waiting = False
+    if 'invdata' in self.currentcmd:
+      self.currentcmd = ''
     self.checkqueue()
 
   def trigger_invitem(self, args):
@@ -879,6 +882,4 @@ class Plugin(AardwolfBasePlugin):
         self.getdata('Inventory')
         self.getdata(container)
 
-    self.waiting = False
-    self.checkqueue()
 
