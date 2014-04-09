@@ -46,7 +46,7 @@ class Plugin(AardwolfBasePlugin):
 
     self.queue = []
 
-    self.api.get('dependency.add')('itemu')
+    self.api.get('dependency.add')('aardwolf.itemu')
 
     self.api.get('api.add')('getitem', self.api_getitem)
     self.api.get('api.add')('get', self.api_putininventory)
@@ -88,6 +88,11 @@ class Plugin(AardwolfBasePlugin):
     parser = argparse.ArgumentParser(add_help=False,
                  description='show some internal variables')
     self.api.get('commands.add')('sv', self.cmd_showinternal,
+                                parser=parser)
+
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='refresh eq')
+    self.api.get('commands.add')('refresh', self.cmd_refresh,
                                 parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
@@ -166,6 +171,34 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('events.register')('trigger_invdataend', self.invdataend)
     self.api.get('events.register')('trigger_invmon', self.invmon)
 
+  def disconnect(self, args):
+    """
+    """
+    AardwolfBasePlugin.disconnect(self)
+    self.itemcache = {}
+    self.eqdata = {}
+    self.invdata = {}
+    self.currentcontainer = None
+    self.currentcmd = ''
+
+    self.queue = []
+
+  def cmd_refresh(self, args):
+    """
+    refresh eq
+    """
+    self.itemcache = {}
+    self.eqdata = {}
+    self.invdata = {}
+    self.currentcontainer = None
+    self.currentcmd = ''
+
+    self.queue = []
+    self.getdata('Worn')
+    self.getdata('Inventory')
+
+    return True, ['Refreshing EQ']
+
   # get an item from the cache
   def api_getitem(self, item):
     """
@@ -233,6 +266,7 @@ class Plugin(AardwolfBasePlugin):
     """
     do something on connect
     """
+    print 'firstactive'
     AardwolfBasePlugin.afterfirstactive(self)
     self.getdata('Worn')
     self.getdata('Inventory')
@@ -440,7 +474,7 @@ class Plugin(AardwolfBasePlugin):
     """
     show that the trigger fired
     """
-    self.api.get('send.msg')('found {eqdata}')
+    #self.api.get('send.msg')('found {eqdata}')
     self.resetworneq()
 
   def eqdataline(self, args):
@@ -449,10 +483,10 @@ class Plugin(AardwolfBasePlugin):
     """
     line = args['line'].strip()
     if line != '{eqdata}':
-      self.api.get('send.msg')('eqdata args: %s' % args)
+      #self.api.get('send.msg')('eqdata args: %s' % args)
       titem = self.api.get('itemu.dataparse')(line, 'eqdata')
       self.itemcache[titem['serial']] = titem
-      self.api.get('send.msg')('eqdata parsed item: %s' % titem)
+      #self.api.get('send.msg')('eqdata parsed item: %s' % titem)
       self.wearitem(titem['serial'], titem['wearslot'])
 
   def eqdataend(self, args):
@@ -472,10 +506,11 @@ class Plugin(AardwolfBasePlugin):
     add item to a container
     """
     self.itemcache[serial]['curcontainer'] = container
-    if place >= 0:
-      self.invdata[container].insert(place, serial)
-    else:
-      self.invdata[container].append(serial)
+    if container:
+      if place >= 0:
+        self.invdata[container].insert(place, serial)
+      else:
+        self.invdata[container].append(serial)
 
   def removeitemfromcontainer(self, container, serial):
     """
@@ -503,11 +538,11 @@ class Plugin(AardwolfBasePlugin):
     """
     line = args['line'].strip()
     if line != '{invdata}':
-      self.api.get('send.msg')('invdata args: %s' % args)
+      #self.api.get('send.msg')('invdata args: %s' % args)
       try:
         titem = self.api.get('itemu.dataparse')(line, 'eqdata')
         self.itemcache[titem['serial']] = titem
-        self.api.get('send.msg')('invdata parsed item: %s' % titem)
+        #self.api.get('send.msg')('invdata parsed item: %s' % titem)
         self.putitemincontainer(self.currentcontainer, titem['serial'])
         if titem['type'] == 11 and not (titem['serial'] in self.invdata):
           self.addtoqueue('invdata %s' % titem['serial'])
@@ -519,7 +554,7 @@ class Plugin(AardwolfBasePlugin):
     reset current when seeing a spellheaders ending
     """
     self.currentcontainer = None
-    self.api.get('send.msg')('found {/invdata}')
+    #self.api.get('send.msg')('found {/invdata}')
     self.api.get('triggers.togglegroup')('invdata', False)
     self.api.get('triggers.togglegroup')('dataline', False)
     self.api.get('events.unregister')('trigger_dataline', self.invdataline)
@@ -528,10 +563,10 @@ class Plugin(AardwolfBasePlugin):
     self.checkqueue()
 
   def trigger_invitem(self, args):
-    self.api.get('send.msg')('invitem args: %s' % args)
+    #self.api.get('send.msg')('invitem args: %s' % args)
     titem = self.api.get('itemu.dataparse')(args['data'], 'eqdata')
     self.itemcache[titem['serial']] = titem
-    self.api.get('send.msg')('invitem parsed item: %s' % titem)
+    #self.api.get('send.msg')('invitem parsed item: %s' % titem)
     self.itemcache[titem['serial']] = titem
 
   def cmd_eq(self, args):
@@ -828,7 +863,7 @@ class Plugin(AardwolfBasePlugin):
     serial = int(args['serial'])
     container = int(args['container'])
     location = int(args['location'])
-    self.api.get('send.msg')('action: %s, item: %s' % (action, serial))
+    #self.api.get('send.msg')('action: %s, item: %s' % (action, serial))
     if action == 1:
     # Remove an item
       if serial in self.eqdata:
