@@ -96,7 +96,9 @@ class CmdQueue(object):
     add a command to the queue
     """
     cmd = self.cmds[cmdtype]['cmd'] + ' ' + str(arguments)
-    if not self.checkinqueue(cmd):
+    if self.checkinqueue(cmd) or ('cmd' in self.currentcmd and self.currentcmd['cmd'] == cmd):
+      return
+    else:
       self.plugin.api.get('send.msg')('added %s to queue' % cmd)
       self.queue.append({'cmd':cmd, 'type':cmdtype})
       if not self.currentcmd:
