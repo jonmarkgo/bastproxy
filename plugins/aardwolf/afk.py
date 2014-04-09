@@ -68,13 +68,13 @@ class Plugin(AardwolfBasePlugin):
 
     self.api.get('events.register')('client_connected', self.clientconnected)
     self.api.get('events.register')('client_disconnected', self.clientdisconnected)
-    self.api.get('events.register')('firstactive', self.afkfirstactive)
     self.api.get('events.register')('watch_titleset', self._titlesetevent)
 
-  def afkfirstactive(self, args):
+  def afterfirstactive(self, _=None):
     """
     set the title when we first connect
     """
+    AardwolfBasePlugin.afterfirstactive(self)
     if self.api.get('setting.gets')('lasttitle'):
       title = self.api.get('setting.gets')('lasttitle')
       self.api.get('send.execute')('title %s' % title)
