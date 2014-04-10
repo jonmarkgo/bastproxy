@@ -112,10 +112,13 @@ class Plugin(BasePlugin):
       return dtime
 
     dtime['years'] = int(math.floor(nseconds/(3600 * 24 * 365)))
+    nseconds = nseconds - (dtime['years'] * 3600 * 24 * 365)
     dtime['days'] = int(math.floor(nseconds/(3600 * 24)))
-    dtime['hours'] = int(math.floor(nseconds/3600 - (dtime['days'] * 24)))
-    dtime['mins'] = int(math.floor(nseconds/60 - (dtime['hours'] * 60) \
-                                          - (dtime['days'] * 24 * 60)))
+    nseconds = nseconds - (dtime['days'] * 3600 * 24)
+    dtime['hours'] = int(math.floor(nseconds/3600))
+    nseconds = nseconds - (dtime['hours'] * 3600)
+    dtime['mins'] = int(math.floor(nseconds/60))
+    nseconds = nseconds - (dtime['mins'] * 60)
     dtime['secs'] = int(nseconds % 60)
     return dtime
 
