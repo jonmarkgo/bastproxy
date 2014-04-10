@@ -177,10 +177,10 @@ class Plugin(BasePlugin):
                 plugin = ''
               tnargs = i(nargs)
               if eventname != 'global_timer':
-                self.api.get('send.msg')('event %s : function %s, plugin %s called with args %s, returned %s' % \
-                                         (eventname, i.__name__, plugin or 'Unknown', nargs, tnargs),
-                                         secondary=plugin)
-              #self.api.get('send.msg')('%s: returned %s' % (eventname, tnargs), self.sname)
+                self.api.get('send.msg')(
+      'event %s : function %s, plugin %s called with args %s, returned %s' % \
+                  (eventname, i.__name__, plugin or 'Unknown', nargs, tnargs),
+                  secondary=plugin)
               if tnargs:
                 nargs = tnargs
             except:
@@ -268,12 +268,15 @@ class Plugin(BasePlugin):
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='get details of an event')
-    parser.add_argument('event', help='the event name to get details for', default=[], nargs='*')
+    parser.add_argument('event', help='the event name to get details for',
+                        default=[], nargs='*')
     self.api.get('commands.add')('detail', self.cmd_detail,
                                  parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='list events and the plugins registered with them')
-    parser.add_argument('match', help='list only events that have this argument in their name', default='', nargs='?')
+    parser.add_argument('match',
+                help='list only events that have this argument in their name',
+                default='', nargs='?')
     self.api.get('commands.add')('list', self.cmd_list,
                                  parser=parser)

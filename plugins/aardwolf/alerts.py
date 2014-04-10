@@ -32,8 +32,8 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.load(self)
 
-    self.api.get('setting.add')('email', '', str, 'the email to send the alerts',
-              nocolor=True)
+    self.api.get('setting.add')('email', '', str,
+                        'the email to send the alerts', nocolor=True)
     self.api.get('events.register')('aard_gq_declared', self._gqdeclared)
     self.api.get('events.register')('aard_quest_ready', self._quest)
 

@@ -28,8 +28,10 @@ class Plugin(AardwolfBasePlugin):
     AardwolfBasePlugin.__init__(self, *args, **kwargs)
     self.savegqfile = os.path.join(self.savedir, 'gq.txt')
     self.gqinfo = PersistentDict(self.savegqfile, 'c', format='json')
-    self.api.get('setting.add')('declared', False, bool, 'flag for a gq being declared')
-    self.api.get('setting.add')('started', False, bool, 'flag for a gq started')
+    self.api.get('setting.add')('declared', False, bool,
+                                'flag for a gq being declared')
+    self.api.get('setting.add')('started', False, bool,
+                                'flag for a gq started')
     self.api.get('setting.add')('joined', False, bool, 'flag for a gq joined')
     self.api.get('setting.add')('extended', False, bool, 'flag for extended')
     self.mobsleft = []
@@ -185,8 +187,9 @@ class Plugin(AardwolfBasePlugin):
     if not name or not location or not num:
       self.api.get('ouput.client')("error parsing line: %s" % args['line'])
     else:
-      self.mobsleft.append({'name':name, 'nocolorname':self.api.get('colors.stripansi')(name),
-            'location':location, 'num':int(num)})
+      self.mobsleft.append({'name':name,
+                    'nocolorname':self.api.get('colors.stripansi')(name),
+                    'location':location, 'num':int(num)})
 
   def _notstarted(self, _=None):
     """

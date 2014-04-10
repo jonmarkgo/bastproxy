@@ -48,7 +48,8 @@ class Plugin(AardwolfBasePlugin):
           if self.lastroom['exits'][i] == room['num']:
             direction = i
         newdict = {'from':self.lastroom,
-            'to': room, 'direction':direction, 'roominfo':copy.deepcopy(dict(room))}
+            'to': room, 'direction':direction,
+            'roominfo':copy.deepcopy(dict(room))}
         self.api.get('send.msg')('raising moved_room, %s' % (newdict))
         self.api.get('events.eraise')('moved_room', newdict)
         self.lastroom = copy.deepcopy(dict(room))

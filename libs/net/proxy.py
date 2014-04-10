@@ -31,7 +31,8 @@ class Proxy(Telnet):
     self.ttype = 'BastProxy'
     self.banned = {}
     self.connectedtime = None
-    self.api.get('events.register')('to_mud_event', self.addtooutbuffer, prio=99)
+    self.api.get('events.register')('to_mud_event', self.addtooutbuffer,
+                                            prio=99)
     self.api.get('options.prepareserver')(self)
 
   def handle_read(self):
@@ -57,7 +58,8 @@ class Proxy(Telnet):
         else:
           tconvertansi = tosend
         if tosend != tconvertansi:
-          self.api.get('send.msg')('converted %s to %s' % (repr(tosend), tconvertansi), 'ansi')
+          self.api.get('send.msg')('converted %s to %s' % (repr(tosend),
+                                                      tconvertansi), 'ansi')
         newdata = self.api.get('events.eraise')('from_mud_event',
             {'original':tosend, 'dtype':'frommud',
                     'noansi':tnoansi,
@@ -138,7 +140,8 @@ class Proxy(Telnet):
     """
     self.api.get('send.msg')('Disconnected from mud', 'net')
     self.api.get('events.eraise')('to_client_event',
-        {'original':self.api.get('colors.convertcolors')('@R#BP@w: The mud closed the connection'),
+        {'original':self.api.get('colors.convertcolors')(
+                              '@R#BP@w: The mud closed the connection'),
         'dtype':'fromproxy'})
     self.api.get('options.resetoptions')(self, True)
     Telnet.handle_close(self)

@@ -304,7 +304,8 @@ class Plugin(AardwolfBasePlugin):
           msg.append('Could not find %s' % serial)
         else:
           serial = titem['serial']
-          if serial in self.itemcache and 'container' in self.itemcache[serial]:
+          if serial in self.itemcache and \
+                      'container' in self.itemcache[serial]:
             del self.itemcache[serial]
           if serial in self.itemcache:
             self.api.get('itemid.show')(serial)
@@ -357,7 +358,8 @@ class Plugin(AardwolfBasePlugin):
     return printstring % (linecolour, linename, data,
                           linecolour, linename2, data2)
 
-  def formatspecialline(self, linename, linecolour, data, linename2='', data2=''):
+  def formatspecialline(self, linename, linecolour, data,
+                                linename2='', data2=''):
     """
     format a special text line
      | Skill Mods : Modifies Dagger by +2                              |
@@ -390,7 +392,8 @@ class Plugin(AardwolfBasePlugin):
     format the stats header
      |     DR   HR    Str Int Wis Dex Con Luc   Sav   HP   MN   MV     |
     """
-    return '|     @w%-4s %-4s  %-3s %-3s %-3s %-3s %-3s %-3s   %-3s   %-4s %-4s %-4s   |' % (
+    return '|     @w%-4s %-4s  %-3s %-3s %-3s ' \
+                  '%-3s %-3s %-3s   %-3s   %-4s %-4s %-4s   |' % (
                             'DR', 'HR', 'Str', 'Int', 'Wis',
                             'Dex', 'Con', 'Luc', 'Sav', 'HP', 'MN', 'MV')
 
@@ -406,9 +409,9 @@ class Plugin(AardwolfBasePlugin):
       else:
         colors[i] = '@R'
 
-    allstats = ['Damage roll', 'Hit roll', 'Strength', 'Intelligence', 'Wisdom',
-             'Dexterity', 'Constitution', 'Luck', 'Saves', 'Hit points',
-             'Mana', 'Moves']
+    allstats = ['Damage roll', 'Hit roll', 'Strength', 'Intelligence',
+              'Wisdom', 'Dexterity', 'Constitution', 'Luck', 'Saves',
+              'Hit points', 'Mana', 'Moves']
 
     for i in allstats:
       if i in stats:
@@ -423,7 +426,9 @@ class Plugin(AardwolfBasePlugin):
         stats[i] = 0
         colors[i] = '@w'
 
-    return '|     %s%-4s@w %s%-4s@w  %s%-3s@w %s%-3s@w %s%-3s@w %s%-3s@w %s%-3s@w %s%-3s@w   %s%-3s@w   %s%-4s@w %s%-4s@w %s%-4s@w   |' % (
+    return '|     %s%-4s@w %s%-4s@w  %s%-3s@w %s%-3s@w ' \
+            '%s%-3s@w %s%-3s@w %s%-3s@w %s%-3s@w   ' \
+            '%s%-3s@w   %s%-4s@w %s%-4s@w %s%-4s@w   |' % (
                 colors['Damage roll'], stats['Damage roll'] or '-',
                 colors['Hit roll'], stats['Hit roll'] or '-',
                 colors['Strength'], stats['Strength'] or '-',
@@ -454,8 +459,8 @@ class Plugin(AardwolfBasePlugin):
     foundfirst = False
     foundsecond = False
 
-    firstline = ['Bash', 'Pierce', 'Slash', 'All physical', 'All magic', 'Disease',
-              'Poison']
+    firstline = ['Bash', 'Pierce', 'Slash', 'All physical',
+                 'All magic', 'Disease', 'Poison']
 
     secondline = ['Acid', 'Air', 'Cold', 'Earth', 'Electric', 'Energy',
               'Fire', 'Holy', 'Light', 'Magic', 'Mental', 'Negative', 'Shadow',
@@ -482,24 +487,29 @@ class Plugin(AardwolfBasePlugin):
 
     if foundfirst:
       ttext.append('|%5s@w%-5s %-7s %-7s  %-8s  %-8s  %-5s %-5s %5s|' % (
-                              '', 'Bash', 'Pierce', 'Slash', 'All Phys', 'All Mag', 'Diss', 'Poisn', ''))
-      ttext.append('|%6s%s%-5s  %s%-7s %s%-7s   %s%-8s %s%-8s %s%-5s %s%-5s @w%4s|' % (
-                              '',
-                              colors['Bash'], resists['Bash'] or '-',
-                              colors['Pierce'], resists['Pierce'] or '-',
-                              colors['Slash'], resists['Slash'] or '-',
-                              colors['All physical'], resists['All physical'] or '-',
-                              colors['All magic'], resists['All magic'] or '-',
-                              colors['Disease'], resists['Disease'] or '-',
-                              colors['Poison'], resists['Poison'] or '-',
-                              ''))
+                              '', 'Bash', 'Pierce', 'Slash', 'All Phys',
+                              'All Mag', 'Diss', 'Poisn', ''))
+      ttext.append(
+        '|%6s%s%-5s  %s%-7s %s%-7s   %s%-8s %s%-8s %s%-5s %s%-5s @w%4s|' % (
+                        '',
+                        colors['Bash'], resists['Bash'] or '-',
+                        colors['Pierce'], resists['Pierce'] or '-',
+                        colors['Slash'], resists['Slash'] or '-',
+                        colors['All physical'], resists['All physical'] or '-',
+                        colors['All magic'], resists['All magic'] or '-',
+                        colors['Disease'], resists['Disease'] or '-',
+                        colors['Poison'], resists['Poison'] or '-',
+                        ''))
 
     if foundsecond:
       ttext.append(divider)
-      ttext.append('|%5s%-5s  %-5s %-5s %-5s   %-5s   %-5s   %-5s   %-5s@w %3s|' % (
-                            '', 'Acid', 'Air', 'Cold', 'Earth', 'Eltrc', 'Enrgy', 'Fire', 'Holy', ''))
+      ttext.append('|%5s%-5s  %-5s %-5s %-5s   %-5s   ' \
+                    '%-5s   %-5s   %-5s@w %3s|' % (
+                            '', 'Acid', 'Air', 'Cold', 'Earth',
+                            'Eltrc', 'Enrgy', 'Fire', 'Holy', ''))
 
-      ttext.append('|%5s%s%-5s  %s%-5s %s%-5s %s%-5s   %s%-5s   %s%-5s   %s%-5s   %s%-5s@w %3s|' % (
+      ttext.append('|%5s%s%-5s  %s%-5s %s%-5s %s%-5s   ' \
+                        '%s%-5s   %s%-5s   %s%-5s   %s%-5s@w %3s|' % (
                             '',
                             colors['Acid'], resists['Acid'] or '-',
                             colors['Air'], resists['Air'] or '-',
@@ -511,10 +521,13 @@ class Plugin(AardwolfBasePlugin):
                             colors['Holy'], resists['Holy'] or '-',
                             ''))
 
-      ttext.append('|%4s %-5s  %-5s %-5s %-5s   %-5s   %-5s   %-5s @w %10s|' % (
-                            '', 'Light', 'Magic', 'Mntl', 'Ngtv', 'Shdw', 'Sonic', 'Water', ''))
+      ttext.append(
+                '|%4s %-5s  %-5s %-5s %-5s   %-5s   %-5s   %-5s @w %10s|' % (
+                            '', 'Light', 'Magic', 'Mntl', 'Ngtv',
+                            'Shdw', 'Sonic', 'Water', ''))
 
-      ttext.append('|%4s %s%-5s  %s%-5s %s%-5s %s%-5s   %s%-5s   %s%-5s   %s%-5s@w %11s|' % (
+      ttext.append('|%4s %s%-5s  %s%-5s %s%-5s %s%-5s   %s%-5s   ' \
+                            '%s%-5s   %s%-5s@w %11s|' % (
                             '',
                             colors['Light'], resists['Light'] or '-',
                             colors['Magic'], resists['Magic'] or '-',
@@ -560,7 +573,8 @@ class Plugin(AardwolfBasePlugin):
     iteml.append(self.formatsingleline('Id', '@R', item['serial']))
 
     if 'curcontainer' in item:
-      iteml.append(self.formatsingleline('Location', '@R', item['curcontainer']))
+      iteml.append(self.formatsingleline('Location', '@R',
+                                         item['curcontainer']))
 
     if 'type' in item and item['type'] and 'level' in item:
       objtypes = self.api.get('itemu.objecttypes')()
@@ -575,7 +589,8 @@ class Plugin(AardwolfBasePlugin):
                                          'Weight', item['weight']))
 
     if 'wearable' in item and item['wearable']:
-      iteml.append(self.formatsingleline('Wearable', '@c', item['wearable']))
+      iteml.append(self.formatsingleline('Wearable', '@c',
+                                         item['wearable']))
 
     if 'score' in item:
       iteml.append(self.formatsingleline('Score', '@c', item['score'],

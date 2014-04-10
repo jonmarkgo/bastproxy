@@ -36,10 +36,13 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.load(self)
 
-    self.api.get('setting.add')('preremort', False, bool, 'flag for pre remort')
-    self.api.get('setting.add')('remortcomp', False, bool, 'flag for remort completion')
+    self.api.get('setting.add')('preremort', False, bool,
+                                'flag for pre remort')
+    self.api.get('setting.add')('remortcomp', False, bool,
+                                'flag for remort completion')
     self.api.get('setting.add')('tiering', False, bool, 'flag for tiering')
-    self.api.get('setting.add')('seen2', False, bool, 'we saw a state 2 after tiering')
+    self.api.get('setting.add')('seen2', False, bool,
+                                'we saw a state 2 after tiering')
 
     self.api.get('watch.add')('shloud', '^superhero loud$')
     self.api.get('watch.add')('shsilent', '^superhero silent$')
@@ -111,13 +114,18 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('events.register')('trigger_lvlbless', self._lvl)
     self.api.get('events.register')('trigger_lvlgains', self._lvlgains)
     self.api.get('events.register')('trigger_lvlpupgains', self._lvlgains)
-    self.api.get('events.register')('trigger_lvlblesstrain', self._lvlblesstrains)
-    self.api.get('events.register')('trigger_lvlbonustrains', self._lvlbonustrains)
-    self.api.get('events.register')('trigger_lvlbonusstat', self._lvlbonusstat)
+    self.api.get('events.register')('trigger_lvlblesstrain',
+                                    self._lvlblesstrains)
+    self.api.get('events.register')('trigger_lvlbonustrains',
+                                    self._lvlbonustrains)
+    self.api.get('events.register')('trigger_lvlbonusstat',
+                                    self._lvlbonusstat)
 
-    self.api.get('events.register')('trigger_lvlshbadstar', self._superherobad)
+    self.api.get('events.register')('trigger_lvlshbadstar',
+                                    self._superherobad)
     self.api.get('events.register')('trigger_lvlshbad', self._superherobad)
-    self.api.get('events.register')('trigger_lvlshnogold', self._superherobad)
+    self.api.get('events.register')('trigger_lvlshnogold',
+                                    self._superherobad)
     self.api.get('events.register')('trigger_lvlshnoqp', self._superherobad)
 
     self.api.get('events.register')('watch_shloud', self.cmd_superhero)
@@ -286,7 +294,8 @@ class Plugin(AardwolfBasePlugin):
     self.levelinfo.sync()
     self.api.get('triggers.togglegroup')('linfo', False)
     self.api.get('events.unregister')('trigger_emptyline', self._finish)
-    self.api.get('events.eraise')('aard_level_gain', copy.deepcopy(self.levelinfo))
+    self.api.get('events.eraise')('aard_level_gain',
+                                  copy.deepcopy(self.levelinfo))
     if self.levelinfo['level'] == 200 and self.levelinfo['type'] == 'level':
       self.api.get('send.msg')('raising hero event', 'level')
       self.api.get('events.eraise')('aard_level_hero', {})

@@ -122,7 +122,8 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('triggers.add')('mobdamage2',
               "^Your (.*) \[(.*)\]$")
     self.api.get('triggers.add')('bsincombat',
-              "^You spin around (.*), catching (.*) off guard, and execute a vicious double backstab.$")
+              "^You spin around (.*), catching (.*) off guard, " \
+                "and execute a vicious double backstab.$")
 
     self.api.get('events.register')('trigger_mobxp', self.mobxp)
     self.api.get('events.register')('trigger_mobxpptless', self.mobxpptless)
@@ -142,7 +143,8 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('events.register')('trigger_mobassassin', self.mobassassin)
     self.api.get('events.register')('trigger_mobdeathblow', self.mobdeathblow)
     self.api.get('events.register')('trigger_mobslit', self.mobslit)
-    self.api.get('events.register')('trigger_mobdisintegrate', self.mobdisintegrate)
+    self.api.get('events.register')('trigger_mobdisintegrate',
+                                                    self.mobdisintegrate)
     self.api.get('events.register')('trigger_mobbanish', self.mobbanish)
     self.api.get('events.register')('trigger_mobdamage', self.mobdamage)
     self.api.get('events.register')('trigger_mobdamage2', self.mobdamage)
@@ -156,7 +158,8 @@ class Plugin(AardwolfBasePlugin):
     """
     status = args['data']
     if status['enemy'] != "" and self.kill_info['name'] == "":
-      self.kill_info['name'] = self.api.get('colors.stripansi')(status['enemy'])
+      self.kill_info['name'] = self.api.get('colors.stripansi')(
+                                                      status['enemy'])
       self.reset_damage()
 
   def reset_kill(self):
@@ -320,7 +323,8 @@ class Plugin(AardwolfBasePlugin):
     try:
       self.kill_info['gold'] = int(gold)
     except ValueError:
-      self.api.get('send.msg')('got an invalid value for gold in mobgold: %s' % args)
+      self.api.get('send.msg')('got an invalid value for gold in mobgold: %s' \
+                                                % args)
     if not self.kill_info['name']:
       self.kill_info['name'] = self.api.get('colors.stripansi')(args['name'])
 
@@ -347,7 +351,8 @@ class Plugin(AardwolfBasePlugin):
                                   self.kill_info['blessingxp']
 
       self.api.get('send.msg')('raising a mobkill: %s' % self.kill_info)
-      self.api.get('events.eraise')('aard_mobkill', copy.deepcopy(self.kill_info))
+      self.api.get('events.eraise')('aard_mobkill',
+                                          copy.deepcopy(self.kill_info))
 
     self.reset_kill()
 

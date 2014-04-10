@@ -86,11 +86,13 @@ class Plugin(BasePlugin):
 
     this function returns no values"""
     if watchname in self.watchcmds:
-      event = self.api.get('events.gete')(self.watchcmds[watchname]['eventname'])
+      event = self.api.get('events.gete')(
+                            self.watchcmds[watchname]['eventname'])
       plugin = self.watchcmds[watchname]['plugin']
       if event:
         if len(event['pluginlist']) > 0 and not force:
-          self.api.get('send.msg')('removewatch: watch %s for plugin %s has functions registered' % \
+          self.api.get('send.msg')(
+            'removewatch: watch %s for plugin %s has functions registered' % \
                       (watchname, plugin), secondary=plugin)
           return False
       del self.regexlookup[self.watchcmds[watchname]['regex']]
@@ -98,7 +100,8 @@ class Plugin(BasePlugin):
       self.api.get('send.msg')('removed watch %s' % watchname,
                                     secondary=plugin)
     else:
-      self.api.get('send.msg')('removewatch: watch %s does not exist' % watchname)
+      self.api.get('send.msg')('removewatch: watch %s does not exist' % \
+                                            watchname)
 
   # remove all watches related to a plugin
   def api_removeplugin(self, plugin):

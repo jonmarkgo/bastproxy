@@ -105,8 +105,10 @@ class Plugin(BasePlugin):
     tstring = '%s - %-10s : ' % (
                 time.strftime('%a %b %d %Y %H:%M:%S', time.localtime()),
                 dtype)
-    if self.api.get('api.has')('colors.convertcolors') and dtype in self.colors:
-      tstring = self.api.get('colors.convertcolors')(self.colors[dtype] + tstring)
+    if self.api.get('api.has')('colors.convertcolors') and \
+        dtype in self.colors:
+      tstring = self.api.get('colors.convertcolors')(
+                                            self.colors[dtype] + tstring)
     tmsg = [tstring]
     tmsg.append(msg)
 
@@ -145,7 +147,8 @@ class Plugin(BasePlugin):
     if 'secondary' in dtypedict \
         and dtypedict['secondary'] != 'None' \
         and dtypedict['secondary'] != 'default':
-      self.process_msg(args['msg'], dtypedict['secondary'], priority='secondary')
+      self.process_msg(args['msg'], dtypedict['secondary'],
+                       priority='secondary')
 
   # archive a log fle
   def archivelog(self, dtype):
@@ -298,7 +301,8 @@ class Plugin(BasePlugin):
       self.sendtofile[datatype] = {'file':tfile,
                                 'timestamp':timestamp}
       self.api.get('send.msg')('setting %s to log to %s' % \
-                      (datatype, self.sendtofile[datatype]['file']), self.sname)
+                      (datatype, self.sendtofile[datatype]['file']),
+                    self.sname)
       self.sendtofile.sync()
 
   # toggle logging datatypes to a file
@@ -404,27 +408,33 @@ class Plugin(BasePlugin):
 
     parser = argparse.ArgumentParser(add_help=False,
                 description="toggle datatypes to clients")
-    parser.add_argument('datatype', help='a list of datatypes to toggle', default=[], nargs='*')
+    parser.add_argument('datatype', help='a list of datatypes to toggle',
+                        default=[], nargs='*')
     self.api.get('commands.add')('client', self.cmd_client,
                         lname='Logger', parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                 description="toggle datatype to log to a file")
-    parser.add_argument('datatype', help='the datatype to toggle', default='list', nargs='?')
-    parser.add_argument("-n", "--notimestamp", help="do not log to file with a timestamp",
-                  action="store_false")
+    parser.add_argument('datatype', help='the datatype to toggle',
+                        default='list', nargs='?')
+    parser.add_argument("-n", "--notimestamp",
+                        help="do not log to file with a timestamp",
+                        action="store_false")
     self.api.get('commands.add')('file', self.cmd_file,
                         lname='Logger', parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                 description="toggle datatypes to the console")
-    parser.add_argument('datatype', help='a list of datatypes to toggle', default=[], nargs='*')
+    parser.add_argument('datatype', help='a list of datatypes to toggle',
+                        default=[], nargs='*')
     self.api.get('commands.add')('console', self.cmd_console,
                         lname='Logger', parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                 description="list all datatypes")
-    parser.add_argument('match', help='only list datatypes that have this argument in their name', default='', nargs='?')
+    parser.add_argument('match',
+            help='only list datatypes that have this argument in their name',
+            default='', nargs='?')
     self.api.get('commands.add')('types', self.cmd_types,
                         lname='Logger', parser=parser)
 

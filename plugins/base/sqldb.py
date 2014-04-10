@@ -53,7 +53,8 @@ class Sqldb(object):
     self.api.get('log.console')('sqlite')
     self.backupform = '%s_%%s.sqlite' % self.dbname
     if 'dbdir' in kwargs:
-      self.dbdir = kwargs['dbdir'] or os.path.join(self.api.BASEPATH, 'data', 'db')
+      self.dbdir = kwargs['dbdir'] or os.path.join(self.api.BASEPATH,
+                                                   'data', 'db')
     else:
       self.dbdir = os.path.join(self.api.BASEPATH, 'data', 'db')
 
@@ -90,7 +91,8 @@ class Sqldb(object):
     if funcname == '__getattribute__':
       funcname = inspect.stack()[2][3]
     self.api.get('send.msg')('open: called by - %s' % funcname)
-    self.dbconn = sqlite3.connect(self.dbfile, detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
+    self.dbconn = sqlite3.connect(self.dbfile,
+                detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
     self.dbconn.row_factory = dict_factory
     # only return byte strings so is easier to send to a client or the mud
     self.dbconn.text_factory = str
@@ -126,7 +128,8 @@ class Sqldb(object):
     """
     parser = argparse.ArgumentParser(add_help=False,
                  description='backup the database')
-    parser.add_argument('name', help='the name to backup to', default='', nargs='?')
+    parser.add_argument('name', help='the name to backup to',
+                        default='', nargs='?')
     self.plugin.api.get('commands.add')('dbbackup', self.cmd_backup,
                                            parser=parser, group='DB')
 
@@ -379,8 +382,8 @@ class Sqldb(object):
     """
     update a database from oldversion to newversion
     """
-    self.api.get('send.msg')('updating %s from version %s to %s' % (self.dbfile,
-                                            oldversion, newversion))
+    self.api.get('send.msg')('updating %s from version %s to %s' % (
+                                  self.dbfile, oldversion, newversion))
     self.backupdb(oldversion)
     for i in range(oldversion + 1, newversion + 1):
       try:
@@ -498,7 +501,8 @@ class Sqldb(object):
         myzip.write(backupfile)
       os.remove(backupfile)
       success = True
-      self.api.get('send.msg')('%s was backed up to %s' % (self.dbfile, backupzipfile))
+      self.api.get('send.msg')('%s was backed up to %s' % (self.dbfile,
+                                                           backupzipfile))
     except IOError:
       self.api.get('send.msg')('could not zip backupfile')
       return success

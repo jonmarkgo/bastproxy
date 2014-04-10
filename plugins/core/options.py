@@ -49,10 +49,12 @@ class Plugin(BasePlugin):
   # add a telnet option to the server
   def api_addserveroption(self, optionname, serveroption):
     """  add a server option
-    @Yserveroption@w  = server option to add, must be of class BaseTelnetOption
+    @Yserveroption@w  = server option to add, must be of
+                                        class BaseTelnetOption
     """
     if issubclass(serveroption, BaseTelnetOption):
-      self.api.get('send.msg')('adding telnet option %s to server' % optionname)
+      self.api.get('send.msg')('adding telnet option %s to server' % \
+                                                              optionname)
       self.serveroptions[optionname] = serveroption
       return True
     return False
@@ -60,10 +62,12 @@ class Plugin(BasePlugin):
   # add a telnet option to the client
   def api_addclientoption(self, optionname, clientoption):
     """  add a client option
-    @Yclientoption@w  = client option to add, must be of class BaseTelnetOption
+    @Yclientoption@w  = client option to add, must be of
+                                        class BaseTelnetOption
     """
     if issubclass(clientoption, BaseTelnetOption):
-      self.api.get('send.msg')('adding telnet option %s to client' % optionname)
+      self.api.get('send.msg')('adding telnet option %s to client' % \
+                                                              optionname)
       self.clientoptions[optionname] = clientoption
       return True
     return False
@@ -106,7 +110,8 @@ class Plugin(BasePlugin):
       try:
         self.clientoptions[i](client)
       except AttributeError:
-        self.api.get('send.msg')('Did not add option to client: %s' % i, 'telopt')
+        self.api.get('send.msg')('Did not add option to client: %s' % i,
+                                                                    'telopt')
 
   def api_prepareserver(self, server):
     """
@@ -116,7 +121,8 @@ class Plugin(BasePlugin):
       try:
         self.serveroptions[i](server)
       except AttributeError:
-        self.api.get('send.msg')('Did not add option to server: %s' % i, 'telopt')
+        self.api.get('send.msg')('Did not add option to server: %s' % i,
+                                                                    'telopt')
 
   # reset options
   def api_resetoptions(self, server, onclose=False):

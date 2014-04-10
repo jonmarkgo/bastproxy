@@ -78,9 +78,11 @@ class TimerEvent(Event):
     """
     return a string representation of the timer
     """
-    return 'Timer - %-10s : %-15s : %05d : %-6s : %s' % (self.name, self.plugin,
-                                  self.seconds, self.enabled, time.strftime('%a %b %d %Y %H:%M:%S',
-                                             time.localtime(self.nextcall)))
+    return 'Timer - %-10s : %-15s : %05d : %-6s : %s' % (self.name,
+                                  self.plugin,
+                                  self.seconds, self.enabled,
+                                  time.strftime('%a %b %d %Y %H:%M:%S',
+                                  time.localtime(self.nextcall)))
 
 class Plugin(BasePlugin):
   """
@@ -110,18 +112,22 @@ class Plugin(BasePlugin):
     """
     BasePlugin.load(self)
 
-    self.api.get('events.register')('global_timer', self.checktimerevents, prio=1)
+    self.api.get('events.register')('global_timer', self.checktimerevents,
+                                        prio=1)
     self.api.get('send.msg')('lasttime:  %s' % self.lasttime)
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='list timers')
-    parser.add_argument('match', help='list only events that have this argument in their name', default='', nargs='?')
+    parser.add_argument('match',
+              help='list only events that have this argument in their name',
+              default='', nargs='?')
     self.api.get('commands.add')('list', self.cmd_list,
                                  parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='get details for timers')
-    parser.add_argument('timers', help='a list of timers to get details', default=[], nargs='*')
+    parser.add_argument('timers', help='a list of timers to get details',
+                        default=[], nargs='*')
     self.api.get('commands.add')('detail', self.cmd_detail,
                                  parser=parser)
 
@@ -167,14 +173,16 @@ class Plugin(BasePlugin):
     tmsg.append('Local time is: %s' % time.strftime('%a %b %d %Y %H:%M:%S',
                                              time.localtime()))
 
-    tmsg.append('%-20s : %-13s %-9s %-8s %s' % ('Name', 'Defined in', 'Enabled', 'Fired', 'Next Fire'))
+    tmsg.append('%-20s : %-13s %-9s %-8s %s' % ('Name', 'Defined in',
+                                        'Enabled', 'Fired', 'Next Fire'))
     for i in self.timerlookup:
       if not match or match in i:
         timerc = self.timerlookup[i]
-        tmsg.append('%-20s : %-13s %-9s %-8s %s' % (timerc.name, timerc.plugin.sname,
-                                          timerc.enabled, timerc.timesfired,
-                                          time.strftime('%a %b %d %Y %H:%M:%S',
-                                             time.localtime(timerc.nextcall))))
+        tmsg.append('%-20s : %-13s %-9s %-8s %s' % (
+                                timerc.name, timerc.plugin.sname,
+                                timerc.enabled, timerc.timesfired,
+                                time.strftime('%a %b %d %Y %H:%M:%S',
+                                time.localtime(timerc.nextcall))))
 
     return True, tmsg
 
@@ -196,8 +204,9 @@ class Plugin(BasePlugin):
           tmsg.append('%-13s : %s' % ('Time', timerc.time))
           tmsg.append('%-13s : %s' % ('Seconds', timerc.seconds))
           tmsg.append('%-13s : %s' % ('Times Fired', timerc.timesfired))
-          tmsg.append('%-13s : %s' % ('Next Fire', time.strftime('%a %b %d %Y %H:%M:%S',
-                                             time.localtime(timerc.nextcall))))
+          tmsg.append('%-13s : %s' % ('Next Fire',
+                                        time.strftime('%a %b %d %Y %H:%M:%S',
+                                        time.localtime(timerc.nextcall))))
           tmsg.append('')
 
     else:
@@ -212,7 +221,8 @@ class Plugin(BasePlugin):
     @Yfunc@w  = the function to call when firing the timer
     @Yseconds@w   = the interval (in seconds) to fire the timer
     @Yargs@w arguments:
-      @Ynodupe@w    = True if no duplicates of this timer are allowed, False otherwise
+      @Ynodupe@w    = True if no duplicates of this timer are allowed,
+                                    False otherwise
       @Yonetime@w   = True for a onetime timer, False otherwise
       @Yenabled@w   = True if enabled, False otherwise
       @Ytime@w      = The time to start this timer, e.g. 1300 for 1PM
@@ -247,7 +257,8 @@ class Plugin(BasePlugin):
         return
 
     tevent = TimerEvent(name, func, seconds, plugin, **kwargs)
-    self.api.get('send.msg')('adding %s from plugin %s' % (tevent, plugin), secondary=plugin.sname)
+    self.api.get('send.msg')('adding %s from plugin %s' % (tevent, plugin),
+                             secondary=plugin.sname)
     self._addtimer(tevent)
     return tevent
 
@@ -277,7 +288,8 @@ class Plugin(BasePlugin):
     try:
       tevent = self.timerlookup[name]
       if tevent:
-        self.api.get('send.msg')('removing %s' % tevent, secondary=tevent.plugin)
+        self.api.get('send.msg')('removing %s' % tevent,
+                                 secondary=tevent.plugin)
         ttime = tevent.nextcall
         if tevent in self.timerevents[ttime]:
           self.timerevents[ttime].remove(tevent)

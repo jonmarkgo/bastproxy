@@ -46,8 +46,10 @@ class Plugin(AardwolfBasePlugin):
                         'the title when afk mode is enabled')
     self.api.get('setting.add')('lasttitle', '', str,
                         'the title before afk mode is enabled')
-    self.api.get('setting.add')('queue', [], list, 'the tell queue', readonly=True)
-    self.api.get('setting.add')('isafk', False, bool, 'AFK flag', readonly=True)
+    self.api.get('setting.add')('queue', [], list, 'the tell queue',
+                                readonly=True)
+    self.api.get('setting.add')('isafk', False, bool, 'AFK flag',
+                                readonly=True)
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='show the communication queue')
@@ -67,7 +69,8 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('watch.add')('titleset', '^(tit|titl|title) (?P<title>.*)$')
 
     self.api.get('events.register')('client_connected', self.clientconnected)
-    self.api.get('events.register')('client_disconnected', self.clientdisconnected)
+    self.api.get('events.register')('client_disconnected',
+                                              self.clientdisconnected)
     self.api.get('events.register')('watch_titleset', self._titlesetevent)
 
   def afterfirstactive(self, _=None):

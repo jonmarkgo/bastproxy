@@ -34,7 +34,7 @@ class Plugin(AardwolfBasePlugin):
     load the plugins
     """
     AardwolfBasePlugin.load(self)
-    
+
     self.api.get('events.register')('GMCP:comm.quest', self.quest)
 
   def resetquest(self):
@@ -93,7 +93,8 @@ class Plugin(AardwolfBasePlugin):
       self.queststuff['double'] = questi['double']
       self.queststuff['totqp'] = questi['totqp']
       self.queststuff['gold'] = questi['gold']
-      self.api.get('events.eraise')('aard_quest_comp', copy.deepcopy(self.queststuff))
+      self.api.get('events.eraise')('aard_quest_comp',
+                                    copy.deepcopy(self.queststuff))
     elif questi['action'] == 'fail' or questi['action'] == 'timeout':
       self.queststuff['finishtime'] = time.time()
       self.queststuff['failed'] = 1

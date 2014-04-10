@@ -7,8 +7,10 @@ Two types of aliases:
 #bp.alias.add 'oa' 'open all'
   This type of alias will just replace the oa with open all
 
-#bp.alias.add 'port (.*)' 'get {1} $portbag|wear {1}|enter|wear amulet|put {1} portbag'
-  This alias can be used with numbered positions from the words following after the alias
+#bp.alias.add
+  'port (.*)' 'get {1} $portbag|wear {1}|enter|wear amulet|put {1} portbag'
+  This alias can be used with numbered positions from the
+                              words following after the alias
 """
 import os
 import re
@@ -57,47 +59,60 @@ class Plugin(BasePlugin):
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='add an alias')
-    parser.add_argument('original', help='the input to replace', default='', nargs='?')
-    parser.add_argument('replacement', help='the string to replace it with', default='', nargs='?')
-    parser.add_argument('-o', "--overwrite", help="overwrite an alias if it already exists", action="store_true")
-    parser.add_argument('-d', "--disable", help="disable the alias", action="store_true")
+    parser.add_argument('original', help='the input to replace',
+                        default='', nargs='?')
+    parser.add_argument('replacement', help='the string to replace it with',
+                        default='', nargs='?')
+    parser.add_argument('-o', "--overwrite",
+                        help="overwrite an alias if it already exists",
+                        action="store_true")
+    parser.add_argument('-d', "--disable", help="disable the alias",
+                        action="store_true")
     parser.add_argument('-g', "--group", help="the alias group", default="")
     self.api.get('commands.add')('add', self.cmd_add,
                                  parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='remove an alias')
-    parser.add_argument('alias', help='the alias to remove', default='', nargs='?')
+    parser.add_argument('alias', help='the alias to remove',
+                        default='', nargs='?')
     self.api.get('commands.add')('remove', self.cmd_remove,
                                  parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='list aliases')
-    parser.add_argument('match', help='list only aliases that have this argument in them', default='', nargs='?')
+    parser.add_argument('match',
+                    help='list only aliases that have this argument in them',
+                    default='', nargs='?')
     self.api.get('commands.add')('list', self.cmd_list,
                                  parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='toggle enabled flag')
-    parser.add_argument('alias', help='the alias to toggle', default='', nargs='?')
+    parser.add_argument('alias', help='the alias to toggle',
+                        default='', nargs='?')
     self.api.get('commands.add')('toggle', self.cmd_toggle,
                                  parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='toggle all aliases in a group')
-    parser.add_argument('group', help='the group to toggle', default='', nargs='?')
-    parser.add_argument('-d', "--disable", help="disable the group", action="store_true")
+    parser.add_argument('group', help='the group to toggle',
+                        default='', nargs='?')
+    parser.add_argument('-d', "--disable", help="disable the group",
+                        action="store_true")
     self.api.get('commands.add')('groupt', self.cmd_grouptoggle,
                                  parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='get detail for an alias')
-    parser.add_argument('alias', help='the alias to get details for', default='', nargs='?')
+    parser.add_argument('alias', help='the alias to get details for',
+                        default='', nargs='?')
     self.api.get('commands.add')('detail', self.cmd_detail,
                                  parser=parser)
 
     self.api.get('commands.default')('list')
-    self.api.get('events.register')('from_client_event', self.checkalias, prio=5)
+    self.api.get('events.register')('from_client_event', self.checkalias,
+                                        prio=5)
 
   def checkalias(self, args):
     """
@@ -135,7 +150,8 @@ class Plugin(BasePlugin):
           self.api.get('send.msg')('incrementing hits for %s' % mem)
           self._aliases[mem]['hits'] = self._aliases[mem]['hits'] + 1
           self.sessionhits[mem] = self.sessionhits[mem] + 1
-          self.api.get('send.msg')('replacing "%s" with "%s"' % (data.strip(), datan.strip()))
+          self.api.get('send.msg')('replacing "%s" with "%s"' % \
+                                          (data.strip(), datan.strip()))
           if datan[0:3] == '#bp':
             self.api.get('send.execute')(datan)
             args['fromdata'] = ''
@@ -177,8 +193,9 @@ class Plugin(BasePlugin):
         return True, ['Alias: %s already exists.' % args['original']]
       else:
         tmsg.append("@GAdding alias@w : '%s' will be replaced by '%s'" % \
-                                                (args['original'], args['replacement']))
-        self.addalias(args['original'], args['replacement'], args['disable'], args['group'])
+                                      (args['original'], args['replacement']))
+        self.addalias(args['original'], args['replacement'],
+                      args['disable'], args['group'])
       return True, tmsg
     else:
       return False, ['@RPlease include all arguments@w']
@@ -238,11 +255,14 @@ class Plugin(BasePlugin):
         if not (alias in self.sessionhits):
           self.sessionhits[alias] = 0
         tmsg.append('%-12s : %d' % ('Num', self._aliases[alias]['num']))
-        tmsg.append('%-12s : %s' % ('Enabled', 'Y' if self._aliases[alias]['enabled'] else 'N'))
-        tmsg.append('%-12s : %d' % ('Total Hits', self._aliases[alias]['hits']))
+        tmsg.append('%-12s : %s' % ('Enabled',
+                            'Y' if self._aliases[alias]['enabled'] else 'N'))
+        tmsg.append('%-12s : %d' % ('Total Hits',
+                                    self._aliases[alias]['hits']))
         tmsg.append('%-12s : %d' % ('Session Hits', self.sessionhits[alias]))
         tmsg.append('%-12s : %s' % ('Alias', alias))
-        tmsg.append('%-12s : %s' % ('Replacement', self._aliases[alias]['alias']))
+        tmsg.append('%-12s : %s' % ('Replacement',
+                                    self._aliases[alias]['alias']))
         tmsg.append('%-12s : %s' % ('Group', self._aliases[alias]['group']))
       else:
         return True, ['@RAlias does not exits@w : \'%s\'' % (args['alias'])]
@@ -326,7 +346,8 @@ class Plugin(BasePlugin):
         lalias = self.api.get('colors.stripansi')(self._aliases[item]['alias'])
         if len(lalias) > 30:
           lalias = lalias[:27] + '...'
-        tmsg.append("%4s %2s  %-10s %-20s : %s@w" % (self._aliases[item]['num'],
+        tmsg.append("%4s %2s  %-10s %-20s : %s@w" % (
+                      self._aliases[item]['num'],
                       'Y' if self._aliases[item]['enabled'] else 'N',
                       self._aliases[item]['group'],
                       item,
@@ -334,7 +355,8 @@ class Plugin(BasePlugin):
     if len(tmsg) == 0:
       tmsg = ['None']
     else:
-      tmsg.insert(0, "%4s %2s  %-10s %-20s : %s@w" % ('#', 'E', 'Group', 'Alias', 'Replacement'))
+      tmsg.insert(0, "%4s %2s  %-10s %-20s : %s@w" % ('#', 'E', 'Group',
+                                                      'Alias', 'Replacement'))
       tmsg.insert(1, '@B' + '-' * 60 + '@w')
 
     return tmsg

@@ -127,7 +127,8 @@ class Plugin(AardwolfBasePlugin):
     AardwolfBasePlugin.load(self)
 
   # convert level, remort, tier, redos to the total levels
-  def api_getactuallevel(self, level=None, remort=None, tier=None, redos=None):
+  def api_getactuallevel(self, level=None, remort=None,
+                                      tier=None, redos=None):
     """  convert level, remort, tier, redos to the total levels
     @Ylevel@w  = the level, defaults to GMCP value
     @Yremort@w  = the # of remorts, default to GMCP value
@@ -142,7 +143,8 @@ class Plugin(AardwolfBasePlugin):
     if redos == 0:
       return (tier * 7 * 201) + ((remort - 1) * 201) + level
     else:
-      return (tier * 7 * 201) + (redos * 7 * 201) + ((remort - 1) * 201) + level
+      return (tier * 7 * 201) + (redos * 7 * 201) + \
+                                  ((remort - 1) * 201) + level
 
   # parse an Aardwolf damage line
   def api_parsedamageline(self, line):

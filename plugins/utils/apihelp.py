@@ -38,12 +38,15 @@ class Plugin(BasePlugin):
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='list functions in the api')
-    parser.add_argument('toplevel', help='the top level api to show (optional)', default='', nargs='?')
+    parser.add_argument('toplevel',
+                        help='the top level api to show (optional)',
+                        default='', nargs='?')
     self.api.get('commands.add')('list', self.cmd_list,
                                  parser=parser)
     parser = argparse.ArgumentParser(add_help=False,
                  description='detail a function in the api')
-    parser.add_argument('api', help='the api to detail (optional)', default='', nargs='?')
+    parser.add_argument('api', help='the api to detail (optional)',
+                        default='', nargs='?')
     self.api.get('commands.add')('detail', self.cmd_detail,
                                  parser=parser)
 

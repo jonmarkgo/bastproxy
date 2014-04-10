@@ -99,7 +99,8 @@ class Plugin(AardwolfBasePlugin):
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='lookup skill or spell by name or sn')
-    parser.add_argument('skill', help='the skill to lookup', default='', nargs='?')
+    parser.add_argument('skill', help='the skill to lookup',
+                        default='', nargs='?')
     self.api.get('commands.add')('lu', self.cmd_lu,
                                  parser=parser)
 
@@ -145,17 +146,26 @@ class Plugin(AardwolfBasePlugin):
             "^\{sfail\}(?P<sn>\d+),(?P<target>\d+)," \
               "(?P<reason>\d+),(?P<recovery>-?\d+)$")
 
-    self.api.get('events.register')('trigger_spellh_noprompt', self.skillstart)
-    self.api.get('events.register')('trigger_spellh_spellup_noprompt', self.skillstart)
-    self.api.get('events.register')('trigger_spellh_affected_noprompt', self.skillstart)
-    self.api.get('events.register')('trigger_spellh_spellline', self.skillline)
-    self.api.get('events.register')('trigger_spellh_end_noprompt', self.skillend)
+    self.api.get('events.register')('trigger_spellh_noprompt',
+                                    self.skillstart)
+    self.api.get('events.register')('trigger_spellh_spellup_noprompt',
+                                    self.skillstart)
+    self.api.get('events.register')('trigger_spellh_affected_noprompt',
+                                    self.skillstart)
+    self.api.get('events.register')('trigger_spellh_spellline',
+                                    self.skillline)
+    self.api.get('events.register')('trigger_spellh_end_noprompt',
+                                    self.skillend)
     self.api.get('events.register')('trigger_affoff', self.affoff)
     self.api.get('events.register')('trigger_affon', self.affon)
-    self.api.get('events.register')('trigger_recov_noprompt', self.recovstart)
-    self.api.get('events.register')('trigger_recov_affected_noprompt', self.recovstart)
-    self.api.get('events.register')('trigger_spellh_recovline', self.recovline)
-    self.api.get('events.register')('trigger_recov_end_noprompt', self.recovend)
+    self.api.get('events.register')('trigger_recov_noprompt',
+                                    self.recovstart)
+    self.api.get('events.register')('trigger_recov_affected_noprompt',
+                                    self.recovstart)
+    self.api.get('events.register')('trigger_spellh_recovline',
+                                    self.recovline)
+    self.api.get('events.register')('trigger_recov_end_noprompt',
+                                    self.recovend)
     self.api.get('events.register')('trigger_recoff', self.recoff)
     self.api.get('events.register')('trigger_recon', self.recon)
 
@@ -274,7 +284,8 @@ class Plugin(AardwolfBasePlugin):
     pct = int(args['percent'])
     if sn in self.skills:
       self.skills[sn]['percent'] = pct
-      self.api.get('events.eraise')('aard_skill_gain', {'sn':sn, 'percent':pct})
+      self.api.get('events.eraise')('aard_skill_gain',
+                                    {'sn':sn, 'percent':pct})
 
   def skillfail(self, args):
     """
@@ -461,7 +472,8 @@ class Plugin(AardwolfBasePlugin):
 
     if not tskill and name:
       #self.api.get('send.msg')('trying name')
-      tlist = self.api.get('utils.checklistformatch')(name, self.skillsnamelookup.keys())
+      tlist = self.api.get('utils.checklistformatch')(name,
+                                                self.skillsnamelookup.keys())
       if len(tlist) == 1:
         tskill = copy.deepcopy(self.skills[self.skillsnamelookup[tlist[0]]])
 

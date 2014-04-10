@@ -65,8 +65,9 @@ class Plugin(AardwolfBasePlugin):
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='show equipment worn')
-    parser.add_argument('-n', "--noflags", help="don't show flags, default False",
-              action="store_true")
+    parser.add_argument('-n', "--noflags",
+                        help="don't show flags, default False",
+                        action="store_true")
     parser.add_argument('-c', "--score", help="show score, default False",
               action="store_true")
     parser.add_argument('-s', "--serial", help="show serial, default False",
@@ -76,15 +77,18 @@ class Plugin(AardwolfBasePlugin):
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='show inventory or a container')
-    parser.add_argument('container', help='the container to see', default='Inventory', nargs='?')
-    parser.add_argument('-n', "--noflags", help="don't show flags, default False",
-              action="store_true")
+    parser.add_argument('container', help='the container to see',
+                        default='Inventory', nargs='?')
+    parser.add_argument('-n', "--noflags",
+                        help="don't show flags, default False",
+                        action="store_true")
     parser.add_argument('-c', "--score", help="show score, default False",
               action="store_true")
     parser.add_argument('-s', "--serial", help="show serial, default False",
               action="store_true")
-    parser.add_argument('-g', "--nogroup", help="don't group items, default False",
-              action="store_true")
+    parser.add_argument('-g', "--nogroup",
+                        help="don't group items, default False",
+                        action="store_true")
     self.api.get('commands.add')('inv', self.cmd_inv,
                                 parser=parser, format=False, preamble=False)
 
@@ -101,14 +105,16 @@ class Plugin(AardwolfBasePlugin):
     parser = argparse.ArgumentParser(add_help=False,
                  description='get an item')
     parser.add_argument('item', help='the item to get', default='', nargs='?')
-    parser.add_argument('otherargs', help='the rest of the args', default=[], nargs='*')
+    parser.add_argument('otherargs', help='the rest of the args',
+                        default=[], nargs='*')
     self.api.get('commands.add')('get', self.cmd_get,
                                 parser=parser, format=False, preamble=False)
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='get an item')
     parser.add_argument('item', help='the item to get', default='', nargs='?')
-    parser.add_argument('otherargs', help='the rest of the args', default=[], nargs='*')
+    parser.add_argument('otherargs', help='the rest of the args',
+                        default=[], nargs='*')
     self.api.get('commands.add')('put', self.cmd_put,
                                 parser=parser, format=False, preamble=False)
 
@@ -139,7 +145,8 @@ class Plugin(AardwolfBasePlugin):
       enabled=True, group='badinvdata')
 
     self.api.get('triggers.add')('invmon',
-      "^\{invmon\}(?P<action>.*),(?P<serial>.*),(?P<container>.*),(?P<location>.*)$",
+      "^\{invmon\}(?P<action>.*),(?P<serial>.*)," \
+        "(?P<container>.*),(?P<location>.*)$",
       enabled=True, group='invmon')
 
     self.api.get('triggers.add')('invitem',
@@ -279,7 +286,8 @@ class Plugin(AardwolfBasePlugin):
     """
     serial = int(serial)
     if not container:
-      if serial in self.itemcache and 'origcontainer' in self.itemcache[serial]:
+      if serial in self.itemcache and \
+              'origcontainer' in self.itemcache[serial]:
         container = self.itemcache[serial]['origcontainer']
     try:
       container = int(container)
@@ -395,7 +403,8 @@ class Plugin(AardwolfBasePlugin):
     args = ' '.join(tlist)
 
     # need to parse all items for identifiers
-    self.api.get('send.msg')('serial is not a number, sending \'get %s\'' % args)
+    self.api.get('send.msg')('serial is not a number, sending \'get %s\'' % \
+                                                      args)
     self.api.get('send.execute')('get %s' % args)
 
     return True, []
@@ -417,7 +426,8 @@ class Plugin(AardwolfBasePlugin):
     if len(args['otherargs']) == 1:
       destination = self.find_item(args['otherargs'][0])
 
-    if item in self.itemcache and destination in self.itemcache and len(args['otherargs']) != 0:
+    if item in self.itemcache and destination in self.itemcache and \
+            len(args['otherargs']) != 0:
       self.api_putincontainer(item, destination)
 
     else:
@@ -673,7 +683,8 @@ class Plugin(AardwolfBasePlugin):
                                     "(%3d) " % foundgroup[stylekey])
           if args['serial'] and foundgroup[stylekey] == 2:
             numstyles[stylekey]['item'].pop(numstyles[stylekey]['serialcol'])
-            numstyles[stylekey]['item'].insert(numstyles[stylekey]['serialcol'],
+            numstyles[stylekey]['item'].insert(
+                                    numstyles[stylekey]['serialcol'],
                                       "%-12s" % "Many")
 
         if doit:
@@ -711,7 +722,8 @@ class Plugin(AardwolfBasePlugin):
 
           if args['serial']:
             sitem.append('(@x136')
-            sitem.append("%-12s" % (item['serial'] if 'serial' in item else ""))
+            sitem.append("%-12s" % (
+                              item['serial'] if 'serial' in item else ""))
             if not args['nogroup']:
               if stylekey in numstyles:
                 numstyles[stylekey]['serialcol'] = len(sitem) - 1
@@ -719,7 +731,8 @@ class Plugin(AardwolfBasePlugin):
 
           if args['score']:
             sitem.append('(@C')
-            sitem.append("%5s" % (item['score'] if 'score' in item else 'Unkn'))
+            sitem.append("%5s" % (
+                              item['score'] if 'score' in item else 'Unkn'))
             sitem.append('@w) ')
 
           sitem.append(item['cname'])

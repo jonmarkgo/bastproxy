@@ -49,25 +49,31 @@ class Plugin(BasePlugin):
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='add a variable')
-    parser.add_argument('name', help='the name of the variable', default='', nargs='?')
-    parser.add_argument('value', help='the value of the variable', default='', nargs='?')
+    parser.add_argument('name', help='the name of the variable',
+                        default='', nargs='?')
+    parser.add_argument('value', help='the value of the variable',
+                        default='', nargs='?')
     self.api.get('commands.add')('add', self.cmd_add,
                                  parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='remove a variable')
-    parser.add_argument('name', help='the variable to remove', default='', nargs='?')
+    parser.add_argument('name', help='the variable to remove',
+                        default='', nargs='?')
     self.api.get('commands.add')('remove', self.cmd_remove,
                                  parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='list variables')
-    parser.add_argument('match', help='list only variables that have this argument in their name', default='', nargs='?')
+    parser.add_argument('match',
+              help='list only variables that have this argument in their name',
+              default='', nargs='?')
     self.api.get('commands.add')('list', self.cmd_list,
                                  parser=parser)
 
     self.api.get('commands.default')('add')
-    self.api.get('events.register')('from_client_event', self.checkvariable, prio=99)
+    self.api.get('events.register')('from_client_event', self.checkvariable,
+                                        prio=99)
 
   def api_getv(self, varname):
     """  get the variable with a specified name
@@ -103,7 +109,8 @@ class Plugin(BasePlugin):
     templ = Template(data)
     datan = templ.safe_substitute(self._variables)
     if datan != data:
-      self.api.get('send.msg')('replacing "%s" with "%s"' % (data.strip(), datan.strip()))
+      self.api.get('send.msg')('replacing "%s" with "%s"' % (data.strip(),
+                                                             datan.strip()))
       args['fromdata'] = datan
     return args
 

@@ -299,7 +299,8 @@ def dbcreate(Sqldb, plugin, **kwargs):
       trows = self.runselect('SELECT * FROM stats WHERE milestone = "%s"' \
                                                             % milestone)
       if len(trows) > 0:
-        self.api.get('send.client')('@RMilestone %s already exists' % milestone)
+        self.api.get('send.client')('@RMilestone %s already exists' % \
+                                                milestone)
         return -1
 
       stats = self.runselect('SELECT * FROM stats WHERE milestone = "current"')
@@ -524,9 +525,10 @@ def dbcreate(Sqldb, plugin, **kwargs):
 
       cur = self.dbconn.cursor()
       stmt2 = """INSERT INTO mobkills VALUES (:mk_id, :name, :xp, 0,
-                    :bonusxp, :blessingxp, :totalxp, :gold, :tp, :time, :vorpal,
-                    :banishment, :assassinate, :slit, :disintegrate, :deathblow,
-                    :wielded_weapon, :second_weapon, :room_id, :level)"""
+                    :bonusxp, :blessingxp, :totalxp, :gold, :tp, :time,
+                    :vorpal, :banishment, :assassinate, :slit, :disintegrate,
+                    :deathblow, :wielded_weapon, :second_weapon, :room_id,
+                    :level)"""
       cur.executemany(stmt2, oldmobst)
       cur.close()
 
@@ -569,31 +571,36 @@ class Plugin(AardwolfBasePlugin):
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='show quests stats')
-    parser.add_argument('count', help='the number of quests to show', default=0, nargs='?')
+    parser.add_argument('count', help='the number of quests to show',
+                        default=0, nargs='?')
     self.api.get('commands.add')('quests', self.cmd_quests,
                                 parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='show level stats')
-    parser.add_argument('count', help='the number of levels to show', default=0, nargs='?')
+    parser.add_argument('count', help='the number of levels to show',
+                        default=0, nargs='?')
     self.api.get('commands.add')('levels', self.cmd_levels,
                                 parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='show cp stats')
-    parser.add_argument('count', help='the number of cps to show', default=0, nargs='?')
+    parser.add_argument('count', help='the number of cps to show',
+                        default=0, nargs='?')
     self.api.get('commands.add')('cps', self.cmd_cps,
                                 parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='show gq stats')
-    parser.add_argument('count', help='the number of gqs to show', default=0, nargs='?')
+    parser.add_argument('count', help='the number of gqs to show',
+                        default=0, nargs='?')
     self.api.get('commands.add')('gqs', self.cmd_gqs,
                                 parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='show mob stats')
-    parser.add_argument('count', help='the number of mobkills to show', default=0, nargs='?')
+    parser.add_argument('count', help='the number of mobkills to show',
+                        default=0, nargs='?')
     self.api.get('commands.add')('mobs', self.cmd_mobs,
                                 parser=parser)
 
@@ -617,13 +624,14 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('events.register')('aard_gq_won', self.gqevent)
     self.api.get('events.register')('GMCP:char.status', self.checkstats)
     self.api.get('events.register')('var_statdb_backupstart', self.changetimer)
-    self.api.get('events.register')('var_statdb_backupinternval', self.changetimer)
+    self.api.get('events.register')('var_statdb_backupinternval',
+                                    self.changetimer)
 
     self.api.get('events.register')('trigger_dead', self.dead)
 
     self.api.get('timers.add')('stats_backup', self.backupdb,
-                                self.api.get('setting.gets')('backupinterval'),
-                                time=self.api.get('setting.gets')('backupstart'))
+                              self.api.get('setting.gets')('backupinterval'),
+                              time=self.api.get('setting.gets')('backupstart'))
 
     self.api.get('api.add')('runselect', self.api_runselect)
 
@@ -746,7 +754,8 @@ class Plugin(AardwolfBasePlugin):
     msg.append(self._format_row("Gold",
           self.api.get('utils.readablenumber')(stats['gold'], 2),
           "%d/quest" % stats['avegold']))
-    msg.append(self._format_row("Time", "", self.api.get('utils.formattime')(stats['avetime'])))
+    msg.append(self._format_row("Time", "",
+                        self.api.get('utils.formattime')(stats['avetime'])))
     msg.append('')
     msg.append(self._format_row("Bonus Rewards", "Total",
                               "Average", '@G', '@G'))
@@ -777,7 +786,8 @@ class Plugin(AardwolfBasePlugin):
 
           leveld = self.api.get('aardu.convertlevel')(item['level'])
 
-          ttime = self.api.get('utils.formattime')(item['finishtime'] - item['starttime'])
+          ttime = self.api.get('utils.formattime')(item['finishtime'] - \
+                                                    item['starttime'])
           if int(item['failed']) == 1:
             ttime = 'Failed'
           msg.append("%-6s %2s %2s %2s %2s %3s" \
@@ -916,7 +926,8 @@ class Plugin(AardwolfBasePlugin):
           leveld = self.api.get('aardu.convertlevel')(item['level'])
 
           if item['finishtime'] != '-1' and item['starttime'] != '-1':
-            ttime = self.api.get('utils.formattime')(item['finishtime'] - item['starttime'])
+            ttime = self.api.get('utils.formattime')(item['finishtime'] - \
+                                                      item['starttime'])
           else:
             ttime = ''
 
@@ -1042,7 +1053,8 @@ class Plugin(AardwolfBasePlugin):
                               leveld['level'])
 
           if item['finishtime'] != '-1' and item['starttime'] != '-1':
-            ttime = self.api.get('utils.formattime')(item['finishtime'] - item['starttime'])
+            ttime = self.api.get('utils.formattime')(item['finishtime'] - \
+                                                      item['starttime'])
           else:
             ttime = ''
 
@@ -1183,7 +1195,8 @@ class Plugin(AardwolfBasePlugin):
                               leveld['level'])
 
           if item['finishtime'] != '-1' and item['starttime'] != '-1':
-            ttime = self.api.get('utils.formattime')(item['finishtime'] - item['starttime'])
+            ttime = self.api.get('utils.formattime')(item['finishtime'] - \
+                                                      item['starttime'])
           else:
             ttime = ''
 
@@ -1416,7 +1429,8 @@ class Plugin(AardwolfBasePlugin):
     """
     add a hero/super milestone
     """
-    tlist = self.api.get('aardu.convertlevel')(self.api.get('aardu.getactuallevel')())
+    tlist = self.api.get('aardu.convertlevel')(
+                            self.api.get('aardu.getactuallevel')())
     if int(tlist['tier']) == 9:
       milestone = "t%s+%sr%sl%s" % (tlist['tier'], tlist['redos'],
                                     tlist['remort'], tlist['level'])
@@ -1426,8 +1440,10 @@ class Plugin(AardwolfBasePlugin):
 
     if args['eventname'] == 'aard_level_remort':
       if self.statdb:
-        self.statdb.setstat('remorts', self.api.get('GMCP.getv')('char.base.remorts'))
-        self.statdb.setstat('tier', self.api.get('GMCP.getv')('char.base.tier'))
+        self.statdb.setstat('remorts', self.api.get('GMCP.getv')(
+                                                      'char.base.remorts'))
+        self.statdb.setstat('tier', self.api.get('GMCP.getv')(
+                                                      'char.base.tier'))
         alev = self.api.get('aardu.getactuallevel')()
         self.statdb.setstat('totallevels', alev)
         self.statdb.setstat('level', 1)

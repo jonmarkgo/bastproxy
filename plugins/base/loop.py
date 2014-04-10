@@ -42,8 +42,11 @@ class Plugin(BasePlugin):
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='loop a command')
-    parser.add_argument('cmd', help='the variable to remove', default='', nargs='?')
-    parser.add_argument('-c', "--count", help="how many times to execute the command", default=1)
+    parser.add_argument('cmd', help='the variable to remove',
+                        default='', nargs='?')
+    parser.add_argument('-c', "--count",
+                        help="how many times to execute the command",
+                        default=1)
     self.api.get('commands.add')('cmd', self.cmd_loop,
                                  parser=parser)
 

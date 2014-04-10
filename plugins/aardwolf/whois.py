@@ -34,7 +34,7 @@ class Plugin(AardwolfBasePlugin):
     load the plugins
     """
     AardwolfBasePlugin.load(self)
-    
+
     self.api.get('watch.add')('whois', '^(whoi|whois)$')
 
     self.api.get('triggers.add')('whoisheader',
@@ -117,7 +117,8 @@ class Plugin(AardwolfBasePlugin):
     self.whois['redos'] = int(self.api.get('GMCP.getv')('char.base.redos'))
     self.whois['race'] = self.api.get('GMCP.getv')('char.base.race').lower()
     self.whois['sex'] = args['sex'].lower()
-    self.whois['subclass'] = self.api.get('GMCP.getv')('char.base.subclass').lower()
+    self.whois['subclass'] = self.api.get('GMCP.getv')(
+                                            'char.base.subclass').lower()
     self.whois['powerupsall'] = 0
     self.whois['powerupsmort'] = 0
     self.whois['remorts'] = self.api.get('GMCP.getv')('char.base.remorts')

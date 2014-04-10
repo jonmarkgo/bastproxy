@@ -19,7 +19,8 @@ PRIORITY = 12
 
 AUTOLOAD = True
 
-TIMELENGTH_REGEXP = re.compile(r"^(?P<days>\d+d)?:?(?P<hours>\d+h)?:?(?P<minutes>\d+m)?:?(?P<seconds>\d+s?)?$")
+TIMELENGTH_REGEXP = re.compile(r"^(?P<days>\d+d)?:?(?P<hours>\d+h)" \
+                              "?:?(?P<minutes>\d+m)?:?(?P<seconds>\d+s?)?$")
 
 
 class Plugin(BasePlugin):

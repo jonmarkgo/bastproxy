@@ -44,14 +44,20 @@ class Plugin(BasePlugin):
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='set the password for the mail account')
-    parser.add_argument('password', help='the top level api to show (optional)', default='', nargs='?')
+    parser.add_argument('password',
+                        help='the top level api to show (optional)',
+                        default='', nargs='?')
     self.api.get('commands.add')('password', self.cmd_pw,
                                         parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='send a test email')
-    parser.add_argument('subject', help='the subject of the test email (optional)', default='Test subject from bastproxy', nargs='?')
-    parser.add_argument('message', help='the message of the test email (optional)', default='Msg from bastproxy', nargs='?')
+    parser.add_argument('subject',
+                        help='the subject of the test email (optional)',
+                        default='Test subject from bastproxy', nargs='?')
+    parser.add_argument('message',
+                        help='the message of the test email (optional)',
+                        default='Msg from bastproxy', nargs='?')
     self.api.get('commands.add')('test', self.cmd_test,
                                         parser=parser)
 
@@ -60,13 +66,17 @@ class Plugin(BasePlugin):
     self.api.get('commands.add')('check', self.cmd_check,
                       parser=parser)
 
-    self.api.get('setting.add')('server', '', str, 'the smtp server to send mail through')
-    self.api.get('setting.add')('port', '', int, 'the port to use when sending mail')
-    self.api.get('setting.add')('username', '', str, 'the username to connect as',
+    self.api.get('setting.add')('server', '', str,
+                                'the smtp server to send mail through')
+    self.api.get('setting.add')('port', '', int,
+                                'the port to use when sending mail')
+    self.api.get('setting.add')('username', '', str,
+                                'the username to connect as',
                   nocolor=True)
     self.api.get('setting.add')('to', '', str, 'the address to send mail to',
                   nocolor=True)
-    self.api.get('setting.add')('from', '', str, 'the address to send mail from',
+    self.api.get('setting.add')('from', '', str,
+                                'the address to send mail from',
                   nocolor=True)
     self.api.get('setting.add')('ssl', '', bool,
                           'set this to True if the connection will use ssl')
@@ -144,7 +154,7 @@ X-Mailer: My-Mail
       if not self.password:
         self.api.get('send.client')(
                       '@CPlease set the email password for account: @M%s@w' \
-                             % self.api.get('setting.gets')('username').replace('@', '@@'))
+                % self.api.get('setting.gets')('username').replace('@', '@@'))
 
   def cmd_pw(self, args):
     """

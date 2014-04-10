@@ -141,7 +141,8 @@ class Plugin(BasePlugin):
     if mstate:
       mstate = 1
       if self.optionstates[aoption] == 0:
-        self.api.get('send.msg')('Enabling A102 option: %s' % AOPTIONREV[aoption])
+        self.api.get('send.msg')('Enabling A102 option: %s' % \
+                                              AOPTIONREV[aoption])
         cmd = '%s%s' % (chr(aoption), ON)
         self.api.get('A102.sendpacket')(cmd)
       self.optionstates[aoption] = self.optionstates[aoption] + 1
@@ -150,7 +151,8 @@ class Plugin(BasePlugin):
       mstate = 2
       self.optionstates[aoption] = self.optionstates[aoption] - 1
       if self.optionstates[aoption] == 0:
-        self.api.get('send.msg')('Disabling A102 option: %s' % AOPTIONREV[aoption])
+        self.api.get('send.msg')('Disabling A102 option: %s' % \
+                                              AOPTIONREV[aoption])
         cmd = '%s%s' % (chr(aoption), OFF)
         self.api.get('A102.sendpacket')(cmd)
 
@@ -174,11 +176,13 @@ class Plugin(BasePlugin):
       for i in self.optionstates:
         tnum = self.optionstates[i]
         if tnum > 0:
-          self.api.get('send.msg')('Re-Enabling A102 option: %s' % AOPTIONREV[i])
+          self.api.get('send.msg')('Re-Enabling A102 option: %s' % \
+                                                    AOPTIONREV[i])
           cmd = '%s%s' % (i, 1)
           self.api.get('A102.sendpacket')(cmd)
         else:
-          self.api.get('send.msg')('Re-Disabling A102 option: %s' % AOPTIONREV[i])
+          self.api.get('send.msg')('Re-Disabling A102 option: %s' % \
+                                                    AOPTIONREV[i])
           cmd = '%s%s' % (i, 2)
           self.api.get('A102.sendpacket')(cmd)
 

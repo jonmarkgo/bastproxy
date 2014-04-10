@@ -50,17 +50,21 @@ class Plugin(BasePlugin):
     self.api.get('log.console')(self.sname)
 
     self.api.get('setting.add')('spamcount', 20, int,
-                      'the # of times a command can be run before an antispam command')
+            'the # of times a command can be run before an antispam command')
     self.api.get('setting.add')('antispamcommand', 'look', str,
                       'the antispam command to send')
     self.api.get('setting.add')('cmdcount', 0, int,
-                      'the # of times the current command has been run', readonly=True)
+            'the # of times the current command has been run', readonly=True)
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='list commands in a category')
-    parser.add_argument('category', help='the category to see help for', default='', nargs='?')
-    parser.add_argument('cmd', help='the command in the category (can be left out)', default='', nargs='?')
-    self.api.get('commands.add')('list', self.cmd_list, shelp='list commands', parser=parser)
+    parser.add_argument('category', help='the category to see help for',
+                        default='', nargs='?')
+    parser.add_argument('cmd',
+                        help='the command in the category (can be left out)',
+                        default='', nargs='?')
+    self.api.get('commands.add')('list', self.cmd_list, shelp='list commands',
+                                 parser=parser)
 
     self.api.get('commands.default')('list')
     self.api.get('events.register')('from_client_event', self.chkcmd, prio=1)
@@ -175,9 +179,12 @@ class Plugin(BasePlugin):
       return {'fromdata':''}
     else:
       if tdat.strip() == self.lastcmd:
-        self.api.get('setting.change')('cmdcount', self.api.get('setting.gets')('cmdcount') + 1)
-        if self.api.get('setting.gets')('cmdcount') == self.api.get('setting.gets')('spamcount'):
-          data['fromdata'] = self.api.get('setting.gets')('antispamcommand') + '|' + tdat
+        self.api.get('setting.change')('cmdcount',
+                            self.api.get('setting.gets')('cmdcount') + 1)
+        if self.api.get('setting.gets')('cmdcount') == \
+                              self.api.get('setting.gets')('spamcount'):
+          data['fromdata'] = self.api.get('setting.gets')('antispamcommand') \
+                                      + '|' + tdat
           self.api.get('send.msg')('adding look for 20 commands')
           self.api.get('setting.change')('cmdcount', 0)
         if tdat in self.nomultiplecmds:
@@ -195,7 +202,8 @@ class Plugin(BasePlugin):
     @Ycmdname@w  = the base that the api should be under
     @Yfunc@w   = the function that should be run when this command is executed
     @Ykeyword arguments@w
-      @Yshelp@w    = the short help, a brief description of what the command does
+      @Yshelp@w    = the short help, a brief description of what the
+                                          command does
       @Ylhelp@w    = a longer description of what the command does
       @Ypreamble@w = show the preamble for this command (default: True)
       @Yformat@w   = format this command (default: True)
@@ -221,13 +229,15 @@ class Plugin(BasePlugin):
       if 'sname' in args:
         sname = args['sname']
       else:
-        self.api.get('send.msg')('Function is not part of a plugin class: %s' % cmdname)
+        self.api.get('send.msg')('Function is not part of a plugin class: %s' \
+                                                      % cmdname)
         return
 
     if 'parser' in args:
       tparser = args['parser']
     else:
-      self.api.get('send.msg')('adding default parser to command %s.%s' % (sname, cmdname))
+      self.api.get('send.msg')('adding default parser to command %s.%s' % \
+                                      (sname, cmdname))
       if not ('shelp' in args):
         args['shelp'] = 'there is no help for this command'
       tparser = argparse.ArgumentParser(add_help=False,
@@ -310,7 +320,8 @@ class Plugin(BasePlugin):
     if plugin in self.cmds:
       del self.cmds[plugin]
     else:
-      self.api.get('send.msg')('removeplugin: plugin %s does not exist' % plugin)
+      self.api.get('send.msg')('removeplugin: plugin %s does not exist' % \
+                                                        plugin)
 
   def format_cmdlist(self, category, cmdlist):
     """

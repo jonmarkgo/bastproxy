@@ -81,7 +81,8 @@ class Plugin(BasePlugin):
       for mem in self._substitutes.keys():
         if mem in data:
           data = data.replace(mem,
-                    self.api.get('color.convertcolors')(self._substitutes[mem]['sub']))
+                    self.api.get('color.convertcolors')(
+                                    self._substitutes[mem]['sub']))
       args['original'] = data
       return args
 

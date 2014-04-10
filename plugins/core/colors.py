@@ -36,7 +36,8 @@ AUTOLOAD = True
 
 # for finding ANSI color sequences
 XTERM_COLOR_REGEX = re.compile('^@[xz](?P<num>[\d]{1,3})$')
-ANSI_COLOR_REGEX = re.compile(chr(27) + r'\[(?P<arg_1>\d+)(;(?P<arg_2>\d+)(;(?P<arg_3>\d+))?)?m')
+ANSI_COLOR_REGEX = re.compile(chr(27) + r'\[(?P<arg_1>\d+)(;(?P<arg_2>\d+)' \
+                                              '(;(?P<arg_3>\d+))?)?m')
 
 CONVERTANSI = {}
 

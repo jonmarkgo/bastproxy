@@ -86,7 +86,8 @@ class Listener(asyncore.dispatcher):
         api.get('send.msg')("HOST: %s is banned" % ipaddress, 'net')
         client_connection.close()
       elif len(self.proxy.clients) == 5:
-        api.get('send.msg')("Only 5 clients can be connected at the same time", 'net')
+        api.get('send.msg')(
+          "Only 5 clients can be connected at the same time", 'net')
         client_connection.close()
       else:
         api.get('send.msg')("Accepted connection from %s : %s" %

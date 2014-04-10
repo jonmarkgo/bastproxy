@@ -52,12 +52,14 @@ class Plugin(AardwolfBasePlugin):
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='show report')
-    parser.add_argument('minutes', help='the number of minutes in the report', default='60m', nargs='?')
+    parser.add_argument('minutes', help='the number of minutes in the report',
+                        default='60m', nargs='?')
     self.api.get('commands.add')('rep', self.cmd_rep,
               parser=parser, format=False, preamble=False)
 
     self.api.get('timers.add')('statrep', self.timershow,
-                               self.api.get('setting.gets')('show'), nodupe=True)
+                               self.api.get('setting.gets')('show'),
+                               nodupe=True)
 
   def showchange(self, args):
     """
@@ -118,7 +120,8 @@ class Plugin(AardwolfBasePlugin):
             args['pracs'], infocolor))
     msg.append('. It took %s%s%s.' % (
          statcolor,
-         self.api.get('utils.timedeltatostring')(args['starttime'], args['finishtime'],
+         self.api.get('utils.timedeltatostring')(args['starttime'],
+                                                 args['finishtime'],
          fmin=True, colorn=statcolor,
          colors=infocolor),
          infocolor))
@@ -169,7 +172,8 @@ class Plugin(AardwolfBasePlugin):
             args['pracs'], infocolor))
     msg.append('. %sIt took %s.' % (
          infocolor,
-         self.api.get('utils.timedeltatostring')(args['starttime'], args['finishtime'],
+         self.api.get('utils.timedeltatostring')(args['starttime'],
+                                                 args['finishtime'],
          fmin=True, colorn=statcolor,
          colors=infocolor)))
 
@@ -201,7 +205,8 @@ class Plugin(AardwolfBasePlugin):
     msg.append('.')
     msg.append(' %sIt took %s.' % (
          infocolor,
-         self.api.get('utils.timedeltatostring')(args['starttime'], args['finishtime'],
+         self.api.get('utils.timedeltatostring')(args['starttime'],
+                                                 args['finishtime'],
          fmin=True, colorn=statcolor,
          colors=infocolor)))
 

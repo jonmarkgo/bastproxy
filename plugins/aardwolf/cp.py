@@ -122,7 +122,8 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('events.register')('trigger_cptime', self._cptime)
     #self.api.get('events.register')('watch_cp_check', self._cpcheckcmd)
     self.api.get('events.register')('trigger_cpmob', self._cpmob)
-    self.api.get('events.register')('trigger_cpneedtolevel', self._cpneedtolevel)
+    self.api.get('events.register')('trigger_cpneedtolevel',
+                                    self._cpneedtolevel)
     self.api.get('events.register')('trigger_cpcantake', self._cpcantake)
     self.api.get('events.register')('trigger_cpshnext', self._cpshnext)
     self.api.get('events.register')('trigger_cpmobdead', self._cpmobdead)
@@ -281,8 +282,9 @@ class Plugin(AardwolfBasePlugin):
     else:
       #self.mobsleft.append({'name':name, 'location':location,
       #'clean':cleanname(name), 'mobdead':mobdead})
-      self.mobsleft.append({'name':name, 'nocolorname':self.api.get('colors.stripansi')(name),
-            'location':location, 'mobdead':mobdead})
+      self.mobsleft.append({'name':name,
+                      'nocolorname':self.api.get('colors.stripansi')(name),
+                      'location':location, 'mobdead':mobdead})
 
   def _cpmobdead(self, _=None):
     """
