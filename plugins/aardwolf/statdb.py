@@ -26,6 +26,22 @@ def format_float(item, addto=""):
     tempt = 0
   return tempt
 
+fieldstocomp = ['totallevels',
+                'qpearned',
+                'questscomplete',
+                'questsfailed',
+                'campaignsdone',
+                'campaignsfld',
+                'gquestswon',
+                'duelswon',
+                'duelslost',
+                'timeskilled',
+                'monsterskilled',
+                'combatmazewins',
+                'combatmazedeaths',
+                'powerupsall',
+                'totaltrivia']
+
 def dbcreate(Sqldb, plugin, **kwargs):
   """
   create the statdb class, this is needed because the Sqldb baseclass
@@ -322,6 +338,17 @@ def dbcreate(Sqldb, plugin, **kwargs):
 
       return -1
 
+    def getmilestone(self, milestone):
+      """
+      get a milestone
+      """
+      trows = self.runselect('SELECT * FROM stats WHERE milestone = "%s"' \
+                                                            % milestone)
+      if len(trows) == 0:
+        return None
+      else:
+        return trows[0]
+
     def addclasses(self, classes):
       """
       add classes from whois
@@ -570,6 +597,20 @@ class Plugin(AardwolfBasePlugin):
                       'the interval to backup the db, default every 4 hours')
 
     parser = argparse.ArgumentParser(add_help=False,
+                 description='list milestones')
+    self.api.get('commands.add')('list', self.cmd_list,
+                                parser=parser)
+
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='compare milestones')
+    parser.add_argument('milestone1', help='the first milestone',
+                        default='', nargs='?')
+    parser.add_argument('milestone2', help='the second milestone',
+                        default='', nargs='?')
+    self.api.get('commands.add')('comp', self.cmd_comp,
+                                parser=parser)
+
+    parser = argparse.ArgumentParser(add_help=False,
                  description='show quests stats')
     parser.add_argument('count', help='the number of quests to show',
                         default=0, nargs='?')
@@ -668,6 +709,129 @@ class Plugin(AardwolfBasePlugin):
       self.api.get('events.unregister')('GMCP:char.status', self.checkstats)
       if not self.statdb.getstat('monsterskilled'):
         self.api.get('send.execute')('whois')
+
+  def cmd_list(self, args=None):
+    """
+    list milestones
+    """
+    msg = []
+    milest = self.statdb.runselect('SELECT milestone FROM stats')
+    levels = self.statdb.runselect(
+      "SELECT MIN(totallevels) as MIN, MAX(totallevels) as MAX FROM stats " \
+                "WHERE stats.totallevels == stats.milestone")
+
+    maxlev = 0
+    minlev = 0
+    for row in levels:
+      maxlev = row['MAX']
+      minlev = row['MIN']
+
+    if maxlev and minlev:
+      msg.append('Levels between %s and %s' % (minlev, maxlev))
+
+    items = []
+    for row in milest:
+      try:
+        int(row['milestone'])
+      except ValueError:
+        items.append(row['milestone'])
+      if len(items) == 3:
+        msg.append('%-15s %-15s %-15s' % (items[0], items[1], items[2]))
+        items = []
+
+    if len(items) > 0:
+      if len(items) == 1:
+        msg.append('%-15s' % items[0])
+      elif len(items) == 2:
+        msg.append('%-15s %-15s' % (items[0], items[1]))
+
+    if not msg:
+      msg.append('No milestones')
+
+    return True, msg
+
+  def formatcomp(self, milestone1, milestone2):
+    """
+    format a milestone comparison
+    """
+    msg = []
+
+    tformat = "%-17s %-15s %-15s %-10s"
+    msg.append(tformat % ('Milestone', milestone1['milestone'],
+                            milestone2['milestone'], 'Difference'))
+
+    msg.append('@g' + '-' * 60)
+
+    if milestone1['time'] == 0:
+      milestone1['dates'] = 'Now'
+      milestone1['times'] = ''
+      milestone1['time'] = time.time()
+    else:
+      milestone1['dates'] = time.strftime('%x',
+                                           time.localtime(milestone1['time']))
+      milestone1['times'] = time.strftime('%X',
+                                          time.localtime(milestone1['time']))
+
+    if milestone2['time'] == 0:
+      milestone2['dates'] = 'Now'
+      milestone2['times'] = ''
+      milestone2['time'] = time.time()
+    else:
+      milestone2['dates'] = time.strftime('%x',
+                                        time.localtime(milestone2['time']))
+      milestone2['times'] = time.strftime('%X',
+                                        time.localtime(milestone2['time']))
+
+    if milestone2['time'] < milestone1['time']:
+      tmp1 = milestone1
+      tmp2 = milestone2
+
+      milestone1 = tmp2
+      milestone2 = tmp1
+
+    datediff = self.api.get('utils.formattime')(
+                                      milestone2['time'] - milestone1['time'])
+
+    msg.append(tformat % ('Date', milestone1['dates'],
+                                milestone2['dates'], datediff))
+    msg.append(tformat % ('Time', milestone1['times'],
+                                milestone2['times'], ''))
+
+    msg.append('@g' + '-' * 60)
+
+    for i in fieldstocomp:
+      msg.append(tformat % (i, milestone1[i], milestone2[i],
+                                  milestone2[i] - milestone1[i]))
+    return msg
+
+
+  def cmd_comp(self, args=None):
+    """
+    list milestones
+    """
+    msg = []
+
+    if args['milestone1'] and args['milestone2']:
+      milestone1 = self.statdb.getmilestone(args['milestone1'])
+      milestone2 = self.statdb.getmilestone(args['milestone2'])
+    elif args['milestone1']:
+      milestone1 = self.statdb.getmilestone(args['milestone1'])
+      milestone2 = self.statdb.getmilestone('current')
+    else:
+      milestone1 = self.statdb.getmilestone('start')
+      milestone2 = self.statdb.getmilestone('current')
+
+    if not milestone1:
+      msg.append('milestone %s does not exist' % args['milestone1'])
+    if not milestone2:
+      msg.append('milestone %s does not exist' % args['milestone2'])
+
+    if not milestone2 or not milestone1:
+      return True, msg
+
+    msg = self.formatcomp(milestone1, milestone2)
+
+    return True, msg
 
   def _format_row(self, rowname, data1, data2, datacolor="@W",
                     headercolor="@C"):
