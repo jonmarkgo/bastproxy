@@ -35,7 +35,7 @@ class Plugin(BasePlugin):
     BasePlugin.__init__(self, *args, **kwargs)
 
     self.variablefile = os.path.join(self.savedir, 'variables.txt')
-    self._variables = PersistentDict(self.variablefile, 'c', format='json')
+    self._variables = PersistentDict(self.variablefile, 'c')
     self.api.get('api.add')('getv', self.api_getv)
     self.api.get('api.add')('setv', self.api_setv)
 
@@ -70,6 +70,8 @@ class Plugin(BasePlugin):
                                  parser=parser)
 
     self.api.get('commands.default')('add')
+    self.api.get('events.register')('from_client_event', self.checkvariable,
+                                        prio=1)
     self.api.get('events.register')('from_client_event', self.checkvariable,
                                         prio=99)
 
