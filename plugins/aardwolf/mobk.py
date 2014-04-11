@@ -110,7 +110,7 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('triggers.add')('mobassassin',
               "^You assassinate (?P<name>.*) with cold efficiency.$")
     self.api.get('triggers.add')('mobdeathblow',
-              "^Your death blow CLEAVES (P<name>.*) in two!$")
+              "^Your death blow CLEAVES (?P<name>.*) in two!$")
     self.api.get('triggers.add')('mobslit',
               "^You sneak behind (?P<name>.*) and slit .* throat.$")
     self.api.get('triggers.add')('mobdisintegrate',
