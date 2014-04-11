@@ -27,7 +27,7 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.__init__(self, *args, **kwargs)
     self.savegqfile = os.path.join(self.savedir, 'gq.txt')
-    self.gqinfo = PersistentDict(self.savegqfile, 'c', format='json')
+    self.gqinfo = PersistentDict(self.savegqfile, 'c')
     self.api.get('setting.add')('declared', False, bool,
                                 'flag for a gq being declared')
     self.api.get('setting.add')('started', False, bool,

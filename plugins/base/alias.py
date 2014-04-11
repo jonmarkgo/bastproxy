@@ -42,7 +42,7 @@ class Plugin(BasePlugin):
     BasePlugin.__init__(self, *args, **kwargs)
 
     self.aliasfile = os.path.join(self.savedir, 'aliases.txt')
-    self._aliases = PersistentDict(self.aliasfile, 'c', format='json')
+    self._aliases = PersistentDict(self.aliasfile, 'c')
 
     self.sessionhits = {}
 
@@ -128,7 +128,6 @@ class Plugin(BasePlugin):
         if '(.*)' in mem:
           matchd = re.match(mem, data)
           if matchd:
-
             self.api.get('send.msg')('matched input on %s' % mem)
             tlistn = [data]
             for i in xrange(1, len(matchd.groups()) + 1):

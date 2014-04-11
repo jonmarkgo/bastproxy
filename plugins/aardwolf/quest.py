@@ -27,7 +27,7 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.__init__(self, *args, **kwargs)
     self.savequestfile = os.path.join(self.savedir, 'quest.txt')
-    self.queststuff = PersistentDict(self.savequestfile, 'c', format='json')
+    self.queststuff = PersistentDict(self.savequestfile, 'c')
 
   def load(self):
     """

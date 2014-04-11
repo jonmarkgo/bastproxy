@@ -27,7 +27,7 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.__init__(self, *args, **kwargs)
     self.savewhoisfile = os.path.join(self.savedir, 'whois.txt')
-    self.whois = PersistentDict(self.savewhoisfile, 'c', format='json')
+    self.whois = PersistentDict(self.savewhoisfile, 'c')
 
   def load(self):
     """

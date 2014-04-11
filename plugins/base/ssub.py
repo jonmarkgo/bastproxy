@@ -31,7 +31,7 @@ class Plugin(BasePlugin):
     """
     BasePlugin.__init__(self, *args, **kwargs)
     self.savesubfile = os.path.join(self.savedir, 'subs.txt')
-    self._substitutes = PersistentDict(self.savesubfile, 'c', format='json')
+    self._substitutes = PersistentDict(self.savesubfile, 'c')
 
   def load(self):
     """

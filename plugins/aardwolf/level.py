@@ -28,7 +28,7 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.__init__(self, *args, **kwargs)
     self.savelevelfile = os.path.join(self.savedir, 'level.txt')
-    self.levelinfo = PersistentDict(self.savelevelfile, 'c', format='json')
+    self.levelinfo = PersistentDict(self.savelevelfile, 'c')
 
   def load(self):
     """

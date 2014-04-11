@@ -41,7 +41,7 @@ class Plugin(BasePlugin):
     self.sessionhits = {}
 
     self.saveactionsfile = os.path.join(self.savedir, 'actions.txt')
-    self.actions = PersistentDict(self.saveactionsfile, 'c', format='json')
+    self.actions = PersistentDict(self.saveactionsfile, 'c')
 
     for i in self.actions:
       self.compiledregex[i] = re.compile(self.actions[i]['regex'])

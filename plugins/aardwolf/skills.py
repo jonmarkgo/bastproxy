@@ -57,13 +57,13 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.__init__(self, *args, **kwargs)
     self.saveskillfile = os.path.join(self.savedir, 'skills.txt')
-    self.skills = PersistentDict(self.saveskillfile, 'c', format='json')
+    self.skills = PersistentDict(self.saveskillfile, 'c')
     self.skillsnamelookup = {}
     for i in self.skills:
       self.skillsnamelookup[self.skills[i]['name']] = i
 
     self.saverecovfile = os.path.join(self.savedir, 'recoveries.txt')
-    self.recoveries = PersistentDict(self.saverecovfile, 'c', format='json')
+    self.recoveries = PersistentDict(self.saverecovfile, 'c')
     self.recoveriesnamelookup = {}
     for i in self.recoveries:
       self.recoveriesnamelookup[self.recoveries[i]['name']] = i

@@ -68,7 +68,7 @@ class PluginMgr(object):
     self.api = API()
     self.savefile = os.path.join(self.api.BASEPATH, 'data',
                                           'plugins', 'loadedplugins.txt')
-    self.loadedplugins = PersistentDict(self.savefile, 'c', format='json')
+    self.loadedplugins = PersistentDict(self.savefile, 'c')
     self.sname = 'plugins'
     self.lname = 'Plugin Manager'
 

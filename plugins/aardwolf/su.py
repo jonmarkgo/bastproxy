@@ -27,7 +27,7 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.__init__(self, *args, **kwargs)
     self.spellupfile = os.path.join(self.savedir, 'spellups.txt')
-    self.spellups = PersistentDict(self.spellupfile, 'c', format='json')
+    self.spellups = PersistentDict(self.spellupfile, 'c')
 
     self.api.get('dependency.add')('aardwolf.skills')
     self.api.get('dependency.add')('aardwolf.move')

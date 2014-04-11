@@ -29,7 +29,7 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.__init__(self, *args, **kwargs)
     self.savecpfile = os.path.join(self.savedir, 'cp.txt')
-    self.cpinfo = PersistentDict(self.savecpfile, 'c', format='json')
+    self.cpinfo = PersistentDict(self.savecpfile, 'c')
     self.mobsleft = []
     self.cpinfotimer = {}
     self.linecount = 0

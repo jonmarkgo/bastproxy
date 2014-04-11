@@ -47,8 +47,7 @@ class BasePlugin(object):
     self.package = fullimploc.split('.')[1]
 
     self.settings = {}
-    self.settingvalues = PersistentDictEvent(self, self.savefile,
-                            'c', format='json')
+    self.settingvalues = PersistentDictEvent(self, self.savefile, 'c')
 
     self.api.overload('send', 'msg', self.api_outputmsg)
     self.api.overload('commands', 'default', self.api_commandsdefault)
