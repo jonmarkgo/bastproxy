@@ -3,6 +3,7 @@ $Id$
 
 This plugin loops commands for a specified number of times
 
+the command can be "get all ${num}.corpse"
 """
 import argparse
 from string import Template
@@ -38,7 +39,7 @@ class Plugin(BasePlugin):
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='loop a command')
-    parser.add_argument('cmd', help='the variable to remove',
+    parser.add_argument('cmd', help='the command to run',
                         default='', nargs='?')
     parser.add_argument('-c', "--count",
                         help="how many times to execute the command",
