@@ -10,6 +10,7 @@ import os
 import sys
 import socket
 import signal
+from libs import io
 from libs.api import API
 
 sys.stderr = sys.stdout
@@ -26,7 +27,7 @@ def setuppaths():
   else:
     tpath = npath[:index]
 
-  api.get('send.msg')('setting basepath to: %s'% tpath, 'startup')
+  api.get('send.msg')('setting basepath to: %s' % tpath, 'startup')
   API.BASEPATH = tpath
 
   try:
