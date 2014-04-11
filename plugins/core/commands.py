@@ -67,7 +67,7 @@ class Plugin(BasePlugin):
                                  parser=parser)
 
     self.api.get('commands.default')('list')
-    self.api.get('events.register')('from_client_event', self.chkcmd, prio=1)
+    self.api.get('events.register')('from_client_event', self.chkcmd, prio=2)
     self.api.get('events.eraise')('plugin_cmdman_loaded', {})
 
   def formatretmsg(self, msg, sname, cmd):
