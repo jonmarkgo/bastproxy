@@ -720,7 +720,7 @@ class Plugin(AardwolfBasePlugin):
       iteml.append(self.formatspecialline('Drink', '@c',
                   "%d servings of %s. Max: %d" % (item['drink']['servings'],
                                     item['drink']['liquid'],
-                                    item['drink']['liquidmax']/20)))
+                                    item['drink']['liquidmax']/20 or 1)))
       iteml.append(self.formatspecialline('', '@c',
                   "Each serving replenishes thirst by %d%%" % \
                     item['drink']['thirstpercent']))
