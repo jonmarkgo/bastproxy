@@ -129,7 +129,7 @@ class Plugin(AardwolfBasePlugin):
     if self.api.get('plugins.isinstalled')('statdb'):
       stmt = "SELECT COUNT(*) as COUNT, AVG(totqp) as AVEQP " \
               "FROM quests where failed = 0"
-      tst = self.api.get('statdb.runselect')(stmt)
+      tst = self.api.get('statdb.select')(stmt)
       quest_total = tst[0]['COUNT']
       quest_avg = tst[0]['AVEQP']
       if quest_total > 1:
@@ -272,7 +272,7 @@ class Plugin(AardwolfBasePlugin):
       stmt = "SELECT count(*) as count, AVG(totalxp) as average FROM " \
             "mobkills where time > %d and time < %d and xp > 0" % \
              (args['starttime'], args['finishtime'])
-      tst = self.api.get('statdb.runselect')(stmt)
+      tst = self.api.get('statdb.select')(stmt)
       count = tst[0]['count']
       ave = tst[0]['average']
       if count > 0 and ave > 0:
@@ -359,7 +359,7 @@ class Plugin(AardwolfBasePlugin):
                      SUM(gold) as gold,
                      SUM(tp) as tp
                      FROM quests where finishtime > %d""" % starttime
-    tst = self.api.get('statdb.runselect')(stmt)
+    tst = self.api.get('statdb.select')(stmt)
     if tst[0]['total'] > 0:
       queststats.update(tst[0])
 
@@ -369,7 +369,7 @@ class Plugin(AardwolfBasePlugin):
                      SUM(tp) as tp
                      FROM campaigns
                      where finishtime > %d and failed = 0""" % starttime
-    tst = self.api.get('statdb.runselect')(stmt)
+    tst = self.api.get('statdb.select')(stmt)
     if tst[0]['total'] > 0:
       cpstats.update(tst[0])
 
@@ -378,7 +378,7 @@ class Plugin(AardwolfBasePlugin):
                      SUM(gold) as gold,
                      SUM(tp) as tp
                      FROM gquests where finishtime > %d""" % starttime
-    tst = self.api.get('statdb.runselect')(stmt)
+    tst = self.api.get('statdb.select')(stmt)
     if tst[0]['total'] > 0:
       gqstats.update(tst[0])
 
@@ -387,7 +387,7 @@ class Plugin(AardwolfBasePlugin):
                      SUM(gold) as gold,
                      SUM(tp) as tp
                      FROM mobkills where time > %d""" % starttime
-    tst = self.api.get('statdb.runselect')(stmt)
+    tst = self.api.get('statdb.select')(stmt)
     if tst[0]['total'] > 0:
       mobstats.update(tst[0])
 
