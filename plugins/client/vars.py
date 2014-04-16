@@ -69,12 +69,13 @@ class Plugin(BasePlugin):
     self.api.get('commands.add')('list', self.cmd_list,
                                  parser=parser)
 
-    self.api.get('commands.default')('add')
+    self.api.get('commands.default')('list')
     self.api.get('events.register')('from_client_event', self.checkvariable,
                                         prio=1)
     self.api.get('events.register')('from_client_event', self.checkvariable,
                                         prio=99)
 
+  # get the variable
   def api_getv(self, varname):
     """  get the variable with a specified name
     @Yvarname@w  = the variable to get
@@ -86,6 +87,7 @@ class Plugin(BasePlugin):
 
     return None
 
+  # set a variable
   def api_setv(self, varname, value):
     """  set the variable with a specified name to the specified value
     @Yvarname@w  = the variable to get
