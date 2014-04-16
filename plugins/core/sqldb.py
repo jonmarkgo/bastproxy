@@ -68,6 +68,15 @@ class Sqldb(object):
     self.versionfuncs = {}
     self.tables = {}
 
+    self.api.get('api.add')('select', self.api_select)
+
+  # execute a select statement against the database
+  def api_select(self, select):
+    """
+    run a select stmt against the char db
+    """
+    return self.select(select)
+
   def close(self):
     """
     close the database
@@ -128,23 +137,23 @@ class Sqldb(object):
                  description='backup the database')
     parser.add_argument('name', help='the name to backup to',
                         default='', nargs='?')
-    self.plugin.api.get('commands.add')('dbbackup', self.cmd_backup,
+    self.api.get('commands.add')('dbbackup', self.cmd_backup,
                                            parser=parser, group='DB')
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='close the database')
-    self.plugin.api.get('commands.add')('dbclose', self.cmd_close,
+    self.api.get('commands.add')('dbclose', self.cmd_close,
                                            parser=parser, group='DB')
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='vacuum the database')
-    self.plugin.api.get('commands.add')('dbvac', self.cmd_vac,
+    self.api.get('commands.add')('dbvac', self.cmd_vac,
                                            parser=parser, group='DB')
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='run a sql statement against the database')
     parser.add_argument('stmt', help='the sql statement', default='', nargs='?')
-    self.plugin.api.get('commands.add')('dbrunselect', self.cmd_runselect,
+    self.api.get('commands.add')('dbselect', self.cmd_select,
                                            parser=parser, group='DB')
 
     parser = argparse.ArgumentParser(add_help=False,
@@ -153,10 +162,10 @@ class Sqldb(object):
                                         default='', nargs='?')
     parser.add_argument('rownumber', help='the row number to remove',
                                         default=-1, nargs='?')
-    self.plugin.api.get('commands.add')('dbremove', self.cmd_remove,
+    self.api.get('commands.add')('dbremove', self.cmd_remove,
                                            parser=parser, group='DB')
 
-  def cmd_runselect(self, args=None):
+  def cmd_select(self, args=None):
     """
     run a cmd against the database
     """
@@ -165,7 +174,7 @@ class Sqldb(object):
       print args
       sqlstmt = args['stmt']
       if sqlstmt:
-        results = self.runselect(sqlstmt)
+        results = self.select(sqlstmt)
         for i in results:
           msg.append('%s' % i)
       else:
@@ -435,7 +444,7 @@ class Sqldb(object):
     self.setversion(newversion)
     self.api.get('send.msg')('Done upgrading!')
 
-  def runselect(self, selectstmt):
+  def select(self, selectstmt):
     """
     run a select statement against the database, returns a list
     """
@@ -450,7 +459,7 @@ class Sqldb(object):
     cur.close()
     return result
 
-  def runselectbykeyword(self, selectstmt, keyword):
+  def selectbykeyword(self, selectstmt, keyword):
     """
     run a select statement against the database, return a dictionary
     where the keys are the keyword specified
@@ -484,7 +493,7 @@ class Sqldb(object):
       tstring = "SELECT * FROM %s ORDER by %s desc limit %d" % \
                         (ttable, colid, num)
 
-    results = self.runselect(tstring)
+    results = self.select(tstring)
 
     return results
 
@@ -494,7 +503,7 @@ class Sqldb(object):
     """
     last = -1
     colid = self.tables[ttable]['keyfield']
-    rows = self.runselect("SELECT MAX(%s) AS MAX FROM %s" % (colid, ttable))
+    rows = self.select("SELECT MAX(%s) AS MAX FROM %s" % (colid, ttable))
     if len(rows) > 0:
       last = rows[0]['MAX']
 
