@@ -1,7 +1,7 @@
 """
 $Id$
 
-This module holds the class BasePlugin, from which all plugins should have as
+This module holds the class BasePlugin, which all plugins should have as
 their base class.
 """
 import os
@@ -92,6 +92,17 @@ class BasePlugin(object):
     parser = argparse.ArgumentParser(add_help=False,
                  description='show plugin stats')
     self.api.get('commands.add')('stats', self.cmd_stats,
+                                 parser=parser)
+
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='show help info for this plugin')
+    parser.add_argument('-a', "--api",
+          help="show functions this plugin has in the api",
+              action="store_true")
+    parser.add_argument('-c', "--commands",
+          help="show commands in this plugin",
+              action="store_true")
+    self.api.get('commands.add')('help', self.cmd_help,
                                  parser=parser)
 
     self.api.get('events.register')('%s_plugin_loaded' % self.sname,
@@ -293,6 +304,29 @@ class BasePlugin(object):
     """
     self.savestate()
     return True, ['Plugin settings saved']
+
+  def cmd_help(self, args):
+    """
+    test command
+    """
+    msg = []
+
+    msg.extend(__doc__.split('\n'))
+    if args['commands']:
+      cmdlist = self.api.get('commands.list')(self.sname)
+      if cmdlist:
+        msg.extend(self.api.get('commands.list')(self.sname))
+        msg.append('')
+    if args['api']:
+      apilist = self.api.get('api.list')(self.sname)
+      if apilist:
+        msg.append('API functions')
+        msg.append('@G' + '-' * 60 + '@w')
+        msg.extend(self.api.get('api.list')(self.sname))
+        msg.append('@G' + '-' * 60 + '@w')
+        msg.append('')
+
+    return True, msg
 
   def listvars(self):
     """
