@@ -4,7 +4,6 @@ $Id$
 This plugin will show information about connections to the proxy
 
 """
-import inspect
 import argparse
 
 from plugins._baseplugin import BasePlugin
@@ -59,10 +58,6 @@ class Plugin(BasePlugin):
       @Yapi@w = (optional) the api to detail
     """
     tmsg = []
-    apia = None
-    apio = None
-    apiapath = None
-    apiopath = None
     if args['api']:
       tmsg.extend(self.api.get('api.detail')(args['api']))
 
