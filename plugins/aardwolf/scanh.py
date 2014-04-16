@@ -130,7 +130,8 @@ class Plugin(AardwolfBasePlugin):
     clear the cp mobs
     """
     self.api.get('send.msg')('clearing cp mobs')
-    del(self.mobs['cp'])
+    if 'cp' in self.mobs:
+      del(self.mobs['cp'])
 
   def gqmobs(self, args):
     """
