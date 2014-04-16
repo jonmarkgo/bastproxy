@@ -64,66 +64,7 @@ class Plugin(BasePlugin):
     apiapath = None
     apiopath = None
     if args['api']:
-      apiname = args['api']
-      name, cmdname = apiname.split('.')
-      tdict = {'name':name, 'cmdname':cmdname, 'apiname':apiname}
-      try:
-        apia = self.api.get(apiname, True)
-      except AttributeError:
-        pass
-
-      try:
-        apio = self.api.get(apiname)
-      except AttributeError:
-        pass
-
-      if not apia and not apio:
-        tmsg.append('%s is not in the api' % apiname)
-      else:
-        if apia and not apio:
-          apif = apia
-          apiapath = inspect.getsourcefile(apia)
-          apiapath = apiapath[len(self.api.BASEPATH)+1:]
-
-        elif apio and not apia:
-          apif = apio
-          apiopath = inspect.getsourcefile(apio)
-          apiopath = apiopath[len(self.api.BASEPATH)+1:]
-
-        elif not (apio == apia) and apia and apio:
-          apif = apia
-          apiapath = inspect.getsourcefile(apia)
-          apiopath = inspect.getsourcefile(apio)
-          apiapath = apiapath[len(self.api.BASEPATH)+1:]
-          apiopath = apiopath[len(self.api.BASEPATH)+1:]
-
-        else:
-          apif = apia
-          apiapath = inspect.getsourcefile(apia)
-          apiapath = apiapath[len(self.api.BASEPATH)+1:]
-
-        src = inspect.getsource(apif)
-        dec = src.split('\n')[0]
-        args = dec.split('(')[-1].strip()
-        args = args.split(')')[0]
-        argsl = args.split(',')
-        argn = []
-        for i in argsl:
-          if i == 'self':
-            continue
-          argn.append('@Y%s@w' % i.strip())
-
-        args = ', '.join(argn)
-        tmsg.append('@G%s@w(%s)' % (apiname, args))
-        tmsg.append(apif.__doc__ % tdict)
-
-        tmsg.append('')
-        if apiapath:
-          tmsg.append('original defined in %s' % apiapath)
-        if apiopath and apiapath:
-          tmsg.append('overloaded in %s' % apiopath)
-        elif apiopath:
-          tmsg.append('original defined in %s' % apiopath)
+      tmsg.extend(self.api.get('api.detail')(args['api']))
 
     else: # args <= 0
       tmsg.append('Please provide an api to detail')
@@ -138,46 +79,11 @@ class Plugin(BasePlugin):
       @Yapiname@w = (optional) the toplevel api to show
     """
     tmsg = []
-    apilist = {}
-    if args['toplevel']:
-      i = args['toplevel']
-      if i in self.api.api:
-        apilist[i] = {}
-        for k in self.api.api[i]:
-          apilist[i][k] = True
-      if i in self.api.overloadedapi:
-        if not (i in apilist):
-          apilist[i] = {}
-        for k in self.api.overloadedapi[i]:
-          apilist[i][k] = True
-      if not apilist:
-        tmsg.append('%s does not exist in the api' % i)
-
+    apilist = self.api.get('api.list')(args['toplevel'])
+    if not apilist:
+      tmsg.append('%s does not exist in the api' % args['toplevel'])
     else:
-      for i in self.api.api:
-        if not (i in apilist):
-          apilist[i] = {}
-        for k in self.api.api[i]:
-          apilist[i][k] = True
-
-      for i in self.api.overloadedapi:
-        if not (i in apilist):
-          apilist[i] = {}
-        for k in self.api.overloadedapi[i]:
-          apilist[i][k] = True
-
-    tkeys = apilist.keys()
-    tkeys.sort()
-    for i in tkeys:
-      tmsg.append('@G%-10s@w' % i)
-      tkeys2 = apilist[i].keys()
-      tkeys2.sort()
-      for k in tkeys2:
-        apif = self.api.get('%s.%s' % (i, k))
-        comments = inspect.getcomments(apif)
-        if comments:
-          comments = comments.strip()
-        tmsg.append('  @G%-15s@w : %s' % (k, comments))
+      tmsg.extend(apilist)
 
     return True, tmsg
 
