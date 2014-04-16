@@ -338,14 +338,14 @@ def dbcreate(sqldb, plugin, **kwargs):
       if not milestone:
         return
 
-      trows = self.runselect('SELECT * FROM stats WHERE milestone = "%s"' \
+      trows = self.select('SELECT * FROM stats WHERE milestone = "%s"' \
                                                             % milestone)
       if len(trows) > 0:
         self.api.get('send.client')('@RMilestone %s already exists' % \
                                                 milestone)
         return -1
 
-      stats = self.runselect('SELECT * FROM stats WHERE milestone = "current"')
+      stats = self.select('SELECT * FROM stats WHERE milestone = "current"')
       tstats = stats[0]
 
       if tstats:
@@ -368,7 +368,7 @@ def dbcreate(sqldb, plugin, **kwargs):
       """
       get a milestone
       """
-      trows = self.runselect('SELECT * FROM stats WHERE milestone = "%s"' \
+      trows = self.select('SELECT * FROM stats WHERE milestone = "%s"' \
                                                             % milestone)
       if len(trows) == 0:
         return None
@@ -390,7 +390,7 @@ def dbcreate(sqldb, plugin, **kwargs):
       get all classes
       """
       classes = []
-      tclasses = self.runselect('SELECT * FROM classes ORDER by remort ASC')
+      tclasses = self.select('SELECT * FROM classes ORDER by remort ASC')
       for i in tclasses:
         if i['remort'] != -1:
           classes.append(i['class'])
@@ -543,7 +543,7 @@ def dbcreate(sqldb, plugin, **kwargs):
       if not self.checktableexists('mobkills'):
         return
 
-      oldmobst = self.runselect('SELECT * FROM mobkills ORDER BY mk_id ASC')
+      oldmobst = self.select('SELECT * FROM mobkills ORDER BY mk_id ASC')
 
       cur = self.dbconn.cursor()
       cur.execute('DROP TABLE IF EXISTS mobkills;')
@@ -625,7 +625,7 @@ class Plugin(AardwolfBasePlugin):
     parser = argparse.ArgumentParser(add_help=False,
                  description='list milestones')
     self.api.get('commands.add')('list', self.cmd_list,
-                                parser=parser)
+                                parser=parser, group='Stats')
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='compare milestones')
@@ -634,42 +634,42 @@ class Plugin(AardwolfBasePlugin):
     parser.add_argument('milestone2', help='the second milestone',
                         default='', nargs='?')
     self.api.get('commands.add')('comp', self.cmd_comp,
-                                parser=parser)
+                                parser=parser, group='Stats')
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='show quests stats')
     parser.add_argument('count', help='the number of quests to show',
                         default=0, nargs='?')
     self.api.get('commands.add')('quests', self.cmd_quests,
-                                parser=parser)
+                                parser=parser, group='Stats')
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='show level stats')
     parser.add_argument('count', help='the number of levels to show',
                         default=0, nargs='?')
     self.api.get('commands.add')('levels', self.cmd_levels,
-                                parser=parser)
+                                parser=parser, group='Stats')
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='show cp stats')
     parser.add_argument('count', help='the number of cps to show',
                         default=0, nargs='?')
     self.api.get('commands.add')('cps', self.cmd_cps,
-                                parser=parser)
+                                parser=parser, group='Stats')
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='show gq stats')
     parser.add_argument('count', help='the number of gqs to show',
                         default=0, nargs='?')
     self.api.get('commands.add')('gqs', self.cmd_gqs,
-                                parser=parser)
+                                parser=parser, group='Stats')
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='show mob stats')
     parser.add_argument('count', help='the number of mobkills to show',
                         default=0, nargs='?')
     self.api.get('commands.add')('mobs', self.cmd_mobs,
-                                parser=parser)
+                                parser=parser, group='Stats')
 
     self.api.get('triggers.add')('dead',
       "^You die.$",
@@ -699,8 +699,6 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('timers.add')('stats_backup', self.backupdb,
                               self.api.get('setting.gets')('backupinterval'),
                               time=self.api.get('setting.gets')('backupstart'))
-
-    self.api.get('api.add')('runselect', self.api_runselect)
 
   def changetimer(self, _=None):
     """
@@ -741,8 +739,8 @@ class Plugin(AardwolfBasePlugin):
     list milestones
     """
     msg = []
-    milest = self.statdb.runselect('SELECT milestone FROM stats')
-    levels = self.statdb.runselect(
+    milest = self.statdb.select('SELECT milestone FROM stats')
+    levels = self.statdb.select(
       "SELECT MIN(totallevels) as MIN, MAX(totallevels) as MAX FROM stats " \
                 "WHERE stats.totallevels == stats.milestone")
 
@@ -886,7 +884,7 @@ class Plugin(AardwolfBasePlugin):
       return True, ['No quests stats are available']
 
 
-    tqrow = self.statdb.runselect(
+    tqrow = self.statdb.select(
         """SELECT AVG(finishtime - starttime) as avetime,
                       SUM(qp) as qp,
                       SUM(tier) as tier,
@@ -908,10 +906,10 @@ class Plugin(AardwolfBasePlugin):
                       SUM(gold) as gold,
                       AVG(gold) as avegold FROM quests where failed = 0""")
     stats = tqrow[0]
-    tfrow = self.statdb.runselect(
+    tfrow = self.statdb.select(
             "SELECT COUNT(*) as failedindb FROM quests where failed != 0")
     stats.update(tfrow[0])
-    tsrow = self.statdb.runselect(
+    tsrow = self.statdb.select(
          """SELECT qpearned, questscomplete, questsfailed,
             totallevels FROM stats WHERE milestone = 'current'""")
     stats.update(tsrow[0])
@@ -1008,17 +1006,17 @@ class Plugin(AardwolfBasePlugin):
     if self.statdb.getlastrowid('levels') <= 0:
       return True, ['No levels/pups stats available']
 
-    lrow = self.statdb.runselect(
+    lrow = self.statdb.select(
         "SELECT totallevels, qpearned FROM stats WHERE milestone = 'current'")
     levels.update(lrow[0])
 
-    prow = self.statdb.runselect(
+    prow = self.statdb.select(
         "SELECT MAX(powerupsall) as powerupsall FROM stats")
     pups.update(prow[0])
 
     levels['qpave'] = int(levels['qpearned']) / int(levels['totallevels'])
 
-    llrow = self.statdb.runselect("""
+    llrow = self.statdb.select("""
              SELECT AVG(trains) as avetrains,
                     AVG(bonustrains) as avebonustrains,
                     AVG(blessingtrains) as aveblessingtrains,
@@ -1029,13 +1027,13 @@ class Plugin(AardwolfBasePlugin):
                     """)
     levels.update(llrow[0])
 
-    ltrow = self.statdb.runselect("""
+    ltrow = self.statdb.select("""
              SELECT AVG(finishtime - starttime) as avetime FROM levels
              where type = 'level' and finishtime <> -1 and trains > 0
                     """)
     levels.update(ltrow[0])
 
-    pprow = self.statdb.runselect("""
+    pprow = self.statdb.select("""
              SELECT AVG(trains) as avetrains,
                     AVG(bonustrains) as avebonustrains,
                     AVG(blessingtrains) as aveblessingtrains,
@@ -1045,7 +1043,7 @@ class Plugin(AardwolfBasePlugin):
                     """)
     pups.update(pprow[0])
 
-    ptrow = self.statdb.runselect("""
+    ptrow = self.statdb.select("""
              SELECT AVG(finishtime - starttime) as avetime FROM levels
              where type = 'pup' and finishtime <> -1
                     """)
@@ -1148,12 +1146,12 @@ class Plugin(AardwolfBasePlugin):
     if self.statdb.getlastrowid('campaigns') <= 0:
       return True, ['No campaign stats available']
 
-    trow = self.statdb.runselect(
+    trow = self.statdb.select(
         "SELECT campaignsdone, campaignsfld, totallevels " \
         "FROM stats WHERE milestone = 'current'")
     stats.update(trow[0])
 
-    trow = self.statdb.runselect(
+    trow = self.statdb.select(
         """SELECT AVG(finishtime - starttime) as avetime,
                   SUM(qp) as totalqp,
                   AVG(qp) as aveqp,
@@ -1169,7 +1167,7 @@ class Plugin(AardwolfBasePlugin):
                   FROM campaigns where failed = 0""")
     stats.update(trow[0])
 
-    trow = self.statdb.runselect(
+    trow = self.statdb.select(
        "SELECT COUNT(*) as failedindb FROM campaigns where failed != 0")
     stats.update(trow[0])
 
@@ -1226,7 +1224,7 @@ class Plugin(AardwolfBasePlugin):
     if int(count) > 0:
       lastitems = self.statdb.getlast('campaigns', int(count))
 
-      mobc = self.statdb.runselectbykeyword(
+      mobc = self.statdb.selectbykeyword(
           'SELECT cp_id, count(*) as mobcount from cpmobs group by cp_id',
           'cp_id')
 
@@ -1276,7 +1274,7 @@ class Plugin(AardwolfBasePlugin):
     if self.statdb.getlastrowid('gquests') <= 0:
       return True, ['No gq stats available']
 
-    wrow = self.statdb.runselect(
+    wrow = self.statdb.select(
         """SELECT AVG(finishtime - starttime) as avetime,
                   SUM(qp) as qp,
                   AVG(qp) as qpave,
@@ -1294,11 +1292,11 @@ class Plugin(AardwolfBasePlugin):
                   FROM gquests where won = 1""")
     stats['won'] = wrow[0]
 
-    trow = self.statdb.runselect(
+    trow = self.statdb.select(
         "SELECT gquestswon FROM stats WHERE milestone = 'current'")
     stats.update(trow[0])
 
-    trow = self.statdb.runselect(
+    trow = self.statdb.select(
        """SELECT AVG(finishtime - starttime) as avetime,
                  SUM(qpmobs) as totalqp,
                  AVG(qpmobs) as aveqp,
@@ -1306,7 +1304,7 @@ class Plugin(AardwolfBasePlugin):
                  FROM gquests where won != 1""")
     stats['lost'] = trow[0]
 
-    trow = self.statdb.runselect(
+    trow = self.statdb.select(
        """SELECT SUM(qpmobs + qp) as overallqp,
                  AVG(qpmobs + qp) as aveoverallqp
                  FROM gquests""")
@@ -1368,7 +1366,7 @@ class Plugin(AardwolfBasePlugin):
     if int(count) > 0:
       lastitems = self.statdb.getlast('gquests', int(count))
 
-      mobc = self.statdb.runselectbykeyword(
+      mobc = self.statdb.selectbykeyword(
           'SELECT gq_id, SUM(num) as mobcount from gqmobs group by gq_id',
           'gq_id')
 
@@ -1415,11 +1413,11 @@ class Plugin(AardwolfBasePlugin):
     if self.statdb.getlastrowid('mobkills') <= 0:
       return True, ['No mob stats available']
 
-    trow = self.statdb.runselect(
+    trow = self.statdb.select(
         "SELECT monsterskilled FROM stats WHERE milestone = 'current'")
     stats.update(trow[0])
 
-    trow = self.statdb.runselect(
+    trow = self.statdb.select(
         """SELECT SUM(xp) AS xp,
                   SUM(rarexp) as rarexp,
                   SUM(bonusxp) AS bonusxp,
@@ -1440,19 +1438,19 @@ class Plugin(AardwolfBasePlugin):
                   FROM mobkills""")
     stats.update(trow[0])
 
-    trow = self.statdb.runselect(
+    trow = self.statdb.select(
        """SELECT AVG(bonusxp) as avebonusxp,
                  COUNT(*) as bonusmobsindb
                  FROM mobkills where bonusxp > 0""")
     stats.update(trow[0])
 
-    trow = self.statdb.runselect(
+    trow = self.statdb.select(
        """SELECT AVG(blessingxp) as aveblessxp,
                  COUNT(*) as blessmobsindb
                  FROM mobkills where blessingxp > 0""")
     stats.update(trow[0])
 
-    trow = self.statdb.runselect(
+    trow = self.statdb.select(
        """SELECT AVG(rarexp) as averarexp,
                  COUNT(*) as raremobsindb
                  FROM mobkills where rarexp > 0""")
@@ -1605,15 +1603,6 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.unload(self)
     self.statdb.close()
-
-  def api_runselect(self, select):
-    """
-    run a select stmt against the char db
-    """
-    if self.statdb:
-      return self.statdb.runselect(select)
-
-    return None
 
   def heroevent(self, args):
     """
