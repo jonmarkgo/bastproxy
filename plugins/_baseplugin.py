@@ -105,6 +105,14 @@ class BasePlugin(object):
     self.api.get('commands.add')('help', self.cmd_help,
                                  parser=parser)
 
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='list functions in the api')
+    parser.add_argument('api',
+                        help='api to get details of',
+                        default='', nargs='?')
+    self.api.get('commands.add')('api', self.cmd_api,
+                                 parser=parser)
+
     self.api.get('events.register')('%s_plugin_loaded' % self.sname,
                                                 self.afterload)
 
@@ -112,6 +120,23 @@ class BasePlugin(object):
     self.api.get('events.register')('muddisconnect', self.disconnect)
 
     self.resetflag = False
+
+  def cmd_api(self, args):
+    """
+    list functions in the api for a plugin
+    """
+    tmsg = []
+    if args['api']:
+      tmsg.extend(self.api.get('api.detail')("%s.%s" % (self.sname,
+                                                          args['api'])))
+    else:
+      apilist = self.api.get('api.list')(self.sname)
+      if not apilist:
+        tmsg.append('nothing in the api')
+      else:
+        tmsg.extend(apilist)
+
+    return True, tmsg
 
   def afterload(self, args):
     """
