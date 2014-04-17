@@ -141,7 +141,7 @@ class Plugin(AardwolfBasePlugin):
                              "type", "unique", "wearslot", "timer"]
     self.invlayout['light'] = ['duration']
     self.invlayout['portal'] = ['uses']
-    self.invlayout['tempmod'] = ['type', 'u1', 'u2', 'statmod', 'duration']
+    self.invlayout['tempmod'] = ['sn', 'u1', 'u2', 'statmod', 'duration']
 
   def load(self):
     """
