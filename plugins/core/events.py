@@ -173,11 +173,16 @@ class Plugin(BasePlugin):
                 plugin = i.im_self.sname
               except AttributeError:
                 plugin = ''
+              if eventname != 'global_timer':
+                self.api.get('send.msg')(
+      'event %s : calling function %s (%s) with args %s' % \
+                  (eventname, i.__name__, plugin or 'Unknown', nargs),
+                  secondary=plugin)
               tnargs = i(nargs)
               if eventname != 'global_timer':
                 self.api.get('send.msg')(
-      'event %s : function %s, plugin %s called with args %s, returned %s' % \
-                  (eventname, i.__name__, plugin or 'Unknown', nargs, tnargs),
+      'event %s : function %s (%s) returned %s' % \
+                  (eventname, i.__name__, plugin or 'Unknown', tnargs),
                   secondary=plugin)
               if tnargs:
                 nargs = tnargs
