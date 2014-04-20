@@ -914,6 +914,7 @@ class Plugin(AardwolfBasePlugin):
         titem = self.itemcache[serial]
         if titem['type'] == 11:
           self.getdata(serial)
+        self.api.get('events.eraise')('inventory_added', titem)
       except KeyError:
         self.getdata('Inventory')
     elif action == 5:
