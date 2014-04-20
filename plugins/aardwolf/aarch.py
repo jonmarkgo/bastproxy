@@ -91,7 +91,7 @@ class Plugin(AardwolfBasePlugin):
     parser = argparse.ArgumentParser(add_help=False,
                  description='show needed aarch items')
     self.api.get('commands.add')('need', self.cmd_need,
-                                parser=parser, format=False, preamble=False)
+                                parser=parser)
 
   def cmd_need(self, args):
     """
@@ -102,18 +102,26 @@ class Plugin(AardwolfBasePlugin):
     have = []
 
     aarchi = self.api.get('eq.findname')('(Aarchaeology)')
+    items = 0
+    pam = 0
     for item in aarchi:
       nname = item['name'].replace('(Aarchaeology) ', '')
       if 'Collectable Pamphlet' in nname:
+        pam = pam + 1
         pamnum = int(nname.split('#')[1])
         have.append(pamnum)
       else:
         if nname in AARCHITEMSREV:
+          items = items + 1
           have.append(AARCHITEMSREV[nname])
 
     need = set(all) - set(have)
-
-    for i in need:
-      tmsg.append('%-2s - %s' % (i, AARCHITEMS[i]))
+    tmsg.append('You have %s Aarcheology Items and %s Pamphlets' % (items, pam))
+    if len(need) > 0:
+      tmsg.append('You need:')
+      for i in need:
+        tmsg.append('%-2s - %s' % (i, AARCHITEMS[i]))
+    else:
+      tmsg.append('Congratulations! You have a full set of Aarcheology items.')
 
     return True, tmsg
