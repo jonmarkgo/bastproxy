@@ -885,6 +885,7 @@ class Plugin(AardwolfBasePlugin):
       if serial in self.eqdata:
         self.takeoffitem(serial)
         self.putitemincontainer('Inventory', serial, place=0)
+        self.api.get('events.eraise')('eq_removed', self.itemcache[serial])
       else:
         self.getdata('Inventory')
         self.getdata('Worn')
@@ -893,6 +894,9 @@ class Plugin(AardwolfBasePlugin):
       if 'Inventory' in self.invdata and serial in self.invdata['Inventory']:
         self.removeitemfromcontainer('Inventory', serial)
         self.wearitem(serial, location)
+        self.api.get('events.eraise')('eq_worn',
+                                      {'item':self.itemcache[serial],
+                                       'location':location})
       else:
         self.getdata('Inventory')
         self.getdata('Worn')
@@ -904,6 +908,7 @@ class Plugin(AardwolfBasePlugin):
           for item in self.invdata[serial]:
             del self.itemcache[item]
         self.removeitemfromcontainer('Inventory', serial)
+        self.api.get('events.eraise')('inventory_removed', titem)
         del self.itemcache[serial]
       else:
         self.getdata('Inventory')
