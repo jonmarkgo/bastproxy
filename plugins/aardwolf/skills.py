@@ -291,9 +291,14 @@ class Plugin(AardwolfBasePlugin):
     """
     raise an event when we fail a skill/spell
     """
-    ndict = {'sn': int(args['sn']), 'reason':FAILREASON[int(args['reason'])],
+    spellnum = int(args['sn'])
+    reason = FAILREASON[int(args['reason'])]
+    ndict = {'sn':spellnum, 'reason':reason,
             'target':FAILTARG[int(args['target'])],
             'recovery':int(args['recovery'])}
+    if reason == 'dontknow' and self.skills[spellnum]['percent'] > 0:
+      self.api.get('send.msg')('refreshing spells because of an unlearned spell')
+      self.cmd_refresh({})
     self.api.get('send.msg')('raising skillfail: %s' % ndict)
     self.api.get('events.eraise')('skill_fail_%s' % args['sn'], ndict)
     self.api.get('events.eraise')('skill_fail', ndict)
