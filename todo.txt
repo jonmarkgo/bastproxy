@@ -12,8 +12,6 @@ Overall:
   #BUG: reload first plugin (eq), disconnect, reconnect, firstactive isn't called
         reload second plugin (skills), disconnect, reconnect, firstactive is called for eq, but not skills
         sometimes firstactive is called, sometimes not
-  #TODO: add a help command to _baseplugin that takes the docstring of the
-        module and shows it
 
 Python3:
   #TODO: convert to run under python3
@@ -30,6 +28,7 @@ New Plugins:
         command seperator, mud address, mud port
     #TODO: plugin to show last x lines in log or buffer
     #TODO: add a note plugin (like bast_notes)
+    #TODO: grep plugin for a command
   Aardwolf Plugins:
     #TODO: create an autohunt plugin
     #TODO: create a plugin to do eqsets
@@ -43,6 +42,10 @@ eq:
   #TODO: an item_<serial>_change event, so that itemcaches can be cleared
     when an item is put in/removed from a container (for the container)
     when an invitem is seen (for things like remove curse)
+
+gq:
+  #BUG: gq check not working first time if you join an extended gq
+      and haven't seen the declared, or started message.
 
 api:
   #TODO: decorator function to set attributes on a function for the api (short description)?
@@ -77,7 +80,6 @@ Events:
 sqlitedb:
   #TODO: load the db into memory and then when adding something, fork and save
       it to disk?
-  #TODO: finish the cmd_runselect
 
 timing:
   #TODO: add a global timing flag
