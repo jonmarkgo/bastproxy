@@ -336,7 +336,7 @@ class BasePlugin(object):
     """
     msg = []
 
-    msg.extend(__doc__.split('\n'))
+    msg.extend(sys.modules[self.fullimploc].__doc__.split('\n'))
     if args['commands']:
       cmdlist = self.api.get('commands.list')(self.sname)
       if cmdlist:
