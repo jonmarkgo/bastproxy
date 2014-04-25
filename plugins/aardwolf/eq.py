@@ -52,6 +52,7 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('api.add')('get', self.api_putininventory)
     self.api.get('api.add')('put', self.api_putincontainer)
     self.api.get('api.add')('findname', self.api_findname)
+    self.api.get('api.add')('getworn', self.api_getworn)
 
   def load(self):
     """
@@ -185,7 +186,20 @@ class Plugin(AardwolfBasePlugin):
     self.cmdqueue.addcmdtype('eqdata', 'eqdata', "^eqdata$",
                        self.eqdatabefore, self.eqdataafter)
     self.cmdqueue.addcmdtype('get', 'get', "^get\s*(.*)$")
-    self.cmdqueue.addcmdtype('put', 'put', "^get\s*(.*)$")
+    self.cmdqueue.addcmdtype('put', 'put', "^put\s*(.*)$")
+
+  def api_getworn(self, location):
+    """
+    get the item that is worn at location
+    """
+    try:
+      int(location)
+      return self.itemcache[self.eqdata[location]]
+    except ValueError:
+      wearlocsrev = self.api.get('itemu.wearlocs')(True)
+      if location in wearlocsrev:
+        return self.itemcache[self.eqdata[wearlocsrev[location]]]
+    return None
 
   def api_findname(self, name, exact=False):
     """
@@ -330,7 +344,6 @@ class Plugin(AardwolfBasePlugin):
     """
     do something on connect
     """
-    print 'firstactive'
     AardwolfBasePlugin.afterfirstactive(self)
     self.getdata('Worn')
     self.getdata('Inventory')
@@ -885,7 +898,8 @@ class Plugin(AardwolfBasePlugin):
       if serial in self.eqdata:
         self.takeoffitem(serial)
         self.putitemincontainer('Inventory', serial, place=0)
-        self.api.get('events.eraise')('eq_removed', self.itemcache[serial])
+        self.api.get('events.eraise')('eq_removed',
+                                      {'item':self.itemcache[serial]})
       else:
         self.getdata('Inventory')
         self.getdata('Worn')
@@ -908,7 +922,7 @@ class Plugin(AardwolfBasePlugin):
           for item in self.invdata[serial]:
             del self.itemcache[item]
         self.removeitemfromcontainer('Inventory', serial)
-        self.api.get('events.eraise')('inventory_removed', titem)
+        self.api.get('events.eraise')('inventory_removed', {'item':titem})
         del self.itemcache[serial]
       else:
         self.getdata('Inventory')
@@ -919,7 +933,7 @@ class Plugin(AardwolfBasePlugin):
         titem = self.itemcache[serial]
         if titem['type'] == 11:
           self.getdata(serial)
-        self.api.get('events.eraise')('inventory_added', titem)
+        self.api.get('events.eraise')('inventory_added', {'item':titem})
       except KeyError:
         self.getdata('Inventory')
     elif action == 5:
