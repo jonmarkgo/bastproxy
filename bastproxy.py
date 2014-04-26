@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 """
-$Id$
+This is a mud proxy.
 
-This is the beginnings of a Mud Proxy that can have triggers, aliases, gags
+It support MCCP, GMCP, aliases, triggers, substitutes
 """
 import asyncore
 import ConfigParser
