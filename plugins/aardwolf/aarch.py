@@ -90,6 +90,8 @@ class Plugin(AardwolfBasePlugin):
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='show needed aarch items')
+    parser.add_argument('filter', help='a word in an aarch piece to check for',
+                        default='', nargs='?')
     self.api.get('commands.add')('need', self.cmd_need,
                                 parser=parser)
 
@@ -115,12 +117,25 @@ class Plugin(AardwolfBasePlugin):
           items = items + 1
           have.append(AARCHITEMSREV[nname])
 
-    need = set(all) - set(have)
+    tneed = set(all) - set(have)
+    if args['filter']:
+      need = []
+      filter = args['filter']
+      for i in tneed:
+        if filter in AARCHITEMS[i].lower():
+          need.append(i)
+    else:
+      need = tneed
+
+
     tmsg.append('You have %s Aarcheology Items and %s Pamphlets' % (items, pam))
-    if len(need) > 0:
-      tmsg.append('You need %s pieces:' % len(need))
-      for i in need:
-        tmsg.append('%-2s - %s' % (i, AARCHITEMS[i]))
+    if len(tneed) > 0:
+      tmsg.append('You need %s pieces:' % len(tneed))
+      if args['filter'] and len(need) == 0:
+        tmsg.append('  Nothing with the filter: %s' % args['filter'])
+      else:
+        for i in need:
+          tmsg.append('%-2s - %s' % (i, AARCHITEMS[i]))
     else:
       tmsg.append('Congratulations! You have a full set of Aarcheology items.')
 
