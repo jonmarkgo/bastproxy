@@ -1,8 +1,44 @@
 #!/usr/bin/env python
 """
+# About
 This is a mud proxy.
+It runs in python 2.X (>2.6).
 
-It support MCCP, GMCP, aliases, triggers, substitutes
+It supports MCCP, GMCP, aliases, actions, substitutes, variables
+
+# Getting Started
+## create a configuration file
+Copy this to aardwolf-config.ini ([Aardwolf Mud](http://www.aardwolf.com/))
+Change the passwords.
+
+    [proxy]
+    mode = proxy
+    listen_port = 9999
+    mud_address = aardmud.org
+    mud_port = 4444
+    password = somepassword
+    viewpw = someviewpassword
+
+## start the proxy
+    python bastproxy.py aard.ini
+
+## Connect
+Connect a client to the listen_port above on the host the proxy is running,
+and then login with the password.
+
+## Getting help
+Use the following commands to get help
+
+ * Show command categories
+  * #bp.commands
+ * show commands in a category
+  * #bp.commands.list "category" or  #bp."category"
+ * Show loaded plugins
+  * #bp.plugins
+ * Show plugins that are not loaded
+  * #bp.plugins -n
+
+Any command will show help when adding -h
 """
 import asyncore
 import ConfigParser
@@ -170,14 +206,14 @@ def main():
 
   listen_port = guard(lambda:configp.getint("proxy", "listen_port"),
     "listen_port is a required field")
-  server_address = guard(lambda:configp.get("proxy", "server_address"),
-    "server is a required field")
-  server_port = guard(lambda:configp.getint("proxy", "server_port"),
-    "server_port is a required field")
+  mud_address = guard(lambda:configp.get("proxy", "mud_address"),
+    "mud_address is a required field")
+  mud_port = guard(lambda:configp.getint("proxy", "mud_port"),
+    "mud_port is a required field")
 
   if not daemon:
     try:
-      start(listen_port, server_address, server_port)
+      start(listen_port, mud_address, mud_port)
     except KeyboardInterrupt:
       api.get('event.eraise')('shutdown', {})
   else:
@@ -191,7 +227,7 @@ def main():
     if os.fork() == 0:
       # We are the child
       try:
-        sys.exit(start(listen_port, server_address, server_port))
+        sys.exit(start(listen_port, mud_address, mud_port))
       except KeyboardInterrupt:
         print
       sys.exit(0)
