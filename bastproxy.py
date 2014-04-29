@@ -1,42 +1,48 @@
 #!/usr/bin/env python
 """
-# About
+## About
 This is a mud proxy.
 It runs in python 2.X (>2.6).
 
 It supports MCCP, GMCP, aliases, actions, substitutes, variables
 
-# Getting Started
-## create a configuration file
-Copy this to aardwolf-config.ini ([Aardwolf Mud](http://www.aardwolf.com/))
-Change the passwords.
+## Getting Started
+### create a configuration file
+ * Use one of the included ones,  both for [Aardwolf Mud](http://www.aardwolf.com/)
+ * Copy the below to "mud"-config.ini and change the items to suit your needs
 
+---
     [proxy]
     mode = proxy
     listen_port = 9999
-    mud_address = aardmud.org
-    mud_port = 4444
+    mud_address = some.mud.address
+    mud_port = 4000
     password = somepassword
     viewpw = someviewpassword
 
-## start the proxy
-    python bastproxy.py aard.ini
+---
 
-## Connect
+Don't forget to change the passwords!
+
+### start the proxy
+ * ```python bastproxy.py "mud"-config.ini```
+
+### connect
 Connect a client to the listen_port above on the host the proxy is running,
 and then login with the password.
 
-## Getting help
+### getting help
 Use the following commands to get help
 
  * Show command categories
-  * #bp.commands
+  * ```#bp.commands```
  * show commands in a category
-  * #bp.commands.list "category" or  #bp."category"
+  * ```#bp.commands.list "category"```
+  * ```#bp."category"```
  * Show loaded plugins
-  * #bp.plugins
+  * ```#bp.plugins```
  * Show plugins that are not loaded
-  * #bp.plugins -n
+  * ```#bp.plugins -n```
 
 Any command will show help when adding -h
 """
