@@ -37,6 +37,30 @@ class Plugin(BasePlugin):
     self.api.get('api.add')('gete', self.api_getevent)
     self.api.get('api.add')('detail', self.api_detail)
 
+  def load(self):
+    """
+    load the module
+    """
+    BasePlugin.load(self)
+    self.api.get('managers.add')(self.sname, self)
+    self.api.get('events.register')('log_plugin_loaded', self.logloaded)
+    self.api.get('events.eraise')('event_plugin_loaded', {})
+
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='get details of an event')
+    parser.add_argument('event', help='the event name to get details for',
+                        default=[], nargs='*')
+    self.api.get('commands.add')('detail', self.cmd_detail,
+                                 parser=parser)
+
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='list events and the plugins registered with them')
+    parser.add_argument('match',
+                help='list only events that have this argument in their name',
+                default='', nargs='?')
+    self.api.get('commands.add')('list', self.cmd_list,
+                                 parser=parser)
+
   # return the event, will have registered functions
   def api_getevent(self, eventname):
     """  register a function with an event
@@ -260,26 +284,3 @@ class Plugin(BasePlugin):
     self.api.get('log.adddtype')(self.sname)
     #self.api.get('log.console')(self.sname)
 
-  def load(self):
-    """
-    load the module
-    """
-    BasePlugin.load(self)
-    self.api.get('managers.add')(self.sname, self)
-    self.api.get('events.register')('log_plugin_loaded', self.logloaded)
-    self.api.get('events.eraise')('event_plugin_loaded', {})
-
-    parser = argparse.ArgumentParser(add_help=False,
-                 description='get details of an event')
-    parser.add_argument('event', help='the event name to get details for',
-                        default=[], nargs='*')
-    self.api.get('commands.add')('detail', self.cmd_detail,
-                                 parser=parser)
-
-    parser = argparse.ArgumentParser(add_help=False,
-                 description='list events and the plugins registered with them')
-    parser.add_argument('match',
-                help='list only events that have this argument in their name',
-                default='', nargs='?')
-    self.api.get('commands.add')('list', self.cmd_list,
-                                 parser=parser)
