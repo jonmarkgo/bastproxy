@@ -44,6 +44,10 @@ class BasePlugin(object):
     self.modpath = modpath
     self.basepath = basepath
     self.fullimploc = fullimploc
+    self.pluginlocation = os.path.normpath(
+                os.path.join(self.api.BASEPATH, 'plugins') + \
+                  os.sep + os.path.dirname(self.modpath))
+
     self.package = fullimploc.split('.')[1]
 
     self.settings = {}
