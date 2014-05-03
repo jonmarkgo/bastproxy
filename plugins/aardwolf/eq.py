@@ -197,7 +197,7 @@ class Plugin(AardwolfBasePlugin):
       try:
         return self.itemcache[self.eqdata[location]]
       except KeyError:
-        return -1
+        return None
     except ValueError:
       wearlocsrev = self.api.get('itemu.wearlocs')(True)
       if location in wearlocsrev:
