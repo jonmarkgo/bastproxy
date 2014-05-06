@@ -40,6 +40,7 @@ class Plugin(BasePlugin):
     self.api.get('api.add')('default', self.api_setdefault)
     self.api.get('api.add')('removeplugin', self.api_removeplugin)
     self.api.get('api.add')('list', self.api_listcmds)
+    self.api.get('api.add')('run', self.api_run)
 
   def load(self):
     """
@@ -83,11 +84,31 @@ class Plugin(BasePlugin):
     return msg
 
   # return a formatted list of commands for a plugin
-  def api_listcmds(self, plugin):
+  def api_listcmds(self, plugin, format=True):
     """
     list commands for a plugin
     """
-    return self.listcmds(plugin)
+    if format:
+      return self.listcmds(plugin)
+    else:
+      if plugin in self.cmds:
+        return self.cmds[plugin]
+      else:
+        return {}
+
+  def api_run(self, plugin, cmdname, argstring):
+    """
+    run a command and return the output
+    """
+    tmsg = []
+    if plugin in self.cmds and cmdname in self.cmds[plugin]:
+      cmd = self.cmds[plugin][cmdname]
+      args, other_args = cmd['parser'].parse_known_args(argstring)
+
+      if args['help']:
+        return cmd['parser'].format_help().split('\n')
+      else:
+        return cmd['func'](args)
 
   def runcmd(self, cmd, targs, fullargs):
     """
@@ -360,10 +381,8 @@ class Plugin(BasePlugin):
       if category in self.cmds:
         tmsg.append('Commands in %s:' % category)
         tmsg.append('@G' + '-' * 60 + '@w')
-        tkeys = self.cmds[category].keys()
-        tkeys.sort()
         groups = {}
-        for i in tkeys:
+        for i in sorted(self.cmds[category].keys()):
           if i != 'default':
             if not (self.cmds[category][i]['group'] in groups):
               groups[self.cmds[category][i]['group']] = []
@@ -373,9 +392,7 @@ class Plugin(BasePlugin):
         if len(groups) == 1:
           tmsg.extend(self.format_cmdlist(category, tkeys))
         else:
-          gkeys = groups.keys()
-          gkeys.sort()
-          for group in gkeys:
+          for group in sorted(groups.keys()):
             if group != 'Default':
               tmsg.append('@M' + '-' * 5 + ' ' +  group + ' ' + '-' * 5)
               tmsg.extend(self.format_cmdlist(category, groups[group]))
