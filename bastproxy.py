@@ -5,15 +5,21 @@ This is a mud proxy.
 It runs in python 2.X (>2.6).
 
 It supports MCCP, GMCP, aliases, actions, substitutes, variables
+## Installation
+### Git
+ * ```git clone https://github.com/endavis/bastproxy.git```
+
+### Download
+ * Download the zip file from [here](https://github.com/endavis/bastproxy/archive/master.zip).
+ * Unzip into a directory
 
 ## Getting Started
-### create a configuration file
+### Configuration
  * Use one of the included ones,  both for [Aardwolf Mud](http://www.aardwolf.com/)
  * Copy the below to "mud"-config.ini and change the items to suit your needs
 
 ---
     [proxy]
-    mode = proxy
     listen_port = 9999
     mud_address = some.mud.address
     mud_port = 4000
@@ -24,27 +30,24 @@ It supports MCCP, GMCP, aliases, actions, substitutes, variables
 
 Don't forget to change the passwords!
 
-### start the proxy
- * ```python bastproxy.py "mud"-config.ini```
+### Starting
+ * From the installation directory, ```python bastproxy.py "mud"-config.ini```
 
-### connect
-Connect a client to the listen_port above on the host the proxy is running,
-and then login with the password.
+### Connecting
+ * Connect a client to the listen_port above on the host the proxy is running, and then login with the password.
 
-### getting help
-Use the following commands to get help
+### Help
+  * Use the following commands to get help, any command will show help when adding -h
+   * Show command categories
+     * ```#bp.commands```
+   * show commands in a category
+     * ```#bp.commands.list "category"```
+     * ```#bp."category"```
+   * Show loaded plugins
+     * ```#bp.plugins```
+   * Show plugins that are not loaded
+     * ```#bp.plugins -n```
 
- * Show command categories
-  * ```#bp.commands```
- * show commands in a category
-  * ```#bp.commands.list "category"```
-  * ```#bp."category"```
- * Show loaded plugins
-  * ```#bp.plugins```
- * Show plugins that are not loaded
-  * ```#bp.plugins -n```
-
-Any command will show help when adding -h
 """
 import asyncore
 import ConfigParser
