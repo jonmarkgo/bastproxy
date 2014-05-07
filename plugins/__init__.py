@@ -75,6 +75,13 @@ class PluginMgr(object):
     self.api.add(self.sname, 'isinstalled', self.api_isinstalled)
     self.api.add(self.sname, 'getp', self.api_getp)
     self.api.add(self.sname, 'module', self.api_getmodule)
+    self.api.add(self.sname, 'allplugininfo', self.api_allplugininfo)
+
+  def api_allplugininfo(self):
+    """
+    return the plugininfo dictionary
+    """
+    return self.plugininfo
 
   def findplugin(self, name):
     """
@@ -130,6 +137,10 @@ class PluginMgr(object):
         return self.plugins[pluginname]
       if pluginname in self.pluginl:
         return self.pluginl[pluginname]
+      if pluginname in self.pluginm:
+        return self.pluginm[pluginname]
+      if pluginname in self.pluginp:
+        return self.pluginp[pluginname]
     elif type(pluginname) == BasePlugin:
       return pluginname
 
@@ -398,6 +409,7 @@ class PluginMgr(object):
           self.plugininfo[modpath]['purpose'] = self.pluginp[modpath].purpose
           self.plugininfo[modpath]['author'] = self.pluginp[modpath].author
           self.plugininfo[modpath]['version'] = self.pluginp[modpath].version
+          self.plugininfo[modpath]['modpath'] = modpath
           self.plugininfo[modpath]['fullimploc'] = fullimploc
 
         else:
@@ -411,6 +423,7 @@ class PluginMgr(object):
             self.plugininfo[modpath]['purpose'] = _module.PURPOSE
             self.plugininfo[modpath]['author'] = _module.AUTHOR
             self.plugininfo[modpath]['version'] = _module.VERSION
+            self.plugininfo[modpath]['modpath'] = modpath
             self.plugininfo[modpath]['fullimploc'] = fullimploc
 
             del sys.modules[fullimploc]
@@ -456,6 +469,7 @@ class PluginMgr(object):
         self.plugininfo[modpath]['purpose'] = _module.PURPOSE
         self.plugininfo[modpath]['author'] = _module.AUTHOR
         self.plugininfo[modpath]['version'] = _module.VERSION
+        self.plugininfo[modpath]['modpath'] = modpath
         self.plugininfo[modpath]['fullimploc'] = fullimploc
 
       if load:
