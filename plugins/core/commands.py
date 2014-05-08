@@ -401,7 +401,7 @@ class Plugin(BasePlugin):
             groups[self.cmds[category][i]['group']].append(i)
 
         if len(groups) == 1:
-          tmsg.extend(self.format_cmdlist(category, tkeys))
+          tmsg.extend(self.format_cmdlist(category, self.cmds[category].keys()))
         else:
           for group in sorted(groups.keys()):
             if group != 'Base':
