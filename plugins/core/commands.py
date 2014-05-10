@@ -203,24 +203,40 @@ class Plugin(BasePlugin):
             if scmd in self.cmds[sname]:
               cmd = self.cmds[sname][scmd]
             if cmd:
-              self.runcmd(cmd, targs, fullargs)
+              try:
+                self.runcmd(cmd, targs, fullargs)
+              except:
+                self.api.get('send.traceback')('Error when calling command %s.%s' % (sname, scmd))
+                return {'fromdata':''}
             else:
               self.api.get('send.client')("@R%s.%s@W is not a command" % \
                                                     (sname, scmd))
           else:
             if 'default' in self.cmds[sname]:
               cmd = self.cmds[sname]['default']
-              self.runcmd(cmd, targs, fullargs)
+              try:
+                self.runcmd(cmd, targs, fullargs)
+              except:
+                self.api.get('send.traceback')('Error when calling command %s.%s' % (sname, scmd))
+                return {'fromdata':''}
             else:
               cmd = self.cmds[self.sname]['list']
-              self.runcmd(cmd, [sname, scmd], '')
+              try:
+                self.runcmd(cmd, [sname, scmd], '')
+              except:
+                self.api.get('send.traceback')('Error when calling command %s.%s' % (sname, scmd))
+                return {'fromdata':''}
       else:
         try:
           del targs[targs.index('help')]
         except ValueError:
           pass
         cmd = self.cmds[self.sname]['list']
-        self.runcmd(cmd, [sname, scmd], '')
+        try:
+          self.runcmd(cmd, [sname, scmd], '')
+        except:
+          self.api.get('send.traceback')('Error when calling command %s.%s' % (sname, scmd))
+          return {'fromdata':''}
 
       return {'fromdata':''}
     else:
