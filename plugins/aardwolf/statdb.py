@@ -1,7 +1,13 @@
 """
-$Id$
+This plugin holds a stat database and collects the following:
 
-This plugin holds a stat database for quests/cp/gqs/mobkills
+ * levels
+ * pups
+ * quests
+ * cp
+ * gqs
+ * mobkills
+
 """
 import copy
 import time
@@ -618,7 +624,7 @@ class Plugin(AardwolfBasePlugin):
                            dbname='stats')
 
     self.api.get('setting.add')('backupstart', '0000', 'miltime',
-                      'the time for a db backup, like 1200 or 2000')
+                      'the time for a db backup, ex. 1200 or 2000')
     self.api.get('setting.add')('backupinterval', '4h', 'timelength',
                       'the interval to backup the db, default every 4 hours')
 
