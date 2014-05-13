@@ -1,6 +1,4 @@
 """
-$Id$
-
 This plugins handles TCP option 201, GMCP (aardwolf implementation)
 """
 from libs.net._basetelnetoption import BaseTelnetOption

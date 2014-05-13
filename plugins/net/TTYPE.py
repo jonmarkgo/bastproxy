@@ -1,6 +1,4 @@
 """
-$Id$
-
 this module handles telnet option 25, Terminal Type
 """
 from libs.net._basetelnetoption import BaseTelnetOption

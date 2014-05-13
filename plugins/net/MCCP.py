@@ -1,6 +1,4 @@
 """
-$Id$
-
 This module handles telnet option 86, MCCP v2
 """
 import zlib
