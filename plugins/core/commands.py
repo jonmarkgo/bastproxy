@@ -310,7 +310,8 @@ class Plugin(BasePlugin):
     tparser.prog = '@B#bp.%s.%s@w' % (sname, cmdname)
 
     if not ('group' in args):
-      args['group'] = 'Base'
+      args['group'] = sname
+
 
     try:
       lname = func.im_self.name

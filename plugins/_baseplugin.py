@@ -79,22 +79,23 @@ class BasePlugin(object):
                            default='list', nargs='?')
     setparser.add_argument('value', help='the new value of the setting',
                            default='', nargs='?')
-    self.api.get('commands.add')('set', self.cmd_set, parser=setparser)
+    self.api.get('commands.add')('set', self.cmd_set, parser=setparser,
+                                 group='Base')
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='reset the plugin')
     self.api.get('commands.add')('reset', self.cmd_reset,
-                                 parser=parser)
+                                 parser=parser, group='Base')
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='save the plugin state')
     self.api.get('commands.add')('save', self.cmd_save,
-                                 parser=parser)
+                                 parser=parser, group='Base')
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='show plugin stats')
     self.api.get('commands.add')('stats', self.cmd_stats,
-                                 parser=parser)
+                                 parser=parser, group='Base')
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='show help info for this plugin')
@@ -105,7 +106,7 @@ class BasePlugin(object):
           help="show commands in this plugin",
               action="store_true")
     self.api.get('commands.add')('help', self.cmd_help,
-                                 parser=parser)
+                                 parser=parser, group='Base')
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='list functions in the api')
@@ -113,7 +114,7 @@ class BasePlugin(object):
                         help='api to get details of',
                         default='', nargs='?')
     self.api.get('commands.add')('api', self.cmd_api,
-                                 parser=parser)
+                                 parser=parser, group='Base')
 
     self.api.get('events.register')('%s_plugin_loaded' % self.sname,
                                                 self.afterload)
