@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+      <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+      <title>%(TITLE)s</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+      <link rel="icon" type="image/x-icon" href="/bastproxy/favicon/basticon.png" />
+      <link href="http://netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet">
+      <link href="/bastproxy/css/bastproxy-dark.css" rel="stylesheet">
+      <link href="/bastproxy/css/codehilite-native.css" rel="stylesheet">
+  </head>
+  <body>
+  <div class="page-container">
+
+        <!-- top navbar -->
+    <div class="navbar navbar-inverse navbar-fixed-top marginBottom-0" role="navigation">
+       <div class="container">
+        <div class="navbar-header">
+           <button type="button" class="navbar-toggle" data-toggle="offcanvas" data-target=".sidebar-nav">
+            <span class="sr-only">Toggle Table of Contents</span>
+            <span style="color: #FFF;">ToC</span>
+           </button>
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-collapse-1">
+            <span class="sr-only">Toggle navigation</span>
+            <span style="color: #FFF;">Menu</span>
+          </button>
+        </div>
+        <div class="navbar-collapse collapse" id="navbar-collapse-1">
+          <ul class="nav navbar-nav">
+            %(HMENU)s
+          </ul>
+        </div>
+       </div>
+    <div class="nav">
+        <div class="divpluginname">%(PNAME)s</div>
+    </div>
+    </div>
+
+    <div class="container">
+      <div class="row row-offcanvas row-offcanvas-left">
+
+        <!-- sidebar -->
+        <div class="col-sm-3 sidebar-offcanvas" id="sidebar" role="navigation">
+            %(TOC)s
+        </div>
+
+        <div class="col-xs-12 col-sm-9">
+        %(BODY)s
+        </div><!-- /.col-xs-12 main -->
+    </div><!--/.row-->
+  </div><!--/.container-->
+</div><!--/.page-container-->
+
+        <script type='text/javascript' src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+        <script type='text/javascript' src="http://netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
+
+        <!-- JavaScript jQuery code from Bootply.com editor -->
+
+        <script type='text/javascript'>
+
+$(document).ready(function() {
+  $('[data-toggle=offcanvas]').click(function() {
+    $('.row-offcanvas').toggleClass('active');
+  });
+
+$(".alert").addClass("in").fadeOut(4500);
+
+/* swap open/close side menu icons */
+$('[data-toggle=collapse]').click(function(){
+          // toggle icon
+          $(this).find("i").toggleClass("glyphicon-chevron-right glyphicon-chevron-down");
+  });
+});
+
+//Toggle dropdown menu function
+(function($){
+        $(document).ready(function(){
+                $('ul.dropdown-menu [data-toggle=dropdown]').on('click', function(event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        $(this).parent().siblings().removeClass('open');
+                        $(this).parent().toggleClass('open');
+                });
+        });
+})(jQuery);
+
+// Smooth Scrolling function
+jQuery('a').each( function() {
+    var $this = jQuery(this),
+        target = this.hash;
+    jQuery(this).click(function (e) {
+        if($this.length > 0 && $this.attr('href').indexOf('#') == 0) {
+            e.preventDefault();
+            if($this.attr('href') == '#' ) {
+              // Do nothing
+            } else {
+               if ($(window).outerWidth() > 752) {
+                jQuery('html, body').animate({
+                      scrollTop: (jQuery(target).offset().top) - 100
+                  }, 1000);
+              } else {
+                jQuery('html, body').animate({
+                      scrollTop: (jQuery(target).offset().top) - 105
+                  }, 1000);
+              }
+            }
+        }
+    });
+});
+        </script>
+  </body>
+</html>
