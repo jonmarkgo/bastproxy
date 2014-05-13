@@ -1,6 +1,4 @@
 """
-$Id$
-
 This file holds the class that connects to the mud
 """
 import time

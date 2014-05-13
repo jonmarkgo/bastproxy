@@ -1,6 +1,4 @@
 """
-$Id$
-
 This module holds the base class for a Telnet Option
 """
 from libs.api import API
