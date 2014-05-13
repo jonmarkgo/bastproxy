@@ -112,7 +112,7 @@
         </div>
        </div>
     <div class="nav">
-        <div class="divpluginname">net.MCCP</div>
+        <div class="divpluginname">aardwolf.alerts</div>
     </div>
     </div>
 
@@ -137,12 +137,17 @@
   <li><a href="#cmdstats">stats</a></li>
 </ul></li>
 </ul></li>
+  <li><a href="#" data-toggle="collapse" data-target="#settingsMenu">
+           Settings <i class="glyphicon glyphicon-chevron-right"></i>
+           <ul class="list-unstyled collapse" id="settingsMenu">
+  <li><a href="#setemail">email</a></li>
+</ul></li>
         </div>
 
         <div class="col-xs-12 col-sm-9">
         <div class="indenth2"><h2 id="about" class="bph2">About</h2>
 
-<p>This module handles telnet option 86, MCCP v2</p>
+<p>This plugin sends emails when certain events happen in aardwolf</p>
 
 </div>
 <h2 id="commands" class="bph2">Commands</h2>
@@ -152,7 +157,7 @@
 <div class="indenth4">
 <h4 id="cmdapi" class="bph4">api</h4>
 <pre><code>
-usage: <span style="color:#5c5cff">#bp.MCCP.api</span> [-h] [api]
+usage: <span style="color:#5c5cff">#bp.alerts.api</span> [-h] [api]
 
 list functions in the api
 
@@ -165,7 +170,7 @@ optional arguments:
 </code></pre>
 <h4 id="cmdhelp" class="bph4">help</h4>
 <pre><code>
-usage: <span style="color:#5c5cff">#bp.MCCP.help</span> [-a] [-c] [-h]
+usage: <span style="color:#5c5cff">#bp.alerts.help</span> [-a] [-c] [-h]
 
 show help info for this plugin
 
@@ -177,7 +182,7 @@ optional arguments:
 </code></pre>
 <h4 id="cmdreset" class="bph4">reset</h4>
 <pre><code>
-usage: <span style="color:#5c5cff">#bp.MCCP.reset</span> [-h]
+usage: <span style="color:#5c5cff">#bp.alerts.reset</span> [-h]
 
 reset the plugin
 
@@ -187,7 +192,7 @@ optional arguments:
 </code></pre>
 <h4 id="cmdsave" class="bph4">save</h4>
 <pre><code>
-usage: <span style="color:#5c5cff">#bp.MCCP.save</span> [-h]
+usage: <span style="color:#5c5cff">#bp.alerts.save</span> [-h]
 
 save the plugin state
 
@@ -197,7 +202,7 @@ optional arguments:
 </code></pre>
 <h4 id="cmdset" class="bph4">set</h4>
 <pre><code>
-usage: <span style="color:#5c5cff">#bp.MCCP.set</span> [-h] [name] [value]
+usage: <span style="color:#5c5cff">#bp.alerts.set</span> [-h] [name] [value]
 
 change a setting in the plugin
 
@@ -214,13 +219,20 @@ optional arguments:
 </code></pre>
 <h4 id="cmdstats" class="bph4">stats</h4>
 <pre><code>
-usage: <span style="color:#5c5cff">#bp.MCCP.stats</span> [-h]
+usage: <span style="color:#5c5cff">#bp.alerts.stats</span> [-h]
 
 show plugin stats
 
 optional arguments:
   -h, --help  show help
 
+</code></pre>
+</div>
+<h2 id="settings" class="bph2">Settings</h2>
+<div class="indenth4">
+<h3 id="setemail" class="bph4">email</h3>
+<pre><code>
+the email to send the alerts
 </code></pre>
 </div>
         </div><!-- /.col-xs-12 main -->
