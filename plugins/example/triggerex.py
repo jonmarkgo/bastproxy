@@ -1,6 +1,4 @@
 """
-$Id$
-
 This is an example plugin about how to use triggers
 """
 from plugins._baseplugin import BasePlugin
@@ -32,7 +30,7 @@ class Plugin(BasePlugin):
     self.api.get('triggers.add')('example_trigger',
             "^(?P<name>.*) flicks a (?P<insect>.*) off his bar\.$")
     self.api.get('events.register')('trigger_example_trigger', self.testtrigger)
-    
+
   def testtrigger(self, args):
     """
     show that the trigger fired

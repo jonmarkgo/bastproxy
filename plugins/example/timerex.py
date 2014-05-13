@@ -1,6 +1,4 @@
 """
-$Id$
-
 This plugin is an example plugin to show how to use timers
 """
 from plugins._baseplugin import BasePlugin
