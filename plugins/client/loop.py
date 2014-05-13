@@ -1,6 +1,4 @@
 """
-$Id$
-
 This plugin loops commands for a specified number of times
 
 the command can be "get all ${num}.corpse"

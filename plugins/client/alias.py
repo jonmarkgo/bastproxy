@@ -1,6 +1,4 @@
 """
-$Id$
-
 This plugin is an alias plugin
 
 Two types of aliases:

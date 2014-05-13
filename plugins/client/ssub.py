@@ -1,6 +1,4 @@
 """
-$Id$
-
 This plugin is a simple substition plugin
 """
 import os
