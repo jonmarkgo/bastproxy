@@ -38,7 +38,7 @@ Don't forget to change the passwords!
  * Connect a client to the listen_port above on the host the proxy is running, and then login with the password.
 
 ### Help
-  * Use the following commands to get help, any command will show help when adding -h
+  * Use the following commands to get help
    * Show command categories
      * ```#bp.commands```
    * show commands in a category
@@ -49,6 +49,25 @@ Don't forget to change the passwords!
    * Show plugins that are not loaded
      * ```#bp.plugins -n```
 
+## Basics
+### Plugins
+  * Plugins are the basic building block for bastproxy. They are used through the
+  commands that are added to the plugin
+
+### Commands
+#### Help
+  * Any command will show a help when adding a -h
+
+#### Arguments
+  * command line arguments are parsed like a unix shell command line
+  * to specify an argument with spaces, surround it with double 's or "s
+   * Examples:
+    * ```#bp.plugins.cmd first second```
+     * 1st argunent = 'first'
+     * 2nd argunet = 'second'
+    * ```#bp.plugins.cmd 'this is the first argument' "this is the second argument"```
+     * 1st argument = 'this is the first argument'
+     * 2nd argument = 'this is the second argument'
 """
 import asyncore
 import ConfigParser
