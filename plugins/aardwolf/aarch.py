@@ -132,7 +132,7 @@ class Plugin(AardwolfBasePlugin):
       if args['filter'] and len(need) == 0:
         tmsg.append('  Nothing with the filter: %s' % args['filter'])
       else:
-        for i in need:
+        for i in sorted(need):
           tmsg.append('%-2s - %s' % (i, AARCHITEMS[i]))
     else:
       tmsg.append('Congratulations! You have a full set of Aarcheology items.')
