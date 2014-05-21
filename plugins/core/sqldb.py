@@ -102,6 +102,7 @@ class Sqldb(object):
     self.tables = {}
 
     self.api.get('api.add')('select', self.api_select)
+    self.api.get('api.add')('modify', self.api_modify)
 
   # execute a select statement against the database
   def api_select(self, select):
@@ -109,6 +110,13 @@ class Sqldb(object):
     run a select stmt against the db
     """
     return self.select(select)
+
+  # execute a update/insert statement against the database
+  def api_modify(self, select):
+    """
+    run a select stmt against the db
+    """
+    return self.modify(select)
 
   def close(self):
     """
@@ -190,6 +198,12 @@ class Sqldb(object):
                                            parser=parser, group='DB')
 
     parser = argparse.ArgumentParser(add_help=False,
+                 description='run a sql update/insert against the database')
+    parser.add_argument('stmt', help='the sql statement', default='', nargs='?')
+    self.api.get('commands.add')('dbmodify', self.cmd_modify,
+                                           parser=parser, group='DB')
+
+    parser = argparse.ArgumentParser(add_help=False,
                  description='remove a row from a table')
     parser.add_argument('table', help='the table to remove the row from',
                                         default='', nargs='?')
@@ -204,7 +218,6 @@ class Sqldb(object):
     """
     msg = []
     if args:
-      print args
       sqlstmt = args['stmt']
       if sqlstmt:
         results = self.select(sqlstmt)
@@ -212,6 +225,19 @@ class Sqldb(object):
           msg.append('%s' % i)
       else:
         msg.append('Please enter a select statement')
+    return True, msg
+
+  def cmd_modify(self, args=None):
+    """
+    run a cmd against the database
+    """
+    msg = []
+    if args:
+      sqlstmt = args['stmt']
+      if sqlstmt:
+        results = self.modify(sqlstmt)
+      else:
+        msg.append('Please enter an update statement')
     return True, msg
 
   def cmd_vac(self, _=None):
@@ -490,6 +516,21 @@ class Sqldb(object):
       self.api.get('send.traceback')('could not run sql statement : %s' % \
                             selectstmt)
     cur.close()
+    return result
+
+  def modify(self, stmt):
+    """
+    run a statement to modify the database
+    """
+    result = []
+    cur = self.dbconn.cursor()
+    try:
+      cur.execute(stmt)
+      result = self.dbconn.commit()
+    except:
+      self.api.get('send.traceback')('could not run sql statement : %s' % \
+                            stmt)
+
     return result
 
   def selectbykeyword(self, selectstmt, keyword):
