@@ -13,7 +13,7 @@ AUTOLOAD = False
 
 class Plugin(AardwolfBasePlugin):
   """
-  a plugin manage info about spells and skills
+  a plugin to highlight mobs in the scan output
   """
   def __init__(self, *args, **kwargs):
     """
@@ -67,7 +67,7 @@ class Plugin(AardwolfBasePlugin):
 
   def scanstart(self, args):
     """
-    show that the trigger fired
+    toggle the "scan" trigger group when seeing {scan}
     """
     self.api.get('send.msg')('found {scan}')
     self.api.get('triggers.togglegroup')('scan', True)
@@ -113,7 +113,7 @@ class Plugin(AardwolfBasePlugin):
 
   def scanend(self, args):
     """
-    reset current when seeing a spellheaders ending
+    reset current when seeing a scan ending
     """
     self.api.get('send.msg')('found {/scan}')
     self.api.get('events.unregister')('trigger_all', self.scanline)
