@@ -1,6 +1,12 @@
 """
 This plugin adds the ability to do user defined actions when text is
 seen from the mud
+
+## Example
+ * ```#bp.actions.add "test (?P<something>.*)" "gt just got a test $something"```
+  * The match can use regular expresssions: see
+  [Python Regular Expression HOWTO](https://docs.python.org/2/howto/regex.html)
+  * The action can use trigger groups
 """
 import re
 import argparse
@@ -46,7 +52,7 @@ class Plugin(BasePlugin):
 
   def load(self):
     """
-    load the plugins
+    load the plugin
     """
     BasePlugin.load(self)
 
