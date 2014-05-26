@@ -1,5 +1,7 @@
 """
-This plugin is a variable plugin
+a plugin to handle global variables, if something goes through
+  send.execute (this includes from the client), a variable
+  can be specified with $varname and will be substituted.
 """
 import os
 import argparse
@@ -38,7 +40,7 @@ class Plugin(BasePlugin):
 
   def load(self):
     """
-    load the plugins
+    load the plugin
     """
     BasePlugin.load(self)
 
