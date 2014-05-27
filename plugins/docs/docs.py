@@ -108,6 +108,23 @@ class Plugin(BasePlugin):
 
     return tocl
 
+  def checknodocs(self, plugin):
+    """
+    check for no docs setting
+    """
+    ppack = 'plugins.%s' % plugin.package
+
+    if not ('NODOCS' in sys.modules[ppack].__dict__):
+      return False
+    elif 'NODOCS' in sys.modules[ppack].__dict__:
+      if sys.modules[ppack].__dict__['NODOCS']:
+        return True
+      else:
+        return False
+
+    return False
+
+
   def buildpluginmenu(self, plugininfo):
     """
     build the plugin menu
@@ -128,10 +145,11 @@ class Plugin(BasePlugin):
       moddir = os.path.basename(os.path.split(i)[0])
       name = os.path.splitext(os.path.basename(i))[0]
 
-      if not (moddir in ptree):
-        ptree[moddir] = {}
+      if not self.checknodocs(pmod):
+        if not (moddir in ptree):
+          ptree[moddir] = {}
 
-      ptree[moddir][name] = {'location':i}
+        ptree[moddir][name] = {'location':i}
 
     for i in sorted(ptree.keys()):
       pmenu.append("""<li class="dropdown-submenu">
@@ -263,11 +281,17 @@ class Plugin(BasePlugin):
     """
     build a plugin page
     """
-    self.api.get('send.msg')('building plugin: %s' % plugin['fullimploc'])
     tlist = plugin['fullimploc'].split('.')
     pdir = tlist[1]
 
     pmod = self.api.get('plugins.getp')(plugin['modpath'])
+
+    if pmod and self.checknodocs(pmod):
+      self.api.get('send.msg')(
+                        'skipping %s' % plugin['fullimploc'])
+      return
+
+    self.api.get('send.msg')('building %s' % plugin['fullimploc'])
 
     try:
       testdoc = sys.modules[pmod.fullimploc].__doc__
