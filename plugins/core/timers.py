@@ -1,5 +1,5 @@
 """
-plugin holds information about timers
+this plugin has a timer interface for internal timers
 """
 import time
 import datetime
