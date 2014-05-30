@@ -1,5 +1,7 @@
 """
 This module handles commands and parsing input
+
+All commands are #bp.[plugin].[cmd]
 """
 import shlex
 import argparse
