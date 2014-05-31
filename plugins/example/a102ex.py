@@ -1,6 +1,12 @@
 """
 This plugin is an example plugin to show how to use the aardwolf 102
 telnet options
+
+## Using A102
+ * register to the A102 event and check which option it was
+ * register to the "A102:#" event
+
+ see the [Aardwolf Blog](http://www.aardwolf.com/blog/2008/07/10/telnet-negotiation-control-mud-client-interaction/)
 """
 from plugins._baseplugin import BasePlugin
 
