@@ -1,6 +1,16 @@
 """
 This plugin handles events.
   You can register/unregister with events, raise events
+
+## Using
+### Registering an event from a plugin
+ * ```self.api.get('events.register')(eventname, function)```
+
+### Unregistering an event
+ * ```self.api.get('events.unregister')(eventname, function)```
+
+### Raising an event
+ * ```self.api.get('events.eraise')(eventname, argtable)```
 """
 import argparse
 from plugins._baseplugin import BasePlugin
