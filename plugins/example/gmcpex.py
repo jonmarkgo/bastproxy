@@ -3,7 +3,7 @@ This plugin is an example plugin to show how to use gmcp
 
 ## Using GMCP
  * register to the GMCP event and check which option it was
- * register to the "GMCP:<module>" event
+ * register to the "GMCP:[module]" event
   * example: GMCP:char
 
  see the [Aardwolf Wiki](http://www.aardwolf.com/wiki/index.php/Clients/GMCP)
