@@ -1,5 +1,11 @@
 """
 This is an example plugin about how to use triggers
+
+## Using
+### Add the regex
+ * ```self.api.get('triggers.add')('testtrig', "^some test$")```
+### Register a function to the event
+ * ```self.api.get('events.register('trigger_testtrig', somefunc)
 """
 from plugins._baseplugin import BasePlugin
 
