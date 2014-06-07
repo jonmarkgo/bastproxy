@@ -1,21 +1,22 @@
 """
 This plugin handles colors
 
-Color Codes:
-xterm 256
-@x154 - make text color xterm 154
-@z154 - make background color xterm 154
+## Color Codes
+### Ansi
 
-regular ansi:
-         regular    bold
-Red        @r        @R
-Green      @g        @G
-Yellow     @y        @Y
-Blue       @b        @B
-Magenta    @m        @M
-Cyan       @c        @C
-White      @w        @W
-Reset      @k        @D
+|| color   ||   regular   ||     bold     ||
+|| Red     ||   @r@@r@w   ||     @R@@R@w  ||
+|| Green   ||   @g@@g@w   ||     @g@@G@w  ||
+|| Yellow  ||   @y@@y@w   ||     @Y@@Y@w  ||
+|| Blue    ||   @b@@b@w   ||     @B@@B@w  ||
+|| Magenta ||   @m@@m@w   ||     @M@@M@w  ||
+|| Cyan    ||   @c@@c@w   ||     @C@@C@w  ||
+|| White   ||   @w@@w@w   ||     @W@@W@w  ||
+
+### xterm 256
+
+* @x154@@x154 - make text color xterm 154@w
+* @z154@@z154 - make background color xterm 154@w
 
 """
 import re
@@ -248,14 +249,16 @@ class Plugin(BasePlugin):
         lastchar = ''
 
       line = line.rstrip()
+      #line = fixstring(line)
+      if '@@' in line:
+        print '@@ in line', line
+        line = line.replace('@@', '\0')
       tlist = re.split('(@[cmyrgbwCMYRGBWD]|@[xz]\d\d\d|@[xz]\d\d|@[xz]\d)', line)
 
       nlist = []
       color = 'w'
       tstart = 0
       tend = 0
-
-      #print tlist
 
       for i in xrange(0, len(tlist)):
         #print 'checking %s, i = %s' % (tlist[i], i)
@@ -270,9 +273,9 @@ class Plugin(BasePlugin):
               #print 'would just add %s' % words
               nlist.append(''.join(words))
             if tlist[i][1] in ['x', 'z']:
-              color = tlist[i][2:]
+              color = tlist[i]
             else:
-              color = tlist[i][1]
+              color = tlist[i]
             tstart = i + 1
             tend = i + 1
           else:
@@ -287,7 +290,12 @@ class Plugin(BasePlugin):
           else:
             #print 'would just add %s' % words
             nlist.append(''.join(words))
-      olist.append(''.join(nlist) + lastchar)
+      tstring = ''.join(nlist)
+      if '\0' in tstring:
+        tstring = tstring.replace('\0', '@')
+        print '\0 in tstring', tstring
+
+      olist.append(tstring + lastchar)
 
     return '\n'.join(olist) + lastchar
 
