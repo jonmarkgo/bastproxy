@@ -191,7 +191,8 @@ class Plugin(BasePlugin):
     @Yargs@w        = A table of arguments
 
     this function returns no values"""
-    self.api.get('send.msg')('raiseevent %s' % eventname)
+    if eventname != 'global_timer':
+      self.api.get('send.msg')('raiseevent %s' % eventname)
     nargs = args.copy()
     nargs['eventname'] = eventname
     if eventname in self.events:
