@@ -16,7 +16,7 @@ This plugin handles colors
 ### xterm 256
 
 * @x154@@x154 - make text color xterm 154@w
-* @z154@@z154 - make background color xterm 154@w
+* @z154@@z154@w - make background color xterm 154@w
 
 """
 import re
@@ -66,7 +66,7 @@ def build_color_table():
     # colors 0..15: 16 basic colors
 
     colortable[0] = (0x00, 0x00, 0x00) # 0
-    colortable['x'] = colortable[0]
+    colortable['k'] = colortable[0]
     colortable[1] = (0xcd, 0x00, 0x00) # 1
     colortable['r'] = colortable[1]
     colortable[2] = (0x00, 0xcd, 0x00) # 2
