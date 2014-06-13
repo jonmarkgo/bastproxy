@@ -44,6 +44,9 @@ eq:
     when an item is put in/removed from a container (for the container)
     when an invitem is seen (for things like remove curse)
 
+colors:
+  #BUG: spans terminate early for @x123@z233
+
 gq:
   #BUG: gq check not working first time if you join an extended gq
       and haven't seen the declared, or started message.
