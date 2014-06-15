@@ -341,9 +341,7 @@ class Plugin(AardwolfBasePlugin):
     self.kill_info['level'] = self.api.get('aardu.getactuallevel')()
     self.kill_info['time'] = time.time()
     wielded = self.api.get('eq.getworn')(24)
-    print 'wielded', wielded
     second = self.api.get('eq.getworn')(25)
-    print 'second', second
     if wielded:
       self.kill_info['wielded_weapon'] = wielded['serial']
     if second:
