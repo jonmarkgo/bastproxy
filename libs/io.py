@@ -95,7 +95,7 @@ def api_client(text, raw=False, preamble=True):
     api.get('send.msg')("couldn't send msg to client: %s" % '\n'.join(text),
                         primary='error')
 
-# execute a command throgh the interpreter
+# execute a command through the interpreter
 def api_execute(command, fromclient=False):
   """  execute a command through the interpreter
   It will first check to see if it is an internal command, and then
