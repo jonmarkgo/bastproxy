@@ -261,8 +261,8 @@ class Plugin(BasePlugin):
             targs['triggername'] = i
             self.triggers[i]['hits'] = self.triggers[i]['hits'] + 1
             args = self.raisetrigger(i, targs, args)
-          if self.triggers[i]['stopevaluating']:
-            break
+            if self.triggers[i]['stopevaluating']:
+              break
 
     self.raisetrigger('all', {'line':data, 'triggername':'all'}, args)
 
