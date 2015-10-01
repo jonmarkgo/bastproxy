@@ -111,6 +111,8 @@ class API(object):
 
     raise AttributeError('%s is not in the api' % apiname)
 
+  __call__ = get
+
   # return a list of api functions in a toplevel api
   def api_getchildren(self, toplevel):
     """
