@@ -69,7 +69,14 @@ class Plugin(AardwolfBasePlugin):
                       'the background color for an instakill')
 
     self.api.get('triggers.add')('mobxp',
-              "^You receive (?P<xp>\d+(?:\+\d+)*) experience points?\.$")
+              "^You (don't )?receive (?P<xp>\d+(?:\+\d+)*) experience points?\.$")
+    self.api.get('triggers.add')('mobrarexp',
+              "^You (don't )?receive (?P<xp>\d+) 'rare kill' experience bonus.$")
+    self.api.get('triggers.add')('mobblessxp',
+              "^You (don't )?receive (?P<xp>\d+) bonus " \
+                "experience points from your daily blessing.$")
+    self.api.get('triggers.add')('mobbonusxp',
+              "^You (don't )?receive (?P<xp>\d+) bonus experience points.+\.$")
     self.api.get('triggers.add')('mobxpptless',
               "^That was a pointless no experience kill!$")
     self.api.get('triggers.add')('mobswitch',
@@ -79,13 +86,6 @@ class Plugin(AardwolfBasePlugin):
               "^You flee from combat!$")
     self.api.get('triggers.add')('mobretreat',
               "^You retreat from the combat!$")
-    self.api.get('triggers.add')('mobrarexp',
-              "^You receive (?P<rarexp>\d+) 'rare kill' experience bonus.$")
-    self.api.get('triggers.add')('mobblessxp',
-              "^You receive (?P<blessxp>\d+) bonus " \
-                "experience points from your daily blessing.$")
-    self.api.get('triggers.add')('mobbonusxp',
-              "^You receive (?P<bonxp>\d+) bonus experience points.+\.$")
     self.api.get('triggers.add')('mobgold',
               "^You get (?P<gold>.+) gold coins " \
                 "from .+ corpse of (?P<name>.+)\.$")
@@ -124,13 +124,13 @@ class Plugin(AardwolfBasePlugin):
                 "and execute a vicious double backstab.$")
 
     self.api.get('events.register')('trigger_mobxp', self.mobxp)
+    self.api.get('events.register')('trigger_mobblessxp', self.mobxp)
+    self.api.get('events.register')('trigger_mobrarexp', self.mobxp)
+    self.api.get('events.register')('trigger_mobbonusxp', self.mobxp)
     self.api.get('events.register')('trigger_mobxpptless', self.mobxpptless)
     self.api.get('events.register')('trigger_mobswitch', self.mobswitch)
     self.api.get('events.register')('trigger_mobflee', self.mobnone)
     self.api.get('events.register')('trigger_mobretreat', self.mobnone)
-    self.api.get('events.register')('trigger_mobblessxp', self.mobblessxp)
-    self.api.get('events.register')('trigger_mobrarexp', self.mobrarexp)
-    self.api.get('events.register')('trigger_mobbonusxp', self.mobbonusxp)
     self.api.get('events.register')('trigger_mobgold', self.mobgold)
     self.api.get('events.register')('trigger_mobsplitgold', self.mobgold)
     self.api.get('events.register')('trigger_mobname', self.mobname)
@@ -178,6 +178,7 @@ class Plugin(AardwolfBasePlugin):
     self.kill_info['blessingxp'] = 0
     self.kill_info['rarexp'] = 0
     self.kill_info['totalxp'] = 0
+    self.kill_info['noexp'] = 0
     self.kill_info['gold'] = 0
     self.kill_info['tp'] = 0
     self.kill_info['name'] = ""
@@ -222,24 +223,6 @@ class Plugin(AardwolfBasePlugin):
     self.kill_info['xp'] = 0
     self.kill_info['raised'] = False
 
-  def mobblessxp(self, args):
-    """
-    add blessing xp
-    """
-    self.kill_info['blessingxp'] = int(args['blessxp'])
-
-  def mobbonusxp(self, args):
-    """
-    add bonus xp
-    """
-    self.kill_info['bonusxp'] = int(args['bonxp'])
-
-  def mobrarexp(self, args):
-    """
-    add rare xp
-    """
-    self.kill_info['rarexp'] = int(args['rarexp'])
-
   def mobxp(self, args):
     """
     add regular xp
@@ -252,9 +235,18 @@ class Plugin(AardwolfBasePlugin):
         newxp = newxp + int(i)
     else:
       newxp = int(mxp)
+      if 'blessing' in args['line']:
+        self.kill_info['blessingxp'] = newxp
+      elif 'rare' in args['line']:
+        self.kill_info['rarexp'] = newxp
+      elif ('supporters' in args['line']) or ('superhero' in args['line']):
+        self.kill_info['bonusxp'] = newxp
+      else:
+        self.kill_info['xp'] = newxp
+        self.kill_info['raised'] = False
 
-    self.kill_info['xp'] = newxp
-    self.kill_info['raised'] = False
+    if "don't" in args['line']:
+      self.kill_info['noexp'] = True
 
   def mobswitch(self, args):
     """
