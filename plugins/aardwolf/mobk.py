@@ -124,9 +124,9 @@ class Plugin(AardwolfBasePlugin):
                 "and execute a vicious double backstab.$")
 
     self.api.get('events.register')('trigger_mobxp', self.mobxp)
-    self.api.get('events.register')('trigger_mobblessxp', self.mobxp)
-    self.api.get('events.register')('trigger_mobrarexp', self.mobxp)
-    self.api.get('events.register')('trigger_mobbonusxp', self.mobxp)
+    self.api.get('events.register')('trigger_mobblessxp', self.bonusxp)
+    self.api.get('events.register')('trigger_mobrarexp', self.bonusxp)
+    self.api.get('events.register')('trigger_mobbonusxp', self.bonusxp)
     self.api.get('events.register')('trigger_mobxpptless', self.mobxpptless)
     self.api.get('events.register')('trigger_mobswitch', self.mobswitch)
     self.api.get('events.register')('trigger_mobflee', self.mobnone)
@@ -223,6 +223,19 @@ class Plugin(AardwolfBasePlugin):
     self.kill_info['xp'] = 0
     self.kill_info['raised'] = False
 
+  def bonusxp(self, args):
+    """
+    add different bonus xps
+    """
+    mxp = args['xp']
+    newxp = int(mxp)
+    if 'blessing' in args['line']:
+      self.kill_info['blessingxp'] = newxp
+    elif 'rare' in args['line']:
+      self.kill_info['rarexp'] = newxp
+    else:
+      self.kill_info['bonusxp'] = newxp
+
   def mobxp(self, args):
     """
     add regular xp
@@ -235,18 +248,11 @@ class Plugin(AardwolfBasePlugin):
         newxp = newxp + int(i)
     else:
       newxp = int(mxp)
-      if 'blessing' in args['line']:
-        self.kill_info['blessingxp'] = newxp
-      elif 'rare' in args['line']:
-        self.kill_info['rarexp'] = newxp
-      elif ('supporters' in args['line']) or ('superhero' in args['line']):
-        self.kill_info['bonusxp'] = newxp
-      else:
-        self.kill_info['xp'] = newxp
-        self.kill_info['raised'] = False
+      self.kill_info['xp'] = newxp
+      self.kill_info['raised'] = False
 
     if "don't" in args['line']:
-      self.kill_info['noexp'] = True
+      self.kill_info['noexp'] = 1
 
   def mobswitch(self, args):
     """
