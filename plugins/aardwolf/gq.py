@@ -375,6 +375,8 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('setting.change')('joined', False)
     self.api.get('setting.change')('extended', False)
     self.api.get('setting.change')('gqnum', 'default')
+    self._gqsdeclared = []
+    self._gqsstarted = []
     self.savestate()
 
   def savestate(self):
