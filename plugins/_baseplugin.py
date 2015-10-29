@@ -6,6 +6,8 @@ import os
 import sys
 import argparse
 import textwrap
+import pprint
+import inspect
 from libs.persistentdict import PersistentDictEvent
 from libs.api import API
 
@@ -98,6 +100,14 @@ class BasePlugin(object):
                                  parser=parser, group='Base')
 
     parser = argparse.ArgumentParser(add_help=False,
+                 description='inspect a plugin')
+    parser.add_argument('-m', "--method",
+          help="get code for a method",
+              default='')
+    self.api.get('commands.add')('inspect', self.cmd_inspect,
+                                 parser=parser, group='Base')
+
+    parser = argparse.ArgumentParser(add_help=False,
                  description='show help info for this plugin')
     parser.add_argument('-a', "--api",
           help="show functions this plugin has in the api",
@@ -123,6 +133,30 @@ class BasePlugin(object):
     self.api.get('events.register')('muddisconnect', self.disconnect)
 
     self.resetflag = False
+
+  def cmd_inspect(self, args):
+    """
+    show the plugin as it currently is in memory
+    """
+    tmsg = []
+    if args['method']:
+      try:
+        tmeth = getattr(self, args['method'])
+        tmsg.append(inspect.getsource(tmeth))
+      except AttributeError:
+        tmsg.append('There is no method named %s' % args['method'])
+
+    else:
+      tmsg.append('@M' + '-' * 60 + '@x')
+      tmsg.append('Variables:')
+      tmsg.append('@M' + '-' * 60 + '@x')
+      tmsg.append(pprint.pformat(vars(self)))
+      tmsg.append('@M' + '-' * 60 + '@x')
+      tmsg.append('Methods')
+      tmsg.append('@M' + '-' * 60 + '@x')
+      tmsg.append(pprint.pformat(inspect.getmembers(self, inspect.ismethod)))
+
+    return True, tmsg
 
   def cmd_api(self, args):
     """
