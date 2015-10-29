@@ -59,6 +59,8 @@ class Plugin(BasePlugin):
                       'the antispam command to send')
     self.api.get('setting.add')('cmdcount', 0, int,
             'the # of times the current command has been run', readonly=True)
+    self.api.get('setting.add')('lastcmd', '', str,
+            'the last command that was sent to the mud', readonly=True)
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='list commands in a category')
@@ -240,7 +242,7 @@ class Plugin(BasePlugin):
 
       return {'fromdata':''}
     else:
-      if tdat.strip() == self.lastcmd:
+      if tdat.strip() == self.api.get('setting.gets')('lastcmd'):
         self.api.get('setting.change')('cmdcount',
                             self.api.get('setting.gets')('cmdcount') + 1)
         if self.api.get('setting.gets')('cmdcount') == \
@@ -254,7 +256,7 @@ class Plugin(BasePlugin):
       else:
         self.api.get('setting.change')('cmdcount', 0)
         self.api.get('send.msg')('resetting command to %s' % tdat.strip())
-        self.lastcmd = tdat.strip()
+        self.api.get('setting.change')('lastcmd', tdat.strip())
 
       return data
 
