@@ -29,6 +29,7 @@ class BasePlugin(object):
     self.name = name
     self.sname = sname
     self.dependencies = []
+    self.versionfuncs = {}
     self.reloaddependents = False
     self.canreload = True
     self.resetflag = True
@@ -68,6 +69,10 @@ class BasePlugin(object):
     load stuff, do most things here
     """
     self.settingvalues.pload()
+
+    if '_version' in self.settingvalues and \
+        self.settingvalues['_version'] != self.version:
+      self.updateversion(self.settingvalues['_version'], self.version)
 
     self.api.get('log.adddtype')(self.sname)
     setparser = argparse.ArgumentParser(add_help=False,
@@ -133,6 +138,24 @@ class BasePlugin(object):
     self.api.get('events.register')('muddisconnect', self.disconnect)
 
     self.resetflag = False
+
+  def updateversion(self, oldversion, newversion):
+    """
+    update plugin data
+    """
+    if oldversion != newversion and newversion > oldversion:
+      for i in range(oldversion + 1, newversion + 1):
+        self.api.get('send.msg')(
+                '%s: upgrading to version %s' % (self.sname, i),
+                secondary='upgrade')
+        if i in self.versionfuncs:
+          self.versionfuncs[i]()
+        else:
+          self.api.get('send.msg')(
+                '%s: no function to upgrade to version %s' % (self.sname, i),
+                secondary='upgrade')
+
+      self.settingvalues.sync()
 
   def cmd_inspect(self, args):
     """
