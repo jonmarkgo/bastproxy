@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE muclient >
+<!-- Originally by Nick Gammon -->
+<muclient>
+<plugin
+  name="bp_afk_timer"
+  author="Bast"
+  id="3d167d47cac26fb36e161f48"
+  language="Lua"
+  purpose="Toggles afk on bastproxy"
+  date_written="2005-10-08 10:32:50"
+  requires="3.52"
+  version="1.0">
+
+<description trim="y">
+<![CDATA[
+After the specified interval (default 5 minutes) elapse, sends "afk" to the MUD.
+]]>
+</description>
+
+</plugin>
+
+<!--  Timers  -->
+
+<timers>
+  <timer name="afk_timer" second="0" minute="5" send_to="12" enabled="y">
+  <send>
+    Send('#bp.afk.toggle')
+    EnableTimer ("afk_timer", 0)
+  </send>
+  </timer>
+</timers>
+
+<!--  Triggers -->
+
+<triggers>
+  <trigger enabled="y" match="\#BP: AFK mode is disabled" send_to="12">
+  <send>
+    FixTimer ()  -- make sure timer is back on
+  </send>
+  </trigger>
+</triggers>
+
+<triggers>
+  <trigger enabled="y" match="\#BP: AFK mode is enabled" send_to="12">
+  <send>
+    EnableTimer ("afk_timer", 0) -- make sure timer is off
+  </send>
+  </trigger>
+</triggers>
+
+
+<!--  Script  -->
+
+
+<script>
+<![CDATA[
+
+-- when they type something, reset AFK status
+
+function OnPluginCommand (sText)
+  FixTimer ()
+  return true  -- process the command
+end
+
+-- when you connect to the MUD, presumably you are not AFK
+
+function OnPluginConnect ()
+  FixTimer ()
+end
+
+-- shared routine to handle turning AFK off
+
+function FixTimer ()
+  if GetTimerOption ("afk_timer", "enabled") == 0 then
+    Send('#bp.afk.toggle')
+  end
+
+-- turn timer back on
+  EnableTimer ("afk_timer", 1)
+
+-- make sure the full time interval elapses
+  ResetTimer ("afk_timer")
+
+end
+]]>
+</script>
+
+</muclient>
