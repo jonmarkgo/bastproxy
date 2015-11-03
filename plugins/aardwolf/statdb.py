@@ -18,7 +18,7 @@ NAME = 'StatDB'
 SNAME = 'statdb'
 PURPOSE = 'Add events to the stat database'
 AUTHOR = 'Bast'
-VERSION = 1
+VERSION = 2
 
 AUTOLOAD = False
 
@@ -667,6 +667,8 @@ class Plugin(AardwolfBasePlugin):
 
     self.statdb = None
 
+    self.versionfuncs[2] = self.movestatdb_version2
+
   def load(self):
     """
     load the plugins
@@ -674,7 +676,7 @@ class Plugin(AardwolfBasePlugin):
     AardwolfBasePlugin.load(self)
 
     self.statdb = dbcreate(self.api.get('sqldb.baseclass')(), self,
-                           dbname='stats')
+                           dbname='stats', dbdir=self.savedir)
 
     self.api.get('setting.add')('backupstart', '0000', 'miltime',
                       'the time for a db backup, ex. 1200 or 2000')
@@ -758,6 +760,28 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('timers.add')('stats_backup', self.backupdb,
                               self.api.get('setting.gets')('backupinterval'),
                               time=self.api.get('setting.gets')('backupstart'))
+
+  def movestatdb_version2(self):
+    """
+    upgrade to version 2
+    """
+    import os
+    import glob
+    import shutil
+
+    oldpath = os.path.join(self.api.BASEPATH, 'data', 'db')
+    oldpatharchive = os.path.join(oldpath, 'archive')
+    newpath = self.savedir
+    newpatharchive = os.path.join(newpath, 'archive')
+    if not os.path.exists(newpatharchive):
+      os.makedirs(newpatharchive)
+
+    for filename in glob.glob(os.path.join(oldpath, 'stats*')):
+      shutil.move(filename, newpath)
+
+    for filename in glob.glob(os.path.join(oldpatharchive, 'stats*')):
+      shutil.move(filename, newpatharchive)
+
 
   def changetimer(self, _=None):
     """
@@ -1324,6 +1348,7 @@ class Plugin(AardwolfBasePlugin):
     if args:
       count = args['count']
 
+
     msg = []
     stats = {}
 
@@ -1619,7 +1644,7 @@ class Plugin(AardwolfBasePlugin):
           tline = "%3s %-18s %-3s %-3s %-3s %-3s %2s %1s %s"
 
           if item['noexp'] == 1:
-            tline = "%3s %-18s %-3s @R%-3s %-3s %-3s@w %2s %1s %s"
+            tline = "%3s %-18s @R%-3s %-3s %-3s %-3s@w %2s %1s %s"
 
 
           msg.append( tline
