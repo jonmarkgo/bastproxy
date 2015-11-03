@@ -155,7 +155,7 @@ class BasePlugin(object):
                 '%s: no function to upgrade to version %s' % (self.sname, i),
                 secondary='upgrade')
 
-      self.settingvalues.sync()
+    self.settingvalues.sync()
 
   def cmd_inspect(self, args):
     """
