@@ -369,6 +369,8 @@ class PluginMgr(object):
       if modname == 'log':
         self.api.get('log.adddtype')(self.sname)
         self.api.get('log.console')(self.sname)
+        self.api.get('log.adddtype')('upgrade')
+        self.api.get('log.console')('upgrade')
 
     if not load:
       testsort = sorted(self.plugins.values(),
