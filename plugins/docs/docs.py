@@ -33,6 +33,9 @@ class Plugin(BasePlugin):
     """
     BasePlugin.__init__(self, *args, **kwargs)
 
+    global markdown2
+    import markdown2
+
   def load(self):
     """
     load the plugins
@@ -168,7 +171,6 @@ class Plugin(BasePlugin):
     build the index page
     """
     #testdoc = __doc__
-    import markdown2
 
     testdoc = sys.modules['__main__'].__doc__
 
@@ -301,7 +303,6 @@ class Plugin(BasePlugin):
     """
     build a plugin page
     """
-    import markdown2
 
     tlist = plugin['fullimploc'].split('.')
     pdir = tlist[1]
