@@ -13,7 +13,6 @@ import smtplib
 import os
 import argparse
 from datetime import datetime
-from pushbullet import Pushbullet
 
 from plugins._baseplugin import BasePlugin
 
@@ -100,6 +99,8 @@ class Plugin(BasePlugin):
     @Ybody@w      = the body of the note
 
     this function returns True if sent, False otherwise"""
+    from pushbullet import Pushbullet
+
     apikey = self.getapikey()
 
     if not apikey:
@@ -139,6 +140,8 @@ class Plugin(BasePlugin):
     @Yurl@w      = the body of the note
 
     this function returns True if sent, False otherwise"""
+    from pushbullet import Pushbullet
+
     apikey = self.getapikey()
 
     if not apikey:
@@ -151,7 +154,7 @@ class Plugin(BasePlugin):
       for i in pb.channels:
         if str(i.channel_tag) == str(self.api.get('setting.gets')('channel')):
           found = True
-          rval = pb.push_link(title, url)
+          rval = i.push_link(title, url)
           break
 
       if not found:
