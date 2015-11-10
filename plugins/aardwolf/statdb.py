@@ -239,12 +239,8 @@ def dbcreate(sqldb, plugin, **kwargs):
         self.addtostat('triviapoints', questinfo['tp'])
         self.addtostat('totaltrivia', questinfo['tp'])
 
-      cur = self.dbconn.cursor()
       stmt = self.converttoinsert('quests', keynull=True)
-      cur.execute(stmt, questinfo)
-      rowid = cur.lastrowid
-      self.dbconn.commit()
-      cur.close()
+      rowid, result = self.api('%s.modify' % self.plugin.sname)(stmt, questinfo)
       self.api.get('send.msg')('added quest: %s' % rowid)
       return rowid
 
@@ -256,18 +252,12 @@ def dbcreate(sqldb, plugin, **kwargs):
 
       if retval:
         if table == 'campaigns':
-          sql = "DELETE FROM cpmobs where cp_id=%s;" % (rownumber)
-          cur = self.dbconn.cursor()
-          cur.execute(sql)
-          cur.close()
-          self.dbconn.commit()
+          stmt = "DELETE FROM cpmobs where cp_id=%s;" % (rownumber)
+          rowid, result = self.api('%s.modify' % self.plugin.sname)(stmt)
 
         elif table == 'gquests':
-          sql = "DELETE FROM gqmobs where gq_id=%s;" % (rownumber)
-          cur = self.dbconn.cursor()
-          cur.execute(sql)
-          cur.close()
-          self.dbconn.commit()
+          stmt = "DELETE FROM gqmobs where gq_id=%s;" % (rownumber)
+          rowid, result = self.api('%s.modify' % self.plugin.sname)(stmt)
 
       return retval, msg
 
@@ -275,12 +265,9 @@ def dbcreate(sqldb, plugin, **kwargs):
       """
       set a stat
       """
-      cur = self.dbconn.cursor()
       stmt = 'update stats set %s=%s where milestone = "current"' % (
                                                         stat, value)
-      cur.execute(stmt)
-      self.dbconn.commit()
-      cur.close()
+      rowid, result = self.api('%s.modify' % self.plugin.sname)(stmt)
       self.api.get('send.msg')('set %s to %s' % (stat, value))
 
     def getstat(self, stat):
@@ -288,12 +275,10 @@ def dbcreate(sqldb, plugin, **kwargs):
       get a stat from the stats table
       """
       tstat = None
-      cur = self.dbconn.cursor()
-      cur.execute('SELECT * FROM stats WHERE milestone = "current"')
-      row = cur.fetchone()
-      if row and stat in row:
-        tstat = row[stat]
-      cur.close()
+      rows = self.api('%s.select' % self.plugin.sname)(
+                  'SELECT * FROM stats WHERE milestone = "current"')
+      if len(rows) > 0 and stat in rows[0]:
+        tstat = rows[0][stat]
       return tstat
 
     def addtostat(self, stat, add):
@@ -304,18 +289,14 @@ def dbcreate(sqldb, plugin, **kwargs):
         return True
 
       if self.checkcolumnexists('stats', stat):
-        cur = self.dbconn.cursor()
-        cur.execute(
-            "UPDATE stats SET %s = %s + %s WHERE milestone = 'current'" \
-            % (stat, stat, add))
-        self.dbconn.commit()
-        cur.close()
+        stmt = "UPDATE stats SET %s = %s + %s WHERE milestone = 'current'" \
+            % (stat, stat, add)
+        rowid, result = self.api('%s.modify' % self.plugin.sname)(stmt)
 
     def savewhois(self, whoisinfo):
       """
       save info into the stats table
       """
-      cur = self.dbconn.cursor()
       if self.getstat('totallevels'):
         nokey = {}
         nokey['stat_id'] = True
@@ -323,18 +304,18 @@ def dbcreate(sqldb, plugin, **kwargs):
         whoisinfo['milestone'] = 'current'
         whoisinfo['time'] = 0
         stmt = self.converttoupdate('stats', 'milestone', nokey)
-        cur.execute(stmt, whoisinfo)
+        rowid, result = self.api('%s.modify' % self.plugin.sname)(stmt,
+                                                                  whoisinfo)
       else:
         whoisinfo['milestone'] = 'current'
         whoisinfo['totaltrivia'] = 0
         whoisinfo['time'] = 0
         stmt = self.converttoinsert('stats', True)
-        cur.execute(stmt, whoisinfo)
+        rowid, result = self.api('%s.modify' % self.plugin.sname)(stmt,
+                                                                  whoisinfo)
         #add a milestone here
         self.addmilestone('start')
 
-      self.dbconn.commit()
-      cur.close()
       self.api.get('send.msg')('updated stats')
       # add classes here
       self.addclasses(whoisinfo['classes'])
@@ -346,29 +327,27 @@ def dbcreate(sqldb, plugin, **kwargs):
       if not milestone:
         return
 
-      trows = self.select('SELECT * FROM stats WHERE milestone = "%s"' \
+      trows = self.api('%s.select' % self.plugin.sname)(
+                          'SELECT * FROM stats WHERE milestone = "%s"' \
                                                             % milestone)
       if len(trows) > 0:
         self.api.get('send.client')('@RMilestone %s already exists' % \
                                                 milestone)
         return -1
 
-      stats = self.select('SELECT * FROM stats WHERE milestone = "current"')
+      stats = self.api('%s.select' % self.plugin.sname)(
+                        'SELECT * FROM stats WHERE milestone = "current"')
       tstats = stats[0]
 
       if tstats:
         tstats['milestone'] = milestone
         tstats['time'] = time.time()
         stmt = self.converttoinsert('stats', True)
-        cur = self.dbconn.cursor()
-        cur.execute(stmt, tstats)
-        trow = cur.lastrowid
-        self.dbconn.commit()
-        cur.close()
+        rowid, result = self.api('%s.modify' % self.plugin.sname)(stmt, tstats)
 
         self.api.get('send.msg')('inserted milestone %s with rowid: %s' % (
-                                              milestone, trow))
-        return trow
+                                              milestone, rowid))
+        return rowid
 
       return -1
 
@@ -376,8 +355,9 @@ def dbcreate(sqldb, plugin, **kwargs):
       """
       get a milestone
       """
-      trows = self.select('SELECT * FROM stats WHERE milestone = "%s"' \
-                                                            % milestone)
+      trows = self.api('%s.select' % self.plugin.sname)(
+          'SELECT * FROM stats WHERE milestone = "%s"' % milestone)
+
       if len(trows) == 0:
         return None
       else:
@@ -388,17 +368,16 @@ def dbcreate(sqldb, plugin, **kwargs):
       add classes from whois
       """
       stmt = 'UPDATE CLASSES SET REMORT = :remort WHERE class = :class'
-      cur = self.dbconn.cursor()
-      cur.executemany(stmt, classes)
-      self.dbconn.commit()
-      cur.close()
+      rowid, result = self.api('%s.modifymany' % self.plugin.sname)(stmt,
+                                                                    classes)
 
     def getclasses(self):
       """
       get all classes
       """
       classes = []
-      tclasses = self.select('SELECT * FROM classes ORDER by remort ASC')
+      tclasses = self.api('%s.select' % self.plugin.sname)(
+                      'SELECT * FROM classes ORDER by remort ASC')
       for i in tclasses:
         if i['remort'] != -1:
           classes.append(i['class'])
@@ -414,10 +393,8 @@ def dbcreate(sqldb, plugin, **kwargs):
       for i in classabb:
         classes.append({'class':i})
       stmt = "INSERT INTO classes VALUES (:class, -1)"
-      cur = self.dbconn.cursor()
-      cur.executemany(stmt, classes)
-      self.dbconn.commit()
-      cur.close()
+      rowid, result = self.api('%s.modifymany' % self.plugin.sname)(stmt,
+                                                                    classes)
 
     def resetclasses(self):
       """
@@ -429,10 +406,8 @@ def dbcreate(sqldb, plugin, **kwargs):
         classes.append({'class':i})
       stmt = """UPDATE classes SET remort = -1
                       WHERE class = :class"""
-      cur = self.dbconn.cursor()
-      cur.executemany(stmt, classes)
-      self.dbconn.commit()
-      cur.close()
+      rowid, result = self.api('%s.modifymany' % self.plugin.sname)(stmt,
+                                                                    classes)
 
     def savecp(self, cpinfo):
       """
@@ -448,20 +423,14 @@ def dbcreate(sqldb, plugin, **kwargs):
         self.addtostat('totaltrivia', cpinfo['tp'])
 
       stmt = self.converttoinsert('campaigns', keynull=True)
-      cur = self.dbconn.cursor()
-      cur.execute(stmt, cpinfo)
-      rowid = self.getlastrowid('campaigns')
-      self.dbconn.commit()
-      cur.close()
+      rowid, result = self.api('%s.modify' % self.plugin.sname)(stmt, cpinfo)
       self.api.get('send.msg')('added cp: %s' % rowid)
 
       for i in cpinfo['mobs']:
         i['cp_id'] = rowid
       stmt2 = self.converttoinsert('cpmobs', keynull=True)
-      cur = self.dbconn.cursor()
-      cur.executemany(stmt2, cpinfo['mobs'])
-      self.dbconn.commit()
-      cur.close()
+      rowid, result = self.api('%s.modifymany' % self.plugin.sname)(stmt2,
+                                                              cpinfo['mobs'])
 
     def savegq(self, gqinfo):
       """
@@ -475,20 +444,14 @@ def dbcreate(sqldb, plugin, **kwargs):
         self.addtostat('gquestswon', 1)
 
       stmt = self.converttoinsert('gquests', keynull=True)
-      cur = self.dbconn.cursor()
-      cur.execute(stmt, gqinfo)
-      rowid = self.getlastrowid('gquests')
-      self.dbconn.commit()
-      cur.close()
+      rowid, result = self.api('%s.modify' % self.plugin.sname)(stmt, gqinfo)
       self.api.get('send.msg')('added gq: %s' % rowid)
 
       for i in gqinfo['mobs']:
         i['gq_id'] = rowid
       stmt2 = self.converttoinsert('gqmobs', keynull=True)
-      cur = self.dbconn.cursor()
-      cur.executemany(stmt2, gqinfo['mobs'])
-      self.dbconn.commit()
-      cur.close()
+      rowid, result = self.api('%s.modifymany' % self.plugin.sname)(stmt2,
+                                                              gqinfo['mobs'])
 
     def savelevel(self, levelinfo, first=False):
       """
@@ -511,17 +474,14 @@ def dbcreate(sqldb, plugin, **kwargs):
           levelinfo['level'] = self.getstat('totallevels')
 
       levelinfo['finishtime'] = -1
-      cur = self.dbconn.cursor()
       stmt = self.converttoinsert('levels', keynull=True)
-      cur.execute(stmt, levelinfo)
-      rowid = self.getlastrowid('levels')
+      rowid, result = self.api('%s.modify' % self.plugin.sname)(stmt,
+                                                                levelinfo)
       self.api.get('send.msg')('inserted level %s' % rowid)
       if rowid > 1:
         stmt2 = "UPDATE levels SET finishtime = %s WHERE level_id = %d" % (
                       levelinfo['starttime'], int(rowid) - 1)
-        cur.execute(stmt2)
-      self.dbconn.commit()
-      cur.close()
+        nrowid, result = self.api('%s.modify' % self.plugin.sname)(stmt2)
 
       if levelinfo['type'] == 'level':
         self.addmilestone(str(levelinfo['totallevels']))
@@ -536,12 +496,8 @@ def dbcreate(sqldb, plugin, **kwargs):
       self.addtostat('monsterskilled', 1)
       if not killinfo['name']:
         killinfo['name'] = 'Unknown'
-      cur = self.dbconn.cursor()
       stmt = self.converttoinsert('mobkills', keynull=True)
-      cur.execute(stmt, killinfo)
-      self.dbconn.commit()
-      rowid = self.getlastrowid('mobkills')
-      cur.close()
+      rowid, result = self.api('%s.modify' % self.plugin.sname)(stmt, killinfo)
       self.api.get('send.msg')('inserted mobkill: %s' % rowid)
 
     def addrarexp_v13(self):
