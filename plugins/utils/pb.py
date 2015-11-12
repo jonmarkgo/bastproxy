@@ -122,7 +122,7 @@ class Plugin(BasePlugin):
       for i in pb.channels:
         if str(i.channel_tag) == nchannel:
           found = True
-          rval = i.push_note(title, url)
+          rval = i.push_note(title, body)
           break
 
       if not found:
