@@ -642,7 +642,7 @@ class Plugin(AardwolfBasePlugin):
     parser = argparse.ArgumentParser(add_help=False,
                  description='list milestones')
     self.api.get('commands.add')('list', self.cmd_list,
-                                parser=parser, group='Stats')
+                                parser=parser, group='Milestones')
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='compare milestones')
@@ -651,7 +651,7 @@ class Plugin(AardwolfBasePlugin):
     parser.add_argument('milestone2', help='the second milestone',
                         default='', nargs='?')
     self.api.get('commands.add')('comp', self.cmd_comp,
-                                parser=parser, group='Stats')
+                                parser=parser, group='Milestones')
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='show quests stats')
@@ -678,6 +678,9 @@ class Plugin(AardwolfBasePlugin):
                  description='show gq stats')
     parser.add_argument('count', help='the number of gqs to show',
                         default=0, nargs='?')
+    parser.add_argument('-n', "--number",
+          help="show info for gq number",
+              default='')
     self.api.get('commands.add')('gqs', self.cmd_gqs,
                                 parser=parser, group='Stats')
 
@@ -1296,14 +1299,22 @@ class Plugin(AardwolfBasePlugin):
 
     return True, msg
 
+  def show_gq(self, args):
+    """
+    show info for a specific gq in the database
+    """
+    pass
+
   def cmd_gqs(self, args=None):
     """
     show gq stats
     """
     count = 0
     if args:
-      count = args['count']
-
+      if args['number']:
+        return self.show_gq(args)
+      else:
+        count = args['count']
 
     msg = []
     stats = {}
