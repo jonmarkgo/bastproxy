@@ -185,7 +185,7 @@ class Plugin(BasePlugin):
       self.pluginlookup[plugin]['events'] = {}
 
   # raise an event, args vary
-  def api_eraise(self, eventname, args):
+  def api_eraise(self, eventname, args={}):
     """  raise an event with args
     @Yeventname@w   = The event to raise
     @Yargs@w        = A table of arguments
