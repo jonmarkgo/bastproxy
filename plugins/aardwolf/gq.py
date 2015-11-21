@@ -153,6 +153,7 @@ class Plugin(AardwolfBasePlugin):
     self.gqinfo['length'] = 0
     self.gqinfo['won'] = 0
     self.gqinfo['completed'] = 0
+    self.api.get('setting.change')('maxkills', False)
     self.savestate()
 
   def _gqdeclared(self, args):
@@ -334,10 +335,11 @@ class Plugin(AardwolfBasePlugin):
     """
     the character finished the extended gq
     """
-    self.gqinfo['completed'] = 1
-    self.gqinfo['finishtime'] = time.time()
-    self._raisegq('aard_gq_completed', self.gqinfo)
-    self._gqreset({'gqnum':self.api('setting.gets')('joined')})
+    if self.gqinfo['qpmobs'] > 0:
+      self.gqinfo['completed'] = 1
+      self.gqinfo['finishtime'] = time.time()
+      self._raisegq('aard_gq_completed', self.gqinfo)
+      self._gqreset({'gqnum':self.api('setting.gets')('joined')})
 
   def _raisegq(self, event, data=None):
     """
@@ -366,7 +368,7 @@ class Plugin(AardwolfBasePlugin):
     self._checkgqavailable()
 
 
-  def _gqreset(self, args=None):
+  def _gqreset(self, args={}):
     """
     reset gq settings
     """
