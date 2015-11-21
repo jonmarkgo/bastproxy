@@ -77,7 +77,7 @@ class Plugin(AardwolfBasePlugin):
               "experience points from your daily blessing.$", priority=99,
             stopevaluating=True)
     self.api('triggers.add')('mobbonusxp',
-              "^You (don't )?receive (?P<xp>\d+) bonus experience points.+\.$")
+              "^You (don't )?receive (?P<xp>\d+) bonus experience points.+$")
     self.api('triggers.add')('mobxpptless',
               "^That was a pointless no experience kill!$")
     self.api('triggers.add')('mobswitch',
