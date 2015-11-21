@@ -4,14 +4,13 @@ This plugin sends messages through the pushbullet api
 To use this plugin:
  1. You must install pushbullet.py
       (https://pypi.python.org/pypi/pushbullet.py)
- 2. Put a file in the data/plugins/pb directory named pushbullet
-      with your api key from your (https://www.pushbullet.com) account
-      page
+ 2. Enter your api key with the apikey command
 
 """
 import smtplib
 import os
 import argparse
+import stat
 from datetime import datetime
 
 from plugins._baseplugin import BasePlugin
@@ -100,6 +99,15 @@ class Plugin(BasePlugin):
     self.api('commands.add')('link', self.cmd_link,
                                         parser=parser)
 
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='send a link')
+    parser.add_argument('apikey',
+                        help='an apikey from pushbullet',
+                        default='',
+                        nargs='?')
+    self.api('commands.add')('apikey', self.cmd_apikey,
+                                        parser=parser)
+
   # send a note through pushbullet
   def api_note(self, title, body, channel=None):
     """ send a note through pushbullet
@@ -177,13 +185,30 @@ class Plugin(BasePlugin):
       self.api('send.msg')('pb returned %s' % rval)
       return True
 
+  def cmd_apikey(self, args):
+    """
+    @G%(name)s@w - @B%(cmdname)s@w
+    enter the apikey
+    @CUsage@w: @B%(cmdname)s@w @Yapikey@x
+      @Yapikey@w   = the apikey from pushbullet.com
+    """
+    if args['apikey']:
+      filen = os.path.join(self.savedir, 'pushbullet')
+      apifile = open(filen, 'w')
+      apifile.write(args['apikey'])
+      os.chmod(filen, stat.S_IRUSR | stat.S_IWUSR)
+      return True, ['APIkey saved']
+    else:
+      return True, ['Please enter the apikey']
+
   def cmd_note(self, args):
     """
     @G%(name)s@w - @B%(cmdname)s@w
     Send a note
-    @CUsage@w: test @Ytitle@x @Ybody@x
+    @CUsage@w: @B%(cmdname)s@w @Ytitle@x @Ybody@x
       @Ytitle@w   = the title of the note
       @Ybody@w    = the body of the note
+      @Ychannel@w    = the channel the note should be sent to
     """
     title = args['title']
     body = args['body']
@@ -197,9 +222,10 @@ class Plugin(BasePlugin):
     """
     @G%(name)s@w - @B%(cmdname)s@w
     Send a link
-    @CUsage@w: test @Ytitle@x @Ybody@x
+    @CUsage@w: @B%(cmdname)s@w @Ytitle@x @Ybody@x
       @Ytitle@w   = the title of the link
       @Yurl@w    = the url of the link
+      @Ychannel@w    = the channel the note should be sent to
     """
     title = args['title']
     body = args['url']
