@@ -8,6 +8,7 @@ import argparse
 import textwrap
 import pprint
 import inspect
+import time
 from libs.persistentdict import PersistentDictEvent
 from libs.api import API
 
@@ -34,6 +35,7 @@ class BasePlugin(object):
     self.canreload = True
     self.resetflag = True
     self.api = API()
+    self.loadedtime = time.time()
     self.savedir = os.path.join(self.api.BASEPATH, 'data',
                                       'plugins', self.sname)
     try:
@@ -45,6 +47,7 @@ class BasePlugin(object):
     self.modpath = modpath
     self.basepath = basepath
     self.fullimploc = fullimploc
+    self.pluginfile = os.path.join(basepath, modpath[1:])
     self.pluginlocation = os.path.normpath(
                 os.path.join(self.api.BASEPATH, 'plugins') + \
                   os.sep + os.path.dirname(self.modpath))
@@ -466,6 +469,19 @@ class BasePlugin(object):
     """
     self.reset()
     return True, ['Plugin reset']
+
+  def ischangedondisk(self):
+    """
+    check to see if the file this plugin is based on has changed on disk
+    """
+    ftime = os.path.getmtime(self.pluginfile)
+    print self.sname
+    print 'ftime     ', ftime
+    print 'loadedtime', self.loadedtime
+    if ftime > self.loadedtime:
+      return True
+
+    return False
 
   def reset(self):
     """
