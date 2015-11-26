@@ -63,10 +63,11 @@ def dbcreate(sqldb, plugin, **kwargs):
       """
       sqldb.__init__(self, plugin, **kwargs)
 
-      self.version = 14
+      self.version = 15
 
       self.versionfuncs[13] = self.addrarexp_v13
       self.versionfuncs[14] = self.addnoexp_v14
+      self.versionfuncs[15] = self.addextendedgq_v15
 
       self.addtable('stats', """CREATE TABLE stats(
             stat_id INTEGER NOT NULL PRIMARY KEY autoincrement,
@@ -201,6 +202,7 @@ def dbcreate(sqldb, plugin, **kwargs):
             trains INT default 0,
             pracs INT default 0,
             level INT default -1,
+            extended INT default 0,
             won INT default 0,
             completed INT default 0
           )""", keyfield='gq_id')
@@ -598,6 +600,53 @@ def dbcreate(sqldb, plugin, **kwargs):
                     :deathblow, :wielded_weapon, :second_weapon, :room_id,
                     :level)"""
       cur.executemany(stmt2, oldmobst)
+      cur.close()
+
+    def addextendedgq_v15(self):
+      """
+      add noexp to each mobkill
+      """
+      if not self.checktableexists('gquests'):
+        return
+
+      oldgqt = self.select('SELECT * FROM gquests ORDER BY gq_id ASC')
+
+      cur = self.dbconn.cursor()
+      cur.execute('DROP TABLE IF EXISTS gquests;')
+      cur.close()
+      self.close()
+
+      self.open()
+      cur = self.dbconn.cursor()
+
+      cur.execute("""CREATE TABLE gquests(
+            gq_id INTEGER NOT NULL PRIMARY KEY autoincrement,
+            starttime INT default 0,
+            finishtime INT default 0,
+            qp INT default 0,
+            qpmobs INT default 0,
+            gold INT default 0,
+            tp INT default 0,
+            trains INT default 0,
+            pracs INT default 0,
+            level INT default -1,
+            extended INT default 0,
+            won INT default 0,
+            completed INT default 0
+          )""")
+      cur.close()
+
+      for gq in oldgqt:
+        if gq['completed'] == 1:
+          gq['extended'] = 1
+        else:
+          gq['extended'] = 0
+
+      cur = self.dbconn.cursor()
+      stmt2 = """INSERT INTO gquests VALUES (:gq_id, :starttime, :finishtime,
+                    :qp, :qpmobs, :gold, :tp, :trains, :pracs, :level,
+                    :extended, :won, :completed)"""
+      cur.executemany(stmt2, oldgqt)
       cur.close()
 
   return Statdb(plugin, **kwargs)
