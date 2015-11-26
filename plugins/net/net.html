@@ -142,7 +142,9 @@
            net <i class="glyphicon glyphicon-chevron-right"></i>
            <ul class="list-unstyled collapse" id="cmdgroupnetMenu">
   <li><a href="#cmdclients">clients</a></li>
+  <li><a href="#cmdconnect">connect</a></li>
   <li><a href="#cmddisconnect">disconnect</a></li>
+  <li><a href="#cmdshutdown">shutdown</a></li>
 </ul></li>
   <li><a href="#" data-toggle="collapse" data-target="#cmdgroupBaseMenu">
            Base <i class="glyphicon glyphicon-chevron-right"></i>
@@ -155,6 +157,15 @@
   <li><a href="#cmdset">set</a></li>
   <li><a href="#cmdstats">stats</a></li>
 </ul></li>
+</ul></li>
+  <li><a href="#" data-toggle="collapse" data-target="#settingsMenu">
+           Settings <i class="glyphicon glyphicon-chevron-right"></i>
+           <ul class="list-unstyled collapse" id="settingsMenu">
+  <li><a href="#setproxypassview">proxypassview</a></li>
+  <li><a href="#setproxypass">proxypass</a></li>
+  <li><a href="#setmudport">mudport</a></li>
+  <li><a href="#setlistenport">listenport</a></li>
+  <li><a href="#setmudhost">mudhost</a></li>
 </ul></li>
         </div>
 
@@ -179,11 +190,31 @@ optional arguments:
   -h, --help  show help
 
 </code></pre>
+<h4 id="cmdconnect" class="bph4">connect</h4>
+<pre><code>
+usage: <span style="color:#5c5cff">#bp.net.connect</span><span style="color:#e5e5e5"> [-h]</span>
+
+connect to the mud
+
+optional arguments:
+  -h, --help  show help
+
+</code></pre>
 <h4 id="cmddisconnect" class="bph4">disconnect</h4>
 <pre><code>
 usage: <span style="color:#5c5cff">#bp.net.disconnect</span><span style="color:#e5e5e5"> [-h]</span>
 
 disconnect from the mud
+
+optional arguments:
+  -h, --help  show help
+
+</code></pre>
+<h4 id="cmdshutdown" class="bph4">shutdown</h4>
+<pre><code>
+usage: <span style="color:#5c5cff">#bp.net.shutdown</span><span style="color:#e5e5e5"> [-h]</span>
+
+shutdown the proxy
 
 optional arguments:
   -h, --help  show help
@@ -277,6 +308,29 @@ show plugin stats
 optional arguments:
   -h, --help  show help
 
+</code></pre>
+</div>
+<h2 id="settings" class="bph2">Settings</h2>
+<div class="indenth4">
+<h3 id="setproxypassview" class="bph4">proxypassview</h3>
+<pre><code>
+the view password of the proxy
+</code></pre>
+<h3 id="setproxypass" class="bph4">proxypass</h3>
+<pre><code>
+the password of the proxy
+</code></pre>
+<h3 id="setmudport" class="bph4">mudport</h3>
+<pre><code>
+the port of the mud
+</code></pre>
+<h3 id="setlistenport" class="bph4">listenport</h3>
+<pre><code>
+the port for the proxy to listen on
+</code></pre>
+<h3 id="setmudhost" class="bph4">mudhost</h3>
+<pre><code>
+the hostname/ip of the mud
 </code></pre>
 </div>
         </div><!-- /.col-xs-12 main -->

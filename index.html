@@ -144,7 +144,6 @@
   <li><a href="#" data-toggle="collapse" data-target="#getting-startedMenu">
            Getting Started <i class="glyphicon glyphicon-chevron-right"></i>
            <ul class="list-unstyled collapse" id="getting-startedMenu">
-  <li><a href="#configuration">Configuration</a></li>
   <li><a href="#starting">Starting</a></li>
   <li><a href="#connecting">Connecting</a></li>
   <li><a href="#help">Help</a></li>
@@ -188,33 +187,21 @@ It runs in python 2.X (&gt;2.6).</p>
 
 </div><div class="indenth2"><h2 id="getting-started" class="bph2">Getting Started</h2>
 
-</div><div class="indenth3"><h3 id="configuration" class="bph3">Configuration</h3>
-
-<ul>
-<li>Use one of the included ones,  both for
-  <a href="http://www.aardwolf.com/">Aardwolf Mud</a></li>
-<li>Copy the below to "mud"-config.ini and change the items to suit your needs</li>
-</ul>
-
-<hr/>
-
-<pre><code>[proxy]
-listen_port = 9999
-mud_address = some.mud.address
-mud_port = 4000
-password = somepassword
-viewpw = someviewpassword
-</code></pre>
-
-<hr/>
-
-<p>Don't forget to change the passwords!</p>
-
 </div><div class="indenth3"><h3 id="starting" class="bph3">Starting</h3>
 
 <ul>
-<li>From the installation directory, <code>python bastproxy.py "mud"-config.ini</code></li>
+<li>From the installation directory, <code>python bastproxy.py</code></li>
 </ul>
+
+<pre><code>usage: bastproxy.py [-h] [-p PORT] [-d]
+
+A python mud proxy
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -p PORT, --port PORT  the port for the proxy to listen on
+  -d, --daemon          run in daemon mode
+</code></pre>
 
 </div><div class="indenth3"><h3 id="connecting" class="bph3">Connecting</h3>
 
