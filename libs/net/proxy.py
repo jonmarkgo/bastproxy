@@ -10,15 +10,11 @@ class Proxy(Telnet):
   """
   This class is for the proxy that connects to the server
   """
-  def __init__(self, host, port):
+  def __init__(self):
     """
     init the class
-
-    required:
-      host - the host to connect to
-      port - the port to connect to
     """
-    Telnet.__init__(self, host, port)
+    Telnet.__init__(self)
 
     self.username = None
     self.password = None
@@ -122,12 +118,12 @@ class Proxy(Telnet):
       return True
     return False
 
-  def connectmud(self):
+  def connectmud(self, mudhost, mudport):
     """
     connect to the mud
     """
     self.outbuffer = ''
-    self.doconnect()
+    self.doconnect(mudhost, mudport)
     self.connectedtime = time.mktime(time.localtime())
     self.api.get('send.msg')('Connected to mud', 'net')
     self.api.get('events.eraise')('mudconnect', {})
@@ -171,3 +167,12 @@ class Proxy(Telnet):
       Telnet.addtooutbuffer(self, data, raw)
     elif dtype == 'fromclient':
       Telnet.addtooutbuffer(self, data, raw)
+
+  def shutdown(self):
+    """
+    shutdown the proxy
+    """
+    API.shutdown = True
+    self.api('events.eraise')('shutdown', {})
+    for client in self.clients:
+      client.sock.close()

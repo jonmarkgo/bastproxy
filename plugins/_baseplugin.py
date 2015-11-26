@@ -137,7 +137,6 @@ class BasePlugin(object):
     self.api.get('events.register')('%s_plugin_loaded' % self.sname,
                                                 self.afterload)
 
-    self.api.get('events.register')('shutdown', self.unload)
     self.api.get('events.register')('muddisconnect', self.disconnect)
 
     self.resetflag = False

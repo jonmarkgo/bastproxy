@@ -90,22 +90,14 @@ class ProxyClient(Telnet):
                {'todata':self.api.get('colors.convertcolors')(
                                 '@R#BP@w: @RYou are in view mode!@w')})
         else:
-          if not proxy.connected:
-            proxy.connectmud()
-
           if len(data) > 0:
             self.api.get('send.execute')(data, fromclient=True)
 
       elif self.state == PASSWORD:
         data = data.strip()
-        try:
-          dpw = config.get("proxy", "password")
-        except NoOptionError:
-          dpw = None
-        try:
-          vpw = config.get("proxy", "viewpw")
-        except NoOptionError:
-          vpw = None
+        netp = self.api('plugins.getp')('net')
+        dpw = netp.api('setting.gets')('proxypass')
+        vpw = netp.api('setting.gets')('proxyviewpass')
 
         if dpw and  data == dpw:
           self.api.get('send.msg')('Successful password from %s : %s' % \
@@ -116,12 +108,6 @@ class ProxyClient(Telnet):
           self.api.get('events.eraise')('client_connected', {'client':self})
           self.api.get('send.client')("%s - %s: Client Connected" % \
                                       (self.host, self.port))
-          if not proxy.connected:
-            proxy.connectmud()
-          else:
-            self.addtooutbufferevent(
-                    {'original':self.api.get('colors.convertcolors')(
-                    '@R#BP@W: @GThe proxy is already connected to the mud@w')})
         elif vpw and data == vpw:
           self.api.get('send.msg')('Successful view password from %s : %s' % \
                               (self.host, self.port), 'net')

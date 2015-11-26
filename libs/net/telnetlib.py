@@ -167,6 +167,7 @@ class Telnet(asyncore.dispatcher):
       asyncore.dispatcher.__init__(self, sock)
     else:
       asyncore.dispatcher.__init__(self)
+    self.sock = sock
     self.debuglevel = DEBUGLEVEL
     self.host = host
     self.port = port
@@ -265,10 +266,12 @@ class Telnet(asyncore.dispatcher):
     """
     self.debuglevel = debuglevel
 
-  def doconnect(self):
+  def doconnect(self, hostname, hostport):
     """
     connect to a host and port
     """
+    self.host = hostname
+    self.port = hostport
     self.msg('doconnect')
     self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
     self.set_reuse_addr()

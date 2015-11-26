@@ -74,6 +74,7 @@ class PluginMgr(object):
     self.api.add(self.sname, 'getp', self.api_getp)
     self.api.add(self.sname, 'module', self.api_getmodule)
     self.api.add(self.sname, 'allplugininfo', self.api_allplugininfo)
+    self.api.add(self.sname, 'savestate', self.savestate)
 
   def api_allplugininfo(self):
     """
@@ -589,13 +590,14 @@ class PluginMgr(object):
     """
     reload all dependents
     """
-    plugins = self.plugins.keys()
-    for plugin in plugins:
-      if plugin != reloadedplugin:
-        if reloadedplugin in self.plugins[plugin].dependencies:
-          self.api.get('send.msg')('reloading dependent %s of %s' % (plugin,
+    testsort = sorted(self.plugins.values(),
+                      key=operator.attrgetter('priority'))
+    for plugin in testsort:
+      if plugin.sname != reloadedplugin:
+        if reloadedplugin in plugin.dependencies:
+          self.api.get('send.msg')('reloading dependent %s of %s' % (plugin.sname,
                                                           reloadedplugin))
-          self.reload_module(plugin, True)
+          self.reload_module(plugin.sname, True)
 
   def loadplugin(self, plugin):
     """

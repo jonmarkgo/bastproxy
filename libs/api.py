@@ -9,6 +9,8 @@ class API(object):
   """
   api = {} # where the main api resides
   BASEPATH = ''
+  loading = False
+  shutdown = False
   MANAGERS = {}
 
   def __init__(self):
