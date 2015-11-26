@@ -87,6 +87,12 @@ class Plugin(AardwolfBasePlugin):
                   "^Congratulations, that was one of the GLOBAL QUEST mobs!$",
                   enabled=False, group='gqin')
 
+    self.api.get('triggers.add')('gqextended',
+                  "^Global Quest: Global Quest \# *(?P<gqnum>\d*) will go " \
+                    "into extended time for 3 more minutes.$",
+                  enabled=False, group='gqin',
+                  argtypes={'gqnum':int})
+
     self.api.get('triggers.add')('gqwon',
                   "^You were the first to complete this quest!$",
                   enabled=False, group='gqin')
@@ -123,6 +129,8 @@ class Plugin(AardwolfBasePlugin):
 
     self.api.get('events.register')('trigger_gqmobdead', self._gqmobdead)
 
+    self.api.get('events.register')('trigger_gqextended', self._gqextended)
+
     self.api.get('events.register')('trigger_gqwon', self._gqwon)
     self.api.get('events.register')('trigger_gqextfin', self._gqextfin)
     self.api.get('events.register')('trigger_gqwonannounce',
@@ -153,6 +161,7 @@ class Plugin(AardwolfBasePlugin):
     self.gqinfo['length'] = 0
     self.gqinfo['won'] = 0
     self.gqinfo['completed'] = 0
+    self.gqinfo['extended'] = 0
     self.api.get('setting.change')('maxkills', False)
     self.savestate()
 
@@ -251,6 +260,13 @@ class Plugin(AardwolfBasePlugin):
     if not self.api.get('setting.gets')('maxkills'):
       self.gqinfo['qpmobs'] = self.gqinfo['qpmobs'] + 3
     self.api.get('events.register')('aard_mobkill', self._mobkillevent)
+
+  def _gqextended(self, args):
+    """
+    gquest went into extended time
+    """
+    if args['gqnum'] ==  self.api('setting.gets')('joined'):
+      self.gqinfo['extended'] = 1
 
   def _gqmaxkills(self, args):
     """
@@ -366,7 +382,6 @@ class Plugin(AardwolfBasePlugin):
     if args['gqnum'] in self._gqsstarted:
       del(self._gqsstarted[args['gqnum']])
     self._checkgqavailable()
-
 
   def _gqreset(self, args={}):
     """
