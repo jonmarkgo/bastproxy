@@ -4,13 +4,15 @@ This module handles commands and parsing input
 All commands are #bp.[plugin].[cmd]
 """
 import shlex
+import os
 import argparse
 
 from plugins._baseplugin import BasePlugin
+from libs.persistentdict import PersistentDict
 
 NAME = 'Commands'
 SNAME = 'commands'
-PURPOSE = 'Parse commands, e.g. #bp.commands.list'
+PURPOSE = 'Parse and handle commands'
 AUTHOR = 'Bast'
 VERSION = 1
 PRIORITY = 10
@@ -32,8 +34,12 @@ class Plugin(BasePlugin):
 
     self.cmds = {}
     self.nomultiplecmds = {}
-    self.regexlookup = {}
-    self.lastcmd = ''
+
+    self.savehistfile = os.path.join(self.savedir, 'history.txt')
+    self.cmdhistorydict = PersistentDict(self.savehistfile, 'c')
+    if not ('history' in self.cmdhistorydict):
+      self.cmdhistorydict['history'] = []
+    self.cmdhistory = self.cmdhistorydict['history']
 
     self.api.get('api.add')('add', self.api_addcmd)
     self.api.get('api.add')('remove', self.api_removecmd)
@@ -61,6 +67,8 @@ class Plugin(BasePlugin):
             'the # of times the current command has been run', readonly=True)
     self.api.get('setting.add')('lastcmd', '', str,
             'the last command that was sent to the mud', readonly=True)
+    self.api.get('setting.add')('historysize', 50, int,
+            'the size of the history to keep')
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='list commands in a category')
@@ -72,7 +80,20 @@ class Plugin(BasePlugin):
     self.api.get('commands.add')('list', self.cmd_list, shelp='list commands',
                                  parser=parser)
 
-    self.api.get('commands.default')('list')
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='list or run a command in history')
+    parser.add_argument('-c', "--clear",
+          help="clear the history", action='store_true')
+    self.api.get('commands.add')('history', self.cmd_history, shelp='list or run a command in history',
+                                 parser=parser)
+
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='run a command in history')
+    parser.add_argument('number', help='the history # to run',
+                        default=-1, nargs='?', type=int)
+    self.api.get('commands.add')('!', self.cmd_runhistory, shelp='run a command in history',
+                                 parser=parser, preamble=False, format=False)
+
     self.api.get('events.register')('from_client_event', self.chkcmd, prio=2)
     self.api.get('events.eraise')('plugin_cmdman_loaded', {})
 
@@ -170,6 +191,14 @@ class Plugin(BasePlugin):
     check a line from a client for a command
     """
     tdat = data['fromdata']
+    if data['fromclient']:
+      if not('commands.history' in tdat) and not('commands.!' in tdat):
+        if tdat in self.cmdhistory:
+          self.cmdhistory.remove(tdat)
+        self.cmdhistory.append(tdat)
+        if len(self.cmdhistory) >= self.api('setting.gets')('historysize'):
+          self.cmdhistory.pop(0)
+        self.cmdhistorydict.sync()
     if tdat[0:3] == '#bp':
       targs = shlex.split(tdat.strip())
       try:
@@ -457,3 +486,42 @@ class Plugin(BasePlugin):
         tmsg.append('  %s' % i)
     return True, tmsg
 
+  def cmd_runhistory(self, args):
+    """
+    act on the command history
+    """
+    if len(self.cmdhistory) < abs(args['number']):
+      return True, ['# is outside of history length']
+
+    if len(self.cmdhistory) >= self.api('setting.gets')('historysize'):
+      cmd = self.cmdhistory[args['number'] - 1]
+    else:
+      cmd = self.cmdhistory[args['number']]
+
+    self.api('send.client')('history: sending "%s"' % cmd)
+    self.api('send.execute')(cmd)
+
+    return True, []
+
+  def cmd_history(self, args):
+    """
+    act on the command history
+    """
+    tmsg = []
+
+    if args['clear']:
+      del self.cmdhistorydict['history'][:]
+      self.cmdhistorydict.sync()
+      tmsg.append('Command history cleared')
+    else:
+      for i in self.cmdhistory:
+        tmsg.append('%s : %s' % (self.cmdhistory.index(i), i))
+
+    return True, tmsg
+
+  def savestate(self):
+    """
+    save states
+    """
+    BasePlugin.savestate(self)
+    self.cmdhistorydict.sync()
