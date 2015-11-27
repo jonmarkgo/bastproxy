@@ -123,18 +123,17 @@ class Plugin(BasePlugin):
     for mem in self._aliases.keys():
       if self._aliases[mem]['enabled']:
         datan = data
-        if '(.*)' in mem:
-          matchd = re.match(mem, data)
-          if matchd:
-            self.api.get('send.msg')('matched input on %s' % mem)
-            tlistn = [data]
-            for i in xrange(1, len(matchd.groups()) + 1):
-              tlistn.append(matchd.group(i))
-            self.api.get('send.msg')('args: %s' % tlistn)
-            try:
-              datan = self._aliases[mem]['alias'].format(*tlistn)
-            except:
-              self.api.get('send.traceback')('alias %s had an issue' % (mem))
+        matchd = re.match(mem, data)
+        if matchd:
+          self.api.get('send.msg')('matched input on %s' % mem)
+          tlistn = [data]
+          for i in xrange(1, len(matchd.groups()) + 1):
+            tlistn.append(matchd.group(i))
+          self.api.get('send.msg')('args: %s' % tlistn)
+          try:
+            datan = self._aliases[mem]['alias'].format(*tlistn)
+          except:
+            self.api.get('send.traceback')('alias %s had an issue' % (mem))
         else:
           cre = re.compile('^%s' % mem)
           datan = cre.sub(self._aliases[mem]['alias'], data)
