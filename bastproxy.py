@@ -16,25 +16,19 @@ It supports MCCP, GMCP, aliases, actions, substitutes, variables
 
 ## Getting Started
 
-### Configuration
- * Use one of the included ones,  both for
-      [Aardwolf Mud](http://www.aardwolf.com/)
- * Copy the below to "mud"-config.ini and change the items to suit your needs
-
----
-    [proxy]
-    listen_port = 9999
-    mud_address = some.mud.address
-    mud_port = 4000
-    password = somepassword
-    viewpw = someviewpassword
-
----
-
-Don't forget to change the passwords!
-
 ### Starting
- * From the installation directory, ```python bastproxy.py "mud"-config.ini```
+ * From the installation directory, ```python bastproxy.py```
+
+```
+usage: bastproxy.py [-h] [-p PORT] [-d]
+
+A python mud proxy
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -p PORT, --port PORT  the port for the proxy to listen on
+  -d, --daemon          run in daemon mode
+```
 
 ### Connecting
  * Connect a client to the listen_port above on the host the proxy is running,
