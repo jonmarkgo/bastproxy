@@ -184,11 +184,16 @@ class PersistentDictEvent(PersistentDict):
     """
     key = convert(key)
     val = convert(val)
+    if key in self:
+      oldvalue = self[key]
+    else:
+      oldvalue = None
     dict.__setitem__(self, key, val)
     eventname = 'var_%s_%s' % (self.plugin.sname, key)
     if not self.plugin.resetflag and key != '_version':
       self.api.get('events.eraise')(eventname, {'var':key,
-                                        'newvalue':val})
+                                        'newvalue':val,
+                                        'oldvalue':oldvalue})
 
   def sync(self):
     """
