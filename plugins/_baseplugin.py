@@ -90,7 +90,7 @@ class BasePlugin(object):
     setparser.add_argument('value', help='the new value of the setting',
                            default='', nargs='?')
     self.api.get('commands.add')('set', self.cmd_set, parser=setparser,
-                                 group='Base')
+                                 group='Base', history=False)
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='reset the plugin')
