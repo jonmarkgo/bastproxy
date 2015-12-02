@@ -39,6 +39,7 @@ class Plugin(AardwolfBasePlugin):
 
     self.api.get('events.register')('GMCP:server-enabled', self.enablemods)
     self.api.get('events.register')('client_connected', self.clientconnected)
+    self.api.get('events.register')('GMCP:char.status', self.charstatus)
 
     state = self.api.get('GMCP.getv')('char.status.state')
     proxy = self.api.get('managers.getm')('proxy')
@@ -58,13 +59,20 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('GMCP.togglemodule')('Group', True)
     self.api.get('GMCP.togglemodule')('Core', True)
 
+  def charstatus(self, args=None):
+    if self.api('GMCP.getv')('char.base.redos') == None:
+      self.api.get('GMCP.sendpacket')("request room")
+      self.api.get('GMCP.sendpacket')("request quest")
+      self.api.get('GMCP.sendpacket')("request char")
+    self.api.get('events.unregister')('GMCP:char.status', self.charstatus)
+
   def clientconnected(self, _=None):
     """
     do stuff when a client connects
     """
     proxy = self.api.get('managers.getm')('proxy')
     if proxy.connected:
-      self.api.get('GMCP.sendmodule')('room.info')
+      self.api.get('GMCP.sendpacket')("request room")
       self.api.get('GMCP.sendpacket')("request quest")
       self.api.get('GMCP.sendpacket')("request char")
 
