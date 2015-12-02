@@ -2,6 +2,7 @@
 This plugins handles TCP option 201, GMCP (aardwolf implementation)
 """
 import argparse
+import pprint
 from libs.net._basetelnetoption import BaseTelnetOption
 from plugins._baseplugin import BasePlugin
 from libs.net.telnetlib import WILL, DO, IAC, SE, SB
@@ -73,6 +74,31 @@ class Plugin(BasePlugin):
                         nargs='?')
     self.api('commands.add')('send', self.cmd_send, history=False,
                                         parser=parser)
+
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='show an item in the cache')
+    parser.add_argument('item',
+                        help='the item to show',
+                        default='',
+                        nargs='?')
+    self.api('commands.add')('cache', self.cmd_cache, history=False,
+                                        parser=parser)
+
+  def cmd_cache(self, args):
+    """
+    send a gmcp packet
+    """
+    tmsg = []
+    if args['item'] == '':
+      tmsg.append('Full cache')
+      tmsg.append('--------------------------------------------')
+      tmsg.append(pprint.pformat(self.gmcpcache))
+    else:
+      tmsg.append(args['item'])
+      tmsg.append('--------------------------------------------')
+      tmsg.append(pprint.pformat(self.api('GMCP.getv')(args['item'])))
+
+    return True, tmsg
 
   def cmd_send(self, args):
     """
