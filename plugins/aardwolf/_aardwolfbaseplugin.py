@@ -21,6 +21,7 @@ class AardwolfBasePlugin(BasePlugin):
 
     self.api.get('dependency.add')('aardwolf.connect')
     self.api.get('dependency.add')('aardwolf.aardu')
+    self.api.get('dependency.add')('aardwolf.agmcp')
 
   def load(self):
     """
