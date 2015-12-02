@@ -1,6 +1,7 @@
 """
 This plugins handles TCP option 201, GMCP (aardwolf implementation)
 """
+import argparse
 from libs.net._basetelnetoption import BaseTelnetOption
 from plugins._baseplugin import BasePlugin
 from libs.net.telnetlib import WILL, DO, IAC, SE, SB
@@ -64,17 +65,24 @@ class Plugin(BasePlugin):
     self.api.get('options.addserveroption')(self.sname, SERVER)
     self.api.get('options.addclientoption')(self.sname, CLIENT)
 
-    self.api.get('commands.add')('send', self.cmd_send)
+    parser = argparse.ArgumentParser(add_help=False,
+                 description='send something through GMCP')
+    parser.add_argument('stuff',
+                        help='the item to send through GCMP',
+                        default='',
+                        nargs='?')
+    self.api('commands.add')('send', self.cmd_send, history=False,
+                                        parser=parser)
 
   def cmd_send(self, args):
     """
     send a gmcp packet
     """
     tmsg = []
-    if len(args) == 0:
+    if not args['stuff']:
       tmsg.append('Please supply a command')
     else:
-      command = args[0]
+      command = args['stuff']
       self.api.get('GMCP.sendpacket')(command)
       tmsg.append('Send "%s" to GMCP' % command)
 
