@@ -109,7 +109,7 @@ class Plugin(BasePlugin):
 
     self.api.get('commands.default')('list')
     self.api.get('events.register')('from_client_event', self.checkalias,
-                                        prio=5)
+                                        prio=2)
 
   def checkalias(self, args):
     """
@@ -148,9 +148,12 @@ class Plugin(BasePlugin):
           self.api.get('send.msg')('replacing "%s" with "%s"' % \
                                           (data.strip(), datan.strip()))
           if datan[0:3] == '#bp':
-            self.api.get('send.execute')(datan)
+            self.api.get('send.execute')(datan, history=False, fromclient=False)
             args['fromdata'] = ''
+            args['history'] = False
           else:
+            args['history'] = False
+            args['fromclient'] = False
             args['fromdata'] = datan
 
     return args
