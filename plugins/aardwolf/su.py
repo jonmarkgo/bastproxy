@@ -215,16 +215,8 @@ class Plugin(AardwolfBasePlugin):
         self.nextspell()
       elif args['reason'] == 'dontknow':
         # do stuff when spell/skill isn't learned
-        sname = spellnum
-        if skill:
-          sname = skill['name']
-        self.api.get('send.client')(
-            "@BSpellup - disabled %s because it is not learned" % \
-                                  sname)
-        if spellnum in self.spellups['self']:
-          self.spellups['self'][spellnum]['enabled'] = False
-        if spellnum in self.spellups['other']:
-          self.spellups['other'][spellnum]['enabled'] = False
+        # don't disable it, hopefully the spell/skill has been updated and
+        # won't be cast through nextspell
         self.api.get('setting.change')('waiting', -1)
         self.nextspell()
       elif args['reason'] == 'wrongtarget':
