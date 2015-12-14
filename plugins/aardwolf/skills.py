@@ -558,7 +558,7 @@ class Plugin(AardwolfBasePlugin):
     """
     skill = self.api.get('skills.gets')(spellnum)
     if skill:
-      if skill['percent'] > 1:
+      if skill['percent'] > 10:
         return True
 
     return False
