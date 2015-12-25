@@ -207,9 +207,10 @@ class Plugin(BasePlugin):
 
     pb = Pushbullet(apikey)
 
-    tmsg.append('Channels')
     for i in pb.channels:
-      tmsg.append(i.channel_tag)
+      tmsg.append(str(i.channel_tag))
+
+    print tmsg
 
     return True, tmsg
 
