@@ -29,6 +29,8 @@ class Plugin(BasePlugin):
     """
     BasePlugin.__init__(self, *args, **kwargs)
 
+    self.api.get('dependency.add')('ssc')
+
   def load(self):
     """
     load the plugins
