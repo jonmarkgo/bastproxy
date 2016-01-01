@@ -165,11 +165,11 @@ for colorc in CONVERTCOLORS.keys():
 #xterm colors
 for xtn in xrange(0, 256):
   CONVERTANSI['38;5;%d' % xtn] = 'x%d' % xtn
-  CONVERTANSI['39;5;%d' % xtn] = 'z%d' % xtn
+  CONVERTANSI['48;5;%d' % xtn] = 'z%d' % xtn
 
 #backgrounds
 for acn in xrange(40, 48):
-  CONVERTANSI['%s' % acn] = CONVERTANSI['39;5;%d' % (acn - 40)]
+  CONVERTANSI['%s' % acn] = CONVERTANSI['48;5;%d' % (acn - 40)]
 
 #foregrounds
 for abn in xrange(30, 38):
