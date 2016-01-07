@@ -6,6 +6,7 @@ All commands are #bp.[plugin].[cmd]
 import shlex
 import os
 import argparse
+import textwrap as _textwrap
 
 from plugins._baseplugin import BasePlugin
 from libs.persistentdict import PersistentDict
@@ -19,6 +20,16 @@ PRIORITY = 10
 
 # This keeps the plugin from being autoloaded if set to False
 AUTOLOAD = True
+
+class CustomFormatter(argparse.HelpFormatter):
+    def _fill_text(self, text, width, indent):
+        text = _textwrap.dedent(text)
+        lines = text.split('\n')
+        multiline_text = ''
+        for line in lines:
+          wrline = _textwrap.fill(line, 73)
+          multiline_text = multiline_text + '\n' + wrline
+        return multiline_text
 
 class Plugin(BasePlugin):
   """
@@ -84,14 +95,16 @@ class Plugin(BasePlugin):
                  description='list or run a command in history')
     parser.add_argument('-c', "--clear",
           help="clear the history", action='store_true')
-    self.api.get('commands.add')('history', self.cmd_history, shelp='list or run a command in history',
+    self.api.get('commands.add')('history', self.cmd_history,
+                                 shelp='list or run a command in history',
                                  parser=parser, history=False)
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='run a command in history')
     parser.add_argument('number', help='the history # to run',
                         default=-1, nargs='?', type=int)
-    self.api.get('commands.add')('!', self.cmd_runhistory, shelp='run a command in history',
+    self.api.get('commands.add')('!', self.cmd_runhistory,
+                                 shelp='run a command in history',
                                  parser=parser, preamble=False, format=False,
                                  history=False)
 
@@ -113,8 +126,8 @@ class Plugin(BasePlugin):
     """
     msg.insert(0, '')
     msg.insert(1, '#bp.%s.%s' % (sname, cmd))
-    msg.insert(2, '@G' + '-' * 60 + '@w')
-    msg.append('@G' + '-' * 60 + '@w')
+    msg.insert(2, '@G' + '-' * 73 + '@w')
+    msg.append('@G' + '-' * 73 + '@w')
     msg.append('')
     return msg
 
@@ -141,6 +154,7 @@ class Plugin(BasePlugin):
       else:
         return {}
 
+  # run a command and return the output
   def api_run(self, plugin, cmdname, argstring):
     """
     run a command and return the output
@@ -264,7 +278,8 @@ class Plugin(BasePlugin):
               try:
                 self.runcmd(cmd, targs, fullargs, data)
               except:
-                self.api.get('send.traceback')('Error when calling command %s.%s' % (sname, scmd))
+                self.api.get('send.traceback')(
+                            'Error when calling command %s.%s' % (sname, scmd))
                 return {'fromdata':''}
             else:
               self.api.get('send.client')("@R%s.%s@W is not a command" % \
@@ -275,14 +290,16 @@ class Plugin(BasePlugin):
               try:
                 self.runcmd(cmd, targs, fullargs, data)
               except:
-                self.api.get('send.traceback')('Error when calling command %s.%s' % (sname, scmd))
+                self.api.get('send.traceback')(
+                            'Error when calling command %s.%s' % (sname, scmd))
                 return {'fromdata':''}
             else:
               cmd = self.cmds[self.sname]['list']
               try:
                 self.runcmd(cmd, [sname, scmd], '', data)
               except:
-                self.api.get('send.traceback')('Error when calling command %s.%s' % (sname, scmd))
+                self.api.get('send.traceback')(
+                            'Error when calling command %s.%s' % (sname, scmd))
                 return {'fromdata':''}
       else:
         try:
@@ -293,7 +310,8 @@ class Plugin(BasePlugin):
         try:
           self.runcmd(cmd, [sname, scmd], '', data)
         except:
-          self.api.get('send.traceback')('Error when calling command %s.%s' % (sname, scmd))
+          self.api.get('send.traceback')(
+                            'Error when calling command %s.%s' % (sname, scmd))
           return {'fromdata':''}
 
       return {'fromdata':''}
@@ -356,6 +374,8 @@ class Plugin(BasePlugin):
 
     if 'parser' in args:
       tparser = args['parser']
+      tparser.formatter_class = CustomFormatter
+
     else:
       self.api.get('send.msg')('adding default parser to command %s.%s' % \
                                       (sname, cmdname))
@@ -479,7 +499,8 @@ class Plugin(BasePlugin):
             groups[self.cmds[category][i]['group']].append(i)
 
         if len(groups) == 1:
-          tmsg.extend(self.format_cmdlist(category, self.cmds[category].keys()))
+          tmsg.extend(self.format_cmdlist(category,
+                                          self.cmds[category].keys()))
         else:
           for group in sorted(groups.keys()):
             if group != 'Base':
