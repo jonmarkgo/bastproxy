@@ -31,6 +31,15 @@ class CustomFormatter(argparse.HelpFormatter):
           multiline_text = multiline_text + '\n' + wrline
         return multiline_text
 
+    def _get_help_string(self, action):
+        help = action.help
+        if '%(default)' not in action.help:
+            if action.default is not argparse.SUPPRESS:
+                defaulting_nargs = [argparse.OPTIONAL, argparse.ZERO_OR_MORE]
+                if action.option_strings or action.nargs in defaulting_nargs:
+                    help += ' (default: %(default)s)'
+        return help
+
 class Plugin(BasePlugin):
   """
   a class to manage internal commands
