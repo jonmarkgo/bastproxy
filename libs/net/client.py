@@ -95,9 +95,9 @@ class ProxyClient(Telnet):
 
       elif self.state == PASSWORD:
         data = data.strip()
-        netp = self.api('plugins.getp')('net')
-        dpw = netp.api('net.proxypw')()
-        vpw = netp.api('net.proxypwview')()
+        proxyp = self.api('plugins.getp')('proxy')
+        dpw = proxyp.api('proxy.proxypw')()
+        vpw = proxyp.api('proxy.proxypwview')()
 
         if dpw and  data == dpw:
           self.api.get('send.msg')('Successful password from %s : %s' % \

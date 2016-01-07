@@ -8,9 +8,9 @@ import stat
 from plugins._baseplugin import BasePlugin
 
 #these 5 are required
-NAME = 'Net Commands'
-SNAME = 'net'
-PURPOSE = 'get information about connections'
+NAME = 'Proxy Interface'
+SNAME = 'proxy'
+PURPOSE = 'control the proxy'
 AUTHOR = 'Bast'
 VERSION = 1
 PRIORITY = 35
@@ -160,12 +160,12 @@ class Plugin(BasePlugin):
       if not self.api('setting.gets')('mudhost'):
         tmsg.append(divider)
         tmsg.append('Please set the mudhost through the net plugin.')
-        tmsg.append('#bp.net.set mudhost "host"')
+        tmsg.append('#bp.proxy.set mudhost "host"')
       if self.api('setting.gets')('mudport') == 0:
         tmsg.append(divider)
         tmsg.append('Please set the mudport through the net plugin.')
-        tmsg.append('#bp.net.set mudport "port"')
-      tmsg.append('Connect to the mud with "#bp.net.connect"')
+        tmsg.append('#bp.proxy.set mudport "port"')
+      tmsg.append('Connect to the mud with "#bp.proxy.connect"')
     else:
       tmsg.append(divider)
       tmsg.append('@R#BP@W: @GThe proxy is already connected to the mud@w')

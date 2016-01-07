@@ -84,7 +84,11 @@ API.loading = True
 
 plistener = None
 
+# restart the proxy
 def restart():
+    """
+    restart the proxy
+    """
     api.get('plugins.savestate')()
 
     executable = sys.executable
@@ -92,9 +96,9 @@ def restart():
     args.insert(0, 'bastproxy.py')
     args.insert(0, sys.executable)
 
-    netp = api('plugins.getp')('net')
+    proxyp = api('plugins.getp')('proxy')
 
-    listen_port = netp.api('setting.gets')('listenport')
+    listen_port = proxyp.api('setting.gets')('listenport')
 
     api('send.client')("Respawning bastproxy on port: %s" % listen_port)
 
@@ -241,12 +245,12 @@ def main():
   api.get('log.adddtype')('inputparse')
   api.get('log.adddtype')('ansi')
 
-  netp = api('plugins.getp')('net')
+  proxyp = api('plugins.getp')('proxy')
 
   if targs['port'] != '':
-    netp.api('setting.change')('listenport', targs['port'])
+    proxyp.api('setting.change')('listenport', targs['port'])
 
-  listen_port = netp.api('setting.gets')('listenport')
+  listen_port = proxyp.api('setting.gets')('listenport')
 
   API.loading = False
   if not daemon:
