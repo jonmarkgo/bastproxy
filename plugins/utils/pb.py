@@ -25,6 +25,7 @@ VERSION = 1
 # This keeps the plugin from being autoloaded if set to False
 AUTOLOAD = False
 
+Pushbullet = None
 
 class Plugin(BasePlugin):
   """
@@ -39,9 +40,6 @@ class Plugin(BasePlugin):
 
     self.api('api.add')('note', self.api_note)
     self.api('api.add')('link', self.api_link)
-
-    global Pushbullet
-    from pushbullet import Pushbullet
 
   def load(self):
     """
@@ -91,6 +89,11 @@ class Plugin(BasePlugin):
 
     ssc = self.api('ssc.baseclass')()
     self.apikey = ssc('apikey', self, desc='Pushbullet API key')
+
+    if not Pushbullet:
+      global Pushbullet
+      from pushbullet import Pushbullet
+
 
   # send a note through pushbullet
   def api_note(self, title, body, channel=None):
@@ -143,7 +146,7 @@ class Plugin(BasePlugin):
     @Ychannel@w   = the pushbullet channel to send to
 
     this function returns True if sent, False otherwise"""
-    apikey = self.getapikey()
+    apikey = self.api('%s.apikey' % self.sname)()
 
     if not apikey:
       return False
@@ -180,7 +183,7 @@ class Plugin(BasePlugin):
     list the channels
     """
     tmsg = []
-    apikey = self.getapikey()
+    apikey = self.api('%s.apikey' % self.sname)()
 
     if not apikey:
       return False
