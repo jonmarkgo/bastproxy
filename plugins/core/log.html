@@ -49,6 +49,7 @@
 <li><a href="/bastproxy/plugins/aardwolf/itemkeep.html">itemkeep</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/itemu.html">itemu</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/level.html">level</a></li>
+<li><a href="/bastproxy/plugins/aardwolf/malerts.html">malerts</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/mobk.html">mobk</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/move.html">move</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/pbalerts.html">pbalerts</a></li>
@@ -83,6 +84,7 @@
 <li><a href="/bastproxy/plugins/core/log.html">log</a></li>
 <li><a href="/bastproxy/plugins/core/options.html">options</a></li>
 <li><a href="/bastproxy/plugins/core/sqldb.html">sqldb</a></li>
+<li><a href="/bastproxy/plugins/core/ssc.html">ssc</a></li>
 <li><a href="/bastproxy/plugins/core/timers.html">timers</a></li>
 <li><a href="/bastproxy/plugins/core/triggers.html">triggers</a></li>
 <li><a href="/bastproxy/plugins/core/utils.html">utils</a></li>
@@ -96,18 +98,28 @@
 </ul>
 </li>
 <li class="dropdown-submenu">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Example</a>
+                  <ul class="dropdown-menu">
+<li><a href="/bastproxy/plugins/example/a102ex.html">a102ex</a></li>
+<li><a href="/bastproxy/plugins/example/gmcpex.html">gmcpex</a></li>
+<li><a href="/bastproxy/plugins/example/timerex.html">timerex</a></li>
+<li><a href="/bastproxy/plugins/example/triggerex.html">triggerex</a></li>
+</ul>
+</li>
+<li class="dropdown-submenu">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">Net</a>
                   <ul class="dropdown-menu">
 <li><a href="/bastproxy/plugins/net/GMCP.html">GMCP</a></li>
 <li><a href="/bastproxy/plugins/net/MCCP.html">MCCP</a></li>
 <li><a href="/bastproxy/plugins/net/TTYPE.html">TTYPE</a></li>
-<li><a href="/bastproxy/plugins/net/net.html">net</a></li>
+<li><a href="/bastproxy/plugins/net/proxy.html">proxy</a></li>
 </ul>
 </li>
 <li class="dropdown-submenu">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">Test</a>
                   <ul class="dropdown-menu">
 <li><a href="/bastproxy/plugins/test/evt.html">evt</a></li>
+<li><a href="/bastproxy/plugins/test/tm.html">tm</a></li>
 </ul>
 </li>
 <li class="dropdown-submenu">
@@ -186,11 +198,14 @@ usage: <span style="color:#5c5cff">#bp.log.client</span><span style="color:#e5e5
 
 toggle datatypes to clients
 
+if no arguments, data types that are currenty sent to clients will be
+listed
+
 positional arguments:
-  datatype    a list of datatypes to toggle
+  datatype    a list of datatypes to toggle (default: [])
 
 optional arguments:
-  -h, --help  show help
+  -h, --help  show help (default: False)
 
 </code></pre>
 <h4 id="cmdconsole" class="bph4">console</h4>
@@ -199,11 +214,14 @@ usage: <span style="color:#5c5cff">#bp.log.console</span><span style="color:#e5e
 
 toggle datatypes to the console
 
+if no arguments, data types that are currenty sent to the console will be
+listed
+
 positional arguments:
-  datatype    a list of datatypes to toggle
+  datatype    a list of datatypes to toggle (default: [])
 
 optional arguments:
-  -h, --help  show help
+  -h, --help  show help (default: False)
 
 </code></pre>
 <h4 id="cmdfile" class="bph4">file</h4>
@@ -212,12 +230,19 @@ usage: <span style="color:#5c5cff">#bp.log.file</span><span style="color:#e5e5e5
 
 toggle datatype to log to a file
 
+the file will be located in the data/logs/&lt;dtype&gt; directory
+
+the filename for the log will be &lt;date&gt;.log
+    Example: Tue-Feb-26-2013.log
+
+if no arguments, types that are sent to file will be listed
+
 positional arguments:
-  datatype           the datatype to toggle
+  datatype           the datatype to toggle (default: list)
 
 optional arguments:
-  -n, --notimestamp  do not log to file with a timestamp
-  -h, --help         show help
+  -n, --notimestamp  do not log to file with a timestamp (default: True)
+  -h, --help         show help (default: False)
 
 </code></pre>
 <h4 id="cmdtypes" class="bph4">types</h4>
@@ -228,9 +253,10 @@ list all datatypes
 
 positional arguments:
   match       only list datatypes that have this argument in their name
+              (default: )
 
 optional arguments:
-  -h, --help  show help
+  -h, --help  show help (default: False)
 
 </code></pre>
 </div>
@@ -245,10 +271,10 @@ usage: <span style="color:#5c5cff">#bp.log.api</span><span style="color:#e5e5e5"
 list functions in the api
 
 positional arguments:
-  api         api to get details of
+  api         api to get details of (default: )
 
 optional arguments:
-  -h, --help  show help
+  -h, --help  show help (default: False)
 
 </code></pre>
 <h4 id="cmdhelp" class="bph4">help</h4>
@@ -258,9 +284,9 @@ usage: <span style="color:#5c5cff">#bp.log.help</span><span style="color:#e5e5e5
 show help info for this plugin
 
 optional arguments:
-  -a, --api       show functions this plugin has in the api
-  -c, --commands  show commands in this plugin
-  -h, --help      show help
+  -a, --api       show functions this plugin has in the api (default: False)
+  -c, --commands  show commands in this plugin (default: False)
+  -h, --help      show help (default: False)
 
 </code></pre>
 <h4 id="cmdinspect" class="bph4">inspect</h4>
@@ -271,8 +297,8 @@ inspect a plugin
 
 optional arguments:
   -m METHOD, --method METHOD
-                        get code for a method
-  -h, --help            show help
+                        get code for a method (default: )
+  -h, --help            show help (default: False)
 
 </code></pre>
 <h4 id="cmdreset" class="bph4">reset</h4>
@@ -282,7 +308,7 @@ usage: <span style="color:#5c5cff">#bp.log.reset</span><span style="color:#e5e5e
 reset the plugin
 
 optional arguments:
-  -h, --help  show help
+  -h, --help  show help (default: False)
 
 </code></pre>
 <h4 id="cmdsave" class="bph4">save</h4>
@@ -292,7 +318,7 @@ usage: <span style="color:#5c5cff">#bp.log.save</span><span style="color:#e5e5e5
 save the plugin state
 
 optional arguments:
-  -h, --help  show help
+  -h, --help  show help (default: False)
 
 </code></pre>
 <h4 id="cmdset" class="bph4">set</h4>
@@ -305,11 +331,11 @@ if there are no arguments or 'list' is the first argument then
 it will list the settings for the plugin
 
 positional arguments:
-  name        the setting name
-  value       the new value of the setting
+  name        the setting name (default: list)
+  value       the new value of the setting (default: )
 
 optional arguments:
-  -h, --help  show help
+  -h, --help  show help (default: False)
 
 </code></pre>
 <h4 id="cmdstats" class="bph4">stats</h4>
@@ -319,7 +345,7 @@ usage: <span style="color:#5c5cff">#bp.log.stats</span><span style="color:#e5e5e
 show plugin stats
 
 optional arguments:
-  -h, --help  show help
+  -h, --help  show help (default: False)
 
 </code></pre>
 </div>

@@ -136,7 +136,7 @@
         </div>
        </div>
     <div class="nav">
-        <div class="divpluginname">example.gmcpex</div>
+        <div class="divpluginname">net.proxy</div>
     </div>
     </div>
 
@@ -147,14 +147,20 @@
         <div class="col-sm-3 sidebar-offcanvas" id="sidebar" role="navigation">
             <ul class="nav sidebar-fixed">
   <li><a href="#about">About</a></li>
-  <li><a href="#using-gmcp">Using GMCP</a></li>
   <li><a href="#" data-toggle="collapse" data-target="#commandsMenu">
            Commands <i class="glyphicon glyphicon-chevron-right"></i>
            <ul class="list-unstyled collapse" id="commandsMenu">
-  <li><a href="#" data-toggle="collapse" data-target="#cmdgroupgmcpexMenu">
-           gmcpex <i class="glyphicon glyphicon-chevron-right"></i>
-           <ul class="list-unstyled collapse" id="cmdgroupgmcpexMenu">
-  <li><a href="#cmdget">get</a></li>
+  <li><a href="#" data-toggle="collapse" data-target="#cmdgroupproxyMenu">
+           proxy <i class="glyphicon glyphicon-chevron-right"></i>
+           <ul class="list-unstyled collapse" id="cmdgroupproxyMenu">
+  <li><a href="#cmdclients">clients</a></li>
+  <li><a href="#cmdconnect">connect</a></li>
+  <li><a href="#cmddisconnect">disconnect</a></li>
+  <li><a href="#cmdmudpw">mudpw</a></li>
+  <li><a href="#cmdproxypw">proxypw</a></li>
+  <li><a href="#cmdproxypwview">proxypwview</a></li>
+  <li><a href="#cmdrestart">restart</a></li>
+  <li><a href="#cmdshutdown">shutdown</a></li>
 </ul></li>
   <li><a href="#" data-toggle="collapse" data-target="#cmdgroupBaseMenu">
            Base <i class="glyphicon glyphicon-chevron-right"></i>
@@ -168,43 +174,122 @@
   <li><a href="#cmdstats">stats</a></li>
 </ul></li>
 </ul></li>
+  <li><a href="#" data-toggle="collapse" data-target="#settingsMenu">
+           Settings <i class="glyphicon glyphicon-chevron-right"></i>
+           <ul class="list-unstyled collapse" id="settingsMenu">
+  <li><a href="#setusername">username</a></li>
+  <li><a href="#setmudport">mudport</a></li>
+  <li><a href="#setlistenport">listenport</a></li>
+  <li><a href="#setmudhost">mudhost</a></li>
+</ul></li>
+  <li><a href="#" data-toggle="collapse" data-target="#apiMenu">
+           API <i class="glyphicon glyphicon-chevron-right"></i>
+           <ul class="list-unstyled collapse" id="apiMenu">
+  <li><a href="#setproxypw">proxypw</a></li>
+  <li><a href="#setmudpw">mudpw</a></li>
+  <li><a href="#setproxypwview">proxypwview</a></li>
+  <li><a href="#setrestart">restart</a></li>
+</ul></li>
         </div>
 
         <div class="col-xs-12 col-sm-9">
         <div class="indenth2"><h2 id="about" class="bph2">About</h2>
 
-<p>This plugin is an example plugin to show how to use gmcp</p>
-
-</div><div class="indenth2"><h2 id="using-gmcp" class="bph2">Using GMCP</h2>
-
-<ul>
-<li>register to the GMCP event and check which option it was</li>
-<li><p>register to the "GMCP:[module]" event</p>
-
-<ul>
-<li>example: GMCP:char</li>
-</ul>
-
-<p/><p>see the <a href="http://www.aardwolf.com/wiki/index.php/Clients/GMCP">Aardwolf Wiki</a></p></li>
-</ul>
+<p>This plugin will show information about connections to the proxy</p>
 
 </div>
 <h2 id="commands" class="bph2">Commands</h2>
 <div class="indenth3">
-<h3 id="cmdgroupgmcpex" class="bph3">gmcpex</h3>
+<h3 id="cmdgroupproxy" class="bph3">proxy</h3>
 </div>
 <div class="indenth4">
-<h4 id="cmdget" class="bph4">get</h4>
+<h4 id="cmdclients" class="bph4">clients</h4>
 <pre><code>
-usage: <span style="color:#5c5cff">#bp.gmcpex.get</span><span style="color:#e5e5e5"> [-h] [module]</span>
+usage: <span style="color:#5c5cff">#bp.proxy.clients</span><span style="color:#e5e5e5"> [-h]</span>
 
-print what is in a module in the gmcp cache
+list clients that are connected
+
+optional arguments:
+  -h, --help  show help
+
+</code></pre>
+<h4 id="cmdconnect" class="bph4">connect</h4>
+<pre><code>
+usage: <span style="color:#5c5cff">#bp.proxy.connect</span><span style="color:#e5e5e5"> [-h]</span>
+
+connect to the mud
+
+optional arguments:
+  -h, --help  show help
+
+</code></pre>
+<h4 id="cmddisconnect" class="bph4">disconnect</h4>
+<pre><code>
+usage: <span style="color:#5c5cff">#bp.proxy.disconnect</span><span style="color:#e5e5e5"> [-h]</span>
+
+disconnect from the mud
+
+optional arguments:
+  -h, --help  show help
+
+</code></pre>
+<h4 id="cmdmudpw" class="bph4">mudpw</h4>
+<pre><code>
+usage: <span style="color:#5c5cff">#bp.proxy.mudpw</span><span style="color:#e5e5e5"> [-h] [value]</span>
+
+set the Mud Password
 
 positional arguments:
-  module      the module to show (default: )
+  value       Mud Password (default: )
 
 optional arguments:
   -h, --help  show help (default: False)
+
+</code></pre>
+<h4 id="cmdproxypw" class="bph4">proxypw</h4>
+<pre><code>
+usage: <span style="color:#5c5cff">#bp.proxy.proxypw</span><span style="color:#e5e5e5"> [-h] [value]</span>
+
+set the Proxy Password
+
+positional arguments:
+  value       Proxy Password (default: )
+
+optional arguments:
+  -h, --help  show help (default: False)
+
+</code></pre>
+<h4 id="cmdproxypwview" class="bph4">proxypwview</h4>
+<pre><code>
+usage: <span style="color:#5c5cff">#bp.proxy.proxypwview</span><span style="color:#e5e5e5"> [-h] [value]</span>
+
+set the Proxy View Password
+
+positional arguments:
+  value       Proxy View Password (default: )
+
+optional arguments:
+  -h, --help  show help (default: False)
+
+</code></pre>
+<h4 id="cmdrestart" class="bph4">restart</h4>
+<pre><code>
+usage: <span style="color:#5c5cff">#bp.proxy.restart</span><span style="color:#e5e5e5"> [-h]</span>
+
+restart the proxy
+
+optional arguments:
+  -h, --help  show help
+
+</code></pre>
+<h4 id="cmdshutdown" class="bph4">shutdown</h4>
+<pre><code>
+usage: <span style="color:#5c5cff">#bp.proxy.shutdown</span><span style="color:#e5e5e5"> [-h]</span>
+
+shutdown the proxy
+
+optional arguments:
+  -h, --help  show help
 
 </code></pre>
 </div>
@@ -214,7 +299,7 @@ optional arguments:
 <div class="indenth4">
 <h4 id="cmdapi" class="bph4">api</h4>
 <pre><code>
-usage: <span style="color:#5c5cff">#bp.gmcpex.api</span><span style="color:#e5e5e5"> [-h] [api]</span>
+usage: <span style="color:#5c5cff">#bp.proxy.api</span><span style="color:#e5e5e5"> [-h] [api]</span>
 
 list functions in the api
 
@@ -227,7 +312,7 @@ optional arguments:
 </code></pre>
 <h4 id="cmdhelp" class="bph4">help</h4>
 <pre><code>
-usage: <span style="color:#5c5cff">#bp.gmcpex.help</span><span style="color:#e5e5e5"> [-a] [-c] [-h]</span>
+usage: <span style="color:#5c5cff">#bp.proxy.help</span><span style="color:#e5e5e5"> [-a] [-c] [-h]</span>
 
 show help info for this plugin
 
@@ -239,7 +324,7 @@ optional arguments:
 </code></pre>
 <h4 id="cmdinspect" class="bph4">inspect</h4>
 <pre><code>
-usage: <span style="color:#5c5cff">#bp.gmcpex.inspect</span><span style="color:#e5e5e5"> [-m METHOD] [-h]</span>
+usage: <span style="color:#5c5cff">#bp.proxy.inspect</span><span style="color:#e5e5e5"> [-m METHOD] [-h]</span>
 
 inspect a plugin
 
@@ -251,7 +336,7 @@ optional arguments:
 </code></pre>
 <h4 id="cmdreset" class="bph4">reset</h4>
 <pre><code>
-usage: <span style="color:#5c5cff">#bp.gmcpex.reset</span><span style="color:#e5e5e5"> [-h]</span>
+usage: <span style="color:#5c5cff">#bp.proxy.reset</span><span style="color:#e5e5e5"> [-h]</span>
 
 reset the plugin
 
@@ -261,7 +346,7 @@ optional arguments:
 </code></pre>
 <h4 id="cmdsave" class="bph4">save</h4>
 <pre><code>
-usage: <span style="color:#5c5cff">#bp.gmcpex.save</span><span style="color:#e5e5e5"> [-h]</span>
+usage: <span style="color:#5c5cff">#bp.proxy.save</span><span style="color:#e5e5e5"> [-h]</span>
 
 save the plugin state
 
@@ -271,7 +356,7 @@ optional arguments:
 </code></pre>
 <h4 id="cmdset" class="bph4">set</h4>
 <pre><code>
-usage: <span style="color:#5c5cff">#bp.gmcpex.set</span><span style="color:#e5e5e5"> [-h] [name] [value]</span>
+usage: <span style="color:#5c5cff">#bp.proxy.set</span><span style="color:#e5e5e5"> [-h] [name] [value]</span>
 
 change a setting in the plugin
 
@@ -288,13 +373,71 @@ optional arguments:
 </code></pre>
 <h4 id="cmdstats" class="bph4">stats</h4>
 <pre><code>
-usage: <span style="color:#5c5cff">#bp.gmcpex.stats</span><span style="color:#e5e5e5"> [-h]</span>
+usage: <span style="color:#5c5cff">#bp.proxy.stats</span><span style="color:#e5e5e5"> [-h]</span>
 
 show plugin stats
 
 optional arguments:
   -h, --help  show help (default: False)
 
+</code></pre>
+</div>
+<h2 id="settings" class="bph2">Settings</h2>
+<div class="indenth4">
+<h3 id="setusername" class="bph4">username</h3>
+<pre><code>
+username
+</code></pre>
+<h3 id="setmudport" class="bph4">mudport</h3>
+<pre><code>
+the port of the mud
+</code></pre>
+<h3 id="setlistenport" class="bph4">listenport</h3>
+<pre><code>
+the port for the proxy to listen on
+</code></pre>
+<h3 id="setmudhost" class="bph4">mudhost</h3>
+<pre><code>
+the hostname/ip of the mud
+</code></pre>
+</div>
+<h2 id="api" class="bph2">API</h2>
+<div class="indenth4">
+<h3 id="setproxypw" class="bph4">proxypw</h3>
+<pre><code>
+<span style="color:#00ff00">proxy.proxypw</span><span style="color:#e5e5e5">()</span>
+
+    read the secret from a file
+
+
+original defined in plugins/core/ssc.py
+</code></pre>
+<h3 id="setmudpw" class="bph4">mudpw</h3>
+<pre><code>
+<span style="color:#00ff00">proxy.mudpw</span><span style="color:#e5e5e5">()</span>
+
+    read the secret from a file
+
+
+original defined in plugins/core/ssc.py
+</code></pre>
+<h3 id="setproxypwview" class="bph4">proxypwview</h3>
+<pre><code>
+<span style="color:#00ff00">proxy.proxypwview</span><span style="color:#e5e5e5">()</span>
+
+    read the secret from a file
+
+
+original defined in plugins/core/ssc.py
+</code></pre>
+<h3 id="setrestart" class="bph4">restart</h3>
+<pre><code>
+<span style="color:#00ff00">proxy.restart</span><span style="color:#e5e5e5">()</span>
+
+    restart the proxy after 10 seconds
+
+
+original defined in plugins/net/proxy.py
 </code></pre>
 </div>
         </div><!-- /.col-xs-12 main -->

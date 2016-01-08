@@ -49,6 +49,7 @@
 <li><a href="/bastproxy/plugins/aardwolf/itemkeep.html">itemkeep</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/itemu.html">itemu</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/level.html">level</a></li>
+<li><a href="/bastproxy/plugins/aardwolf/malerts.html">malerts</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/mobk.html">mobk</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/move.html">move</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/pbalerts.html">pbalerts</a></li>
@@ -83,6 +84,7 @@
 <li><a href="/bastproxy/plugins/core/log.html">log</a></li>
 <li><a href="/bastproxy/plugins/core/options.html">options</a></li>
 <li><a href="/bastproxy/plugins/core/sqldb.html">sqldb</a></li>
+<li><a href="/bastproxy/plugins/core/ssc.html">ssc</a></li>
 <li><a href="/bastproxy/plugins/core/timers.html">timers</a></li>
 <li><a href="/bastproxy/plugins/core/triggers.html">triggers</a></li>
 <li><a href="/bastproxy/plugins/core/utils.html">utils</a></li>
@@ -96,18 +98,28 @@
 </ul>
 </li>
 <li class="dropdown-submenu">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Example</a>
+                  <ul class="dropdown-menu">
+<li><a href="/bastproxy/plugins/example/a102ex.html">a102ex</a></li>
+<li><a href="/bastproxy/plugins/example/gmcpex.html">gmcpex</a></li>
+<li><a href="/bastproxy/plugins/example/timerex.html">timerex</a></li>
+<li><a href="/bastproxy/plugins/example/triggerex.html">triggerex</a></li>
+</ul>
+</li>
+<li class="dropdown-submenu">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">Net</a>
                   <ul class="dropdown-menu">
 <li><a href="/bastproxy/plugins/net/GMCP.html">GMCP</a></li>
 <li><a href="/bastproxy/plugins/net/MCCP.html">MCCP</a></li>
 <li><a href="/bastproxy/plugins/net/TTYPE.html">TTYPE</a></li>
-<li><a href="/bastproxy/plugins/net/net.html">net</a></li>
+<li><a href="/bastproxy/plugins/net/proxy.html">proxy</a></li>
 </ul>
 </li>
 <li class="dropdown-submenu">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">Test</a>
                   <ul class="dropdown-menu">
 <li><a href="/bastproxy/plugins/test/evt.html">evt</a></li>
+<li><a href="/bastproxy/plugins/test/tm.html">tm</a></li>
 </ul>
 </li>
 <li class="dropdown-submenu">
@@ -200,18 +212,19 @@ usage: <span style="color:#5c5cff">#bp.actions.add</span><span style="color:#e5e
 add a action
 
 positional arguments:
-  regex                 the regex to match
-  action                the action to take
+  regex                 the regex to match (default: )
+  action                the action to take (default: )
   {execute,traceback,mud,client,error,msg}
-                        where to send the action
+                        where to send the action (default: execute)
 
 optional arguments:
-  -c, --color           match colors (@colors)
-  -d, --disable         disable the action
+  -c, --color           match colors (@colors) (default: False)
+  -d, --disable         disable the action (default: False)
   -g GROUP, --group GROUP
-                        the action group
-  -o, --overwrite       overwrite an action if it already exists
-  -h, --help            show help
+                        the action group (default: )
+  -o, --overwrite       overwrite an action if it already exists (default:
+                        False)
+  -h, --help            show help (default: False)
 
 </code></pre>
 <h4 id="cmddetail" class="bph4">detail</h4>
@@ -221,10 +234,10 @@ usage: <span style="color:#5c5cff">#bp.actions.detail</span><span style="color:#
 get detail for an action
 
 positional arguments:
-  action      the action to get details for
+  action      the action to get details for (default: )
 
 optional arguments:
-  -h, --help  show help
+  -h, --help  show help (default: False)
 
 </code></pre>
 <h4 id="cmdgroupt" class="bph4">groupt</h4>
@@ -234,11 +247,11 @@ usage: <span style="color:#5c5cff">#bp.actions.groupt</span><span style="color:#
 toggle all actions in a group
 
 positional arguments:
-  group          the group to toggle
+  group          the group to toggle (default: )
 
 optional arguments:
-  -d, --disable  disable the group
-  -h, --help     show help
+  -d, --disable  disable the group (default: False)
+  -h, --help     show help (default: False)
 
 </code></pre>
 <h4 id="cmdlist" class="bph4">list</h4>
@@ -248,10 +261,10 @@ usage: <span style="color:#5c5cff">#bp.actions.list</span><span style="color:#e5
 list actions
 
 positional arguments:
-  match       list only actions that have this argument in them
+  match       list only actions that have this argument in them (default: )
 
 optional arguments:
-  -h, --help  show help
+  -h, --help  show help (default: False)
 
 </code></pre>
 <h4 id="cmdremove" class="bph4">remove</h4>
@@ -261,10 +274,10 @@ usage: <span style="color:#5c5cff">#bp.actions.remove</span><span style="color:#
 remove an action
 
 positional arguments:
-  action      the action to remove
+  action      the action to remove (default: )
 
 optional arguments:
-  -h, --help  show help
+  -h, --help  show help (default: False)
 
 </code></pre>
 <h4 id="cmdtoggle" class="bph4">toggle</h4>
@@ -274,10 +287,10 @@ usage: <span style="color:#5c5cff">#bp.actions.toggle</span><span style="color:#
 toggle enabled flag
 
 positional arguments:
-  action      the action to toggle
+  action      the action to toggle (default: )
 
 optional arguments:
-  -h, --help  show help
+  -h, --help  show help (default: False)
 
 </code></pre>
 </div>
@@ -292,10 +305,10 @@ usage: <span style="color:#5c5cff">#bp.actions.api</span><span style="color:#e5e
 list functions in the api
 
 positional arguments:
-  api         api to get details of
+  api         api to get details of (default: )
 
 optional arguments:
-  -h, --help  show help
+  -h, --help  show help (default: False)
 
 </code></pre>
 <h4 id="cmdhelp" class="bph4">help</h4>
@@ -305,9 +318,9 @@ usage: <span style="color:#5c5cff">#bp.actions.help</span><span style="color:#e5
 show help info for this plugin
 
 optional arguments:
-  -a, --api       show functions this plugin has in the api
-  -c, --commands  show commands in this plugin
-  -h, --help      show help
+  -a, --api       show functions this plugin has in the api (default: False)
+  -c, --commands  show commands in this plugin (default: False)
+  -h, --help      show help (default: False)
 
 </code></pre>
 <h4 id="cmdinspect" class="bph4">inspect</h4>
@@ -318,8 +331,8 @@ inspect a plugin
 
 optional arguments:
   -m METHOD, --method METHOD
-                        get code for a method
-  -h, --help            show help
+                        get code for a method (default: )
+  -h, --help            show help (default: False)
 
 </code></pre>
 <h4 id="cmdreset" class="bph4">reset</h4>
@@ -329,7 +342,7 @@ usage: <span style="color:#5c5cff">#bp.actions.reset</span><span style="color:#e
 reset the plugin
 
 optional arguments:
-  -h, --help  show help
+  -h, --help  show help (default: False)
 
 </code></pre>
 <h4 id="cmdsave" class="bph4">save</h4>
@@ -339,7 +352,7 @@ usage: <span style="color:#5c5cff">#bp.actions.save</span><span style="color:#e5
 save the plugin state
 
 optional arguments:
-  -h, --help  show help
+  -h, --help  show help (default: False)
 
 </code></pre>
 <h4 id="cmdset" class="bph4">set</h4>
@@ -352,11 +365,11 @@ if there are no arguments or 'list' is the first argument then
 it will list the settings for the plugin
 
 positional arguments:
-  name        the setting name
-  value       the new value of the setting
+  name        the setting name (default: list)
+  value       the new value of the setting (default: )
 
 optional arguments:
-  -h, --help  show help
+  -h, --help  show help (default: False)
 
 </code></pre>
 <h4 id="cmdstats" class="bph4">stats</h4>
@@ -366,7 +379,7 @@ usage: <span style="color:#5c5cff">#bp.actions.stats</span><span style="color:#e
 show plugin stats
 
 optional arguments:
-  -h, --help  show help
+  -h, --help  show help (default: False)
 
 </code></pre>
 </div>

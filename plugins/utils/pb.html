@@ -49,6 +49,7 @@
 <li><a href="/bastproxy/plugins/aardwolf/itemkeep.html">itemkeep</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/itemu.html">itemu</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/level.html">level</a></li>
+<li><a href="/bastproxy/plugins/aardwolf/malerts.html">malerts</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/mobk.html">mobk</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/move.html">move</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/pbalerts.html">pbalerts</a></li>
@@ -83,6 +84,7 @@
 <li><a href="/bastproxy/plugins/core/log.html">log</a></li>
 <li><a href="/bastproxy/plugins/core/options.html">options</a></li>
 <li><a href="/bastproxy/plugins/core/sqldb.html">sqldb</a></li>
+<li><a href="/bastproxy/plugins/core/ssc.html">ssc</a></li>
 <li><a href="/bastproxy/plugins/core/timers.html">timers</a></li>
 <li><a href="/bastproxy/plugins/core/triggers.html">triggers</a></li>
 <li><a href="/bastproxy/plugins/core/utils.html">utils</a></li>
@@ -96,18 +98,28 @@
 </ul>
 </li>
 <li class="dropdown-submenu">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Example</a>
+                  <ul class="dropdown-menu">
+<li><a href="/bastproxy/plugins/example/a102ex.html">a102ex</a></li>
+<li><a href="/bastproxy/plugins/example/gmcpex.html">gmcpex</a></li>
+<li><a href="/bastproxy/plugins/example/timerex.html">timerex</a></li>
+<li><a href="/bastproxy/plugins/example/triggerex.html">triggerex</a></li>
+</ul>
+</li>
+<li class="dropdown-submenu">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">Net</a>
                   <ul class="dropdown-menu">
 <li><a href="/bastproxy/plugins/net/GMCP.html">GMCP</a></li>
 <li><a href="/bastproxy/plugins/net/MCCP.html">MCCP</a></li>
 <li><a href="/bastproxy/plugins/net/TTYPE.html">TTYPE</a></li>
-<li><a href="/bastproxy/plugins/net/net.html">net</a></li>
+<li><a href="/bastproxy/plugins/net/proxy.html">proxy</a></li>
 </ul>
 </li>
 <li class="dropdown-submenu">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">Test</a>
                   <ul class="dropdown-menu">
 <li><a href="/bastproxy/plugins/test/evt.html">evt</a></li>
+<li><a href="/bastproxy/plugins/test/tm.html">tm</a></li>
 </ul>
 </li>
 <li class="dropdown-submenu">
@@ -143,6 +155,7 @@
            pb <i class="glyphicon glyphicon-chevron-right"></i>
            <ul class="list-unstyled collapse" id="cmdgrouppbMenu">
   <li><a href="#cmdapikey">apikey</a></li>
+  <li><a href="#cmdchannels">channels</a></li>
   <li><a href="#cmdlink">link</a></li>
   <li><a href="#cmdnote">note</a></li>
 </ul></li>
@@ -167,6 +180,7 @@
            API <i class="glyphicon glyphicon-chevron-right"></i>
            <ul class="list-unstyled collapse" id="apiMenu">
   <li><a href="#setnote">note</a></li>
+  <li><a href="#setapikey">apikey</a></li>
   <li><a href="#setlink">link</a></li>
 </ul></li>
         </div>
@@ -191,15 +205,25 @@
 <div class="indenth4">
 <h4 id="cmdapikey" class="bph4">apikey</h4>
 <pre><code>
-usage: <span style="color:#5c5cff">#bp.pb.apikey</span><span style="color:#e5e5e5"> [-h] [apikey]</span>
+usage: <span style="color:#5c5cff">#bp.pb.apikey</span><span style="color:#e5e5e5"> [-h] [value]</span>
 
-add the apikey
+set the Pushbullet API key
 
 positional arguments:
-  apikey      an apikey from pushbullet
+  value       Pushbullet API key (default: )
 
 optional arguments:
-  -h, --help  show help
+  -h, --help  show help (default: False)
+
+</code></pre>
+<h4 id="cmdchannels" class="bph4">channels</h4>
+<pre><code>
+usage: <span style="color:#5c5cff">#bp.pb.channels</span><span style="color:#e5e5e5"> [-h]</span>
+
+show channels associated with pb
+
+optional arguments:
+  -h, --help  show help (default: False)
 
 </code></pre>
 <h4 id="cmdlink" class="bph4">link</h4>
@@ -209,13 +233,15 @@ usage: <span style="color:#5c5cff">#bp.pb.link</span><span style="color:#e5e5e5"
 send a link
 
 positional arguments:
-  title                 the title of the link
-  url                   the url of the link
+  title                 the title of the link (default: Pushbullet link from
+                        bastproxy)
+  url                   the url of the link (default:
+                        https://github.com/endavis/bastproxy)
 
 optional arguments:
   -c CHANNEL, --channel CHANNEL
-                        the pushbullet channel to send to
-  -h, --help            show help
+                        the pushbullet channel to send to (default: )
+  -h, --help            show help (default: False)
 
 </code></pre>
 <h4 id="cmdnote" class="bph4">note</h4>
@@ -225,13 +251,15 @@ usage: <span style="color:#5c5cff">#bp.pb.note</span><span style="color:#e5e5e5"
 send a note
 
 positional arguments:
-  title                 the title of the note
-  body                  the body of the note
+  title                 the title of the note (default: Pushbullet note from
+                        bastproxy)
+  body                  the body of the note (default: A Pushbullet note sent
+                        through bastproxy)
 
 optional arguments:
   -c CHANNEL, --channel CHANNEL
-                        the pushbullet channel to send to
-  -h, --help            show help
+                        the pushbullet channel to send to (default: )
+  -h, --help            show help (default: False)
 
 </code></pre>
 </div>
@@ -246,10 +274,10 @@ usage: <span style="color:#5c5cff">#bp.pb.api</span><span style="color:#e5e5e5">
 list functions in the api
 
 positional arguments:
-  api         api to get details of
+  api         api to get details of (default: )
 
 optional arguments:
-  -h, --help  show help
+  -h, --help  show help (default: False)
 
 </code></pre>
 <h4 id="cmdhelp" class="bph4">help</h4>
@@ -259,9 +287,9 @@ usage: <span style="color:#5c5cff">#bp.pb.help</span><span style="color:#e5e5e5"
 show help info for this plugin
 
 optional arguments:
-  -a, --api       show functions this plugin has in the api
-  -c, --commands  show commands in this plugin
-  -h, --help      show help
+  -a, --api       show functions this plugin has in the api (default: False)
+  -c, --commands  show commands in this plugin (default: False)
+  -h, --help      show help (default: False)
 
 </code></pre>
 <h4 id="cmdinspect" class="bph4">inspect</h4>
@@ -272,8 +300,8 @@ inspect a plugin
 
 optional arguments:
   -m METHOD, --method METHOD
-                        get code for a method
-  -h, --help            show help
+                        get code for a method (default: )
+  -h, --help            show help (default: False)
 
 </code></pre>
 <h4 id="cmdreset" class="bph4">reset</h4>
@@ -283,7 +311,7 @@ usage: <span style="color:#5c5cff">#bp.pb.reset</span><span style="color:#e5e5e5
 reset the plugin
 
 optional arguments:
-  -h, --help  show help
+  -h, --help  show help (default: False)
 
 </code></pre>
 <h4 id="cmdsave" class="bph4">save</h4>
@@ -293,7 +321,7 @@ usage: <span style="color:#5c5cff">#bp.pb.save</span><span style="color:#e5e5e5"
 save the plugin state
 
 optional arguments:
-  -h, --help  show help
+  -h, --help  show help (default: False)
 
 </code></pre>
 <h4 id="cmdset" class="bph4">set</h4>
@@ -306,11 +334,11 @@ if there are no arguments or 'list' is the first argument then
 it will list the settings for the plugin
 
 positional arguments:
-  name        the setting name
-  value       the new value of the setting
+  name        the setting name (default: list)
+  value       the new value of the setting (default: )
 
 optional arguments:
-  -h, --help  show help
+  -h, --help  show help (default: False)
 
 </code></pre>
 <h4 id="cmdstats" class="bph4">stats</h4>
@@ -320,7 +348,7 @@ usage: <span style="color:#5c5cff">#bp.pb.stats</span><span style="color:#e5e5e5
 show plugin stats
 
 optional arguments:
-  -h, --help  show help
+  -h, --help  show help (default: False)
 
 </code></pre>
 </div>
@@ -338,12 +366,22 @@ the channel to send to
 <span style="color:#00ff00">pb.note</span><span style="color:#e5e5e5">(</span><span style="color:#ffff00">title</span><span style="color:#e5e5e5">, </span><span style="color:#ffff00">body</span><span style="color:#e5e5e5">, </span><span style="color:#ffff00">channel=None</span><span style="color:#e5e5e5">)</span>
  send a note through pushbullet
 
-    <span style="color:#ffff00">title</span><span style="color:#e5e5e5">  = the title of the note</span>
+    <span style="color:#ffff00">title</span><span style="color:#e5e5e5">     = the title of the note</span>
     <span style="color:#ffff00">body</span><span style="color:#e5e5e5">      = the body of the note</span>
+    <span style="color:#ffff00">channel</span><span style="color:#e5e5e5">   = the pushbullet channel to send to</span>
 
     this function returns True if sent, False otherwise
 
 original defined in plugins/utils/pb.py
+</code></pre>
+<h3 id="setapikey" class="bph4">apikey</h3>
+<pre><code>
+<span style="color:#00ff00">pb.apikey</span><span style="color:#e5e5e5">()</span>
+
+    read the secret from a file
+
+
+original defined in plugins/core/ssc.py
 </code></pre>
 <h3 id="setlink" class="bph4">link</h3>
 <pre><code>
@@ -352,6 +390,7 @@ original defined in plugins/utils/pb.py
 
     <span style="color:#ffff00">title</span><span style="color:#e5e5e5">  = the title of the note</span>
     <span style="color:#ffff00">url</span><span style="color:#e5e5e5">      = the body of the note</span>
+    <span style="color:#ffff00">channel</span><span style="color:#e5e5e5">   = the pushbullet channel to send to</span>
 
     this function returns True if sent, False otherwise
 

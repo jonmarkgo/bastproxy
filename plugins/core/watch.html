@@ -49,6 +49,7 @@
 <li><a href="/bastproxy/plugins/aardwolf/itemkeep.html">itemkeep</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/itemu.html">itemu</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/level.html">level</a></li>
+<li><a href="/bastproxy/plugins/aardwolf/malerts.html">malerts</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/mobk.html">mobk</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/move.html">move</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/pbalerts.html">pbalerts</a></li>
@@ -83,6 +84,7 @@
 <li><a href="/bastproxy/plugins/core/log.html">log</a></li>
 <li><a href="/bastproxy/plugins/core/options.html">options</a></li>
 <li><a href="/bastproxy/plugins/core/sqldb.html">sqldb</a></li>
+<li><a href="/bastproxy/plugins/core/ssc.html">ssc</a></li>
 <li><a href="/bastproxy/plugins/core/timers.html">timers</a></li>
 <li><a href="/bastproxy/plugins/core/triggers.html">triggers</a></li>
 <li><a href="/bastproxy/plugins/core/utils.html">utils</a></li>
@@ -96,18 +98,28 @@
 </ul>
 </li>
 <li class="dropdown-submenu">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Example</a>
+                  <ul class="dropdown-menu">
+<li><a href="/bastproxy/plugins/example/a102ex.html">a102ex</a></li>
+<li><a href="/bastproxy/plugins/example/gmcpex.html">gmcpex</a></li>
+<li><a href="/bastproxy/plugins/example/timerex.html">timerex</a></li>
+<li><a href="/bastproxy/plugins/example/triggerex.html">triggerex</a></li>
+</ul>
+</li>
+<li class="dropdown-submenu">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">Net</a>
                   <ul class="dropdown-menu">
 <li><a href="/bastproxy/plugins/net/GMCP.html">GMCP</a></li>
 <li><a href="/bastproxy/plugins/net/MCCP.html">MCCP</a></li>
 <li><a href="/bastproxy/plugins/net/TTYPE.html">TTYPE</a></li>
-<li><a href="/bastproxy/plugins/net/net.html">net</a></li>
+<li><a href="/bastproxy/plugins/net/proxy.html">proxy</a></li>
 </ul>
 </li>
 <li class="dropdown-submenu">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">Test</a>
                   <ul class="dropdown-menu">
 <li><a href="/bastproxy/plugins/test/evt.html">evt</a></li>
+<li><a href="/bastproxy/plugins/test/tm.html">tm</a></li>
 </ul>
 </li>
 <li class="dropdown-submenu">
@@ -138,6 +150,12 @@
   <li><a href="#" data-toggle="collapse" data-target="#commandsMenu">
            Commands <i class="glyphicon glyphicon-chevron-right"></i>
            <ul class="list-unstyled collapse" id="commandsMenu">
+  <li><a href="#" data-toggle="collapse" data-target="#cmdgroupwatchMenu">
+           watch <i class="glyphicon glyphicon-chevron-right"></i>
+           <ul class="list-unstyled collapse" id="cmdgroupwatchMenu">
+  <li><a href="#cmddetail">detail</a></li>
+  <li><a href="#cmdlist">list</a></li>
+</ul></li>
   <li><a href="#" data-toggle="collapse" data-target="#cmdgroupBaseMenu">
            Base <i class="glyphicon glyphicon-chevron-right"></i>
            <ul class="list-unstyled collapse" id="cmdgroupBaseMenu">
@@ -167,6 +185,37 @@
 </div>
 <h2 id="commands" class="bph2">Commands</h2>
 <div class="indenth3">
+<h3 id="cmdgroupwatch" class="bph3">watch</h3>
+</div>
+<div class="indenth4">
+<h4 id="cmddetail" class="bph4">detail</h4>
+<pre><code>
+usage: <span style="color:#5c5cff">#bp.watch.detail</span><span style="color:#e5e5e5"> [-h] [watch [watch ...]]</span>
+
+get details of a watch
+
+positional arguments:
+  watch       the trigger to detail (default: [])
+
+optional arguments:
+  -h, --help  show help (default: False)
+
+</code></pre>
+<h4 id="cmdlist" class="bph4">list</h4>
+<pre><code>
+usage: <span style="color:#5c5cff">#bp.watch.list</span><span style="color:#e5e5e5"> [-h] [match]</span>
+
+list watches
+
+positional arguments:
+  match       list only watches that have this argument in them (default: )
+
+optional arguments:
+  -h, --help  show help (default: False)
+
+</code></pre>
+</div>
+<div class="indenth3">
 <h3 id="cmdgroupBase" class="bph3">Base</h3>
 </div>
 <div class="indenth4">
@@ -177,10 +226,10 @@ usage: <span style="color:#5c5cff">#bp.watch.api</span><span style="color:#e5e5e
 list functions in the api
 
 positional arguments:
-  api         api to get details of
+  api         api to get details of (default: )
 
 optional arguments:
-  -h, --help  show help
+  -h, --help  show help (default: False)
 
 </code></pre>
 <h4 id="cmdhelp" class="bph4">help</h4>
@@ -190,9 +239,9 @@ usage: <span style="color:#5c5cff">#bp.watch.help</span><span style="color:#e5e5
 show help info for this plugin
 
 optional arguments:
-  -a, --api       show functions this plugin has in the api
-  -c, --commands  show commands in this plugin
-  -h, --help      show help
+  -a, --api       show functions this plugin has in the api (default: False)
+  -c, --commands  show commands in this plugin (default: False)
+  -h, --help      show help (default: False)
 
 </code></pre>
 <h4 id="cmdinspect" class="bph4">inspect</h4>
@@ -203,8 +252,8 @@ inspect a plugin
 
 optional arguments:
   -m METHOD, --method METHOD
-                        get code for a method
-  -h, --help            show help
+                        get code for a method (default: )
+  -h, --help            show help (default: False)
 
 </code></pre>
 <h4 id="cmdreset" class="bph4">reset</h4>
@@ -214,7 +263,7 @@ usage: <span style="color:#5c5cff">#bp.watch.reset</span><span style="color:#e5e
 reset the plugin
 
 optional arguments:
-  -h, --help  show help
+  -h, --help  show help (default: False)
 
 </code></pre>
 <h4 id="cmdsave" class="bph4">save</h4>
@@ -224,7 +273,7 @@ usage: <span style="color:#5c5cff">#bp.watch.save</span><span style="color:#e5e5
 save the plugin state
 
 optional arguments:
-  -h, --help  show help
+  -h, --help  show help (default: False)
 
 </code></pre>
 <h4 id="cmdset" class="bph4">set</h4>
@@ -237,11 +286,11 @@ if there are no arguments or 'list' is the first argument then
 it will list the settings for the plugin
 
 positional arguments:
-  name        the setting name
-  value       the new value of the setting
+  name        the setting name (default: list)
+  value       the new value of the setting (default: )
 
 optional arguments:
-  -h, --help  show help
+  -h, --help  show help (default: False)
 
 </code></pre>
 <h4 id="cmdstats" class="bph4">stats</h4>
@@ -251,7 +300,7 @@ usage: <span style="color:#5c5cff">#bp.watch.stats</span><span style="color:#e5e
 show plugin stats
 
 optional arguments:
-  -h, --help  show help
+  -h, --help  show help (default: False)
 
 </code></pre>
 </div>
@@ -262,7 +311,7 @@ optional arguments:
 <span style="color:#00ff00">watch.add</span><span style="color:#e5e5e5">(</span><span style="color:#ffff00">watchname</span><span style="color:#e5e5e5">, </span><span style="color:#ffff00">regex</span><span style="color:#e5e5e5">, </span><span style="color:#ffff00">plugin</span><span style="color:#e5e5e5">, </span><span style="color:#ffff00">**kwargs</span><span style="color:#e5e5e5">)</span>
   add a command watch
     <span style="color:#ffff00">watchname</span><span style="color:#e5e5e5">   = name</span>
-    <span style="color:#ffff00">regex</span><span style="color:#e5e5e5">    = the regular expression that matches this trigger</span>
+    <span style="color:#ffff00">regex</span><span style="color:#e5e5e5">    = the regular expression that matches this command</span>
     <span style="color:#ffff00">plugin</span><span style="color:#e5e5e5">   = the plugin this comes from, added</span>
           automatically if using the api through BaseClass
     <span style="color:#ffff00">keyword args</span><span style="color:#e5e5e5"> arguments:</span>
@@ -277,7 +326,7 @@ overloaded in plugins/_baseplugin.py
 <pre><code>
 <span style="color:#00ff00">watch.removeplugin</span><span style="color:#e5e5e5">(</span><span style="color:#ffff00">plugin</span><span style="color:#e5e5e5">)</span>
   remove all watches related to a plugin
-    <span style="color:#ffff00">watchname</span><span style="color:#e5e5e5">   = The trigger name</span>
+    <span style="color:#ffff00">plugin</span><span style="color:#e5e5e5">   = The plugin</span>
 
     this function returns no values
 
@@ -287,7 +336,8 @@ original defined in plugins/core/watch.py
 <pre><code>
 <span style="color:#00ff00">watch.remove</span><span style="color:#e5e5e5">(</span><span style="color:#ffff00">watchname</span><span style="color:#e5e5e5">, </span><span style="color:#ffff00">force=False</span><span style="color:#e5e5e5">)</span>
   remove a command watch
-    <span style="color:#ffff00">watchname</span><span style="color:#e5e5e5">   = The trigger name</span>
+    <span style="color:#ffff00">watchname</span><span style="color:#e5e5e5">   = The watch name</span>
+    <span style="color:#ffff00">force</span><span style="color:#e5e5e5">       = force removal if functions are registered</span>
 
     this function returns no values
 

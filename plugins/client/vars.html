@@ -49,6 +49,7 @@
 <li><a href="/bastproxy/plugins/aardwolf/itemkeep.html">itemkeep</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/itemu.html">itemu</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/level.html">level</a></li>
+<li><a href="/bastproxy/plugins/aardwolf/malerts.html">malerts</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/mobk.html">mobk</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/move.html">move</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/pbalerts.html">pbalerts</a></li>
@@ -83,6 +84,7 @@
 <li><a href="/bastproxy/plugins/core/log.html">log</a></li>
 <li><a href="/bastproxy/plugins/core/options.html">options</a></li>
 <li><a href="/bastproxy/plugins/core/sqldb.html">sqldb</a></li>
+<li><a href="/bastproxy/plugins/core/ssc.html">ssc</a></li>
 <li><a href="/bastproxy/plugins/core/timers.html">timers</a></li>
 <li><a href="/bastproxy/plugins/core/triggers.html">triggers</a></li>
 <li><a href="/bastproxy/plugins/core/utils.html">utils</a></li>
@@ -96,18 +98,28 @@
 </ul>
 </li>
 <li class="dropdown-submenu">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Example</a>
+                  <ul class="dropdown-menu">
+<li><a href="/bastproxy/plugins/example/a102ex.html">a102ex</a></li>
+<li><a href="/bastproxy/plugins/example/gmcpex.html">gmcpex</a></li>
+<li><a href="/bastproxy/plugins/example/timerex.html">timerex</a></li>
+<li><a href="/bastproxy/plugins/example/triggerex.html">triggerex</a></li>
+</ul>
+</li>
+<li class="dropdown-submenu">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">Net</a>
                   <ul class="dropdown-menu">
 <li><a href="/bastproxy/plugins/net/GMCP.html">GMCP</a></li>
 <li><a href="/bastproxy/plugins/net/MCCP.html">MCCP</a></li>
 <li><a href="/bastproxy/plugins/net/TTYPE.html">TTYPE</a></li>
-<li><a href="/bastproxy/plugins/net/net.html">net</a></li>
+<li><a href="/bastproxy/plugins/net/proxy.html">proxy</a></li>
 </ul>
 </li>
 <li class="dropdown-submenu">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">Test</a>
                   <ul class="dropdown-menu">
 <li><a href="/bastproxy/plugins/test/evt.html">evt</a></li>
+<li><a href="/bastproxy/plugins/test/tm.html">tm</a></li>
 </ul>
 </li>
 <li class="dropdown-submenu">
@@ -162,6 +174,7 @@
            <ul class="list-unstyled collapse" id="apiMenu">
   <li><a href="#setsetv">setv</a></li>
   <li><a href="#setgetv">getv</a></li>
+  <li><a href="#setreplace">replace</a></li>
 </ul></li>
         </div>
 
@@ -185,11 +198,11 @@ usage: <span style="color:#5c5cff">#bp.vars.add</span><span style="color:#e5e5e5
 add a variable
 
 positional arguments:
-  name        the name of the variable
-  value       the value of the variable
+  name        the name of the variable (default: )
+  value       the value of the variable (default: )
 
 optional arguments:
-  -h, --help  show help
+  -h, --help  show help (default: False)
 
 </code></pre>
 <h4 id="cmdlist" class="bph4">list</h4>
@@ -200,9 +213,10 @@ list variables
 
 positional arguments:
   match       list only variables that have this argument in their name
+              (default: )
 
 optional arguments:
-  -h, --help  show help
+  -h, --help  show help (default: False)
 
 </code></pre>
 <h4 id="cmdremove" class="bph4">remove</h4>
@@ -212,10 +226,10 @@ usage: <span style="color:#5c5cff">#bp.vars.remove</span><span style="color:#e5e
 remove a variable
 
 positional arguments:
-  name        the variable to remove
+  name        the variable to remove (default: )
 
 optional arguments:
-  -h, --help  show help
+  -h, --help  show help (default: False)
 
 </code></pre>
 </div>
@@ -230,10 +244,10 @@ usage: <span style="color:#5c5cff">#bp.vars.api</span><span style="color:#e5e5e5
 list functions in the api
 
 positional arguments:
-  api         api to get details of
+  api         api to get details of (default: )
 
 optional arguments:
-  -h, --help  show help
+  -h, --help  show help (default: False)
 
 </code></pre>
 <h4 id="cmdhelp" class="bph4">help</h4>
@@ -243,9 +257,9 @@ usage: <span style="color:#5c5cff">#bp.vars.help</span><span style="color:#e5e5e
 show help info for this plugin
 
 optional arguments:
-  -a, --api       show functions this plugin has in the api
-  -c, --commands  show commands in this plugin
-  -h, --help      show help
+  -a, --api       show functions this plugin has in the api (default: False)
+  -c, --commands  show commands in this plugin (default: False)
+  -h, --help      show help (default: False)
 
 </code></pre>
 <h4 id="cmdinspect" class="bph4">inspect</h4>
@@ -256,8 +270,8 @@ inspect a plugin
 
 optional arguments:
   -m METHOD, --method METHOD
-                        get code for a method
-  -h, --help            show help
+                        get code for a method (default: )
+  -h, --help            show help (default: False)
 
 </code></pre>
 <h4 id="cmdreset" class="bph4">reset</h4>
@@ -267,7 +281,7 @@ usage: <span style="color:#5c5cff">#bp.vars.reset</span><span style="color:#e5e5
 reset the plugin
 
 optional arguments:
-  -h, --help  show help
+  -h, --help  show help (default: False)
 
 </code></pre>
 <h4 id="cmdsave" class="bph4">save</h4>
@@ -277,7 +291,7 @@ usage: <span style="color:#5c5cff">#bp.vars.save</span><span style="color:#e5e5e
 save the plugin state
 
 optional arguments:
-  -h, --help  show help
+  -h, --help  show help (default: False)
 
 </code></pre>
 <h4 id="cmdset" class="bph4">set</h4>
@@ -290,11 +304,11 @@ if there are no arguments or 'list' is the first argument then
 it will list the settings for the plugin
 
 positional arguments:
-  name        the setting name
-  value       the new value of the setting
+  name        the setting name (default: list)
+  value       the new value of the setting (default: )
 
 optional arguments:
-  -h, --help  show help
+  -h, --help  show help (default: False)
 
 </code></pre>
 <h4 id="cmdstats" class="bph4">stats</h4>
@@ -304,7 +318,7 @@ usage: <span style="color:#5c5cff">#bp.vars.stats</span><span style="color:#e5e5
 show plugin stats
 
 optional arguments:
-  -h, --help  show help
+  -h, --help  show help (default: False)
 
 </code></pre>
 </div>
@@ -314,7 +328,7 @@ optional arguments:
 <pre><code>
 <span style="color:#00ff00">vars.setv</span><span style="color:#e5e5e5">(</span><span style="color:#ffff00">varname</span><span style="color:#e5e5e5">, </span><span style="color:#ffff00">value</span><span style="color:#e5e5e5">)</span>
   set the variable with a specified name to the specified value
-    <span style="color:#ffff00">varname</span><span style="color:#e5e5e5">  = the variable to get</span>
+    <span style="color:#ffff00">varname</span><span style="color:#e5e5e5">  = the variable to set</span>
     <span style="color:#ffff00">value</span><span style="color:#e5e5e5">  = the value to set</span>
 
     this function returns True if the value was set, False if an error was
@@ -330,6 +344,17 @@ original defined in plugins/client/vars.py
     <span style="color:#ffff00">varname</span><span style="color:#e5e5e5">  = the variable to get</span>
 
     this function returns the value of variable with the name of the argument
+
+
+original defined in plugins/client/vars.py
+</code></pre>
+<h3 id="setreplace" class="bph4">replace</h3>
+<pre><code>
+<span style="color:#00ff00">vars.replace</span><span style="color:#e5e5e5">(</span><span style="color:#ffff00">data</span><span style="color:#e5e5e5">)</span>
+replace the variables in data
+    <span style="color:#ffff00">data</span><span style="color:#e5e5e5">  = the variable to get</span>
+
+    this function returns the data after variable substition
 
 
 original defined in plugins/client/vars.py
