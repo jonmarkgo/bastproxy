@@ -86,7 +86,7 @@ class Plugin(BasePlugin):
 
   def cmd_cache(self, args):
     """
-    send a gmcp packet
+    see the cache
     """
     tmsg = []
     if args['item'] == '':

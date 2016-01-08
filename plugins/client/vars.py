@@ -75,7 +75,7 @@ class Plugin(BasePlugin):
     self.api.get('events.register')('from_client_event', self.checkline,
                                         prio=99)
 
-  # get the variable
+  # get a variable
   def api_getv(self, varname):
     """  get the variable with a specified name
     @Yvarname@w  = the variable to get
@@ -90,7 +90,7 @@ class Plugin(BasePlugin):
   # set a variable
   def api_setv(self, varname, value):
     """  set the variable with a specified name to the specified value
-    @Yvarname@w  = the variable to get
+    @Yvarname@w  = the variable to set
     @Yvalue@w  = the value to set
 
     this function returns True if the value was set, False if an error was
@@ -130,11 +130,7 @@ class Plugin(BasePlugin):
 
   def cmd_add(self, args):
     """
-    @G%(name)s@w - @B%(cmdname)s@w
-      Add a variable
-      @CUsage@w: add @Y<originalstring>@w @M<replacementstring>@w
-        @Yoriginalstring@w    = The original string to be replaced
-        @Mreplacementstring@w = The new string
+    command to add a variable
     """
     tmsg = []
     if args['name'] and args['value']:
@@ -148,10 +144,7 @@ class Plugin(BasePlugin):
 
   def cmd_remove(self, args):
     """
-    @G%(name)s@w - @B%(cmdname)s@w
-      Remove a variable
-      @CUsage@w: rem @Y<originalstring>@w
-        @Yoriginalstring@w    = The original string
+    command to remove a variable
     """
     tmsg = []
     if args['name']:
@@ -163,9 +156,7 @@ class Plugin(BasePlugin):
 
   def cmd_list(self, args):
     """
-    @G%(name)s@w - @B%(cmdname)s@w
-      List variables
-      @CUsage@w: list
+    command to list variables
     """
     tmsg = self.listvariables(args['match'])
     return True, tmsg
@@ -199,7 +190,7 @@ class Plugin(BasePlugin):
 
   def clearvariables(self):
     """
-    clear all subs
+    clear all variables
     """
     self._variables.clear()
     self._variables.sync()
