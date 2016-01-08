@@ -37,6 +37,7 @@ class CustomFormatter(argparse.HelpFormatter):
             if action.default is not argparse.SUPPRESS:
                 defaulting_nargs = [argparse.OPTIONAL, argparse.ZERO_OR_MORE]
                 if action.option_strings or action.nargs in defaulting_nargs:
+                  if action.default != '':
                     help += ' (default: %(default)s)'
         return help
 
@@ -101,7 +102,7 @@ class Plugin(BasePlugin):
                                  parser=parser, history=False)
 
     parser = argparse.ArgumentParser(add_help=False,
-                 description='list or run a command in history')
+                 description='list the command history')
     parser.add_argument('-c', "--clear",
           help="clear the history", action='store_true')
     self.api.get('commands.add')('history', self.cmd_history,
