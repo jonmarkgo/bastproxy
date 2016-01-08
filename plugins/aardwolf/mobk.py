@@ -103,6 +103,8 @@ class Plugin(AardwolfBasePlugin):
                 "Your share is (?P<gold>\d+) gold\.$")
     self.api('triggers.add')('mobtrivia',
               "^You killed a Triv bonus mob!! Triv point added\.$")
+    self.api('triggers.add')('mobtrivia2',
+              "^^You killed a Trivia Point bonus mob!! Trivia point added\.$")
     self.api('triggers.add')('mobvorpal',
               "^Deep magic stirs within your weapon. " \
                 "It seems to have a life of its own.$")
@@ -138,6 +140,7 @@ class Plugin(AardwolfBasePlugin):
     self.api('events.register')('trigger_mobsac', self.mobname)
     self.api('events.register')('trigger_mobconsume', self.mobname)
     self.api('events.register')('trigger_mobtrivia', self.mobtrivia)
+    self.api('events.register')('trigger_mobtrivia2', self.mobtrivia)
     self.api('events.register')('trigger_mobvorpal', self.mobvorpal)
     self.api('events.register')('trigger_mobassassin', self.mobassassin)
     self.api('events.register')('trigger_mobdeathblow', self.mobdeathblow)
