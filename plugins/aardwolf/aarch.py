@@ -1,5 +1,6 @@
 """
 This plugin searches inventory for aarcheology items
+
 It can tell how many are in inventory, how many are needed,
 which pamplets are in inventory and which are needed
 """

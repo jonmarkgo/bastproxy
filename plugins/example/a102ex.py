@@ -3,6 +3,7 @@ This plugin is an example plugin to show how to use the aardwolf 102
 telnet options
 
 ## Using A102
+
  * register to the A102 event and check which option it was
  * register to the "A102:#" event
 
