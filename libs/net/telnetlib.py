@@ -6,7 +6,7 @@ J. Reynolds
 """
 
 from __future__ import print_function
-# Imported modules
+
 import asyncore
 import socket
 

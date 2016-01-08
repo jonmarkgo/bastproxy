@@ -1,4 +1,4 @@
 """
 Aardwolf specific plugins
 """
-DESCRIPTION = 'Aardwolf Mud specific plugins- www.aardwolf.com'
+DESCRIPTION = 'Aardwolf Mud specific plugins - http://www.aardwolf.com'

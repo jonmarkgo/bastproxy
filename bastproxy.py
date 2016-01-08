@@ -32,7 +32,9 @@ optional arguments:
 
 ### Connecting
  * Connect a client to the listen_port above on the host the proxy is running,
-      and then login with the password.
+      and then login with the password
+      Default Port: 9999
+      Default Password: "defaultpass"
 
 ### Help
   * Use the following commands to get help

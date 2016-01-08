@@ -8,7 +8,7 @@ from libs.api import API
 
 class Proxy(Telnet):
   """
-  This class is for the proxy that connects to the server
+  This class is for the proxy that connects to the mud
   """
   def __init__(self):
     """
