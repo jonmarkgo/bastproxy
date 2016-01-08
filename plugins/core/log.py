@@ -161,7 +161,8 @@ class Plugin(BasePlugin):
                           tfile)
     backupzipfile = os.path.join(self.logdir, dtype, 'archive',
                           tfile + '.zip')
-    with zipfile.ZipFile(backupzipfile, 'w', zipfile.ZIP_DEFLATED) as myzip:
+    with zipfile.ZipFile(backupzipfile, 'w', zipfile.ZIP_DEFLATED,
+                         allowZip64=True) as myzip:
       myzip.write(backupfile, arcname=self.currentlogs[dtype])
     os.remove(backupfile)
     del self.openlogs[self.currentlogs[dtype]]
@@ -216,11 +217,9 @@ class Plugin(BasePlugin):
 
   # toggle logging datatypes to the clients
   def cmd_client(self, args):
-    """@G%(name)s@w - @B%(cmdname)s@w
-  toggle a message type to show to clients
-  @CUsage@w: show @Y<datatype>@w
-    @Ydatatype@w  = the type to toggle
-    if no arguments, list types that are sent to client"""
+    """
+    toggle datatypes shown to client
+    """
     tmsg = []
     if len(args['datatype']) > 0:
       for i in args['datatype']:
@@ -259,11 +258,9 @@ class Plugin(BasePlugin):
 
   # toggle logging datatypes to the console
   def cmd_console(self, args):
-    """@G%(name)s@w - @B%(cmdname)s@w
-  toggle a message type to show in the console
-  @CUsage@w: show @Y<datatype>@w
-    @Ydatatype@w  = the type to toggle, can be multiple (list)
-    if no arguments, list types that are sent to console"""
+    """
+    log datatypes to the console
+    """
     tmsg = []
     if len(args['datatype']) > 0:
       for i in args['datatype']:
@@ -304,19 +301,11 @@ class Plugin(BasePlugin):
                     self.sname)
       self.sendtofile.sync()
 
-  # toggle logging datatypes to a file
+  # toggle a datatype to log to a file
   def cmd_file(self, args):
-    """@G%(name)s@w - @B%(cmdname)s@w
-  toggle a message type to show to file
-  @CUsage@w: show @Y<datatype>@w @Y<timestamp>@w
-    @Ydatatype@w  = the type to toggle, can be multiple (list)
-    @Ytimestamp@W = (optional) if True, then add timestamps before each line
-           if False, do not add timestamps
-           the default is True
-    the file will be located in the data/logs/<dtype> directory
-    the filename for the log will be <date>.log
-           Example: Tue-Feb-26-2013.log
-    if no arguments, list types that are sent to file"""
+    """
+    toggle a datatype to log to a file
+    """
     tmsg = []
     timestamp = True
     if args['datatype'] != 'list':
@@ -346,11 +335,9 @@ class Plugin(BasePlugin):
 
   # archive a datatype
   def cmd_archive(self, args):
-    """@G%(name)s@w - @B%(cmdname)s@w
-  archive a log file
-  @CUsage@w: show @Y<datatype>@w
-    @Ydatatype@w  = the type to toggle, can be multiple (list)
-    if no arguments, list types that are sent to client"""
+    """
+    archive a datatype
+    """
     tmsg = []
     if len(args) > 0:
       for i in args:
@@ -365,9 +352,9 @@ class Plugin(BasePlugin):
 
   # show all types
   def cmd_types(self, args):
-    """@G%(name)s@w - @B%(cmdname)s@w
-  show data types
-  @CUsage@w: types"""
+    """
+    list data types
+    """
     tmsg = []
     tmsg.append('Data Types')
     tmsg.append('-' *  30)
@@ -391,7 +378,6 @@ class Plugin(BasePlugin):
       self.logtofile(data, 'frommud')
     return args
 
-
   def load(self):
     """
     load external stuff
@@ -406,14 +392,25 @@ class Plugin(BasePlugin):
     self.api.get('events.register')('to_mud_event', self.logmud)
 
     parser = argparse.ArgumentParser(add_help=False,
-                description="toggle datatypes to clients")
+                description="""\
+      toggle datatypes to clients
+
+      if no arguments, data types that are currenty sent to clients will be listed""")
     parser.add_argument('datatype', help='a list of datatypes to toggle',
                         default=[], nargs='*')
     self.api.get('commands.add')('client', self.cmd_client,
                         lname='Logger', parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
-                description="toggle datatype to log to a file")
+                description="""\
+      toggle datatype to log to a file
+
+      the file will be located in the data/logs/<dtype> directory
+
+      the filename for the log will be <date>.log
+          Example: Tue-Feb-26-2013.log
+
+      if no arguments, types that are sent to file will be listed""")
     parser.add_argument('datatype', help='the datatype to toggle',
                         default='list', nargs='?')
     parser.add_argument("-n", "--notimestamp",
@@ -423,7 +420,10 @@ class Plugin(BasePlugin):
                         lname='Logger', parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
-                description="toggle datatypes to the console")
+                description="""\
+      toggle datatypes to the console
+
+      if no arguments, data types that are currenty sent to the console will be listed""")
     parser.add_argument('datatype', help='a list of datatypes to toggle',
                         default=[], nargs='*')
     self.api.get('commands.add')('console', self.cmd_console,
