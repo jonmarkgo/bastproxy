@@ -12,7 +12,7 @@ from libs.net.telnetlib import Telnet
 PASSWORD = 0
 CONNECTED = 1
 
-class ProxyClient(Telnet):
+class Client(Telnet):
   """
   a class to hand a proxy client
   """
@@ -76,7 +76,7 @@ class ProxyClient(Telnet):
     """
 
     proxy = self.api.get('managers.getm')('proxy')
-    config = self.api.get('managers.getm')('config')
+
     if self.connected == False:
       return
     Telnet.handle_read(self)

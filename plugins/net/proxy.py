@@ -5,6 +5,7 @@ import time
 import argparse
 import os
 import stat
+import sys
 from plugins._baseplugin import BasePlugin
 
 #these 5 are required
@@ -31,6 +32,8 @@ class Plugin(BasePlugin):
 
     self.api.get('dependency.add')('ssc')
 
+    self.api.get('api.add')('restart', self.api_restart)
+
   def load(self):
     """
     load the plugins
@@ -54,6 +57,9 @@ class Plugin(BasePlugin):
 
     self.api.get('commands.add')('connect', self.cmd_connect,
                               shelp='connect to the mud')
+
+    self.api.get('commands.add')('restart', self.cmd_restart,
+                              shelp='restart the proxy', format=False)
 
     self.api.get('commands.add')('shutdown', self.cmd_shutdown,
                               shelp='shutdown the proxy')
@@ -83,9 +89,7 @@ class Plugin(BasePlugin):
 
   def cmd_clients(self, _):
     """
-    @G%(name)s@w - @B%(cmdname)s@w
-    List connections
-      @CUsage@w: list
+    show all clients
     """
     proxy = self.api.get('managers.getm')('proxy')
     clientformat = '%-6s %-17s %-7s %-17s %-s'
@@ -149,6 +153,12 @@ class Plugin(BasePlugin):
     self.api('send.client')('Shutting down bastproxy')
     proxy.shutdown()
 
+  def cmd_restart(self, args):
+    """
+    restart the proxy
+    """
+    self.api('proxy.restart')()
+
   def client_connected(self, args):
     """
     check for mud settings
@@ -188,6 +198,38 @@ class Plugin(BasePlugin):
       self.api('send.client')(tmsg)
 
     return True
+
+  # restart the proxy
+  def api_restart(self):
+    """
+    restart the proxy after 10 seconds
+    """
+    listen_port = self.api('setting.gets')('listenport')
+
+    self.api('send.client')("Respawning bastproxy on port: %s in 10 seconds" \
+                                              % listen_port)
+
+    self.api.get('timers.add')('restart', self.timer_restart, 5, onetime=True)
+
+  def timer_restart(self):
+    """
+    a function to restart the proxy after a timer
+    """
+    self.api('plugins.savestate')()
+
+    executable = sys.executable
+    args = []
+    args.insert(0, 'bastproxy.py')
+    args.insert(0, sys.executable)
+
+    plistener = self.api('managers.getm')('listener')
+    plistener.close()
+    proxy = self.api('managers.getm')('proxy')
+    proxy.shutdown()
+
+    time.sleep(5)
+
+    os.execv(executable, args)
 
   def listenportchange(self, args):
     """

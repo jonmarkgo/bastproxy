@@ -84,34 +84,6 @@ API.loading = True
 
 plistener = None
 
-# restart the proxy
-def restart():
-    """
-    restart the proxy
-    """
-    api.get('plugins.savestate')()
-
-    executable = sys.executable
-    args = []
-    args.insert(0, 'bastproxy.py')
-    args.insert(0, sys.executable)
-
-    proxyp = api('plugins.getp')('proxy')
-
-    listen_port = proxyp.api('setting.gets')('listenport')
-
-    api('send.client')("Respawning bastproxy on port: %s" % listen_port)
-
-    plistener.close()
-    proxy = api.get('managers.getm')('proxy')
-    proxy.shutdown()
-
-    time.sleep(10)
-
-    os.execv(executable, args)
-
-api.add('proxy', 'restart', restart)
-
 def setuppaths():
   """
   setup paths
@@ -184,9 +156,9 @@ class Listener(asyncore.dispatcher):
         api.get('send.msg')("Accepted connection from %s : %s" %
                                       (source_addr[0], source_addr[1]), 'net')
 
-        #Proxy client keeps up with itself
-        from libs.net.client import ProxyClient
-        ProxyClient(client_connection, source_addr[0], source_addr[1])
+        #client keeps up with itself
+        from libs.net.client import Client
+        Client(client_connection, source_addr[0], source_addr[1])
     except:
       api.get('send.traceback')('Error handling client')
 
@@ -199,8 +171,10 @@ def start(listen_port):
   global plistener
   plistener = Listener(listen_port)
 
-  if getattr(signal, 'SIGCHLD', None) is not None:
-    signal.signal(signal.SIGCHLD, signal.SIG_IGN)
+  api.get('managers.add')('listener', plistener)
+
+  #if getattr(signal, 'SIGCHLD', None) is not None:
+   # signal.signal(signal.SIGCHLD, signal.SIG_IGN)
 
   try:
     while True:
@@ -223,7 +197,7 @@ def main():
   parser = argparse.ArgumentParser(description='A python mud proxy')
   parser.add_argument('-p', "--port",
           help="the port for the proxy to listen on",
-              default='')
+              default=9999)
   parser.add_argument('-d', "--daemon",
           help="run in daemon mode",
               action='store_true')
@@ -247,7 +221,7 @@ def main():
 
   proxyp = api('plugins.getp')('proxy')
 
-  if targs['port'] != '':
+  if targs['port'] != 9999:
     proxyp.api('setting.change')('listenport', targs['port'])
 
   listen_port = proxyp.api('setting.gets')('listenport')
