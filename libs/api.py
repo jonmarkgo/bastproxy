@@ -30,41 +30,41 @@ class API(object):
     self.overload('api', 'list', self.api_list)
 
   # add a function to the api
-  def add(self, ptype, name, function):
+  def add(self, toplevel, name, function):
     """  add a function to the api
-    @Yptype@w  = the base that the api should be under
+    @Yptoplevel@w  = the toplevel that the api should be under
     @Yname@w  = the name of the api
     @Yfunction@w  = the function
 
-    the function is added as ptype.name into the api
+    the function is added as toplevel.name into the api
 
     this function returns no values"""
-    if not (ptype in API.api):
-      API.api[ptype] = {}
+    if not (toplevel in API.api):
+      API.api[toplevel] = {}
 
-    if not (name in API.api[ptype]):
-      API.api[ptype][name] = function
+    if not (name in API.api[toplevel]):
+      API.api[toplevel][name] = function
 
   # overload a function in the api
-  def overload(self, ptype, name, function):
+  def overload(self, toplevel, name, function):
     """  overload a function in the api
-    @Yptype@w  = the base that the api should be under
+    @Ytoplevel@w  = the toplevel that the api should be under
     @Yname@w  = the name of the api
     @Yfunction@w  = the function
 
-    the function is added as ptype.name into the overloaded api
+    the function is added as toplevel.name into the overloaded api
 
     this function returns no values"""
     try:
-      ofunc = self.get(ptype + '.' + name)
+      ofunc = self.get(toplevel + '.' + name)
       function.__doc__ = ofunc.__doc__
     except AttributeError:
       pass
 
-    if not (ptype in self.overloadedapi):
-      self.overloadedapi[ptype] = {}
+    if not (toplevel in self.overloadedapi):
+      self.overloadedapi[toplevel] = {}
 
-    self.overloadedapi[ptype][name] = function
+    self.overloadedapi[toplevel][name] = function
 
   # get a manager
   def getmanager(self, name):
@@ -87,27 +87,27 @@ class API(object):
     self.MANAGERS[name] = manager
 
   # remove a toplevel api
-  def remove(self, ptype):
+  def remove(self, toplevel):
     """  remove a toplevel api
-    @Yptype@w  = the base of the api to remove
+    @Ytoplevel@w  = the toplevel of the api to remove
 
     this function returns no values"""
-    if ptype in API.api:
-      del API.api[ptype]
+    if toplevel in API.api:
+      del API.api[toplevel]
 
-  def get(self, apiname, baseapi=False):
+  def get(self, apiname, toplevelapi=False):
     """
     get an api
     """
-    ptype, name = apiname.split('.')
-    if not baseapi:
+    toplevel, name = apiname.split('.')
+    if not toplevelapi:
       try:
-        return self.overloadedapi[ptype][name]
+        return self.overloadedapi[toplevel][name]
       except KeyError:
         pass
 
     try:
-      return self.api[ptype][name]
+      return self.api[toplevel][name]
     except KeyError:
       pass
 
@@ -214,7 +214,7 @@ class API(object):
 
     return tmsg
 
-  # return a formatted list of functions in an api
+  # return a formatted list of functions in a toplevel api
   def api_list(self, toplevel=None):
     """
     return a formatted list of functions in an api
