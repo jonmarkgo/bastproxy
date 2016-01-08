@@ -186,6 +186,7 @@ class Plugin(AardwolfBasePlugin):
     self.cmdqueue.addcmdtype('get', 'get', "^get\s*(.*)$")
     self.cmdqueue.addcmdtype('put', 'put', "^put\s*(.*)$")
 
+  # return the item worn at a specified location
   def api_getworn(self, location):
     """
     get the item that is worn at location
@@ -202,6 +203,7 @@ class Plugin(AardwolfBasePlugin):
         return self.itemcache[self.eqdata[wearlocsrev[location]]]
     return None
 
+  # find an item with name in it
   def api_findname(self, name, exact=False):
     """
     find an item with name in it
@@ -289,9 +291,10 @@ class Plugin(AardwolfBasePlugin):
     else:
       return None
 
+  # put an item into inventory
   def api_putininventory(self, serial):
     """
-    put an item in inventory
+    put an item into inventory
     """
     serial = int(serial)
     if serial in self.itemcache:
@@ -307,9 +310,10 @@ class Plugin(AardwolfBasePlugin):
     else:
       return False, ''
 
+  # put an item into a container
   def api_putincontainer(self, serial, container=None):
     """
-    put an item in a container
+    put an item into a container
     """
     serial = int(serial)
     if not container:
@@ -357,6 +361,8 @@ class Plugin(AardwolfBasePlugin):
       self.cmdqueue.addtoqueue('invdata', '')
     elif etype == 'Worn':
       self.cmdqueue.addtoqueue('eqdata', '')
+    elif etype == 'Vault':
+      pass
     else:
       self.cmdqueue.addtoqueue('invdata', etype)
 
@@ -889,10 +895,13 @@ class Plugin(AardwolfBasePlugin):
     """
     do the appropriate action when seeing an invmon message
     """
-    action = int(args['action'])
-    serial = int(args['serial'])
-    container = int(args['container'])
-    location = int(args['location'])
+    try:
+      action = int(args['action'])
+      serial = int(args['serial'])
+      container = int(args['container'])
+      location = int(args['location'])
+    except ValueError:
+      self.api('send.error')('the invmon line has bad data: %s' % args['line'])
     #self.api.get('send.msg')('action: %s, item: %s' % (action, serial))
     if action == 1:
     # Remove an item
@@ -953,5 +962,10 @@ class Plugin(AardwolfBasePlugin):
       except KeyError:
         self.getdata('Inventory')
         self.getdata(container)
-
+    elif action == 9:
+    # put into vault
+      pass
+    elif action == 10:
+    # take from vault
+      pass
 
