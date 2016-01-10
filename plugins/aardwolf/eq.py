@@ -2,6 +2,7 @@
 This plugin reads and parses invmon data from Aardwolf
 """
 import argparse
+import re
 from plugins.aardwolf._aardwolfbaseplugin import AardwolfBasePlugin
 
 NAME = 'Aardwolf Eq cmds, parser'
@@ -13,6 +14,585 @@ VERSION = 1
 AUTOLOAD = False
 
 OPTIONALLOCS = [8, 9, 10, 11, 25, 28, 29, 30, 31, 32]
+
+class EqContainer(object):
+  def __init__(self, plugin, cid, cmd=None, cmdregex=None,
+                  startregex=None, endregex=None):
+    ## cid = container ID "83744667"
+    ## cmd = command to send to get data "invdata 83744667"
+    ## cmdregex = regex that matches command "^invdata 83744667$"
+    ## startregex = the line to match to start collecting data "{invdata 83744667}"
+    ## endregex = the line to match to end collecting data "{/invdata}"
+    self.cid = cid
+    self.cmd = cmd or "invdata %s" % self.cid
+    self.cmdregex = cmdregex or "^invdata %s$" % self.cid
+    self.startregex = startregex or "{invdata %s}" % self.cid
+    self.endregex = endregex or "{/invdata}"
+    self.plugin = plugin
+    self.api = self.plugin.api
+    self.cmdqueue = self.plugin.cmdqueue
+    self.itemcache = self.plugin.itemcache
+    self.needsrefresh = True
+    self.items = []
+
+    self.cmdqueue.addcmdtype(self.cid, self.cmd, self.cmdregex,
+                       self.databefore, self.dataafter)
+
+    self.reset()
+
+  def count(self):
+    """
+    return the # of items in container
+    """
+    return len(self.items)
+
+  def get(self, serial):
+    """
+    get an item from container
+    """
+    self.api('send.execute')('get %s %s' % (serial, self.cid))
+
+  def put(self, serial):
+    """
+    put an item into container
+    """
+    self.api('send.execute')('put %s %s' % (serial, self.cid))
+
+  def add(self, serial, place=-1):
+    """
+    add an item into this container
+    """
+    self.itemcache[serial]['curcontainer'] = self
+    if place >= 0:
+      self.items.insert(place, serial)
+    else:
+      self.items.append(serial)
+
+  def remove(self, serial):
+    """
+    remove an item from this container
+    """
+    self.itemcache[serial]['curcontainer'] = ''
+    itemindex = self.items.index(serial)
+    del self.items[itemindex]
+
+  def reset(self):
+    """
+    reset this container
+    """
+    self.items = []
+
+  def refresh(self):
+    """
+    refresh data
+    """
+    self.cmdqueue.addtoqueue(self.cid, '')
+
+  def databefore(self):
+    """
+    this will be called before the the command
+    """
+    self.api.get('triggers.add')('%sstart' % self.cid,
+      self.startregex,
+      enabled=False, group='%sdata' % self.cid, omit=True)
+
+    self.api.get('triggers.add')('%send' % self.cid,
+      self.endregex,
+      enabled=False, group='%sdata' % self.cid, omit=True)
+
+    self.api.get('events.register')('trigger_%sstart' % self.cid, self.datastart)
+    self.api.get('events.register')('trigger_%send' % self.cid, self.dataend)
+
+    self.api.get('send.msg')('enabling %sdata triggers' % self.cid)
+    self.api.get('triggers.togglegroup')('%sdata' % self.cid, True)
+
+    if self.api.get('triggers.gett')('dataline'):
+      self.api.get('triggers.remove')('dataline', force=True)
+
+    self.api.get('triggers.add')('dataline',
+      "^\s*(\d+),(.*),(.+),(.+),(.+),(.+),(.+),(.+)$",
+      enabled=True, group='dataline', omit=True)
+
+    self.api.get('events.register')('trigger_dataline', self.dataline,
+                                    plugin=self.plugin.sname)
+
+  def dataafter(self):
+    """
+    this will be called after the command
+    """
+    self.api.get('send.msg')('disabling %sdata triggers' % self.cid)
+    self.api.get('triggers.togglegroup')('%sdata' % self.cid, False)
+    self.api.get('events.unregister')('trigger_dataline', self.dataline)
+    self.api.get('triggers.remove')('dataline')
+
+    self.api.get('events.unregister')('trigger_%sstart' % self.cid, self.datastart)
+    self.api.get('events.unregister')('trigger_%send' % self.cid, self.dataend)
+
+    self.api.get('triggers.remove')('%sstart' % self.cid)
+    self.api.get('triggers.remove')('%send' % self.cid)
+
+  def datastart(self, args):
+    """
+    found beginning of data for this container
+    """
+    self.api.get('send.msg')('found {invdata}: %s' % args)
+    self.reset()
+
+  def dataline(self, args):
+    """
+    parse a line of data
+    """
+    line = args['line'].strip()
+    if line != self.startregex:
+      #self.api.get('send.msg')('invdata args: %s' % args)
+      try:
+        titem = self.api.get('itemu.dataparse')(line, 'eqdata')
+        self.itemcache[titem['serial']] = titem
+        #self.api.get('send.msg')('invdata parsed item: %s' % titem)
+        self.add(titem['serial'])
+        if titem['type'] == 11 and not (titem['serial'] in self.plugin.containers):
+          self.plugin.containers[titem['serial']] = EqContainer(self.plugin, titem['serial'])
+      except (IndexError, ValueError):
+        self.api.get('send.msg')('incorrect invdata line: %s' % line)
+
+  def dataend(self, args):
+    """
+    found end of data for this container
+    """
+    self.cmdqueue.cmddone(self.cid)
+    self.needsrefresh = False
+    for container in self.plugin.containers:
+      if self.plugin.containers[container].needsrefresh:
+        self.plugin.containers[container].refresh()
+        break
+
+  def build_header(self, args):
+    """
+    build the container header
+    """
+    header = []
+
+    if not args['nogroup']:
+      header.append(' %3s  '% '#')
+
+    if not args['noflags']:
+      header.append('(')
+      count = 0
+      flagaardcolors = self.api.get('itemu.itemflagscolors')()
+      for flag in self.api.get('itemu.itemflags')():
+        colour = flagaardcolors[flag]
+        count = count + 1
+        if count == 1:
+          header.append(' @' + colour + flag + '@x ')
+        else:
+          header.append('@' + colour + flag + '@x ')
+
+      header.append('@w) ')
+
+    header.append('(')
+    header.append("@G%3s@w" % 'Lvl')
+    header.append(') ')
+
+    if args['serial']:
+      header.append('(@x136')
+      header.append("%-12s" % "Serial")
+      header.append('@w) ')
+
+    if args['score']:
+      header.append('(@C')
+      header.append("%-5s" % 'Score')
+      header.append('@w) ')
+
+    header.append("%s" % 'Item Name')
+
+    return ''.join(header)
+
+  def build(self, args):
+    """
+    build a container
+    """
+    self.api.get('send.msg')('build_container args: %s' % args)
+
+    msg = ['Items in %s:' % self.cid]
+
+    msg.append(self.build_header(args))
+
+    msg.append('@B' + '-' * 80)
+
+    if len(self.items) < 1:
+      msg.append('You have nothing in %s' % self.cid)
+    else:
+      items = []
+      numstyles = {}
+      foundgroup = {}
+
+      for serial in self.items:
+        item = self.itemcache[serial]
+        #item = i
+        stylekey = item['name'] + item['shortflags'] + str(item['level'])
+        doit = True
+        sitem = []
+        if not args['nogroup'] and stylekey in numstyles:
+          if not (stylekey) in foundgroup:
+            foundgroup[stylekey] = 1
+          foundgroup[stylekey] = foundgroup[stylekey] + 1
+          doit = False
+          numstyles[stylekey]['item'].pop(numstyles[stylekey]['countcol'])
+          numstyles[stylekey]['item'].insert(numstyles[stylekey]['countcol'],
+                                    "(%3d) " % foundgroup[stylekey])
+          if args['serial'] and foundgroup[stylekey] == 2:
+            numstyles[stylekey]['item'].pop(numstyles[stylekey]['serialcol'])
+            numstyles[stylekey]['item'].insert(
+                                    numstyles[stylekey]['serialcol'],
+                                      "%-12s" % "Many")
+
+        if doit:
+          if not args['nogroup']:
+            sitem.append(" %3s  " % " ")
+            if not (stylekey in numstyles):
+              numstyles[stylekey] = {'item':sitem, 'countcol':len(sitem) - 1,
+                                     'serial':item['serial']}
+
+          if not args['noflags']:
+            sitem.append('(')
+
+            count = 0
+            flagaardcolors = self.api.get('itemu.itemflagscolors')()
+            for flag in self.api.get('itemu.itemflags')():
+              aardcolour = flagaardcolors[flag]
+              count = count + 1
+              if flag in item['shortflags']:
+                if count == 1:
+                  sitem.append(' @' + aardcolour + flag + ' ')
+                else:
+                  sitem.append('@' + aardcolour + flag + ' ')
+              else:
+                if count == 1:
+                  sitem.append('   ')
+                else:
+                  sitem.append('  ')
+            sitem.append('@w)')
+
+            sitem.append(' ')
+
+          sitem.append('(')
+          sitem.append("@G%3s@w" % (item['level'] or ""))
+          sitem.append(') ')
+
+          if args['serial']:
+            sitem.append('(@x136')
+            sitem.append("%-12s" % (
+                              item['serial'] if 'serial' in item else ""))
+            if not args['nogroup']:
+              if stylekey in numstyles:
+                numstyles[stylekey]['serialcol'] = len(sitem) - 1
+            sitem.append('@w) ')
+
+          if args['score']:
+            sitem.append('(@C')
+            sitem.append("%5s" % (
+                              item['score'] if 'score' in item else 'Unkn'))
+            sitem.append('@w) ')
+
+          sitem.append(item['cname'])
+          items.append(sitem)
+
+      for item in items:
+        msg.append(''.join(item))
+
+      msg.append('')
+
+    return msg
+
+class Inventory(EqContainer):
+  def __init__(self, plugin):
+    EqContainer.__init__(self, plugin, 'Inventory', cmd='invdata',
+                         cmdregex='^invdata$', startregex="{invdata}")
+
+  def build(self, args):
+    msg = EqContainer.build(self, args)
+
+    if 'Keyring' in self.plugin.containers and \
+        self.plugin.containers['Keyring'].count() > 0:
+      msg.append("@C(%2d)@W ** Item(s) on Keyring **@w" % \
+                                  self.plugin.containers['Keyring'].count())
+      msg.append("")
+
+    return msg
+
+class Worn(EqContainer):
+  def __init__(self, plugin):
+    EqContainer.__init__(self, plugin, 'Worn', cmd='eqdata',
+                         cmdregex='^eqdata$', startregex="{eqdata}",
+                         endregex="{/eqdata}")
+
+  def reset(self):
+    """
+    reset worn eq
+    """
+    wearlocs = self.api.get('itemu.wearlocs')()
+    self.items = []
+    for i in xrange(0, len(wearlocs)):
+      self.items.append(-1)
+
+  def get(self, serial):
+    """
+    get an item from container
+    """
+    self.api('send.execute')('remove %s' % (serial))
+
+  def put(self, serial):
+    """
+    put an item into container
+    """
+    self.api('send.execute')('wear %s' % (serial))
+
+  def add(self, serial, wearloc):
+    """
+    wear an item
+    """
+    del self.items[wearloc]
+    self.itemcache[serial]['curcontainer'] = self
+    self.items.insert(wearloc, serial)
+
+  def remove(self, serial):
+    """
+    take off an item
+    """
+    self.itemcache[serial]['curcontainer'] = 'Inventory'
+    try:
+      location = self.items.index(serial)
+      del self.items[location]
+      self.items.insert(location, -1)
+    except IndexError:
+      self.refresh()
+
+  def dataline(self, args):
+    """
+    parse a line of data
+    """
+    line = args['line'].strip()
+    if line != self.startregex:
+      #self.api.get('send.msg')('invdata args: %s' % args)
+      try:
+        titem = self.api.get('itemu.dataparse')(line, 'eqdata')
+        self.itemcache[titem['serial']] = titem
+        #self.api.get('send.msg')('invdata parsed item: %s' % titem)
+        self.add(titem['serial'], titem['wearslot'])
+        if titem['type'] == 11 and not (titem['serial'] in self.plugin.containers):
+          self.plugin.containers[titem['serial']] = EqContainer(self.plugin, titem['serial'])
+      except (IndexError, ValueError):
+        self.api.get('send.msg')('incorrect invdata line: %s' % line)
+        self.api('send.traceback')()
+
+  def build_wornitem(self, item, wearloc, args):
+    """
+    build the output of a worn item
+    """
+    sitem = []
+
+    wearlocs = self.api.get('itemu.wearlocs')()
+
+    sitem.append('@G[@w')
+
+    colour = '@c'
+    if wearlocs[wearloc] == 'wielded' or wearlocs[wearloc] == 'second':
+      colour = '@R'
+    elif wearlocs[wearloc] == 'above' or wearlocs[wearloc] == 'light':
+      colour = '@W'
+    elif wearlocs[wearloc] == 'portal' or wearlocs[wearloc] == 'sleeping':
+      colour = '@C'
+
+    sitem.append(' %s%-8s@x ' % (colour, wearlocs[wearloc]))
+    sitem.append('@G]@w ')
+
+    if not args['noflags']:
+      sitem.append('(')
+
+      count = 0
+      flagaardcolors = self.api.get('itemu.itemflagscolors')()
+      for flag in self.api.get('itemu.itemflags')():
+        aardcolour = flagaardcolors[flag]
+        count = count + 1
+        if flag in item['shortflags']:
+          if count == 1:
+            sitem.append(' @' + aardcolour + flag + ' ')
+          else:
+            sitem.append('@' + aardcolour + flag + ' ')
+        else:
+          if count == 1:
+            sitem.append('   ')
+          else:
+            sitem.append('  ')
+      sitem.append('@w)')
+
+      sitem.append(' ')
+
+    sitem.append('(')
+    sitem.append("@G%3s@w" % (item['level'] or ""))
+    sitem.append(') ')
+
+    if args['serial']:
+      sitem.append('(@x136')
+      sitem.append("%-12s" % (item['serial'] if 'serial' in item else ""))
+      sitem.append('@w) ')
+
+    if args['score']:
+      sitem.append('(@C')
+      sitem.append("%5s" % (item['score'] if 'score' in item else 'Unkn'))
+      sitem.append('@w) ')
+
+    sitem.append(item['cname'])
+
+    return ''.join(sitem)
+
+  def build(self, args):
+    """
+    build the output of a container
+    """
+    print self.items
+    wearlocs = self.api.get('itemu.wearlocs')()
+    self.api.get('send.msg')('build_worn args: %s' % args)
+    msg = ['You are using:']
+    header = []
+
+    header.append('@G[@w')
+    header.append(' %-8s ' % 'Location')
+    header.append('@G]@w ')
+
+    if not args['noflags']:
+      header.append('(')
+      count = 0
+      flagaardcolors = self.api.get('itemu.itemflagscolors')()
+      for flag in self.api.get('itemu.itemflags')():
+        colour = flagaardcolors[flag]
+        count = count + 1
+        if count == 1:
+          header.append(' @' + colour + flag + '@x ')
+        else:
+          header.append('@' + colour + flag + '@x ')
+
+      header.append('@w) ')
+
+    header.append('(')
+    header.append("@G%3s@w" % 'Lvl')
+    header.append(') ')
+
+    if args['serial']:
+      header.append('(@x136')
+      header.append("%-12s" % "Serial")
+      header.append('@w) ')
+
+    if args['score']:
+      header.append('(@C')
+      header.append("%-5s" % 'Score')
+      header.append('@w) ')
+
+    header.append("%s" % 'Item Name')
+
+    header.append('  ')
+
+    msg.append(''.join(header))
+
+    msg.append('@B' + '-' * 80)
+
+    for i in xrange(0, len(wearlocs)):
+      if self.items[i] != -1:
+        serial = self.items[i]
+        item = self.itemcache[serial]
+        msg.append(self.build_wornitem(item, i, args))
+      else:
+        doit = True
+        if i in OPTIONALLOCS:
+          doit = False
+        if (i == 23 or i == 26) and self.items[25] != -1:
+          doit = False
+        if doit:
+          item = {'cname':"@r< empty >@w", 'shortflags':"", 'level':'',
+                  'serial':''}
+          msg.append(self.build_wornitem(item, i, args))
+
+    msg.append('')
+    return msg
+
+class Keyring(EqContainer):
+  def __init__(self, plugin):
+    EqContainer.__init__(self, plugin, 'Keyring', cmd='keyring data',
+                         cmdregex='^keyring data$', startregex="{keyring}",
+                         endregex="{/keyring}")
+
+  def get(self, serial):
+    """
+    get an item from the keyring
+    """
+    self.api('send.execute')('keyring get %s' % serial)
+
+  def put(self, serial):
+    """
+    put an item into the keyring
+    """
+    self.api('send.execute')('keyring put %s' % serial)
+
+class Vault(EqContainer):
+  def __init__(self, plugin):
+    EqContainer.__init__(self, plugin, 'Vault', cmd='vault data',
+                         cmdregex='^vault data$', startregex="{vault}",
+                         endregex="{/vault}")
+    self.itemcount = 0
+    self.itemtotal = 0
+    self.itemmax = 0
+
+  def refresh(self):
+    if 'bank' in self.api('GMCP.getv')('room.info')['details']:
+      EqContainer.refresh(self)
+
+  def get(self, serial):
+    """
+    get an item from the keyring
+    """
+    self.api('send.execute')('vault get %s' % serial)
+
+  def put(self, serial):
+    """
+    put an item into the keyring
+    """
+    self.api('send.execute')('vault put %s' % serial)
+
+  def databefore(self):
+    """
+    account for vaultcounts
+    """
+    EqContainer.databefore(self)
+
+    self.api.get('triggers.add')('%scount' % self.cid,
+      "^{vaultcounts}(?P<items>.*),(?P<totalitems>.*),(?P<maxitems>.*){/vaultcounts}$",
+      omit=True)
+
+    self.api.get('events.register')('trigger_%scount' % self.cid, self.vaultcount)
+
+  def vaultcount(self, args):
+    """
+    get the vaultcount line
+    """
+    self.itemcount = args['items']
+    self.itemtotal = args['totalitems']
+    self.itemmax = args['maxitems']
+
+    self.api.get('events.unregister')('trigger_%scount' % self.cid, self.vaultcount)
+
+    self.api.get('triggers.remove')('%scount' % self.cid, force=True)
+
+  def build(self, args):
+    msg = EqContainer.build(self, args)
+
+    msg.append("@wYou have @Y%s@w of @Y%s@w items stored in your vault." % \
+                                (len(self.items), self.itemmax))
+
+    #if self.itemcount != self.itemtotal:
+      #msg.append("@wIncluding keep flagged items, you have @Y%s@w item in your vault.@w" % \
+        #self.itemtotal)
+
+    return msg
 
 class Plugin(AardwolfBasePlugin):
   """
@@ -26,9 +606,7 @@ class Plugin(AardwolfBasePlugin):
     AardwolfBasePlugin.__init__(self, *args, **kwargs)
 
     self.itemcache = {}
-    self.eqdata = {}
-    self.invdata = {}
-    self.currentcontainer = None
+    self.containers = {}
     self.currentcmd = ''
 
     self.wearall = False
@@ -57,8 +635,6 @@ class Plugin(AardwolfBasePlugin):
     load the plugin
     """
     AardwolfBasePlugin.load(self)
-
-    self.resetworneq()
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='show equipment worn')
@@ -150,41 +726,17 @@ class Plugin(AardwolfBasePlugin):
       "^\{invitem\}(?P<data>.*)$",
       enabled=True, matchcolor=True)
 
-    self.api.get('triggers.add')('eqdatastart',
-      "^\{eqdata\}$",
-      enabled=False, group='eqdata', omit=True)
-
-    self.api.get('triggers.add')('eqdataend',
-      "^\{/eqdata\}$",
-      enabled=False, group='eqdata', omit=True)
-
-    self.api.get('triggers.add')('dataline',
-      "^(\d+),(.*),(.+),(.+),(.+),(.+),(.+),(.+)$",
-      enabled=False, group='dataline', omit=True)
-
-    self.api.get('triggers.add')('invdatastart',
-      "^\{invdata\s*(?P<container>.*)?\}$",
-      enabled=False, group='invdata', omit=True)
-
-    self.api.get('triggers.add')('invdataend',
-      "^\{/invdata\}$",
-      enabled=True, group='invdata', omit=True)
 
     self.api.get('events.register')('trigger_dead', self.dead)
     self.api.get('events.register')('trigger_invitem', self.trigger_invitem)
-    self.api.get('events.register')('trigger_eqdatastart', self.eqdatastart)
-    self.api.get('events.register')('trigger_eqdataend', self.eqdataend)
-    self.api.get('events.register')('trigger_invdatastart', self.invdatastart)
-    self.api.get('events.register')('trigger_invdataend', self.invdataend)
     self.api.get('events.register')('trigger_invmon', self.invmon)
 
     self.cmdqueue = self.api.get('cmdq.baseclass')()(self)
-    self.cmdqueue.addcmdtype('invdata', 'invdata', "^invdata\s*(\d*)$",
-                       self.invdatabefore, self.invdataafter)
-    self.cmdqueue.addcmdtype('eqdata', 'eqdata', "^eqdata$",
-                       self.eqdatabefore, self.eqdataafter)
-    self.cmdqueue.addcmdtype('get', 'get', "^get\s*(.*)$")
-    self.cmdqueue.addcmdtype('put', 'put', "^put\s*(.*)$")
+
+    self.containers['Inventory'] = Inventory(self)
+    self.containers['Worn'] = Worn(self)
+    self.containers['Keyring'] = Keyring(self)
+    self.containers['Vault'] = Vault(self)
 
   # return the item worn at a specified location
   def api_getworn(self, location):
@@ -194,13 +746,14 @@ class Plugin(AardwolfBasePlugin):
     try:
       int(location)
       try:
-        return self.itemcache[self.eqdata[location]]
+        return self.itemcache[self.containers['Worn'].items[location]]
       except KeyError:
         return None
     except ValueError:
       wearlocsrev = self.api.get('itemu.wearlocs')(True)
       if location in wearlocsrev:
-        return self.itemcache[self.eqdata[wearlocsrev[location]]]
+        container = self.containers['Worn']
+        return self.itemcache[container.items[wearlocsrev[location]]]
     return None
 
   # find an item with name in it
@@ -215,51 +768,12 @@ class Plugin(AardwolfBasePlugin):
 
     return results
 
-  def invdatabefore(self):
-    """
-    this will be called before the invdata command
-    """
-    self.api.get('send.msg')('enabling invdata triggers')
-    self.api.get('triggers.togglegroup')('invdata', True)
-    self.api.get('triggers.togglegroup')('dataline', True)
-    self.api.get('events.register')('trigger_dataline', self.invdataline)
-
-  def invdataafter(self):
-    """
-    this will be called after the invdata command
-    """
-    self.api.get('send.msg')('disabling invdata triggers')
-    self.api.get('triggers.togglegroup')('invdata', False)
-    self.api.get('triggers.togglegroup')('dataline', False)
-    self.api.get('events.unregister')('trigger_dataline', self.invdataline)
-
-  def eqdatabefore(self):
-    """
-    this will be called before the eqdata command
-    """
-    self.api.get('send.msg')('enabling eqdata triggers')
-    self.api.get('triggers.togglegroup')('eqdata', True)
-    self.api.get('triggers.togglegroup')('dataline', True)
-    self.api.get('events.register')('trigger_dataline', self.eqdataline)
-
-  def eqdataafter(self):
-    """
-    this will be called after the eqdata command
-    """
-    self.api.get('send.msg')('disabling eqdata triggers')
-    self.api.get('triggers.togglegroup')('eqdata', False)
-    self.api.get('triggers.togglegroup')('dataline', False)
-    self.api.get('events.unregister')('trigger_dataline', self.eqdataline)
-
   def disconnect(self, args=None):
     """
     called when the mud disconnects
     """
     AardwolfBasePlugin.disconnect(self, args)
     self.itemcache = {}
-    self.eqdata = {}
-    self.invdata = {}
-    self.currentcontainer = None
 
     self.cmdqueue.resetqueue()
 
@@ -268,14 +782,11 @@ class Plugin(AardwolfBasePlugin):
     refresh eq
     """
     self.itemcache = {}
-    self.eqdata = {}
-    self.invdata = {}
-    self.currentcontainer = None
 
     self.cmdqueue.resetqueue()
 
-    self.getdata('Worn')
-    self.getdata('Inventory')
+    for container in self.containers:
+      self.containers[container].refresh()
 
     return True, ['Refreshing EQ']
 
@@ -299,11 +810,9 @@ class Plugin(AardwolfBasePlugin):
     serial = int(serial)
     if serial in self.itemcache:
       container = self.itemcache[serial]['curcontainer']
-      if container == 'Worn':
-        self.queue.append('remove %s' % serial)
-      elif container != 'Inventory':
+      if container.cid != 'Inventory':
         self.itemcache[serial]['origcontainer'] = container
-        self.api.get('send.execute')('get %s %s' % (serial, container))
+        container.get(serial)
       else:
         container = ''
       return True, container
@@ -316,19 +825,34 @@ class Plugin(AardwolfBasePlugin):
     put an item into a container
     """
     serial = int(serial)
+    oldcontainer = None
+
     if not container:
-      if serial in self.itemcache and \
-              'origcontainer' in self.itemcache[serial]:
-        container = self.itemcache[serial]['origcontainer']
+      if serial in self.itemcache:
+        if 'origcontainer' in self.itemcache[serial]:
+          container = self.itemcache[serial]['origcontainer']
+
+    if serial in self.itemcache:
+      if  'curcontainer' in self.itemcache[serial] and \
+          self.itemcache[serial]['curcontainer'].cid != 'Inventory':
+        oldcontainer = self.itemcache[serial]['curcontainer']
+
     try:
       container = int(container)
+
     except (ValueError, TypeError):
       pass
 
-    self.api_putininventory(serial)
+    if container in self.containers:
+      container = self.containers[container]
+    else:
+      container = None
 
-    if serial in self.itemcache and container in self.itemcache:
-      self.api.get('send.execute')('put %s %s' % (serial, container))
+    if container:
+      if oldcontainer:
+        oldcontainer.get(serial)
+
+      container.put(serial)
       return True, container
 
     return False, ''
@@ -337,42 +861,30 @@ class Plugin(AardwolfBasePlugin):
     """
     wear an item
     """
-    pass
+    self.containers['Worn'].put(serial)
 
   def api_removeitem(self, serial):
     """
     remove an item
     """
-    pass
+    self.containers['Worn'].get(serial)
 
   def afterfirstactive(self, _=None):
     """
     do something on connect
     """
     AardwolfBasePlugin.afterfirstactive(self)
-    self.getdata('Worn')
-    self.getdata('Inventory')
-
-  def getdata(self, etype):
-    """
-    get container or worn data
-    """
-    if etype == 'Inventory':
-      self.cmdqueue.addtoqueue('invdata', '')
-    elif etype == 'Worn':
-      self.cmdqueue.addtoqueue('eqdata', '')
-    elif etype == 'Vault':
-      pass
-    else:
-      self.cmdqueue.addtoqueue('invdata', etype)
+    for container in self.containers:
+      print 'refreshing %s' % container
+      self.containers[container].refresh()
 
   def dead(self, _):
     """
     reset stuff on death
     """
-    self.invdata = {}
     self.queue = []
-    self.resetworneq()
+    for container in self.containers:
+      self.containers[container].reset()
 
   def cmd_showinternal(self, args):
     """
@@ -381,8 +893,8 @@ class Plugin(AardwolfBasePlugin):
     msg = []
     msg.append('Queue     : %s' % self.cmdqueue.queue)
     msg.append('Cur cmd   : %s' % self.cmdqueue.currentcmd)
-    msg.append('invdata   : %s' % self.invdata)
-    msg.append('eqdata    : %s' % self.eqdata)
+    msg.append('Inventory : %s' % self.containers['Inventory'].items)
+    msg.append('Worn      : %s' % self.containers['Worn'].items)
     msg.append('itemcache : %s' % self.itemcache)
 
     return True, msg
@@ -483,116 +995,6 @@ class Plugin(AardwolfBasePlugin):
 
     return True
 
-  def resetworneq(self):
-    """
-    reset worn eq
-    """
-    wearlocs = self.api.get('itemu.wearlocs')()
-    self.eqdata = []
-    for i in xrange(0, len(wearlocs)):
-      self.eqdata.append(-1)
-
-  def wearitem(self, serial, wearloc):
-    """
-    wear an item
-    """
-    del self.eqdata[wearloc]
-    self.itemcache[serial]['curcontainer'] = 'Worn'
-    self.eqdata.insert(wearloc, serial)
-
-  def takeoffitem(self, serial):
-    """
-    take off an item
-    """
-    self.itemcache[serial]['curcontainer'] = 'Inventory'
-    try:
-      location = self.eqdata.index(serial)
-      del self.eqdata[location]
-      self.eqdata.insert(location, -1)
-    except IndexError:
-      self.getdata('Worn')
-
-  def eqdatastart(self, args):
-    """
-    show that the trigger fired
-    """
-    #self.api.get('send.msg')('found {eqdata}')
-    self.resetworneq()
-
-  def eqdataline(self, args):
-    """
-    parse a line of eqdata
-    """
-    line = args['line'].strip()
-    if line != '{eqdata}':
-      #self.api.get('send.msg')('eqdata args: %s' % args)
-      titem = self.api.get('itemu.dataparse')(line, 'eqdata')
-      self.itemcache[titem['serial']] = titem
-      #self.api.get('send.msg')('eqdata parsed item: %s' % titem)
-      self.wearitem(titem['serial'], titem['wearslot'])
-
-  def eqdataend(self, args):
-    """
-    reset current when seeing a spellheaders ending
-    """
-    self.cmdqueue.cmddone('eqdata')
-
-  def putitemincontainer(self, container, serial, place=-1):
-    """
-    add item to a container
-    """
-    self.itemcache[serial]['curcontainer'] = container
-    if container:
-      if place >= 0:
-        self.invdata[container].insert(place, serial)
-      else:
-        self.invdata[container].append(serial)
-
-  def removeitemfromcontainer(self, container, serial):
-    """
-    remove an item from inventory
-    """
-    self.itemcache[serial]['curcontainer'] = 'Inventory'
-    itemindex = self.invdata[container].index(serial)
-    del self.invdata[container][itemindex]
-
-  def invdatastart(self, args):
-    """
-    show that the trigger fired
-    """
-    self.api.get('send.msg')('found {invdata}: %s' % args)
-    if not args['container']:
-      container = 'Inventory'
-    else:
-      container = int(args['container'])
-    self.currentcontainer = container
-    self.invdata[self.currentcontainer] = []
-
-  def invdataline(self, args):
-    """
-    parse a line of eqdata
-    """
-    line = args['line'].strip()
-    if line != '{invdata}':
-      #self.api.get('send.msg')('invdata args: %s' % args)
-      try:
-        titem = self.api.get('itemu.dataparse')(line, 'eqdata')
-        self.itemcache[titem['serial']] = titem
-        #self.api.get('send.msg')('invdata parsed item: %s' % titem)
-        self.putitemincontainer(self.currentcontainer, titem['serial'])
-        if titem['type'] == 11 and not (titem['serial'] in self.invdata):
-          self.cmdqueue.addtoqueue('invdata', titem['serial'])
-      except (IndexError, ValueError):
-        self.api.get('send.msg')('incorrect invdata line: %s' % line)
-
-  def invdataend(self, args):
-    """
-    reset current when seeing a spellheaders ending
-    """
-    self.currentcontainer = None
-    #self.api.get('send.msg')('found {/invdata}')
-    self.cmdqueue.cmddone('invdata')
-
   def trigger_invitem(self, args):
     """
     run when an invitem is seen
@@ -609,7 +1011,7 @@ class Plugin(AardwolfBasePlugin):
     """
     self.api.get('send.msg')('cmd_eq args: %s' % args)
 
-    return True, self.build_worn(args)
+    return True, self.containers['Worn'].build(args)
 
   def cmd_inv(self, args):
     """
@@ -617,279 +1019,17 @@ class Plugin(AardwolfBasePlugin):
     """
     self.api.get('send.msg')('cmd_inv args: %s' % args)
 
-    return True, self.build_container(args)
-
-  def build_containerheader(self, args):
-    """
-    build the container header
-    """
-    header = []
-
-    if not args['nogroup']:
-      header.append(' %3s  '% '#')
-
-    if not args['noflags']:
-      header.append('(')
-      count = 0
-      flagaardcolors = self.api.get('itemu.itemflagscolors')()
-      for flag in self.api.get('itemu.itemflags')():
-        colour = flagaardcolors[flag]
-        count = count + 1
-        if count == 1:
-          header.append(' @' + colour + flag + '@x ')
-        else:
-          header.append('@' + colour + flag + '@x ')
-
-      header.append('@w) ')
-
-    header.append('(')
-    header.append("@G%3s@w" % 'Lvl')
-    header.append(') ')
-
-    if args['serial']:
-      header.append('(@x136')
-      header.append("%-12s" % "Serial")
-      header.append('@w) ')
-
-    if args['score']:
-      header.append('(@C')
-      header.append("%-5s" % 'Score')
-      header.append('@w) ')
-
-    header.append("%s" % 'Item Name')
-
-    return ''.join(header)
-
-  def build_container(self, args):
-    """
-    build a container
-    """
-    self.api.get('send.msg')('build_container args: %s' % args)
+    container = args['container']
 
     try:
-      container = int(args['container'])
+      container = int(container)
     except ValueError:
-      container = args['container']
+      pass
 
-    msg = ['Items in %s:' % container]
-
-    msg.append(self.build_containerheader(args))
-
-    msg.append('@B' + '-' * 80)
-
-    if not (container in self.invdata) or not self.invdata[container]:
-      msg.append('You have nothing in %s' % container)
+    if container in self.containers:
+      return True, self.containers[container].build(args)
     else:
-      items = []
-      numstyles = {}
-      foundgroup = {}
-
-      for serial in self.invdata[container]:
-        item = self.itemcache[serial]
-        #item = i
-        stylekey = item['name'] + item['shortflags'] + str(item['level'])
-        doit = True
-        sitem = []
-        if not args['nogroup'] and stylekey in numstyles:
-          if not (stylekey) in foundgroup:
-            foundgroup[stylekey] = 1
-          foundgroup[stylekey] = foundgroup[stylekey] + 1
-          doit = False
-          numstyles[stylekey]['item'].pop(numstyles[stylekey]['countcol'])
-          numstyles[stylekey]['item'].insert(numstyles[stylekey]['countcol'],
-                                    "(%3d) " % foundgroup[stylekey])
-          if args['serial'] and foundgroup[stylekey] == 2:
-            numstyles[stylekey]['item'].pop(numstyles[stylekey]['serialcol'])
-            numstyles[stylekey]['item'].insert(
-                                    numstyles[stylekey]['serialcol'],
-                                      "%-12s" % "Many")
-
-        if doit:
-          if not args['nogroup']:
-            sitem.append(" %3s  " % " ")
-            if not (stylekey in numstyles):
-              numstyles[stylekey] = {'item':sitem, 'countcol':len(sitem) - 1,
-                                     'serial':item['serial']}
-
-          if not args['noflags']:
-            sitem.append('(')
-
-            count = 0
-            flagaardcolors = self.api.get('itemu.itemflagscolors')()
-            for flag in self.api.get('itemu.itemflags')():
-              aardcolour = flagaardcolors[flag]
-              count = count + 1
-              if flag in item['shortflags']:
-                if count == 1:
-                  sitem.append(' @' + aardcolour + flag + ' ')
-                else:
-                  sitem.append('@' + aardcolour + flag + ' ')
-              else:
-                if count == 1:
-                  sitem.append('   ')
-                else:
-                  sitem.append('  ')
-            sitem.append('@w)')
-
-            sitem.append(' ')
-
-          sitem.append('(')
-          sitem.append("@G%3s@w" % (item['level'] or ""))
-          sitem.append(') ')
-
-          if args['serial']:
-            sitem.append('(@x136')
-            sitem.append("%-12s" % (
-                              item['serial'] if 'serial' in item else ""))
-            if not args['nogroup']:
-              if stylekey in numstyles:
-                numstyles[stylekey]['serialcol'] = len(sitem) - 1
-            sitem.append('@w) ')
-
-          if args['score']:
-            sitem.append('(@C')
-            sitem.append("%5s" % (
-                              item['score'] if 'score' in item else 'Unkn'))
-            sitem.append('@w) ')
-
-          sitem.append(item['cname'])
-          items.append(sitem)
-
-      for item in items:
-        msg.append(''.join(item))
-
-      msg.append('')
-
-    return msg
-
-  def build_wornitem(self, item, wearloc, args):
-    """
-    build the output of a worn item
-    """
-    sitem = []
-
-    wearlocs = self.api.get('itemu.wearlocs')()
-
-    sitem.append('@G[@w')
-
-    colour = '@c'
-    if wearlocs[wearloc] == 'wielded' or wearlocs[wearloc] == 'second':
-      colour = '@R'
-    elif wearlocs[wearloc] == 'above' or wearlocs[wearloc] == 'light':
-      colour = '@W'
-    elif wearlocs[wearloc] == 'portal' or wearlocs[wearloc] == 'sleeping':
-      colour = '@C'
-
-    sitem.append(' %s%-8s@x ' % (colour, wearlocs[wearloc]))
-    sitem.append('@G]@w ')
-
-    if not args['noflags']:
-      sitem.append('(')
-
-      count = 0
-      flagaardcolors = self.api.get('itemu.itemflagscolors')()
-      for flag in self.api.get('itemu.itemflags')():
-        aardcolour = flagaardcolors[flag]
-        count = count + 1
-        if flag in item['shortflags']:
-          if count == 1:
-            sitem.append(' @' + aardcolour + flag + ' ')
-          else:
-            sitem.append('@' + aardcolour + flag + ' ')
-        else:
-          if count == 1:
-            sitem.append('   ')
-          else:
-            sitem.append('  ')
-      sitem.append('@w)')
-
-      sitem.append(' ')
-
-    sitem.append('(')
-    sitem.append("@G%3s@w" % (item['level'] or ""))
-    sitem.append(') ')
-
-    if args['serial']:
-      sitem.append('(@x136')
-      sitem.append("%-12s" % (item['serial'] if 'serial' in item else ""))
-      sitem.append('@w) ')
-
-    if args['score']:
-      sitem.append('(@C')
-      sitem.append("%5s" % (item['score'] if 'score' in item else 'Unkn'))
-      sitem.append('@w) ')
-
-    sitem.append(item['cname'])
-
-    return ''.join(sitem)
-
-  def build_worn(self, args):
-    """
-    build the output of a container
-    """
-    wearlocs = self.api.get('itemu.wearlocs')()
-    self.api.get('send.msg')('build_worn args: %s' % args)
-    msg = ['You are using:']
-    header = []
-
-    header.append('@G[@w')
-    header.append(' %-8s ' % 'Location')
-    header.append('@G]@w ')
-
-    if not args['noflags']:
-      header.append('(')
-      count = 0
-      flagaardcolors = self.api.get('itemu.itemflagscolors')()
-      for flag in self.api.get('itemu.itemflags')():
-        colour = flagaardcolors[flag]
-        count = count + 1
-        if count == 1:
-          header.append(' @' + colour + flag + '@x ')
-        else:
-          header.append('@' + colour + flag + '@x ')
-
-      header.append('@w) ')
-
-    header.append('(')
-    header.append("@G%3s@w" % 'Lvl')
-    header.append(') ')
-
-    if args['serial']:
-      header.append('(@x136')
-      header.append("%-12s" % "Serial")
-      header.append('@w) ')
-
-    if args['score']:
-      header.append('(@C')
-      header.append("%-5s" % 'Score')
-      header.append('@w) ')
-
-    header.append("%s" % 'Item Name')
-
-    header.append('  ')
-
-    msg.append(''.join(header))
-
-    msg.append('@B' + '-' * 80)
-
-    for i in xrange(0, len(wearlocs)):
-      if self.eqdata[i] != -1:
-        serial = self.eqdata[i]
-        item = self.itemcache[serial]
-        msg.append(self.build_wornitem(item, i, args))
-      else:
-        doit = True
-        if i in OPTIONALLOCS:
-          doit = False
-        if (i == 23 or i == 26) and self.eqdata[25] != -1:
-          doit = False
-        if doit:
-          item = {'cname':"@r< empty >@w", 'shortflags':"", 'level':'',
-                  'serial':''}
-          msg.append(self.build_wornitem(item, i, args))
-
-    msg.append('')
-    return msg
+      return True, ["container %s does not exist" % container]
 
   def invmon(self, args):
     """
@@ -905,67 +1045,83 @@ class Plugin(AardwolfBasePlugin):
     #self.api.get('send.msg')('action: %s, item: %s' % (action, serial))
     if action == 1:
     # Remove an item
-      if serial in self.eqdata:
-        self.takeoffitem(serial)
-        self.putitemincontainer('Inventory', serial, place=0)
+      if serial in self.containers['Worn'].items:
+        self.containers['Worn'].remove(serial)
+        self.containers['Inventory'].add(serial, place=0)
         self.api.get('events.eraise')('eq_removed',
                                       {'item':self.itemcache[serial]})
       else:
-        self.getdata('Inventory')
-        self.getdata('Worn')
+        self.containers['Worn'].refresh()
+        self.containers['Inventory'].refresh()
     elif action == 2:
     # Wear an item
-      if 'Inventory' in self.invdata and serial in self.invdata['Inventory']:
-        self.removeitemfromcontainer('Inventory', serial)
-        self.wearitem(serial, location)
+      if serial in self.containers['Inventory'].items:
+        self.containers['Inventory'].remove(serial)
+        self.containers['Worn'].add(serial, location)
         self.api.get('events.eraise')('eq_worn',
                                       {'item':self.itemcache[serial],
                                        'location':location})
       else:
-        self.getdata('Inventory')
-        self.getdata('Worn')
+        self.containers['Inventory'].refresh()
+        self.containers['Worn'].refresh()
     elif action == 3 or action == 7:
       # 3 = Removed from inventory, 7 = consumed
-      if 'Inventory' in self.invdata and serial in self.invdata['Inventory']:
+      if serial in self.containers['Inventory'].items:
         titem = self.itemcache[serial]
-        if titem['type'] == 11:
-          for item in self.invdata[serial]:
-            del self.itemcache[item]
-        self.removeitemfromcontainer('Inventory', serial)
+        #if titem['type'] == 11:
+          #for item in self.containers[serial].items:
+            #del self.itemcache[item]
+        self.containers['Inventory'].remove(serial)
         self.api.get('events.eraise')('inventory_removed', {'item':titem})
-        del self.itemcache[serial]
+        #del self.itemcache[serial]
       else:
-        self.getdata('Inventory')
+        self.containers['Inventory'].refresh()
     elif action == 4:
     # Added to inventory
       try:
-        self.putitemincontainer('Inventory', serial, place=0)
+        self.containers['Inventory'].add(serial, place=0)
         titem = self.itemcache[serial]
         if titem['type'] == 11:
-          self.getdata(serial)
+          self.containers[serial].refresh()
         self.api.get('events.eraise')('inventory_added', {'item':titem})
       except KeyError:
-        self.getdata('Inventory')
+        self.containers['Inventory'].refresh()
     elif action == 5:
     # Taken out of container
       try:
-        self.removeitemfromcontainer(container, serial)
-        self.putitemincontainer('Inventory', serial, place=0)
+        self.containers[container].remove(serial)
+        self.containers['Inventory'].add(serial)
       except KeyError:
-        self.getdata('Inventory')
-        self.getdata(container)
+        self.containers[container].refresh()
+        self.containers['Inventory'].refresh()
     elif action == 6:
     # Put into container
       try:
-        self.removeitemfromcontainer('Inventory', serial)
-        self.putitemincontainer(container, serial, place=0)
+        self.containers['Inventory'].remove(serial)
+        self.containers[container].add(serial, place=0)
       except KeyError:
-        self.getdata('Inventory')
-        self.getdata(container)
+        self.containers['Inventory'].refresh()
+        self.containers[container].refresh()
     elif action == 9:
     # put into vault
+      self.containers['Vault'].add(serial)
       pass
     elif action == 10:
     # take from vault
-      pass
-
+      self.containers['Vault'].remove(serial)
+    elif action == 11:
+    # put into keyring
+      try:
+        self.containers['Inventory'].remove(serial)
+        self.containers['Keyring'].add(serial, place=0)
+      except KeyError:
+        self.containers['Inventory'].refresh()
+        self.containers['Keyring'].refresh()
+    elif action == 12:
+    # take from keyring
+      try:
+        self.containers['Keyring'].remove(serial)
+        self.containers['Inventory'].add(serial, place=0)
+      except KeyError:
+        self.containers['Keyring'].refresh()
+        self.containers['Inventory'].refresh()
