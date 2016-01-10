@@ -247,26 +247,28 @@ class Plugin(BasePlugin):
       triggers = sorted(self.triggers,
                         key=lambda item: self.triggers[item]['priority'])
       for i in triggers:
-        if self.triggers[i]['enabled']:
-          trigre = self.triggers[i]['compiled']
-          if 'matchcolor' in self.triggers[i] \
-              and self.triggers[i]['matchcolor']:
-            mat = trigre.match(colordata)
-          else:
-            mat = trigre.match(data)
-          if mat:
-            targs = mat.groupdict()
-            if 'argtypes' in self.triggers[i]:
-              for arg in self.triggers[i]['argtypes']:
-                if arg in targs:
-                  targs[arg] = self.triggers[i]['argtypes'][arg](targs[arg])
-            targs['line'] = data
-            targs['colorline'] = colordata
-            targs['triggername'] = i
-            self.triggers[i]['hits'] = self.triggers[i]['hits'] + 1
-            args = self.raisetrigger(i, targs, args)
-            if self.triggers[i]['stopevaluating']:
-              break
+        if i in self.triggers:
+          if self.triggers[i]['enabled']:
+            trigre = self.triggers[i]['compiled']
+            if 'matchcolor' in self.triggers[i] \
+                and self.triggers[i]['matchcolor']:
+              mat = trigre.match(colordata)
+            else:
+              mat = trigre.match(data)
+            if mat:
+              targs = mat.groupdict()
+              if 'argtypes' in self.triggers[i]:
+                for arg in self.triggers[i]['argtypes']:
+                  if arg in targs:
+                    targs[arg] = self.triggers[i]['argtypes'][arg](targs[arg])
+              targs['line'] = data
+              targs['colorline'] = colordata
+              targs['triggername'] = i
+              self.triggers[i]['hits'] = self.triggers[i]['hits'] + 1
+              args = self.raisetrigger(i, targs, args)
+              if i in self.triggers:
+                if self.triggers[i]['stopevaluating']:
+                  break
 
     self.raisetrigger('all', {'line':data, 'triggername':'all'}, args)
 
@@ -280,6 +282,9 @@ class Plugin(BasePlugin):
       eventname = self.triggers[triggername]['eventname']
     except KeyError:
       eventname = 'trigger_' + triggername
+    if triggername in self.triggers and self.triggers[triggername]['omit']:
+      origargs['omit'] = True
+
     tdat = self.api.get('events.eraise')(eventname, args)
     self.api.get('send.msg')('trigger raiseevent returned: %s' % tdat)
     if tdat and 'newline' in tdat:
