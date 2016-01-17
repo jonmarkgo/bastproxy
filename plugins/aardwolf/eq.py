@@ -154,6 +154,7 @@ class EqContainer(object):
           self.plugin.containers[titem['serial']] = EqContainer(self.plugin, titem['serial'])
       except (IndexError, ValueError):
         self.api.get('send.msg')('incorrect invdata line: %s' % line)
+        self.api('send.traceback')()
 
   def dataend(self, args):
     """
@@ -773,7 +774,7 @@ class Plugin(AardwolfBasePlugin):
     called when the mud disconnects
     """
     AardwolfBasePlugin.disconnect(self, args)
-    self.itemcache = {}
+    #self.itemcache = {}
 
     self.cmdqueue.resetqueue()
 
@@ -781,7 +782,7 @@ class Plugin(AardwolfBasePlugin):
     """
     refresh eq
     """
-    self.itemcache = {}
+    #self.itemcache = {}
 
     self.cmdqueue.resetqueue()
 
