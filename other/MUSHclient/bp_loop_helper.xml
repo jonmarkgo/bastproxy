@@ -3,11 +3,11 @@
 
 <muclient>
 <plugin
-   name="bastproxy_helper"
+   name="bp_loop_helper"
    author="Bast"
    id="aaaecc6ab7dacff665e2a23d"
    language="Lua"
-   purpose="bastproxy helper aliases, triggers, etc"
+   purpose="bastproxy loop alias"
    date_written="2014-03-04 09:04:23"
    requires="4.00"
    version="1.0"
@@ -30,13 +30,18 @@ Helper aliases:
    match="^#\s*(\d+) (.*?)$"
    enabled="y"
    regexp="y"
-   send_to="12"
+   script="loop"
    sequence="100"
   >
-  <send>
-  Send('#bp.loop.cmd -c ' .. tostring(%1) .. ' "' .. tostring(%2) .. '"')
-</send>
   </alias>
 </aliases>
+<script>
+<![CDATA[
+require "tprint"
 
+function loop(name, line, wildcards)
+  Send("#bp.loop.cmd -c " .. tostring(wildcards[1]) .. ' "' .. tostring(wildcards[2]) .. '"')
+end
+]]>
+</script>
 </muclient>
