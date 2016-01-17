@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+
+<muclient>
+<plugin
+   name="bastproxy_helper"
+   author="Bast"
+   id="aaaecc6ab7dacff665e2a23d"
+   language="Lua"
+   purpose="bastproxy helper aliases, triggers, etc"
+   date_written="2014-03-04 09:04:23"
+   requires="4.00"
+   version="1.0"
+   >
+<description trim="y">
+<![CDATA[
+Helper aliases:
+#<count> command
+  will send #bp.loop.cmd -c count "command'
+]]>
+</description>
+
+</plugin>
+
+
+<!--  Aliases  -->
+
+<aliases>
+  <alias
+   match="^#\s*(\d+) (.*?)$"
+   enabled="y"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+  Send('#bp.loop.cmd -c ' .. tostring(%1) .. ' "' .. tostring(%2) .. '"')
+</send>
+  </alias>
+</aliases>
+
+</muclient>
