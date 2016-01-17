@@ -370,7 +370,7 @@ class Plugin(AardwolfBasePlugin):
       self.api.get('events.eraise')('aard_cp_mobsleft',
                         copy.deepcopy({'mobsleft':self.mobsleft}))
     else:
-      self.api.get('send.msg')("CP: could not find mob: %s" % args['name'])
+      self.api.get('send.msg')("BP CP: could not find mob: %s" % args['name'])
       self.cmdqueue.addtoqueue('cpcheck', '')
 
   def savestate(self):

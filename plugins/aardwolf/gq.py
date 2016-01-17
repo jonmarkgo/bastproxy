@@ -300,7 +300,7 @@ class Plugin(AardwolfBasePlugin):
       self._raisegq('aard_gq_mobsleft',
                         {'mobsleft':self.mobsleft})
     else:
-      self.api.get('send.msg')("GQ: could not find mob: %s" % args['name'])
+      self.api.get('send.msg')("BP GQ: could not find mob: %s" % args['name'])
       self.api.get('send.execute')("gq check")
 
   def _gqwon(self, _=None):
