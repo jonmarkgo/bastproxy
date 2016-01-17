@@ -43,7 +43,7 @@ OBJECTTYPES = [
   'portal',
   'beacon',
   'giftcard',
-  'bold',
+  'gold',
   'raw material',
   'campfire'
 ]
