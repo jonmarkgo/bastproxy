@@ -169,6 +169,7 @@ class Sqldb(object):
     """
     Fix quotes in a item that will be passed into a sql statement
     """
+    tstr = str(tstr)
     if tstr:
       if like:
         return "'%" + tstr.replace("'", "''") + "%'"
@@ -447,10 +448,7 @@ class Sqldb(object):
       if not self.checktableexists(tablename):
         if self.tables[tablename]['precreate']:
           self.tables[tablename]['precreate']()
-        cur = self.dbconn.cursor()
-        cur.executescript(self.tables[tablename]['createsql'])
-        self.dbconn.commit()
-        cur.close()
+        self.modifyscript(self.tables[tablename]['createsql'])
         if self.tables[tablename]['postcreate']:
           self.tables[tablename]['postcreate']()
     return True
@@ -549,6 +547,22 @@ class Sqldb(object):
     cur = self.dbconn.cursor()
     try:
       cur.executemany(stmt, data)
+      rowid = cur.lastrowid
+      result = self.dbconn.commit()
+    except:
+      self.api('send.traceback')('could not run sql statement : %s' % \
+                            stmt)
+
+    return rowid, result
+
+  def modifyscript(self, stmt):
+    """
+    run a statement to execute a script
+    """
+    result = []
+    cur = self.dbconn.cursor()
+    try:
+      cur.executescript(stmt)
       rowid = cur.lastrowid
       result = self.dbconn.commit()
     except:
