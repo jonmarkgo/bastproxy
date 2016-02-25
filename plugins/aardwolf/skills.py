@@ -83,6 +83,7 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('api.add')('ispracticed', self.api_ispracticed)
     self.api.get('api.add')('canuse', self.api_canuse)
     self.api.get('api.add')('isuptodate', self.api_isuptodate)
+    self.api.get('api.add')('isbad', self.api_isbad)
 
   def load(self):
     """
@@ -531,6 +532,18 @@ class Plugin(AardwolfBasePlugin):
     spellnum = int(spellnum)
     if spellnum in self.skills:
       return self.skills[spellnum]['spellup']
+
+    return False
+
+  # check if a skill/spell is bad
+  def api_isbad(self, spellnum):
+    """
+    return True for a bad spell, False for a good spell
+    """
+    skill = self.api.get('skill.gets')(spellnum)
+    if (skill['target'] == 'attack' or skill['target'] == 'special') and \
+          not skill['spellup']:
+      return True
 
     return False
 
