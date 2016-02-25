@@ -23,6 +23,9 @@ class Plugin(BasePlugin):
     self.firstactive = False
     self.connected = False
 
+    self.gotchar = False
+    self.gotroom = False
+
     # the firstactive flag
     self.api.get('api.add')('firstactive', self.api_firstactive)
 
@@ -33,6 +36,7 @@ class Plugin(BasePlugin):
     BasePlugin.load(self)
 
     self.api.get('events.register')('GMCP:char.status', self._charstatus)
+    self.api.get('events.register')('GMCP:room.info', self._roominfo)
 
     self._charstatus()
 
@@ -41,7 +45,10 @@ class Plugin(BasePlugin):
     reattach to GMCP:char.status
     """
     BasePlugin.disconnect(self)
+    self.gotchar = False
+    self.gotroom = False
     self.api.get('events.register')('GMCP:char.status', self._charstatus)
+    self.api.get('events.register')('GMCP:room.info', self._roominfo)
 
   # returns the firstactive flag
   def api_firstactive(self):
@@ -49,16 +56,32 @@ class Plugin(BasePlugin):
     this function returns True or False"""
     return self.firstactive
 
-  def _charstatus(self, args=None):
+  def sendfirstactive(self):
     """
-    check status for 3
+    send the firstactive event
     """
-    state = self.api.get('GMCP.getv')('char.status.state')
     proxy = self.api.get('managers.getm')('proxy')
-    if state == 3 and proxy and proxy.connected:
-      self.api.get('events.unregister')('GMCP:char.status', self._charstatus)
+    if self.gotchar and self.gotroom and proxy and proxy.connected:
       self.connected = True
       self.firstactive = True
       self.api.get('send.msg')('sending first active')
       self.api.get('events.eraise')('firstactive', {})
 
+  def _charstatus(self, args=None):
+    """
+    check status for 3
+    """
+    state = self.api.get('GMCP.getv')('char.status.state')
+
+    if state == 3:
+      self.gotchar = True
+      self.api.get('events.unregister')('GMCP:char.status', self._charstatus)
+      self.sendfirstactive()
+
+  def _roominfo(self, args=None):
+    """
+    check status for 3
+    """
+    self.gotroom = True
+    self.api.get('events.unregister')('GMCP:room.info', self._roominfo)
+    self.sendfirstactive()
