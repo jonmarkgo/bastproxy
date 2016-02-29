@@ -98,7 +98,6 @@ class Plugin(AardwolfBasePlugin):
     """
     self.currentflags = {}
     allflags = args['flags'].split(',')
-    print 'allflags: %s' % allflags
     for i in allflags:
       i = i.lower().strip()
       if i:
@@ -115,7 +114,6 @@ class Plugin(AardwolfBasePlugin):
     line = args['line']
     line = line.lstrip()
     allflags = line.split(',')
-    print 'allflagsother: %s' % allflags
     for i in allflags:
       i = i.lower().strip()
       if i:
@@ -129,7 +127,6 @@ class Plugin(AardwolfBasePlugin):
     """
     finished aflags when seeing an emptyline
     """
-    print 'flagsdone'
     self.api('events.unregister')('trigger_beall', self.aflagsotherline)
     self.api('events.unregister')('trigger_emptyline', self.aflagsdone)
     self.cmdqueue.cmddone('aflags')
@@ -138,7 +135,6 @@ class Plugin(AardwolfBasePlugin):
     """
     stuff to do after doing aflags command
     """
-    print 'flagsafter'
     self.savestate()
     self.api('triggers.togglegroup')('aflags', False)
 
