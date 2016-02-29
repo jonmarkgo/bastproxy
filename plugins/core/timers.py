@@ -331,7 +331,6 @@ class Plugin(BasePlugin):
     except KeyError:
       self.api.get('send.msg')('timer %s does not exist' % name)
 
-
   # toggle a timer
   def api_toggle(self, name, flag):
     """  toggle a timer to be enabled/disabled
@@ -347,9 +346,10 @@ class Plugin(BasePlugin):
     internally add a timer
     """
     nexttime = timer.nextcall
-    if not (nexttime in self.timerevents):
-      self.timerevents[nexttime] = []
-    self.timerevents[nexttime].append(timer)
+    if nexttime != -1:
+      if not (nexttime in self.timerevents):
+        self.timerevents[nexttime] = []
+      self.timerevents[nexttime].append(timer)
     self.timerlookup[timer.name] = timer
 
   def checktimerevents(self, args):
