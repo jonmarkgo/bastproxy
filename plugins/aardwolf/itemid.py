@@ -29,7 +29,6 @@ class Plugin(AardwolfBasePlugin):
 
     self.waitingforid = {}
     self.showid = {}
-    self.itemcache = {}
     self.pastkeywords = False
     self.dividercount = 0
     self.affectmods = False
@@ -53,15 +52,10 @@ class Plugin(AardwolfBasePlugin):
                       'identify')
 
     parser = argparse.ArgumentParser(add_help=False,
-                 description='show inventory or a container')
+                 description='id an item')
     parser.add_argument('serial', help='the item to id', default='', nargs='?')
     self.api.get('commands.add')('id', self.cmd_id,
                                 parser=parser, format=False, preamble=False)
-
-    parser = argparse.ArgumentParser(add_help=False,
-                 description='show some internal variables')
-    self.api.get('commands.add')('sv', self.cmd_showinternal,
-                                parser=parser, format=False, preable=False)
 
     self.api.get('triggers.add')('invdetailsstart',
       "^\{invdetails\}$", group='invdetails',
@@ -91,17 +85,6 @@ class Plugin(AardwolfBasePlugin):
                                       self.invdetailsline)
     self.api.get('events.register')('trigger_identifyon', self.identifyon)
     self.api.get('events.register')('trigger_identify1', self.identifyline)
-
-  def cmd_showinternal(self, args):
-    """
-    show internal stuff
-    """
-    msg = []
-    msg.append('waitingforid: %s' % self.waitingforid)
-    msg.append('showid: %s' % self.showid)
-    msg.append('currentitem: %s' % self.currentitem)
-
-    return True, msg
 
   def sendcmd(self, cmd):
     """
@@ -158,12 +141,6 @@ class Plugin(AardwolfBasePlugin):
     """
     reset current when seeing an {/invdetails}
     """
-    titem = self.api.get('eq.getitem')(self.currentitem['serial'])
-    if titem:
-      self.currentitem.update(titem)
-    self.itemcache[self.currentitem['serial']] = self.currentitem
-
-    #add the current item to something
     self.api.get('send.msg')('found {/invdetails}')
     self.api.get('triggers.togglegroup')('invdetails', False)
 
@@ -255,8 +232,11 @@ class Plugin(AardwolfBasePlugin):
     self.dividercount = 0
     if self.currentitem['serial'] in self.waitingforid:
       del self.waitingforid[self.currentitem['serial']]
+    titem = self.api.get('eq.addidentify')(self.currentitem['serial'],
+                                          self.currentitem)
     self.api.get('events.eraise')('itemid_%s' % self.currentitem['serial'],
                             self.currentitem)
+    ### Get the item from eq and update it
 
   # identify an item
   def api_identify(self, serial):
@@ -266,15 +246,15 @@ class Plugin(AardwolfBasePlugin):
     this function returns None if the identify data has to gathered,
     or the item if is in the cache"""
     titem = self.api.get('eq.getitem')(serial)
-    if titem['serial'] in self.itemcache:
-      return self.itemcache[titem['serial']]
+    if titem.hasbeenided:
+      return titem
     else:
       self.waitingforid[serial] = True
-      if titem['curcontainer'] != 'Inventory':
+      if titem.curcontainer and titem.curcontainer.cid != 'Inventory':
         self.api.get('eq.get')(serial)
       self.sendcmd('invdetails %s' % serial)
       self.sendcmd('identify %s' % serial)
-      if titem['curcontainer'] != 'Inventory':
+      if titem.origcontainer and titem.origcontainer.cid != 'Inventory':
         self.api.get('eq.put')(serial)
       return None
 
@@ -298,11 +278,7 @@ class Plugin(AardwolfBasePlugin):
       if not titem:
         msg.append('Could not find %s' % serial)
       else:
-        serial = titem['serial']
-        if serial in self.itemcache and \
-                    'container' in self.itemcache[serial]:
-          del self.itemcache[serial]
-        if serial in self.itemcache:
+        if titem.hasbeenided:
           self.api.get('itemid.show')(serial)
         else:
           self.api.get('events.register')('itemid_%s' % serial,
@@ -535,6 +511,12 @@ class Plugin(AardwolfBasePlugin):
 
     return ttext
 
+  def checkattr(self, item, attr):
+    if hasattr(item, attr) and item.__dict__[attr]:
+      return True
+
+    return False
+
   # format an item
   def api_formatitem(self, serial):
     """  format an item
@@ -545,16 +527,12 @@ class Plugin(AardwolfBasePlugin):
     linelen = 50
 
     serial = int(serial)
-    nitem = self.api.get('eq.getitem')(serial)
-    if nitem:
-      self.itemcache[serial].update(nitem)
-    #self.api.get('send.client')('%s' % self.itemcache[serial])
+    item = self.api.get('eq.getitem')(serial)
 
     iteml = [divider]
-    item = self.itemcache[serial]
 
-    if 'keywords' in item and item['keywords']:
-      tstuff = textwrap.wrap(item['keywords'], linelen)
+    if item.checkattr('keywords'):
+      tstuff = textwrap.wrap(item.keywords, linelen)
       header = 'Keywords'
       for i in tstuff:
         iteml.append(self.formatsingleline(header, '@R', i))
@@ -562,176 +540,181 @@ class Plugin(AardwolfBasePlugin):
 
     # do identifiers here
 
-    if 'cname' in item and item['cname']:
-      iteml.append(self.formatsingleline('Name', '@R', '@w' + item['cname']))
+    if item.checkattr('cname'):
+      iteml.append(self.formatsingleline('Name', '@R', '@w' + item.cname))
 
-    iteml.append(self.formatsingleline('Id', '@R', item['serial']))
+    iteml.append(self.formatsingleline('Id', '@R', item.serial))
 
-    if 'curcontainer' in item:
-      iteml.append(self.formatsingleline('Location', '@R',
-                                         item['curcontainer']))
+    if item.checkattr('curcontainer'):
+      if item.curcontainer.cid == 'Worn':
+        wearlocs = self.api.get('itemu.wearlocs')()
+        iteml.append(self.formatsingleline('Location', '@R',
+                                         'Worn - %s' % wearlocs[item.wearslot]))
+      else:
+        iteml.append(self.formatsingleline('Location', '@R',
+                                         item.curcontainer.cid))
 
-    if 'type' in item and item['type'] and 'level' in item:
+    if item.checkattr('itype') and item.checkattr('level'):
       objtypes = self.api.get('itemu.objecttypes')()
-      ntype = objtypes[item['type']].capitalize()
+      ntype = item.itype.capitalize()
       iteml.append(self.formatdoubleline('Type', '@c', ntype,
-                                         'Level', item['level']))
-    else:
-      iteml.append(self.formatsingleline('Level', '@c', item['level']))
+                                         'Level', item.level))
+    elif item.checkattr(level):
+      iteml.append(self.formatsingleline('Level', '@c', item.level))
 
-    if 'worth' in item and 'weight' in item:
-      iteml.append(self.formatdoubleline('Worth', '@c', item['worth'],
-                                         'Weight', item['weight']))
+    if item.checkattr('worth') and item.checkattr('weight'):
+      iteml.append(self.formatdoubleline('Worth', '@c', item.worth,
+                                         'Weight', item.weight))
 
-    if 'wearable' in item and item['wearable']:
+    if item.checkattr('wearable'):
       iteml.append(self.formatsingleline('Wearable', '@c',
-                                         item['wearable']))
+                                         item.wearable))
 
-    if 'score' in item:
-      iteml.append(self.formatsingleline('Score', '@c', item['score'],
+    if item.checkattr('score'):
+      iteml.append(self.formatsingleline('Score', '@c', item.score,
                                          datacolor='@Y'))
 
-    if 'material' in item and item['material']:
-      iteml.append(self.formatsingleline('Material', '@c', item['material']))
+    if item.checkattr('material'):
+      iteml.append(self.formatsingleline('Material', '@c', item.material))
 
-    if 'flags' in item and item['flags']:
-      tlist = textwrap.wrap(item['flags'], linelen)
+    if item.checkattr('flags'):
+      tlist = textwrap.wrap(item.flags, linelen)
       header = 'Flags'
       for i in tlist:
         i = i.replace('precious', '@Yprecious@w')
         iteml.append(self.formatsingleline(header, '@c', i.rstrip()))
         header = ''
 
-    if 'owner' in item and item['owner']:
-      iteml.append(self.formatsingleline('Owned by', '@c', item['owner']))
+    if item.checkattr('owner'):
+      iteml.append(self.formatsingleline('Owned by', '@c', item.owner))
 
-    if 'fromclan' in item and item['fromclan']:
-      iteml.append(self.formatsingleline('Clan Item', '@G', item['fromclan'],
+    if item.checkattr('fromclan'):
+      iteml.append(self.formatsingleline('Clan Item', '@G', item.fromclan,
                                          datacolor='@M'))
 
-    if 'foundat' in item and item['foundat']:
-      iteml.append(self.formatsingleline('Found at', '@G', item['foundat'],
+    if item.checkattr('foundat'):
+      iteml.append(self.formatsingleline('Found at', '@G', item.foundat,
                                          datacolor='@M'))
 
-    if 'leadsto' in item and item['leadsto']:
-      iteml.append(self.formatsingleline('Leads to', '@G', item['leadsto'],
+    if item.checkattr('leadsto'):
+      iteml.append(self.formatsingleline('Leads to', '@G', item.leadsto,
                                          datacolor='@M'))
 
-    if 'notes' in item and item['notes']:
+    if item.checkattr('notes'):
       iteml.append(divider)
-      tlist = textwrap.wrap(' '.join(item['notes']), linelen)
+      tlist = textwrap.wrap(' '.join(item.notes), linelen)
       header = 'Notes'
       for i in tlist:
         iteml.append(self.formatsingleline(header, '@W', i, '@w'))
         header = ''
 
-    if 'affectmod' in item and item['affectmod']:
+    if item.checkattr('affectmod'):
       iteml.append(divider)
-      tlist = textwrap.wrap(', '.join(item['affectmod']), linelen)
+      tlist = textwrap.wrap(', '.join(item.affectmod), linelen)
       header = 'Affects'
       for i in tlist:
         iteml.append(self.formatsingleline(header, '@g', i, '@w'))
         header = ''
 
-    if 'container' in item and item['container']:
+    if item.checkattr('container'):
       iteml.append(divider)
       iteml.append(self.formatspecialline('Capacity', '@c',
-                          item['container']['capacity'], 'Heaviest Item',
-                          item['container']['heaviestitem']))
+                          item.container['capacity'], 'Heaviest Item',
+                          item.container['heaviestitem']))
       iteml.append(self.formatspecialline('Holding', '@c',
-                            item['container']['holding'], 'Items Inside',
-                            item['container']['itemsinside']))
+                            item.container['holding'], 'Items Inside',
+                            item.container['itemsinside']))
       iteml.append(self.formatspecialline('Tot Weight', '@c',
-                            item['container']['totalweight'], 'Item Burden',
-                            item['container']['itemburden']))
+                            item.container['totalweight'], 'Item Burden',
+                            item.container['itemburden']))
       iteml.append(self.formatspecialline('', '@c',
                   '@wItems inside weigh @Y%d@w%%@w of their usual weight' % \
-                          item['container']['itemweightpercent']))
+                          item.container['itemweightpercent']))
 
-    if 'weapon' in item and item['weapon']:
+    if item.checkattr('weapon'):
       iteml.append(divider)
       iteml.append(self.formatspecialline('Weapon Type', '@c',
-                                  item['weapon']['wtype'], 'Average Dam',
-                                  item['weapon']['avedam']))
+                                  item.weapon['wtype'], 'Average Dam',
+                                  item.weapon['avedam']))
       iteml.append(self.formatspecialline('Inflicts', '@c',
-                                  item['weapon']['inflicts'], 'Damage Type',
-                                  item['weapon']['damtype']))
-      if 'special' in item['weapon'] and item['weapon']['special']:
+                                  item.weapon['inflicts'], 'Damage Type',
+                                  item.weapon['damtype']))
+      if 'special' in item.weapon and item.weapon['special']:
         iteml.append(self.formatspecialline('Specials', '@c',
-                                            item['weapon']['special']))
+                                            item.weapon['special']))
 
-    if item['type'] == 20:
-      if 'portal' in item and item['portal']:
+    if item.itype == 20:
+      if item.checkattr('portal'):
         iteml.append(divider)
         iteml.append(self.formatsingleline('Portal', '@R',
-                  '@Y%s@w uses remaining.' % item['portal']['uses']))
+                  '@Y%s@w uses remaining.' % item.portal['uses']))
 
-    if 'statmod' in item and item['statmod']:
+    if item.checkattr('statmod'):
       iteml.append(divider)
       iteml.append(self.formatstatsheader())
-      iteml.append(self.formatstats(item['statmod']))
+      iteml.append(self.formatstats(item.statmod))
 
-    if 'resistmod' in item and item['resistmod']:
+    if item.checkattr('resistmod'):
       iteml.append(divider)
-      for i in self.formatresist(item['resistmod'], divider):
+      for i in self.formatresist(item.resistmod, divider):
         iteml.append(i)
 
-    if 'skillmod' in item and item['skillmod']:
+    if item.checkattr('skillmod'):
       iteml.append(divider)
       header = 'Skill Mods'
-      for i in item['skillmod']:
+      for i in item.skillmod:
         spell = self.api.get('skills.gets')(i)
         color = '@R'
-        if int(item['skillmod'][i]) > 0:
+        if int(item.skillmod[i]) > 0:
           color = '@G'
         iteml.append(self.formatspecialline(header, '@c',
                'Modifies @g%s@w by %s%+d@w' % (str(spell['name']).capitalize(),
-               color, int(item['skillmod'][i]))))
+               color, int(item.skillmod[i]))))
         header = ''
 
-    if 'spells' in item and item['spells']:
+    if item.checkattr('spells'):
       iteml.append(divider)
 
       header = 'Spells'
       for i in xrange(1, 5):
         key = 'sn%s' % i
-        if item['spells'][key] and item['spells'][key] != 0:
-          spell = self.api.get('skills.gets')(item['spells'][key])
+        if item.spells[key] and item.spells[key] != 0:
+          spell = self.api.get('skills.gets')(item.spells[key])
           plural = ''
-          if int(item['spells']['uses']) > 1:
+          if int(item.spells['uses']) > 1:
             plural = 's'
           iteml.append(self.formatspecialline(header, '@c',
                     "%d use%s of level %d '@g%s@w'" % (
-                            item['spells']['uses'], plural,
-                            item['spells']['level'],
+                            item.spells['uses'], plural,
+                            item.spells['level'],
                             spell['name'].lower())))
           header = ''
 
-    if 'food' in item and item['food']:
+    if item.checkattr('food'):
       iteml.append(divider)
       header = 'Food'
       iteml.append(self.formatspecialline(header, '@c',
-          "Will replenish hunger by %d%%" % (item['food']['percent'])))
+          "Will replenish hunger by %d%%" % (item.food['percent'])))
 
-    if 'drink' in item and item['drink']:
+    if item.checkattr('drink'):
       iteml.append(divider)
       iteml.append(self.formatspecialline('Drink', '@c',
-                  "%d servings of %s. Max: %d" % (item['drink']['servings'],
-                                    item['drink']['liquid'],
-                                    item['drink']['liquidmax']/20 or 1)))
+                  "%d servings of %s. Max: %d" % (item.drink['servings'],
+                                    item.drink['liquid'],
+                                    item.drink['liquidmax']/20 or 1)))
       iteml.append(self.formatspecialline('', '@c',
                   "Each serving replenishes thirst by %d%%" % \
-                    item['drink']['thirstpercent']))
+                    item.drink['thirstpercent']))
       iteml.append(self.formatspecialline('', '@c',
                   "Each serving replenishes hunger by %d%%" % \
-                    item['drink']['hungerpercent']))
+                    item.drink['hungerpercent']))
 
-    if 'furniture' in item and item['furniture']:
+    if item.checkattr('furniture'):
       iteml.append(divider)
       iteml.append(self.formatspecialline('Heal Rate', '@c',
               "Health [@Y%d@w]    Magic [@Y%d@w]" % (
-                    item['furniture']['hpregen'],
-                    item['furniture']['manaregen'])))
+                    item.furniture['hpregen'],
+                    item.furniture['manaregen'])))
 
     iteml.append(divider)
 
@@ -746,9 +729,11 @@ class Plugin(AardwolfBasePlugin):
     command
 
     this function returns nothing"""
-    tstuff = self.api.get('itemid.format')(serial)
+    item = self.api.get('eq.getitem')(serial)
+    if item:
+      if item.hasbeenided:
+        tstuff = self.api.get('itemid.format')(serial)
 
-    if serial in self.itemcache:
-      self.api.get('send.client')('\n'.join(tstuff), preamble=False)
-    else:
-      self.api.get('send.execute')('#bp.itemid.id %s' % serial)
+        self.api.get('send.client')('\n'.join(tstuff), preamble=False)
+      else:
+        self.api.get('send.execute')('#bp.itemid.id %s' % serial)
