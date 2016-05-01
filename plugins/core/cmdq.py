@@ -30,6 +30,8 @@ class CmdQueue(object):
 
     self.cmds = {}
 
+    self._dump_shallow_attrs = ['plugin']
+
   def addcmdtype(self, cmdtype, cmd, regex, beforef=None, afterf=None):
     """
     add a command type
