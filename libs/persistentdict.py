@@ -9,7 +9,7 @@ import os
 import shutil
 import stat
 from libs.api import API
-api = API()
+#api = API()
 
 def convert(tinput):
   """
@@ -176,6 +176,7 @@ class PersistentDictEvent(PersistentDict):
     """
     self.plugin = plugin
     self.api = API()
+    self._dump_shallow_attrs = ['api']
     PersistentDict.__init__(self, filename, *args, **kwds)
 
   def __setitem__(self, key, val):
