@@ -124,7 +124,7 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('api.add')('itemflagsname', self.api_itemflagsname)
 
     self.invlayout = {}
-    self.invlayout['invheader'] = ["serial", "level", "type", "worth",
+    self.invlayout['invheader'] = ["serial", "level", "itype", "worth",
                                 "weight", "wearable", "flags", "owner",
                                 "fromclan", "timer", "u1", "u2", "u3",
                                 "score"]
@@ -143,7 +143,7 @@ class Plugin(AardwolfBasePlugin):
                             "thirstpercent", "hungerpercent", "u1"]
     self.invlayout['furniture'] = ["hpregen", "manaregen", "u1"]
     self.invlayout['eqdata'] = ["serial", "shortflags", "cname", "level",
-                             "type", "unique", "wearslot", "timer"]
+                             "itype", "unique", "wearslot", "timer"]
     self.invlayout['light'] = ['duration']
     self.invlayout['portal'] = ['uses']
     self.invlayout['tempmod'] = ['sn', 'u1', 'u2', 'statmod', 'duration']
