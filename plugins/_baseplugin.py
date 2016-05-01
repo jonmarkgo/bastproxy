@@ -57,6 +57,8 @@ class BasePlugin(object):
     self.settings = {}
     self.settingvalues = PersistentDictEvent(self, self.savefile, 'c')
 
+    self._dump_shallow_attrs = ['api']
+
     self.api.overload('send', 'msg', self.api_outputmsg)
     self.api.overload('commands', 'default', self.api_commandsdefault)
     self.api.overload('dependency', 'add', self.api_dependencyadd)
@@ -112,6 +114,12 @@ class BasePlugin(object):
     parser.add_argument('-m', "--method",
           help="get code for a method",
               default='')
+    parser.add_argument('-o', "--object",
+          help="show an object of the plugin, can be method or variable",
+              default='')
+    parser.add_argument('-s', "--simple",
+          help="show a simple output",
+              action="store_true")
     self.api.get('commands.add')('inspect', self.cmd_inspect,
                                  parser=parser, group='Base')
 
@@ -163,6 +171,8 @@ class BasePlugin(object):
     """
     show the plugin as it currently is in memory
     """
+    from libs.objectdump import dumps as dumper
+
     tmsg = []
     if args['method']:
       try:
@@ -171,11 +181,38 @@ class BasePlugin(object):
       except AttributeError:
         tmsg.append('There is no method named %s' % args['method'])
 
+    elif args['object']:
+      tobj = args['object']
+      key = None
+      if ':' in tobj:
+        tobj, key = tobj.split(':')
+
+      obj = getattr(self, tobj)
+      if obj:
+        if key:
+          if not (key in obj):
+            try:
+              key = int(key)
+            except ValueError:
+              pass
+          if key in obj:
+            obj = obj[key]
+        if args['simple']:
+          tvars = pprint.pformat(obj)
+        else:
+          tvars = dumper(obj)
+        tmsg.append(tvars)
+
     else:
+      if args['simple']:
+        tvars = pprint.pformat(vars(self))
+      else:
+        tvars = dumper(self)
+
       tmsg.append('@M' + '-' * 60 + '@x')
-      tmsg.append('Variables:')
+      tmsg.append('Variables')
       tmsg.append('@M' + '-' * 60 + '@x')
-      tmsg.append(pprint.pformat(vars(self)))
+      tmsg.append(tvars)
       tmsg.append('@M' + '-' * 60 + '@x')
       tmsg.append('Methods')
       tmsg.append('@M' + '-' * 60 + '@x')
