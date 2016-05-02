@@ -38,8 +38,8 @@ class Plugin(AardwolfBasePlugin):
     """
     item = args['item']
     itemtypesrev = self.api.get('itemu.objecttypes')()
-    ntype = itemtypesrev[item['type']]
+    ntype = itemtypesrev[item.itype]
 
     if self.api.get('setting.gets')(ntype):
-      if not ('K' in item['shortflags']):
-        self.api.get('send.execute')('keep %s' % item['serial'])
+      if not ('K' in item.shortflags):
+        self.api.get('send.execute')('keep %s' % item.serial)
