@@ -59,6 +59,8 @@ class PersistentDict(dict):
     """
     initialize the instance
     """
+    self._dump_shallow_attrs = ['api']
+    self.api = API()
     self.flag = flag                    # r=readonly, c=create, or n=new
     self.mode = stat.S_IWUSR | stat.S_IRUSR                   # None or an octal triple like 0644
     self.format = tformat                # 'csv', 'json', or 'pickle'
@@ -111,7 +113,10 @@ class PersistentDict(dict):
     if self.format == 'csv':
       csv.writer(fileobj).writerows(self.items())
     elif self.format == 'json':
-      json.dump(self, fileobj, separators=(',', ':'))
+      try:
+        json.dump(self, fileobj, separators=(',', ':'))
+      except TypeError:
+	self.api('send.traceback')('Could not save object')
     elif self.format == 'pickle':
       pickle.dump(dict(self), fileobj, 2)
     else:
@@ -175,8 +180,6 @@ class PersistentDictEvent(PersistentDict):
     init the class
     """
     self.plugin = plugin
-    self.api = API()
-    self._dump_shallow_attrs = ['api']
     PersistentDict.__init__(self, filename, *args, **kwds)
 
   def __setitem__(self, key, val):
