@@ -80,7 +80,7 @@ class Plugin(BasePlugin):
     self.api('%s.removeplugin' % self.sname)(args['name'])
 
   # add a trigger
-  def api_addtrigger(self, triggername, regex, plugin, **kwargs):
+  def api_addtrigger(self, triggername, regex, plugin=None, **kwargs):
     """  add a trigger
     @Ytriggername@w   = The trigger name
     @Yregex@w    = the regular expression that matches this trigger
@@ -97,11 +97,18 @@ class Plugin(BasePlugin):
                               trigger is matched
 
     this function returns no values"""
+    if not plugin:
+      plugin = self.api('utils.funccallerplugin')()
+
+    if not plugin:
+      print 'could not add a trigger for triggername', triggername
+      return False
+
     if regex in self.regexlookup:
       self.api.get('send.msg')(
             'trigger %s tried to add a regex that already existed for %s' % \
                     (triggername, self.regexlookup[regex]))
-      return
+      return False
     args = kwargs.copy()
     args['regex'] = regex
     if not ('enabled' in args):
@@ -134,6 +141,9 @@ class Plugin(BasePlugin):
       self.api.get('send.traceback')(
               'Could not compile regex for trigger: %s : %s' % \
                       (triggername, args['regex']))
+      return False
+
+    return True
 
   # remove a trigger
   def api_remove(self, triggername, force=False):
