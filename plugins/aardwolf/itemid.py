@@ -235,7 +235,8 @@ class Plugin(AardwolfBasePlugin):
     titem = self.api.get('eq.addidentify')(self.currentitem['serial'],
                                           self.currentitem)
     self.api.get('events.eraise')('itemid_%s' % self.currentitem['serial'],
-                            self.currentitem)
+                            {'item':self.api.get('eq.getitem')(
+				      self.currentitem['serial'])})
     ### Get the item from eq and update it
 
   # identify an item
@@ -254,9 +255,20 @@ class Plugin(AardwolfBasePlugin):
         self.api.get('eq.get')(serial)
       self.sendcmd('invdetails %s' % serial)
       self.sendcmd('identify %s' % serial)
-      if titem.origcontainer and titem.origcontainer.cid != 'Inventory':
-        self.api.get('eq.put')(serial)
+      self.api('events.register')('itemid_%s' % titem.serial, self.putincontainer,
+				  prio=40)
       return None
+
+  def putincontainer(self, args):
+    """
+    after identification, put an item into its original container
+    """
+    self.api('events.unregister')(args['eventname'], self.putincontainer)
+
+    titem = args['item']
+
+    if titem.origcontainer and titem.origcontainer.cid != 'Inventory':
+      self.api.get('eq.put')(titem.serial)
 
   def event_showitem(self, args):
     """
@@ -264,7 +276,7 @@ class Plugin(AardwolfBasePlugin):
     it registers with itemid_<serial>
     """
     self.api.get('events.unregister')(args['eventname'], self.event_showitem)
-    self.api.get('itemid.show')(args['serial'])
+    self.api.get('itemid.show')(args['item'].serial)
 
   def cmd_id(self, args):
     """
