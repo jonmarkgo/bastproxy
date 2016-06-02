@@ -14,7 +14,6 @@ from libs.persistentdict import PersistentDict
 from libs.api import API
 from plugins._baseplugin import BasePlugin
 
-
 def find_files(directory, filematch):
   """
   find files in a directory that match a filter
@@ -609,7 +608,8 @@ class PluginMgr(object):
     self.api.get('send.msg')('loading dependencies for %s' % \
                                   plugin.fullimploc, self.sname)
     self.loaddependencies(plugin.sname, plugin.dependencies)
-    self.api.get('send.client')("load: loading %s" % plugin.fullimploc)
+    self.api.get('send.client')("load: loading %s with priority %s" % \
+			    (plugin.fullimploc, plugin.priority))
     self.api.get('send.msg')('loading %s (%s: %s)' % (plugin.fullimploc,
                                     plugin.sname, plugin.name), self.sname)
     plugin.load()
@@ -705,8 +705,6 @@ class PluginMgr(object):
     """
     load various things
     """
-    self.api.get('managers.add')('plugin', self)
-
     self.load_modules("*.py")
 
     parser = argparse.ArgumentParser(add_help=False,
@@ -743,7 +741,7 @@ class PluginMgr(object):
     self.api.get('commands.add')('reload', self.cmd_reload,
                         lname='Plugin Manager', parser=parser)
 
-    self.api.get('commands.default')(self.sname, 'list')
+    self.api.get('commands.default')('list', self.sname)
     self.api.get('events.register')('savestate', self.savestate,
                                     plugin=self.sname)
 
