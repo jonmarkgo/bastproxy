@@ -706,6 +706,9 @@ class Plugin(AardwolfBasePlugin):
                  description='show quests stats')
     parser.add_argument('count', help='the number of quests to show',
                         default=0, nargs='?')
+    parser.add_argument('-n', "--number",
+          help="show info for level number",
+              default='')
     self.api.get('commands.add')('quests', self.cmd_quests,
                                 parser=parser, group='Stats')
 
@@ -713,6 +716,9 @@ class Plugin(AardwolfBasePlugin):
                  description='show level stats')
     parser.add_argument('count', help='the number of levels to show',
                         default=0, nargs='?')
+    parser.add_argument('-n', "--number",
+          help="show info for level number",
+              default='')
     self.api.get('commands.add')('levels', self.cmd_levels,
                                 parser=parser, group='Stats')
 
@@ -720,6 +726,9 @@ class Plugin(AardwolfBasePlugin):
                  description='show cp stats')
     parser.add_argument('count', help='the number of cps to show',
                         default=0, nargs='?')
+    parser.add_argument('-n', "--number",
+          help="show info for cp number",
+              default='')
     self.api.get('commands.add')('cps', self.cmd_cps,
                                 parser=parser, group='Stats')
 
@@ -958,22 +967,81 @@ class Plugin(AardwolfBasePlugin):
 
     return lstr
 
+  def show_quest(self, args):
+    """
+    show info for a specific quest in the database
+    """
+    msg = []
+
+    tid = args['number']
+
+    questinfo = self.api('%s.getrow' % self.sname)(tid, 'quests')
+
+    if questinfo:
+      questinfo = questinfo[0]
+
+    linelen = self.api('plugins.getp')('proxy').api('setting.gets')('linelen')
+    div = '@B' + '-' * linelen
+
+    msg.append("@G%-6s %-2s %-2s %-2s %-2s %-3s" \
+                    " %-2s %-2s %-2s %-2s %-4s %-3s   %s" % ("ID", "QP",
+                    "MC", "TR", "LK", "DBL", "TL", "TP", "TN",
+                    "PR", "Gold", "Lvl",  "Time"))
+    msg.append(div)
+
+    dbl = ''
+    if int(questinfo['double']) == 1:
+      dbl = dbl + 'D'
+    if int(questinfo['daily']) == 1:
+      dbl = dbl + 'E'
+
+    leveld = self.api.get('aardu.convertlevel')(questinfo['level'])
+
+    ttime = self.api.get('utils.formattime')(questinfo['finishtime'] - \
+                                              questinfo['starttime'])
+    if int(questinfo['failed']) == 1:
+      ttime = 'Failed'
+    msg.append("%-6s %2s %2s %2s %2s %3s" \
+                  " %2s %2s %2s %2s %4s %3s %8s" % (
+                  questinfo['quest_id'], questinfo['qp'],
+                  questinfo['mccp'], questinfo['tier'], questinfo['lucky'],
+                  dbl, questinfo['totqp'], questinfo['tp'],
+                  questinfo['trains'], questinfo['pracs'], questinfo['gold'],
+                  leveld['level'],  ttime))
+
+
+    msg.append(div)
+
+    msg.append('%-25s %-25s %-20s' % (questinfo['mobname'],
+                                      questinfo['mobroom'],
+                                      questinfo['mobarea']))
+
+    msg.append(div)
+
+    return True, msg
+
   def cmd_quests(self, args=None):
     """
     show quest stats
     """
-    count = 0
-    if args and args['count']:
-      count = args['count']
-
-    msg = []
-
     if self.statdb.getlastrowid('stats') <= 0:
       return True, ['No stats available']
 
     if self.statdb.getlastrowid('quests') <= 0:
       return True, ['No quests stats are available']
 
+    count = 0
+
+    if args:
+      if args['number']:
+        return self.show_quest(args)
+      else:
+        count = args['count']
+
+    msg = []
+
+    linelen = self.api('plugins.getp')('proxy').api('setting.gets')('linelen')
+    div = '@B' + '-' * linelen
 
     tqrow = self.statdb.select(
         """SELECT AVG(finishtime - starttime) as avetime,
@@ -1007,7 +1075,7 @@ class Plugin(AardwolfBasePlugin):
     stats['indb'] = stats['failedindb'] + stats['qindb']
     stats['qplevelave'] = stats['qpearned']/float(stats['totallevels'])
     msg.append(self._format_row('DB Stats', 'Total', 'In DB', '@G', '@G'))
-    msg.append('@G--------------------------------------------')
+    msg.append(div)
     msg.append(self._format_row("Quests",
               stats['questscomplete'] + stats['questsfailed'],
               stats['indb']))
@@ -1017,7 +1085,7 @@ class Plugin(AardwolfBasePlugin):
               stats['questsfailed'], stats['failedindb']))
     msg.append('')
     msg.append(self._format_row("QP Stats", "Total", "Average", '@G', '@G'))
-    msg.append('@G--------------------------------------------')
+    msg.append(div)
     msg.append(self._format_row("Overall QP", stats['qpearned'],
         format_float(stats['qplevelave'], "/level")))
     msg.append(self._format_row("Quest QP", stats['qp'],
@@ -1038,7 +1106,7 @@ class Plugin(AardwolfBasePlugin):
     msg.append('')
     msg.append(self._format_row("Bonus Rewards", "Total",
                               "Average", '@G', '@G'))
-    msg.append('@G--------------------------------------------')
+    msg.append(div)
     msg.append(self._format_row("TP", stats['tp'],
         format_float(stats['tpave'], "/quest")))
     msg.append(self._format_row("Trains", stats['trains'],
@@ -1054,7 +1122,7 @@ class Plugin(AardwolfBasePlugin):
                         " %-2s %-2s %-2s %-2s %-4s %-3s   %s" % ("ID", "QP",
                         "MC", "TR", "LK", "DBL", "TL", "TP", "TN",
                         "PR", "Gold", "Lvl",  "Time"))
-        msg.append('@G----------------------------------------------------')
+        msg.append(div)
 
         for item in lastitems:
           dbl = ''
@@ -1079,23 +1147,100 @@ class Plugin(AardwolfBasePlugin):
 
     return True, msg
 
+  def show_level(self, args):
+    """
+    show info for a specific level in the database
+    """
+    msg = []
+
+    tid = args['number']
+
+    levelinfo = self.api('%s.getrow' % self.sname)(tid, 'levels')
+
+    linelen = self.api('plugins.getp')('proxy').api('setting.gets')('linelen')
+    div = '@B' + '-' * linelen
+
+    if levelinfo:
+      levelinfo = levelinfo[0]
+
+    msg.append("@G%-6s %-3s %2s %2s %-2s %-2s %-2s" \
+                  " %-2s %-1s %-1s %-1s %-1s %-1s %-1s   %s" % ("ID", "Lvl",
+                  "TR", "BT", "PR", "HP", "MN", "MV", "S",
+                  "I", "W", "C",  "D", "L", "Time"))
+    msg.append(div)
+
+    bonus = 0
+    if int(levelinfo['bonustrains']) > 0:
+      bonus = bonus + int(levelinfo['bonustrains'])
+    if int(levelinfo['blessingtrains']) > 0:
+      bonus = bonus + int(levelinfo['blessingtrains'])
+
+    leveld = self.api.get('aardu.convertlevel')(levelinfo['level'])
+
+    if levelinfo['finishtime'] != '-1' and levelinfo['starttime'] != '-1':
+      ttime = self.api.get('utils.formattime')(levelinfo['finishtime'] - \
+                                                levelinfo['starttime'])
+    else:
+      ttime = ''
+
+    msg.append("%-6s %-3s %2s %2s %-2s %-2s %-2s" \
+                " %-2s %-1s %-1s %-1s %-1s %-1s %-1s   %s" % (
+                levelinfo['level_id'], leveld['level'], levelinfo['trains'],
+                bonus, levelinfo['pracs'], levelinfo['hp'], levelinfo['mp'],
+                levelinfo['mv'], levelinfo['str'], levelinfo['int'],
+                levelinfo['wis'], levelinfo['con'], levelinfo['dex'],
+                levelinfo['luc'], ttime))
+
+    stmt = "SELECT count(*) as count, AVG(totalxp) as average FROM " \
+          "mobkills where time > %d and time < %d and xp > 0" % \
+            (levelinfo['starttime'], levelinfo['finishtime'])
+    tst = self.api.get('statdb.select')(stmt)
+    count = tst[0]['count']
+    ave = tst[0]['average']
+
+    print count
+    print ave
+
+    if count > 0 and ave > 0:
+      msg.append(div)
+      length = levelinfo['finishtime'] - levelinfo['starttime']
+      tmsg = '@G%s@w mobs killed' % count
+      tmsg = tmsg + ' (@G%02.02f@w xp/mob)' % (ave)
+      perlevel = self.api.get('GMCP.getv')('char.base.perlevel')
+      if length and perlevel:
+        expmin = self.api.get('GMCP.getv')('char.base.perlevel')/(length/60)
+        tmsg = tmsg + ' @G%02d@w xp/min' % (expmin)
+
+      msg.append(tmsg)
+
+    msg.append(div)
+
+    return True, msg
+
   def cmd_levels(self, args=None):
     """
     show level stats
     """
-    count = 0
-    if args:
-      count = args['count']
-
-    msg = []
-    pups = {}
-    levels = {}
-
     if self.statdb.getlastrowid('stats') <= 0:
       return True, ['No stats available']
 
     if self.statdb.getlastrowid('levels') <= 0:
       return True, ['No levels/pups stats available']
+
+    count = 0
+
+    if args:
+      if args['number']:
+        return self.show_level(args)
+      else:
+        count = args['count']
+
+    msg = []
+    pups = {}
+    levels = {}
+
+    linelen = self.api('plugins.getp')('proxy').api('setting.gets')('linelen')
+    div = '@B' + '-' * linelen
 
     lrow = self.statdb.select(
         "SELECT totallevels, qpearned FROM stats WHERE milestone = 'current'")
@@ -1141,7 +1286,7 @@ class Plugin(AardwolfBasePlugin):
     pups.update(ptrow[0])
 
     msg.append(self._format_row('Type', 'Levels', 'Pups', '@G', '@G'))
-    msg.append('@G--------------------------------------------')
+    msg.append(div)
     msg.append(self._format_row("Total Overall",
                 levels['totallevels'], pups['powerupsall']))
     msg.append(self._format_row("Total In DB",
@@ -1193,7 +1338,7 @@ class Plugin(AardwolfBasePlugin):
                   " %-2s %-1s %-1s %-1s %-1s %-1s %-1s   %s" % ("ID", "Lvl",
                   "TR", "BT", "PR", "HP", "MN", "MV", "S",
                   "I", "W", "C",  "D", "L", "Time"))
-        msg.append('@G----------------------------------------------------')
+        msg.append(div)
 
         for item in lastitems:
           bonus = 0
@@ -1220,22 +1365,86 @@ class Plugin(AardwolfBasePlugin):
 
     return True, msg
 
+  def show_cp(self, args):
+    """
+    show info for a specific cp in the database
+    """
+    msg = []
+
+    tid = args['number']
+
+    cpinfo = self.api('%s.getrow' % self.sname)(tid, 'campaigns')
+
+    linelen = self.api('plugins.getp')('proxy').api('setting.gets')('linelen')
+    div = '@B' + '-' * linelen
+
+    if cpinfo:
+      cpinfo = cpinfo[0]
+
+    mobs = self.api('%s.select' % self.sname)(
+      "SELECT * FROM cpmobs WHERE cp_id = %s" % tid)
+
+
+    msg.append("@G%-6s %-12s %-2s %-2s %-2s %-2s %-2s %6s" \
+                  " %-4s  %s" % ("ID", "Lvl",
+                  "QP", "BN", "TP", "TN", "PR", "Gold", "Mobs", "Time"))
+    msg.append(div)
+
+
+    leveld = self.api.get('aardu.convertlevel')(cpinfo['level'])
+    levelstr = 'T%d R%d L%d' % (leveld['tier'], leveld['remort'],
+                        leveld['level'])
+
+    if cpinfo['finishtime'] != '-1' and cpinfo['starttime'] != '-1':
+      ttime = self.api.get('utils.formattime')(cpinfo['finishtime'] - \
+                                                cpinfo['starttime'])
+    else:
+      ttime = ''
+
+    if int(cpinfo['failed']) == 1:
+      ttime = 'Failed'
+
+    msg.append("%-6s %-12s %-2s %2s %2s %2s %2s %6s" \
+                "  %-3s  %s" % (
+                cpinfo['cp_id'], levelstr, cpinfo['qp'], cpinfo['bonusqp'],
+                cpinfo['tp'], cpinfo['trains'], cpinfo['pracs'], cpinfo['gold'],
+                len(mobs), ttime))
+
+    msg.append(div)
+    msg.append("@G%-30s %-30s" % ("Name", "Location"))
+    msg.append(div)
+
+    for i in mobs:
+      msg.append("@G%-30s %-30s" % (i['name'],
+                                         i['location']))
+
+    msg.append(div)
+
+    return True, msg
+
   def cmd_cps(self, args=None):
     """
     show cp stats
     """
-    count = 0
-    if args:
-      count = args['count']
-
-    msg = []
-    stats = {}
-
     if self.statdb.getlastrowid('stats') <= 0:
       return True, ['No stats available']
 
     if self.statdb.getlastrowid('campaigns') <= 0:
       return True, ['No campaign stats available']
+
+    count = 0
+
+    if args:
+      if args['number']:
+        return self.show_cp(args)
+      else:
+        count = args['count']
+
+    msg = []
+    stats = {}
+
+    linelen = self.api('plugins.getp')('proxy').api('setting.gets')('linelen')
+    div = '@B' + '-' * linelen
 
     trow = self.statdb.select(
         "SELECT campaignsdone, campaignsfld, totallevels " \
@@ -1267,7 +1476,7 @@ class Plugin(AardwolfBasePlugin):
                         int(stats['campaignsfld'])
 
     msg.append(self._format_row('DB Stats', 'Total', 'In DB', '@G', '@G'))
-    msg.append('@G--------------------------------------------')
+    msg.append(div)
 
     msg.append(self._format_row("Overall",
                 stats['totalcps'], stats['indb'] or 0))
@@ -1278,7 +1487,7 @@ class Plugin(AardwolfBasePlugin):
 
     msg.append('')
     msg.append(self._format_row('CP Stats', 'Total', 'Average', '@G', '@G'))
-    msg.append('@G--------------------------------------------')
+    msg.append(div)
     msg.append(self._format_row("QP",
                 stats['totalqp'] or 0,
                 format_float(stats['aveqp'], "/CP")))
@@ -1300,7 +1509,7 @@ class Plugin(AardwolfBasePlugin):
     msg.append('')
     msg.append(self._format_row("Bonus Rewards", "Total",
                               "Average", '@G', '@G'))
-    msg.append('@G--------------------------------------------')
+    msg.append(div)
     msg.append(self._format_row("TP",
                 stats['totaltp'] or 0,
                 format_float(stats['avetp'], "/CP")))
@@ -1324,7 +1533,7 @@ class Plugin(AardwolfBasePlugin):
         msg.append("@G%-6s %-12s %-2s %-2s %-2s %-2s %-2s %6s" \
                   " %-4s  %s" % ("ID", "Lvl",
                   "QP", "BN", "TP", "TN", "PR", "Gold", "Mobs", "Time"))
-        msg.append('@G----------------------------------------------------')
+        msg.append(div)
 
         for item in lastitems:
           leveld = self.api.get('aardu.convertlevel')(item['level'])
@@ -1352,13 +1561,68 @@ class Plugin(AardwolfBasePlugin):
     """
     show info for a specific gq in the database
     """
-    pass
+    msg = []
+
+    tid = args['number']
+
+    gqinfo = self.api('%s.getrow' % self.sname)(tid, 'gquests')
+
+    linelen = self.api('plugins.getp')('proxy').api('setting.gets')('linelen')
+    div = '@B' + '-' * linelen
+
+    if gqinfo:
+      gqinfo = gqinfo[0]
+
+    mobs = self.api('%s.select' % self.sname)(
+      "SELECT * FROM gqmobs WHERE gq_id = %s" % tid)
+
+
+    msg.append("@G%-6s %-12s %-2s %-2s %-2s %-2s %-2s %6s" \
+              " %-4s  %s" % ("ID", "Lvl",
+              "QP", "QM", "TP", "TN", "PR", "Gold", "Mobs", "Time"))
+    msg.append(div)
+
+
+    leveld = self.api.get('aardu.convertlevel')(gqinfo['level'])
+    levelstr = 'T%d R%d L%d' % (leveld['tier'], leveld['remort'],
+                        leveld['level'])
+
+    if gqinfo['finishtime'] != '-1' and gqinfo['starttime'] != '-1':
+      ttime = self.api.get('utils.formattime')(gqinfo['finishtime'] - \
+                                                gqinfo['starttime'])
+    else:
+      ttime = ''
+
+    msg.append("%-6s %-12s %2s %2s %2s %2s %2s %6s" \
+                "  %-3s  %s" % (
+                gqinfo['gq_id'], levelstr, gqinfo['qp'], gqinfo['qpmobs'],
+                gqinfo['tp'], gqinfo['trains'], gqinfo['pracs'],
+                gqinfo['gold'], len(mobs), ttime))
+
+    msg.append(div)
+    msg.append("@G%-5s %-30s %-30s" % ("Num", "Name", "Location"))
+    msg.append(div)
+
+    for i in mobs:
+      msg.append("@G%-5s %-30s %-30s" % (i['num'], i['name'],
+                                         i['location']))
+
+    msg.append(div)
+
+    return True, msg
 
   def cmd_gqs(self, args=None):
     """
     show gq stats
     """
+    if self.statdb.getlastrowid('stats') <= 0:
+      return True, ['No stats available']
+
+    if self.statdb.getlastrowid('gquests') <= 0:
+      return True, ['No gq stats available']
+
     count = 0
+
     if args:
       if args['number']:
         return self.show_gq(args)
@@ -1368,11 +1632,8 @@ class Plugin(AardwolfBasePlugin):
     msg = []
     stats = {}
 
-    if self.statdb.getlastrowid('stats') <= 0:
-      return True, ['No stats available']
-
-    if self.statdb.getlastrowid('gquests') <= 0:
-      return True, ['No gq stats available']
+    linelen = self.api('plugins.getp')('proxy').api('setting.gets')('linelen')
+    div = '@B' + '-' * linelen
 
     wrow = self.statdb.select(
         """SELECT AVG(finishtime - starttime) as avetime,
@@ -1414,7 +1675,7 @@ class Plugin(AardwolfBasePlugin):
     stats['overall'] = stats['gquestswon'] + stats['lost']['indb']
 
     msg.append(self._format_row('GQ Stats', 'Total', 'In DB', '@G', '@G'))
-    msg.append('@G--------------------------------------------')
+    msg.append(div)
     msg.append(self._format_row("Won",
                 stats['gquestswon'], stats['won']['indb'] or 0))
     msg.append(self._format_row("Lost",
@@ -1428,7 +1689,7 @@ class Plugin(AardwolfBasePlugin):
     msg.append('')
     msg.append(self._format_row('GQ Won Stats', 'Total', 'Average',
                                 '@G', '@G'))
-    msg.append('@G--------------------------------------------')
+    msg.append(div)
     msg.append(self._format_row("GQ QP",
                 stats['won']['qp'],
                 format_float(stats['won']['qpave'], "/GQ")))
@@ -1458,7 +1719,7 @@ class Plugin(AardwolfBasePlugin):
     msg.append('')
     msg.append(self._format_row('GQ Lost Stats', 'Total', 'Average',
                                 '@G', '@G'))
-    msg.append('@G--------------------------------------------')
+    msg.append(div)
     msg.append(self._format_row("GQ MOB QP",
                 stats['lost']['totalqp'],
                 format_float(stats['lost']['aveqp'], "/GQ")))
@@ -1475,7 +1736,7 @@ class Plugin(AardwolfBasePlugin):
         msg.append("@G%-6s %-12s %-2s %-2s %-2s %-2s %-2s %6s" \
                   " %-4s  %s" % ("ID", "Lvl",
                   "QP", "QM", "TP", "TN", "PR", "Gold", "Mobs", "Time"))
-        msg.append('@G----------------------------------------------------')
+        msg.append(div)
 
         for item in lastitems:
           leveld = self.api.get('aardu.convertlevel')(item['level'])
@@ -1500,6 +1761,12 @@ class Plugin(AardwolfBasePlugin):
     """
     show mobs stats
     """
+    if self.statdb.getlastrowid('stats') <= 0:
+      return True, ['No stats available']
+
+    if self.statdb.getlastrowid('mobkills') <= 0:
+      return True, ['No mob stats available']
+
     count = 0
     if args:
       count = args['count']
@@ -1507,11 +1774,8 @@ class Plugin(AardwolfBasePlugin):
     msg = []
     stats = {}
 
-    if self.statdb.getlastrowid('stats') <= 0:
-      return True, ['No stats available']
-
-    if self.statdb.getlastrowid('mobkills') <= 0:
-      return True, ['No mob stats available']
+    linelen = self.api('plugins.getp')('proxy').api('setting.gets')('linelen')
+    div = '@B' + '-' * linelen
 
     trow = self.statdb.select(
         "SELECT monsterskilled FROM stats WHERE milestone = 'current'")
@@ -1557,7 +1821,7 @@ class Plugin(AardwolfBasePlugin):
     stats.update(trow[0])
 
     msg.append(self._format_row('DB Stats', 'Total', 'In DB', '@G', '@G'))
-    msg.append('@G--------------------------------------------')
+    msg.append(div)
     msg.append(self._format_row("Overall",
                 stats['monsterskilled'], stats['indb'] or 0))
     msg.append(self._format_row("Rare Mobs",
@@ -1569,7 +1833,7 @@ class Plugin(AardwolfBasePlugin):
 
     msg.append('')
     msg.append(self._format_row('Stats', 'Total', 'Average', '@G', '@G'))
-    msg.append('@G--------------------------------------------')
+    msg.append(div)
     msg.append(self._format_row("XP",
                 stats['xp'],
                 format_float(stats['avexp'], "/kill")))
@@ -1624,7 +1888,7 @@ class Plugin(AardwolfBasePlugin):
         msg.append('')
         msg.append("@G%3s %-18s %-3s %-3s %-3s %-3s %2s %1s %s" % (
                   "Lvl", "Mob", "TXP", "XP", "RXP", "OXP", "TP", "S", "Gold"))
-        msg.append('@G----------------------------------------------------')
+        msg.append(div)
 
         for item in lastitems:
           leveld = self.api.get('aardu.convertlevel')(item['level'])
