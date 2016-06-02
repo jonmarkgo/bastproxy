@@ -9,7 +9,7 @@ SNAME = 'errors'
 PURPOSE = 'show and manage errors'
 AUTHOR = 'Bast'
 VERSION = 1
-PRIORITY = 12
+PRIORITY = 2
 
 AUTOLOAD = True
 
@@ -22,6 +22,12 @@ class Plugin(BasePlugin):
     initialize the instance
     """
     BasePlugin.__init__(self, *args, **kwargs)
+
+    self.errors = []
+
+    self.api('api.add')('add', self.api_add)
+    self.api('api.add')('gete', self.api_geterrors)
+    self.api('api.add')('clear', self.api_clearerrors)
 
   def load(self):
     """
@@ -38,6 +44,35 @@ class Plugin(BasePlugin):
     parser = argparse.ArgumentParser(add_help=False,
                  description='clear errors')
     self.api.get('commands.add')('clear', self.cmd_clear, parser=parser)
+
+  # add an error to the list
+  def api_add(self, timestamp, error):
+    """add an error
+
+    this function adds an error to the list
+    """
+    self.errors.append({'timestamp':timestamp,
+                 'msg':error})
+
+  # get the errors that have been seen
+  def api_geterrors(self):
+    """ get errors
+
+    this function has no arguments
+
+    this function returns the list of errors
+    """
+    return self.errors
+
+  # clear errors
+  def api_clearerrors(self):
+    """ clear errors
+
+    this function has no arguments
+
+    this function returns no values
+    """
+    self.errors = []
 
   def cmd_show(self, args=None):
     """
