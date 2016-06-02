@@ -59,15 +59,11 @@ class BasePlugin(object):
 
     self._dump_shallow_attrs = ['api']
 
-    self.api.overload('send', 'msg', self.api_outputmsg)
-    self.api.overload('commands', 'default', self.api_commandsdefault)
     self.api.overload('dependency', 'add', self.api_dependencyadd)
     self.api.overload('setting', 'add', self.api_settingadd)
     self.api.overload('setting', 'gets', self.api_settinggets)
     self.api.overload('setting', 'change', self.api_settingchange)
     self.api.overload('api', 'add', self.api_add)
-    self.api.overload('triggers', 'add', self.api_triggersadd)
-    self.api.overload('watch', 'add', self.api_watchadd)
 
   def load(self):
     """
@@ -338,26 +334,6 @@ class BasePlugin(object):
     #save the state
     self.savestate()
 
-  # handle a message
-  def api_outputmsg(self, msg, secondary='None'):
-    """
-    an internal function to send msgs
-    """
-    self.api.get('send.msg', True)(msg, self.sname, secondary)
-
-  def api_triggersadd(self, triggername, regex, **kwargs):
-    """
-    add triggers
-    """
-    self.api.get('triggers.add', True)(triggername, regex,
-                                       self.sname, **kwargs)
-
-  def api_watchadd(self, triggername, regex, **kwargs):
-    """
-    add triggers
-    """
-    self.api.get('watch.add', True)(triggername, regex, self.sname, **kwargs)
-
   def savestate(self):
     """
     save the state
@@ -518,14 +494,6 @@ class BasePlugin(object):
     """
     self.api.get('send.msg')('baseplugin, firstactive')
     self.api.get('events.unregister')('firstactive', self.afterfirstactive)
-
-  # set the default command
-  def api_commandsdefault(self, cmd):
-    """
-    set a command as default
-    """
-    # we call the non overloaded versions
-    self.api.get('commands.default', True)(self.sname, cmd)
 
   # add a function to the api
   def api_add(self, name, func):
