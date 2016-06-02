@@ -24,6 +24,7 @@ class API(object):
     self.overload('managers', 'add', self.addmanager)
     self.overload('managers', 'getm', self.getmanager)
     self.overload('api', 'add', self.add)
+    self.overload('api', 'overload', self.overload)
     self.overload('api', 'remove', self.remove)
     self.overload('api', 'getchildren', self.api_getchildren)
     self.overload('api', 'has', self.api_has)
