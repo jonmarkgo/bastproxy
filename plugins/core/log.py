@@ -143,10 +143,11 @@ class Plugin(BasePlugin):
 
     self.process_msg(args['msg'], dtype)
 
-    if 'secondary' in dtypedict \
-        and dtypedict['secondary'] != 'None' \
-        and dtypedict['secondary'] != 'default':
-      self.process_msg(args['msg'], dtypedict['secondary'],
+    if 'secondary' in dtypedict:
+      for i in dtypedict['secondary']:
+        if i and i != 'None' \
+            and i != 'default':
+          self.process_msg(args['msg'], i,
                        priority='secondary')
 
   # archive a log fle
