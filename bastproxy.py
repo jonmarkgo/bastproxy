@@ -74,17 +74,16 @@ import argparse
 import os
 import sys
 import socket
-import signal
-import time
+#import signal
+from libs.api import API as BASEAPI
+
+# import io so we can get the functions added to the api
 from libs import io
-from libs.api import API
 
 sys.stderr = sys.stdout
 
-api = API()
-API.loading = True
-
-plistener = None
+API = BASEAPI()
+BASEAPI.loading = True
 
 def setuppaths():
   """
@@ -98,11 +97,11 @@ def setuppaths():
   else:
     tpath = npath[:index]
 
-  api.get('send.msg')('setting basepath to: %s' % tpath, 'startup')
-  API.BASEPATH = tpath
+  API('send.msg')('setting basepath to: %s' % tpath, 'startup')
+  BASEAPI.BASEPATH = tpath
 
   try:
-    os.makedirs(os.path.join(api.BASEPATH, 'data', 'logs'))
+    os.makedirs(os.path.join(API.BASEPATH, 'data', 'logs'))
   except OSError:
     pass
 
@@ -124,13 +123,13 @@ class Listener(asyncore.dispatcher):
     self.listen(50)
     self.proxy = None
     self.clients = []
-    api.get('send.msg')("Listener bound on: %s" % listen_port, 'startup')
+    API('send.msg')("Listener bound on: %s" % listen_port, 'startup')
 
   def handle_error(self):
     """
     show the traceback for an error in the listener
     """
-    api.get('send.traceback')("Forwarder error:")
+    API('send.traceback')("Forwarder error:")
 
   def handle_accept(self):
     """
@@ -141,28 +140,28 @@ class Listener(asyncore.dispatcher):
 
       # do proxy stuff here
       self.proxy = Proxy()
-      api.get('managers.add')('proxy', self.proxy)
+      API('managers.add')('proxy', self.proxy)
 
     client_connection, source_addr = self.accept()
 
     try:
       ipaddress = source_addr[0]
       if self.proxy.checkbanned(ipaddress):
-        api.get('send.msg')("HOST: %s is banned" % ipaddress, 'net')
+        API('send.msg')("HOST: %s is banned" % ipaddress, 'net')
         client_connection.close()
       elif len(self.proxy.clients) == 5:
-        api.get('send.msg')(
-          "Only 5 clients can be connected at the same time", 'net')
+        API('send.msg')(
+            "Only 5 clients can be connected at the same time", 'net')
         client_connection.close()
       else:
-        api.get('send.msg')("Accepted connection from %s : %s" %
-                                      (source_addr[0], source_addr[1]), 'net')
+        API('send.msg')("Accepted connection from %s : %s" %
+                        (source_addr[0], source_addr[1]), 'net')
 
         #client keeps up with itself
         from libs.net.client import Client
         Client(client_connection, source_addr[0], source_addr[1])
-    except:
-      api.get('send.traceback')('Error handling client')
+    except Exception:
+      API('send.traceback')('Error handling client')
 
 def start(listen_port):
   """
@@ -170,10 +169,7 @@ def start(listen_port):
 
   we do a single asyncore.loop then we check timers
   """
-  global plistener
-  plistener = Listener(listen_port)
-
-  api.get('managers.add')('listener', plistener)
+  API('managers.add')('listener', Listener(listen_port))
 
   #if getattr(signal, 'SIGCHLD', None) is not None:
    # signal.signal(signal.SIGCHLD, signal.SIG_IGN)
@@ -183,12 +179,12 @@ def start(listen_port):
 
       asyncore.loop(timeout=.25, count=1)
      # check our timer event
-      api.get('events.eraise')('global_timer', {})
+      API('events.eraise')('global_timer', {})
 
   except KeyboardInterrupt:
     pass
 
-  api.get('send.msg')("Shutting down...", 'shutdown')
+  API('send.msg')("Shutting down...", 'shutdown')
 
 def main():
   """
@@ -198,42 +194,39 @@ def main():
 
   parser = argparse.ArgumentParser(description='A python mud proxy')
   parser.add_argument('-p', "--port",
-          help="the port for the proxy to listen on",
-              default=9999)
+                      help="the port for the proxy to listen on",
+                      default=9999)
   parser.add_argument('-d', "--daemon",
-          help="run in daemon mode",
-              action='store_true')
+                      help="run in daemon mode",
+                      action='store_true')
   targs = vars(parser.parse_args())
 
-  if targs['daemon']:
-    daemon = True
-  else:
-    daemon = False
+  daemon = bool(targs['daemon'])
 
-  api.get('send.msg')('Plugin Manager - loading', 'startup')
+  API('send.msg')('Plugin Manager - loading', 'startup')
   from plugins import PluginMgr
   pluginmgr = PluginMgr()
   pluginmgr.load()
-  api.get('send.msg')('Plugin Manager - loaded', 'startup')
+  API('send.msg')('Plugin Manager - loaded', 'startup')
 
-  api.get('log.adddtype')('net')
-  api.get('log.console')('net')
-  api.get('log.adddtype')('inputparse')
-  api.get('log.adddtype')('ansi')
+  API('log.adddtype')('net')
+  API('log.console')('net')
+  API('log.adddtype')('inputparse')
+  API('log.adddtype')('ansi')
 
-  proxyp = api('plugins.getp')('proxy')
+  proxyp = API('plugins.getp')('proxy')
 
   if targs['port'] != 9999:
     proxyp.api('setting.change')('listenport', targs['port'])
 
   listen_port = proxyp.api('setting.gets')('listenport')
 
-  API.loading = False
+  BASEAPI.loading = False
   if not daemon:
     try:
       start(listen_port)
     except KeyboardInterrupt:
-      proxy = api.get('managers.getm')('proxy')
+      proxy = API('managers.getm')('proxy')
       proxy.shutdown()
   else:
     os.close(0)

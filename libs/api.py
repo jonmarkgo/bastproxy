@@ -20,7 +20,7 @@ class API(object):
     self.overloadedapi = {}
     self.classapi = self.__class__.api
     self.timestring = '%a %b %d %Y %H:%M:%S'
-    self.splitre = '(?<=[^\|])\|(?=[^\|])'
+    self.splitre = r'(?<=[^|])|(?=[^|])'
     self.overload('managers', 'add', self.addmanager)
     self.overload('managers', 'getm', self.getmanager)
     self.overload('api', 'add', self.add)
@@ -41,10 +41,10 @@ class API(object):
     the function is added as toplevel.name into the api
 
     this function returns no values"""
-    if not (toplevel in self.__class__.api):
+    if toplevel not in self.__class__.api:
       self.__class__.api[toplevel] = {}
 
-    if not (name in self.__class__.api[toplevel]):
+    if name not in self.__class__.api[toplevel]:
       self.__class__.api[toplevel][name] = function
 
   # overload a function in the api
@@ -63,7 +63,7 @@ class API(object):
     except AttributeError:
       pass
 
-    if not (toplevel in self.overloadedapi):
+    if toplevel not in self.overloadedapi:
       self.overloadedapi[toplevel] = {}
 
     self.overloadedapi[toplevel][name] = function
@@ -143,7 +143,7 @@ class API(object):
       return False
 
   # get the details for an api function
-  def api_detail(self, api):
+  def api_detail(self, apiname):
     """
     return the detail of an api function
     """
@@ -152,8 +152,7 @@ class API(object):
     apio = None
     apiapath = None
     apiopath = None
-    if api:
-      apiname = api
+    if apiname:
       name, cmdname = apiname.split('.')
       tdict = {'name':name, 'cmdname':cmdname, 'apiname':apiname}
       try:
@@ -229,19 +228,19 @@ class API(object):
         for k in self.api[toplevel]:
           apilist[toplevel][k] = True
       if toplevel in self.overloadedapi:
-        if not (toplevel in apilist):
+        if toplevel not in apilist:
           apilist[toplevel] = {}
         for k in self.overloadedapi[toplevel]:
           apilist[toplevel][k] = True
     else:
       for i in self.api:
-        if not (i in apilist):
+        if i not in apilist:
           apilist[i] = {}
         for k in self.api[i]:
           apilist[i][k] = True
 
       for i in self.overloadedapi:
-        if not (i in apilist):
+        if i not in apilist:
           apilist[i] = {}
         for k in self.overloadedapi[i]:
           apilist[i][k] = True
@@ -261,8 +260,10 @@ class API(object):
 
     return tmsg
 
-
-if __name__ == '__main__':
+def test():
+  """
+  do some testing for the api
+  """
   def testapi():
     """
     a test api
@@ -308,4 +309,6 @@ if __name__ == '__main__':
   print 'api_has', api2.api_has('test.three')
   print 'test.three', api2.get('test.three')()
 
+if __name__ == '__main__':
+  test()
 

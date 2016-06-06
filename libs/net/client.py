@@ -3,7 +3,6 @@ $Id$
 
 this module holds the proxy client class
 """
-from ConfigParser import NoOptionError
 import time
 
 from libs.api import API
@@ -36,14 +35,14 @@ class Client(Telnet):
       self.connectedtime = time.mktime(time.localtime())
 
     self.api.get('events.register')('to_client_event',
-                                      self.addtooutbufferevent, prio=99)
+                                    self.addtooutbufferevent, prio=99)
 
     self.api.get('options.prepareclient')(self)
 
     self.state = PASSWORD
     self.addtooutbufferevent({'original':self.api.get('colors.convertcolors')(
-                  '@R#BP@w: @RPlease enter the proxy password:@w'),
-                  'dtype':'passwd'})
+        '@R#BP@w: @RPlease enter the proxy password:@w'),
+                              'dtype':'passwd'})
 
   def addtooutbufferevent(self, args):
     """
@@ -77,7 +76,7 @@ class Client(Telnet):
 
     proxy = self.api.get('managers.getm')('proxy')
 
-    if self.connected == False:
+    if not self.connected:
       return
     Telnet.handle_read(self)
 
@@ -87,8 +86,8 @@ class Client(Telnet):
       if self.state == CONNECTED:
         if self.viewonly:
           self.addtooutbufferevent(
-               {'todata':self.api.get('colors.convertcolors')(
-                                '@R#BP@w: @RYou are in view mode!@w')})
+              {'todata':self.api.get('colors.convertcolors')(
+                  '@R#BP@w: @RYou are in view mode!@w')})
         else:
           if len(data) > 0:
             self.api.get('send.execute')(data, fromclient=True)
@@ -114,30 +113,30 @@ class Client(Telnet):
           self.state = CONNECTED
           self.viewonly = True
           self.addtooutbufferevent(
-                            {'original':self.api.get('colors.convertcolors')(
-                            '@R#BP@W: @GYou are connected in view mode@w')})
+              {'original':self.api.get('colors.convertcolors')(
+                  '@R#BP@W: @GYou are connected in view mode@w')})
           proxy.addclient(self)
           self.api.get('events.eraise')('client_connected_view',
-                                          {'client':self})
+                                        {'client':self})
           self.api.get('send.client')(
-                                  "%s - %s: Client Connected (View Mode)" % \
-                                  (self.host, self.port))
+              "%s - %s: Client Connected (View Mode)" % \
+                  (self.host, self.port))
         else:
           self.pwtries += 1
           if self.pwtries == 5:
             self.addtooutbufferevent(
-                        {'original':self.api.get('colors.convertcolors')(
-                        '@R#BP@w: @RYou have been BANNED for 10 minutes:@w'),
-                        'dtype':'passwd'})
+                {'original':self.api.get('colors.convertcolors')(
+                    '@R#BP@w: @RYou have been BANNED for 10 minutes:@w'),
+                 'dtype':'passwd'})
             self.api.get('send.msg')('%s has been banned.' % self.host, 'net')
             proxy.removeclient(self)
             proxy.addbanned(self.host)
             self.close()
           else:
             self.addtooutbufferevent(
-                    {'original':self.api.get('colors.convertcolors')(
+                {'original':self.api.get('colors.convertcolors')(
                     '@R#BP@w: @RPlease try again! Proxy Password:@w'),
-                    'dtype':'passwd'})
+                 'dtype':'passwd'})
 
   def handle_close(self):
     """

@@ -5,12 +5,12 @@ import time
 import sys
 import traceback
 import re
-from libs.api import API
+from libs.api import API as BASEAPI
 
-api = API()
+API = BASEAPI()
 
 # send a message
-def api_msg(tmsg, primary='default', secondary=[]):
+def api_msg(tmsg, primary='default', secondary=None):
   """  send a message through the log plugin
     @Ymsg@w        = This message to send
     @Yprimary@w    = the primary datatype of the message (default: 'default')
@@ -20,21 +20,22 @@ def api_msg(tmsg, primary='default', secondary=[]):
   this function returns no values"""
   if primary == 'default':
     try:
-      primary = api.get('utils.funccallerplugin')() or primary
+      primary = API('utils.funccallerplugin')() or primary
     except (AttributeError, RuntimeError):
       pass
 
-  if not(type(secondary) == list):
+  if not isinstance(secondary, list):
     tmpl = []
-    tmpl.append(secondary)
+    if secondary:
+      tmpl.append(secondary)
     secondary = tmpl
 
   try:
-    api.get('log.msg')({'msg':tmsg},
-                       {'primary':primary, 'secondary':secondary})
+    API('log.msg')({'msg':tmsg},
+                   {'primary':primary, 'secondary':secondary})
   except (AttributeError, RuntimeError): #%s - %-10s :
-    print '%s - %-10s : %s' % (time.strftime(api.timestring,
-                                          time.localtime()), primary, tmsg)
+    print '%s - %-10s : %s' % (time.strftime(API.timestring,
+                                             time.localtime()), primary, tmsg)
 
 # write and format a traceback
 def api_traceback(message=""):
@@ -43,14 +44,15 @@ def api_traceback(message=""):
 
   this function returns no values"""
   exc = "".join(traceback.format_exception(sys.exc_info()[0],
-                    sys.exc_info()[1], sys.exc_info()[2]))
+                                           sys.exc_info()[1],
+                                           sys.exc_info()[2]))
 
   if message:
     message = message + "\n" + exc
   else:
     message = exc
 
-  api.get('send.error')(message)
+  API('send.error')(message)
 
 # write and format an error
 def api_error(text):
@@ -61,21 +63,23 @@ def api_error(text):
   text = str(text)
   test = []
   for i in text.split('\n'):
-    if api.get('api.has')('colors.convertcolors'):
-      test.append(api.get('colors.convertcolors')('@x136%s@w' % i))
+    if API('api.has')('colors.convertcolors'):
+      test.append(API('colors.convertcolors')('@x136%s@w' % i))
     else:
       test.append(i)
   tmsg = '\n'.join(test)
 
   try:
-    api.get('log.msg')({'msg':tmsg, 'primary':'error'})
+    API('log.msg')({'msg':tmsg, 'primary':'error'})
   except (AttributeError, TypeError):
-    print '%s - No Log Plugin - %s : %s' % (time.strftime(api.timestring,
-                                          time.localtime()), 'error', tmsg)
+    print '%s - No Log Plugin - %s : %s' % (time.strftime(API.timestring,
+                                                          time.localtime()),
+                                            'error', tmsg)
 
   try:
-    api.get('errors.add')(time.strftime(api.timestring,
-                                          time.localtime()), tmsg)
+    API('errors.add')(time.strftime(API.timestring,
+                                    time.localtime()),
+                      tmsg)
   except (AttributeError, TypeError):
     pass
 
@@ -95,18 +99,18 @@ def api_client(text, raw=False, preamble=True):
     for i in text:
       if preamble:
         i = '@C#BP@w: ' + i
-      if api.get('api.has')('colors.convertcolors'):
-        test.append(api.get('colors.convertcolors')(i))
+      if API('api.has')('colors.convertcolors'):
+        test.append(API('colors.convertcolors')(i))
       else:
         test.append(i)
     text = test
 
   try:
-    api.get('events.eraise')('to_client_event', {'original':'\n'.join(text),
-                                    'raw':raw, 'dtype':'fromproxy'})
+    API('events.eraise')('to_client_event', {'original':'\n'.join(text),
+                                             'raw':raw, 'dtype':'fromproxy'})
   except (NameError, TypeError, AttributeError):
-    api.get('send.msg')("couldn't send msg to client: %s" % '\n'.join(text),
-                        primary='error')
+    API('send.msg')("couldn't send msg to client: %s" % '\n'.join(text),
+                    primary='error')
 
 # execute a command through the interpreter
 def api_execute(command, fromclient=False, history=True):
@@ -116,15 +120,15 @@ def api_execute(command, fromclient=False, history=True):
     @Ycommand@w      = the command to send through the interpreter
 
   this function returns no values"""
-  api.get('send.msg')('got command %s from client' % repr(command),
-                      primary='inputparse')
+  API('send.msg')('got command %s from client' % repr(command),
+                  primary='inputparse')
 
   if command == '\r\n':
-    api.get('send.msg')('sending %s to the mud' % repr(command),
-                        primary='inputparse')
-    api.get('events.eraise')('to_mud_event', {'data':command,
-                                              'dtype':'fromclient',
-                                              'history':history})
+    API('send.msg')('sending %s to the mud' % repr(command),
+                    primary='inputparse')
+    API('events.eraise')('to_mud_event', {'data':command,
+                                          'dtype':'fromclient',
+                                          'history':history})
     return
 
   command = command.strip()
@@ -132,30 +136,33 @@ def api_execute(command, fromclient=False, history=True):
   commands = command.split('\r\n')
 
   for tcommand in commands:
-    newdata = api.get('events.eraise')('from_client_event',
-                    {'fromdata':tcommand, 'fromclient':fromclient,
-                     'internal':not fromclient, 'history':history})
+    newdata = API('events.eraise')('from_client_event',
+                                   {'fromdata':tcommand,
+                                    'fromclient':fromclient,
+                                    'internal':not fromclient,
+                                    'history':history})
 
     if 'fromdata' in newdata:
       tcommand = newdata['fromdata']
       tcommand = tcommand.strip()
 
     if tcommand:
-      datalist = re.split(api.splitre, tcommand)
+      datalist = re.split(API.splitre, tcommand)
       if len(datalist) > 1:
-        api.get('send.msg')('broke %s into %s' % (tcommand, datalist),
-                            primary='inputparse')
+        API('send.msg')('broke %s into %s' % (tcommand, datalist),
+                        primary='inputparse')
         for cmd in datalist:
           api_execute(cmd, history=history)
       else:
         tcommand = tcommand.replace('||', '|')
         if tcommand[-1] != '\n':
           tcommand = tcommand + '\n'
-        api.get('send.msg')('sending %s to the mud' % tcommand.strip(),
-                            primary='inputparse')
-        api.get('events.eraise')('to_mud_event',
-                                 {'data':tcommand, 'dtype':'fromclient',
-                                  'history':history})
+        API('send.msg')('sending %s to the mud' % tcommand.strip(),
+                        primary='inputparse')
+        API('events.eraise')('to_mud_event',
+                             {'data':tcommand,
+                              'dtype':'fromclient',
+                              'history':history})
 
 # send data directly to the mud
 def api_tomud(data):
@@ -168,12 +175,13 @@ def api_tomud(data):
   """
   if data[-1] != '\n':
     data = data + '\n'
-  api.get('events.eraise')('to_mud_event',
-                           {'data':data, 'dtype':'fromclient'})
+  API('events.eraise')('to_mud_event',
+                       {'data':data,
+                        'dtype':'fromclient'})
 
-api.add('send', 'msg', api_msg)
-api.add('send', 'error', api_error)
-api.add('send', 'traceback', api_traceback)
-api.add('send', 'client', api_client)
-api.add('send', 'mud', api_tomud)
-api.add('send', 'execute', api_execute)
+API.add('send', 'msg', api_msg)
+API.add('send', 'error', api_error)
+API.add('send', 'traceback', api_traceback)
+API.add('send', 'client', api_client)
+API.add('send', 'mud', api_tomud)
+API.add('send', 'execute', api_execute)

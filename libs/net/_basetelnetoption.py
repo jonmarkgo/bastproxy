@@ -22,14 +22,14 @@ class BaseTelnetOption(object):
     a method for when an option connects
     """
     self.telnetobj.msg('onconnect for option', ord(self.option),
-                                                      mtype='option')
+                       mtype='option')
 
   def handleopt(self, command, sbdata):
     """
     handle an option
     """
     self.telnetobj.msg('handleopt for option', ord(self.option),
-                                command, sbdata, mtype='option')
+                       command, sbdata, mtype='option')
 
   def reset(self, onclose=False):
     """

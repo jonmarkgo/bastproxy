@@ -55,15 +55,21 @@ class PersistentDict(dict):
 
   '''
   def __init__(self, filename, flag='c', mode=None,
-                                    tformat='json', *args, **kwds):
+               tformat='json', *args, **kwds):
     """
     initialize the instance
     """
     self._dump_shallow_attrs = ['api']
     self.api = API()
-    self.flag = flag                    # r=readonly, c=create, or n=new
-    self.mode = stat.S_IWUSR | stat.S_IRUSR                   # None or an octal triple like 0644
-    self.format = tformat                # 'csv', 'json', or 'pickle'
+
+    # r=readonly, c=create, or n=new
+    self.flag = flag
+
+    # None or an octal triple like 0644
+    self.mode = (stat.S_IWUSR | stat.S_IRUSR) or mode
+
+    # 'csv', 'json', or 'pickle'
+    self.format = tformat
     self.filename = filename
     self.pload()
     dict.__init__(self, *args, **kwds)
@@ -76,7 +82,7 @@ class PersistentDict(dict):
       return
     filename = self.filename
     tempname = filename + '.tmp'
-    fileobj = open(tempname, 'wb' if self.format=='pickle' else 'w')
+    fileobj = open(tempname, 'wb' if self.format == 'pickle' else 'w')
     try:
       self.dump(fileobj)
     except Exception:
@@ -116,7 +122,7 @@ class PersistentDict(dict):
       try:
         json.dump(self, fileobj, separators=(',', ':'), skipkeys=True)
       except TypeError:
-	self.api('send.traceback')('Could not save object')
+        self.api('send.traceback')('Could not save object')
     elif self.format == 'pickle':
       pickle.dump(dict(self), fileobj, 2)
     else:
@@ -128,7 +134,7 @@ class PersistentDict(dict):
     """
     # try formats from most restrictive to least restrictive
     if self.flag != 'n' and os.access(self.filename, os.R_OK):
-      fileobj = open(self.filename, 'rb' if self.format=='pickle' else 'r')
+      fileobj = open(self.filename, 'rb' if self.format == 'pickle' else 'r')
       with fileobj:
         self.load(fileobj)
 
@@ -199,9 +205,10 @@ class PersistentDictEvent(PersistentDict):
 
     eventname = 'var_%s_%s' % (self.plugin.sname, key)
     if not self.plugin.resetflag and key != '_version':
-      self.plugin.api.get('events.eraise')(eventname, {'var':key,
-                                      'newvalue':val,
-                                      'oldvalue':oldvalue})
+      self.plugin.api.get('events.eraise')(eventname,
+                                           {'var':key,
+                                            'newvalue':val,
+                                            'oldvalue':oldvalue})
 
   def sync(self):
     """

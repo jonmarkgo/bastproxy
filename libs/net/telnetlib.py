@@ -24,24 +24,24 @@ DEBUGLEVEL = 3
 TELNET_PORT = 23
 
 # Telnet protocol characters (don't change)
-IAC  = chr(255) # "Interpret As Command"
+IAC = chr(255) # "Interpret As Command"
 DONT = chr(254)
-DO   = chr(253)
+DO = chr(253)
 WONT = chr(252)
 WILL = chr(251)
 THENULL = chr(0)
 
-SE  = chr(240)  # Subnegotiation End
+SE = chr(240)  # Subnegotiation End
 NOP = chr(241)  # No Operation
-DM  = chr(242)  # Data Mark
+DM = chr(242)  # Data Mark
 BRK = chr(243)  # Break
-IP  = chr(244)  # Interrupt process
-AO  = chr(245)  # Abort output
+IP = chr(244)  # Interrupt process
+AO = chr(245)  # Abort output
 AYT = chr(246)  # Are You There
-EC  = chr(247)  # Erase Character
-EL  = chr(248)  # Erase Line
-GA  = chr(249)  # Go Ahead
-SB =  chr(250)  # Subnegotiation Begin
+EC = chr(247)  # Erase Character
+EL = chr(248)  # Erase Line
+GA = chr(249)  # Go Ahead
+SB = chr(250)  # Subnegotiation Begin
 
 
 # Telnet protocol options code (don't change)
@@ -216,7 +216,7 @@ class Telnet(asyncore.dispatcher):
       pass
     else:
       self.msg('Fallthrough:', ord(command), 'with option',
-                                    option, ord(option), level=2)
+               option, ord(option), level=2)
       if command == SE:
         self.msg('sbdataq: %r' % self.sbdataq, level=2)
 
@@ -249,7 +249,7 @@ class Telnet(asyncore.dispatcher):
 
     """
     mtype = 'net'
-    if not('level' in kwargs):
+    if 'level' not in kwargs:
       kwargs['level'] = 1
     if 'mtype' in kwargs:
       mtype = kwargs['mtype']
@@ -423,10 +423,10 @@ class Telnet(asyncore.dispatcher):
               buf[1] = ''
               if len(self.sbdataq) == 1:
                 self.msg('proccess_rawq: got an SE',
-                                  ord(self.sbdataq), level=2)
+                         ord(self.sbdataq), level=2)
               else:
                 self.msg('proccess_rawq: got an SE (2)',
-                                  self.sbdataq, level=2)
+                         self.sbdataq, level=2)
             if self.option_callback:
               # Callback is supposed to look into
               # the sbdataq
@@ -442,7 +442,7 @@ class Telnet(asyncore.dispatcher):
           opt = tchar
           if cmd in (DO, DONT):
             self.msg('IAC %s %d' %
-              (cmd == DO and 'DO' or 'DONT', ord(opt)))
+                     (cmd == DO and 'DO' or 'DONT', ord(opt)))
             if self.option_callback:
               self.option_callback(cmd, opt)
             else:
@@ -450,7 +450,7 @@ class Telnet(asyncore.dispatcher):
               self.send(IAC + WONT + opt)
           elif cmd in (WILL, WONT):
             self.msg('IAC %s %d' %
-              (cmd == WILL and 'WILL' or 'WONT', ord(opt)))
+                     (cmd == WILL and 'WILL' or 'WONT', ord(opt)))
             if self.option_callback:
               self.option_callback(cmd, opt)
           else:
