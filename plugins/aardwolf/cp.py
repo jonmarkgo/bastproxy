@@ -45,7 +45,7 @@ class Plugin(AardwolfBasePlugin):
     self.cmdqueue = self.api.get('cmdq.baseclass')()(self)
 
     self.cmdqueue.addcmdtype('cpcheck', 'campaign check', "^campaign check$",
-                       self.cpcheckbefore, self.cpcheckafter)
+                       beforef=self.cpcheckbefore, afterf=self.cpcheckafter)
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='show cp info')

@@ -36,7 +36,7 @@ class Plugin(AardwolfBasePlugin):
 
     self.cmdqueue = self.api.get('cmdq.baseclass')()(self)
     self.cmdqueue.addcmdtype('aflags', 'aflags', "^aflags$",
-              self.aflagsbefore, self.aflagsafter)
+              beforef=self.aflagsbefore, afterf=self.aflagsafter)
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='refresh affect flags')

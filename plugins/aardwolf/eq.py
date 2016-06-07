@@ -62,7 +62,7 @@ class EqContainer(object):
     self._dump_shallow_attrs = ['plugin', 'api', 'cmdqueue', 'itemcache']
 
     self.cmdqueue.addcmdtype(self.cid, self.cmd, self.cmdregex,
-                       self.databefore, self.dataafter)
+                       beforef=self.databefore, afterf=self.dataafter)
 
     self.reset()
 

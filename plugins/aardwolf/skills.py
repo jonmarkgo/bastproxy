@@ -181,7 +181,7 @@ class Plugin(AardwolfBasePlugin):
 
     self.cmdqueue = self.api.get('cmdq.baseclass')()(self)
     self.cmdqueue.addcmdtype('slist', 'slist', "^slist\s*(.*)$",
-                       self.slistbefore, self.slistafter)
+                       beforef=self.slistbefore, afterf=self.slistafter)
 
     self.checkskills()
 
