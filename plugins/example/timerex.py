@@ -28,20 +28,20 @@ class Plugin(BasePlugin):
     BasePlugin.load(self)
 
     self.api.get('timers.add')('test_timer', self.test,
-                                    600, onetime=False)
+                               600, onetime=False)
     self.api.get('timers.add')('test_touser_timer', self.test_to_user,
-                                    10, onetime=True)
+                               10, onetime=True)
     self.api.get('timers.add')('test_timewsec', self.test_timewsec,
-                                    60, time='2010')
+                               60, time='2010')
     self.api.get('timers.add')('test_time', self.test_time,
-                                    60*60*24, time='1200')
+                               60*60*24, time='1200')
 
   def test(self):
     """
     send a message to the mud and client
     """
     self.api.get('send.client')(
-                '@RHere is the timer that fires every 600 seconds!')
+        '@RHere is the timer that fires every 600 seconds!')
     self.api.get('send.execute')('look')
 
   def test_to_user(self):
@@ -55,11 +55,11 @@ class Plugin(BasePlugin):
     test an time timer with seconds
     """
     self.api.get('send.client')(
-            'this is the timer that starts at 2010 and goes every 1 minute')
+        'this is the timer that starts at 2010 and goes every 1 minute')
 
   def test_time(self):
     """
     test an time timer
     """
     self.api.get('send.client')(
-            'this is the timer that fires at noon')
+        'this is the timer that fires at noon')

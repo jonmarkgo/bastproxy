@@ -39,12 +39,16 @@ class Plugin(BasePlugin):
     self.api.get('events.register')('GMCP:char', self.testchar)
     self.api.get('events.register')('GMCP:char.status', self.testcharstatus)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                 description='print what is in a module in the gmcp cache')
-    parser.add_argument('module', help='the module to show',
-                        default='', nargs='?')
-    self.api.get('commands.add')('get', self.cmd_get,
-                         parser=parser)
+    parser = argparse.ArgumentParser(
+        add_help=False,
+        description='print what is in a module in the gmcp cache')
+    parser.add_argument('module',
+                        help='the module to show',
+                        default='',
+                        nargs='?')
+    self.api.get('commands.add')('get',
+                                 self.cmd_get,
+                                 parser=parser)
 
   def cmd_get(self, args):
     """
@@ -63,8 +67,8 @@ class Plugin(BasePlugin):
     show the gmcp event
     """
     self.api.get('send.client')(
-                          '@x52@z192 Event @w- @GGMCP@w: @B%s@w : %s' % \
-                         (args['module'], args['data']))
+        '@x52@z192 Event @w- @GGMCP@w: @B%s@w : %s' % \
+                  (args['module'], args['data']))
 
   def testchar(self, args):
     """
@@ -93,7 +97,7 @@ class Plugin(BasePlugin):
 
     self.api.get('send.msg')('\n'.join(msg))
     self.api.get('send.client')('@CEvent@w - @GGMCP:char@w: %s' % \
-                                      args['module'])
+                                  args['module'])
 
   def testcharstatus(self, _=None):
     """

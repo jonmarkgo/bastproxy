@@ -33,8 +33,9 @@ class Plugin(BasePlugin):
     """
     BasePlugin.load(self)
 
-    self.api.get('triggers.add')('example_trigger',
-            "^(?P<name>.*) flicks a (?P<insect>.*) off his bar\.$")
+    self.api.get('triggers.add')(
+        'example_trigger',
+        r"^(?P<name>.*) flicks a (?P<insect>.*) off his bar\.$")
     self.api.get('events.register')('trigger_example_trigger', self.testtrigger)
 
   def testtrigger(self, args):
