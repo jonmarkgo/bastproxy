@@ -42,6 +42,7 @@ def get_module_name(modpath):
     return '.'.join([base, mod]), mod
 
 class PluginMgr(object):
+  # pylint: disable=too-many-public-methods
   """
   a class to manage plugins
   """
@@ -64,7 +65,7 @@ class PluginMgr(object):
 
     self.api = API()
     self.savefile = os.path.join(self.api.BASEPATH, 'data',
-                                          'plugins', 'loadedplugins.txt')
+                                 'plugins', 'loadedplugins.txt')
     self.loadedplugins = PersistentDict(self.savefile, 'c')
     self.sname = 'plugins'
     self.lname = 'Plugin Manager'
@@ -92,7 +93,7 @@ class PluginMgr(object):
       del tlist[-1]
       npath = os.sep.join(tlist)
 
-    _module_list = find_files( self.basepath, name + ".py")
+    _module_list = find_files(self.basepath, name + ".py")
 
     if len(_module_list) == 1:
       return _module_list[0], self.basepath
@@ -131,7 +132,7 @@ class PluginMgr(object):
     """  get a plugin instance
     @Ypluginname@w  = the plugin to get for"""
 
-    if type(pluginname) == str:
+    if isinstance(pluginname, basestring):
       if pluginname in self.plugins:
         return self.plugins[pluginname]
       if pluginname in self.pluginl:
@@ -140,7 +141,7 @@ class PluginMgr(object):
         return self.pluginm[pluginname]
       if pluginname in self.pluginp:
         return self.pluginp[pluginname]
-    elif type(pluginname) == BasePlugin:
+    elif isinstance(pluginname, BasePlugin):
       return pluginname
 
     return None
@@ -169,101 +170,52 @@ class PluginMgr(object):
         modpath = name.replace(path, '')
         self.load_module(modpath, path, force=True)
 
-  def cmd_list(self, args):
+  def getnotloadedplugins(self):
     """
-    @G%(name)s@w - @B%(cmdname)s@w
-      List plugins
-      @CUsage@w: list
+    create a message of all not loaded plugins
+    """
+    msg = []
+    badplugins = self.updateallplugininfo()
+    for modpath in sorted(self.plugininfo.keys()):
+      sname = self.plugininfo[modpath]['sname']
+      fullimploc = self.plugininfo[modpath]['fullimploc']
+      if sname not in self.plugins:
+        msg.append("%-20s : %-25s %-10s %-5s %s@w" % \
+                  (fullimploc.replace('plugins.', ''),
+                   self.plugininfo[modpath]['name'],
+                   self.plugininfo[modpath]['author'],
+                   self.plugininfo[modpath]['version'],
+                   self.plugininfo[modpath]['purpose']))
+    if len(msg) > 0:
+      msg.insert(0, '-' * 75)
+      msg.insert(0, "%-20s : %-25s %-10s %-5s %s@w" % \
+                          ('Location', 'Name', 'Author', 'Vers', 'Purpose'))
+      msg.insert(0, 'The following plugins are not loaded')
+
+    if badplugins:
+      msg.append('')
+      msg.append('The following files would not import')
+      for bad in badplugins:
+        msg.append(bad.replace('plugins.', ''))
+
+    return msg
+
+  def getchangedplugins(self):
+    """
+    create a message of plugins that are changed on disk
     """
     msg = []
 
-    if args['notloaded']:
-      badplugins = self.updateallplugininfo()
-      for modpath in sorted(self.plugininfo.keys()):
-        sname = self.plugininfo[modpath]['sname']
-        fullimploc = self.plugininfo[modpath]['fullimploc']
-        if not (sname in self.plugins):
-          msg.append("%-20s : %-25s %-10s %-5s %s@w" % \
-                    (fullimploc.replace('plugins.',''),
-                     self.plugininfo[modpath]['name'],
-                     self.plugininfo[modpath]['author'],
-                     self.plugininfo[modpath]['version'],
-                     self.plugininfo[modpath]['purpose']))
-      if len(msg) > 0:
-        msg.insert(0, '-' * 75)
-        msg.insert(0, "%-20s : %-25s %-10s %-5s %s@w" % \
-                           ('Location', 'Name', 'Author', 'Vers', 'Purpose'))
-        msg.insert(0, 'The following plugins are not loaded')
+    plugins = sorted(self.plugins.values(),
+                     key=operator.attrgetter('package'))
+    packageheader = []
 
-      if badplugins:
-        msg.append('')
-        msg.append('The following files would not import')
-        for bad in badplugins:
-          msg.append(bad.replace('plugins.', ''))
-    elif args['changed']:
-      plugins = sorted(self.plugins.values(),
-                          key=operator.attrgetter('package'))
-      packageheader = []
-
-      msg.append("%-10s : %-25s %-10s %-5s %s@w" % \
-                          ('Short Name', 'Name', 'Author', 'Vers', 'Purpose'))
-      msg.append('-' * 75)
-      for tpl in plugins:
-        if tpl.ischangedondisk():
-          if not (tpl.package in packageheader):
-            if len(packageheader) > 0:
-              msg.append('')
-            packageheader.append(tpl.package)
-            limp = 'plugins.%s' % tpl.package
-            mod = __import__(limp)
-            try:
-              desc = getattr(mod, tpl.package).DESCRIPTION
-            except AttributeError:
-              desc = ''
-            msg.append('@GPackage: %s%s@w' % (
-                                tpl.package, ' - ' + desc if desc else ''))
-            msg.append('@G' + '-' * 75 + '@w')
-          msg.append("%-10s : %-25s %-10s %-5s %s@w" % \
-                    (tpl.sname, tpl.name,
-                     tpl.author, tpl.version, tpl.purpose))
-    elif args['package']:
-      plist = []
-      for plugin in self.plugins.values():
-        if plugin.package == args['package']:
-          plist.append(plugin)
-
-      if len(plist) > 0:
-        plugins = sorted(plist, key=operator.attrgetter('sname'))
-        limp = 'plugins.%s' % args['package']
-        mod = __import__(limp)
-        try:
-          desc = getattr(mod, args['package']).DESCRIPTION
-        except AttributeError:
-          desc = ''
-        msg.append('@GPackage: %s%s@w' % (
-                          args['package'], ' - ' + desc if desc else ''))
-        msg.append('@G' + '-' * 75 + '@w')
-        msg.append("%-10s : %-25s %-10s %-5s %s@w" % \
-                            ('Short Name', 'Name',
-                             'Author', 'Vers', 'Purpose'))
-        msg.append('-' * 75)
-
-        for tpl in plugins:
-          msg.append("%-10s : %-25s %-10s %-5s %s@w" % \
-                    (tpl.sname, tpl.name,
-                     tpl.author, tpl.version, tpl.purpose))
-      else:
-        msg.append('That is not a valid package')
-
-    else:
-      plugins = sorted(self.plugins.values(),
-                          key=operator.attrgetter('package'))
-      packageheader = []
-      msg.append("%-10s : %-25s %-10s %-5s %s@w" % \
-                          ('Short Name', 'Name', 'Author', 'Vers', 'Purpose'))
-      msg.append('-' * 75)
-      for tpl in plugins:
-        if not (tpl.package in packageheader):
+    msg.append("%-10s : %-25s %-10s %-5s %s@w" % \
+                        ('Short Name', 'Name', 'Author', 'Vers', 'Purpose'))
+    msg.append('-' * 75)
+    for tpl in plugins:
+      if tpl.ischangedondisk():
+        if tpl.package not in packageheader:
           if len(packageheader) > 0:
             msg.append('')
           packageheader.append(tpl.package)
@@ -273,12 +225,98 @@ class PluginMgr(object):
             desc = getattr(mod, tpl.package).DESCRIPTION
           except AttributeError:
             desc = ''
-          msg.append('@GPackage: %s%s@w' % (
-                              tpl.package, ' - ' + desc if desc else ''))
+          msg.append('@GPackage: %s%s@w' % \
+                  (tpl.package, ' - ' + desc if desc else ''))
           msg.append('@G' + '-' * 75 + '@w')
         msg.append("%-10s : %-25s %-10s %-5s %s@w" % \
-                    (tpl.sname, tpl.name,
-                     tpl.author, tpl.version, tpl.purpose))
+                  (tpl.sname, tpl.name,
+                   tpl.author, tpl.version, tpl.purpose))
+
+    return msg
+
+  def getpackageplugins(self, package):
+    """
+    create a message of plugins in a package
+    """
+    msg = []
+
+    plist = []
+    for plugin in self.plugins.values():
+      if plugin.package == package:
+        plist.append(plugin)
+
+    if len(plist) > 0:
+      plugins = sorted(plist, key=operator.attrgetter('sname'))
+      limp = 'plugins.%s' % package
+      mod = __import__(limp)
+      try:
+        desc = getattr(mod, package).DESCRIPTION
+      except AttributeError:
+        desc = ''
+      msg.append('@GPackage: %s%s@w' % \
+            (package, ' - ' + desc if desc else ''))
+      msg.append('@G' + '-' * 75 + '@w')
+      msg.append("%-10s : %-25s %-10s %-5s %s@w" % \
+                          ('Short Name', 'Name',
+                           'Author', 'Vers', 'Purpose'))
+      msg.append('-' * 75)
+
+      for tpl in plugins:
+        msg.append("%-10s : %-25s %-10s %-5s %s@w" % \
+                  (tpl.sname, tpl.name,
+                   tpl.author, tpl.version, tpl.purpose))
+    else:
+      msg.append('That is not a valid package')
+
+    return msg
+
+  def getallplugins(self):
+    """
+    create a message of all plugins
+    """
+    msg = []
+
+    plugins = sorted(self.plugins.values(),
+                     key=operator.attrgetter('package'))
+    packageheader = []
+    msg.append("%-10s : %-25s %-10s %-5s %s@w" % \
+                        ('Short Name', 'Name', 'Author', 'Vers', 'Purpose'))
+    msg.append('-' * 75)
+    for tpl in plugins:
+      if tpl.package not in packageheader:
+        if len(packageheader) > 0:
+          msg.append('')
+        packageheader.append(tpl.package)
+        limp = 'plugins.%s' % tpl.package
+        mod = __import__(limp)
+        try:
+          desc = getattr(mod, tpl.package).DESCRIPTION
+        except AttributeError:
+          desc = ''
+        msg.append('@GPackage: %s%s@w' % \
+            (tpl.package, ' - ' + desc if desc else ''))
+        msg.append('@G' + '-' * 75 + '@w')
+      msg.append("%-10s : %-25s %-10s %-5s %s@w" % \
+                  (tpl.sname, tpl.name,
+                   tpl.author, tpl.version, tpl.purpose))
+    return msg
+
+  def cmd_list(self, args):
+    """
+    @G%(name)s@w - @B%(cmdname)s@w
+      List plugins
+      @CUsage@w: list
+    """
+    msg = []
+
+    if args['notloaded']:
+      msg.extend(self.getnotloadedplugins())
+    elif args['changed']:
+      msg.extend(self.getchangedplugins())
+    elif args['package']:
+      msg.extend(self.getpackageplugins(args['package']))
+    else:
+      msg.extend(self.getallplugins())
     return True, msg
 
   def cmd_load(self, args):
@@ -294,7 +332,7 @@ class PluginMgr(object):
     if plugin:
 
       fname = plugin.replace('.', os.sep)
-      _module_list = find_files( self.basepath, fname + ".py")
+      _module_list = find_files(self.basepath, fname + ".py")
 
       if len(_module_list) > 1:
         tmsg.append('There is more than one module that matches: %s' % \
@@ -380,7 +418,7 @@ class PluginMgr(object):
     """
     load modules in all directories under plugins
     """
-    _module_list = find_files( self.basepath, tfilter)
+    _module_list = find_files(self.basepath, tfilter)
     _module_list.sort()
 
     load = False
@@ -390,8 +428,8 @@ class PluginMgr(object):
       force = False
       if modpath in self.loadedplugins:
         force = True
-      modname, status = self.load_module(modpath, self.basepath,
-                                         force=force, runload=load)
+      modname, dummy = self.load_module(modpath, self.basepath,
+                                        force=force, runload=load)
 
       if modname == 'log':
         self.api.get('log.adddtype')(self.sname)
@@ -406,9 +444,9 @@ class PluginMgr(object):
         try:
           #check dependencies here
           self.loadplugin(i)
-        except:
+        except Exception: # pylint: disable=broad-except
           self.api.get('send.traceback')(
-                        "load: had problems running the load method for %s." \
+              "load: had problems running the load method for %s." \
                           % i.fullimploc)
           del sys.modules[i.fullimploc]
 
@@ -416,7 +454,7 @@ class PluginMgr(object):
     """
     find plugins that are not in self.plugininfo
     """
-    _module_list = find_files( self.basepath, '*.py')
+    _module_list = find_files(self.basepath, '*.py')
     _module_list.sort()
 
     self.plugininfo = {}
@@ -455,12 +493,13 @@ class PluginMgr(object):
 
             del sys.modules[fullimploc]
 
-          except:
+          except Exception: # pylint: disable=broad-except
             badplugins.append(fullimploc)
 
     return badplugins
 
   def load_module(self, modpath, basepath, force=False, runload=True):
+    # pylint: disable=too-many-branches
     """
     load a single module
     """
@@ -486,10 +525,10 @@ class PluginMgr(object):
       if 'AUTOLOAD' in _module.__dict__ and not force:
         if not _module.AUTOLOAD:
           load = False
-      elif not ('AUTOLOAD' in _module.__dict__):
+      elif 'AUTOLOAD' not in _module.__dict__:
         load = False
 
-      if not (modpath in self.plugininfo):
+      if modpath not in self.plugininfo:
         self.plugininfo[modpath] = {}
         self.plugininfo[modpath]['sname'] = _module.SNAME
         self.plugininfo[modpath]['name'] = _module.NAME
@@ -505,7 +544,8 @@ class PluginMgr(object):
 
         else:
           self.api.get('send.msg')('Module %s has no Plugin class' % \
-                                              _module.NAME, self.sname)
+                                              _module.NAME,
+                                   self.sname)
 
         _module.__dict__["proxy_import"] = 1
 
@@ -514,15 +554,16 @@ class PluginMgr(object):
         if fullimploc in sys.modules:
           del sys.modules[fullimploc]
         self.api.get('send.msg')(
-                'Not loading %s (%s) because autoload is False' % \
-                                    (_module.NAME, fullimploc), self.sname)
+            'Not loading %s (%s) because autoload is False' % \
+                                    (_module.NAME, fullimploc),
+            self.sname)
       return True, 'not autoloaded'
-    except:
+    except Exception: # pylint: disable=broad-except
       if fullimploc in sys.modules:
         del sys.modules[fullimploc]
 
       self.api.get('send.traceback')(
-                    "Module '%s' refuses to import/load." % fullimploc)
+          "Module '%s' refuses to import/load." % fullimploc)
       return False, 'error'
 
   def unload_module(self, fullimploc):
@@ -532,31 +573,28 @@ class PluginMgr(object):
     if fullimploc in sys.modules:
 
       _module = sys.modules[fullimploc]
-      _oldmodule = _module
       try:
         if "proxy_import" in _module.__dict__:
           self.api.get('send.client')(
-                          'unload: unloading %s' % fullimploc)
+              'unload: unloading %s' % fullimploc)
           if "unload" in _module.__dict__:
             try:
               _module.unload()
-            except:
+            except Exception: # pylint: disable=broad-except
               self.api.get('send.traceback')(
-                    "unload: module %s didn't unload properly." % fullimploc)
+                  "unload: module %s didn't unload properly." % fullimploc)
 
           if not self.remove_plugin(_module.SNAME):
             self.api.get('send.client')(
-                              'could not remove plugin %s' % fullimploc)
+                'could not remove plugin %s' % fullimploc)
 
         del sys.modules[fullimploc]
         self.api.get('send.client')("unload: unloaded %s." % fullimploc)
 
-      except:
+      except Exception: # pylint: disable=broad-except
         self.api.get('send.traceback')(
-                      "unload: had problems unloading %s." % fullimploc)
+            "unload: had problems unloading %s." % fullimploc)
         return False
-    else:
-      _oldmodule = None
 
     return True
 
@@ -572,7 +610,7 @@ class PluginMgr(object):
       sname = plugin.sname
       try:
         reloaddependents = plugin.reloaddependents
-      except:
+      except Exception: # pylint: disable=broad-except
         reloaddependents = False
       plugin = None
       if not self.unload_module(fullimploc):
@@ -596,8 +634,8 @@ class PluginMgr(object):
     for plugin in testsort:
       if plugin.sname != reloadedplugin:
         if reloadedplugin in plugin.dependencies:
-          self.api.get('send.msg')('reloading dependent %s of %s' % (plugin.sname,
-                                                          reloadedplugin))
+          self.api.get('send.msg')('reloading dependent %s of %s' % \
+                      (plugin.sname, reloadedplugin))
           plugin.savestate()
           self.reload_module(plugin.sname, True)
 
@@ -606,27 +644,31 @@ class PluginMgr(object):
     check dependencies and run the load function
     """
     self.api.get('send.msg')('loading dependencies for %s' % \
-                                  plugin.fullimploc, self.sname)
+                                  plugin.fullimploc,
+                             self.sname)
     self.loaddependencies(plugin.sname, plugin.dependencies)
     self.api.get('send.client')("load: loading %s with priority %s" % \
 			    (plugin.fullimploc, plugin.priority))
-    self.api.get('send.msg')('loading %s (%s: %s)' % (plugin.fullimploc,
-                                    plugin.sname, plugin.name), self.sname)
+    self.api.get('send.msg')('loading %s (%s: %s)' % \
+              (plugin.fullimploc, plugin.sname, plugin.name),
+                             self.sname)
     plugin.load()
     self.api.get('send.client')("load: loaded %s" % plugin.fullimploc)
-    self.api.get('send.msg')('loaded %s (%s: %s)' % (plugin.fullimploc,
-                                    plugin.sname, plugin.name), self.sname)
+    self.api.get('send.msg')('loaded %s (%s: %s)' % \
+              (plugin.fullimploc, plugin.sname, plugin.name),
+                             self.sname)
 
     self.api.get('events.eraise')('%s_plugin_loaded' % plugin.sname, {})
     self.api.get('events.eraise')('plugin_loaded', {'plugin':plugin.sname})
 
   def add_plugin(self, module, modpath, basepath, fullimploc, load=True):
+    # pylint: disable=too-many-arguments
     """
     add a plugin to be managed
     """
     module.__dict__["lyntin_import"] = 1
     plugin = module.Plugin(module.NAME, module.SNAME,
-                                    modpath, basepath, fullimploc)
+                           modpath, basepath, fullimploc)
     plugin.author = module.AUTHOR
     plugin.purpose = module.PURPOSE
     plugin.version = module.VERSION
@@ -647,9 +689,9 @@ class PluginMgr(object):
       try:
         #check dependencies here
         self.loadplugin(plugin)
-      except:
+      except Exception: # pylint: disable=broad-except
         self.api.get('send.traceback')(
-                      "load: had problems running the load method for %s." \
+            "load: had problems running the load method for %s." \
                                                 % fullimploc)
         del sys.modules[fullimploc]
         return False
@@ -674,10 +716,10 @@ class PluginMgr(object):
         self.api.get('events.eraise')('%s_plugin_unload' % plugin.sname, {})
         self.api.get('events.eraise')('plugin_unloaded', {'name':plugin.sname})
         self.api.get('send.msg')('Plugin %s unloaded' % plugin.sname,
-                               self.sname, plugin.sname)
-      except:
+                                 self.sname, plugin.sname)
+      except Exception: # pylint: disable=broad-except
         self.api.get('send.traceback')(
-                    "unload: had problems running the unload method for %s." \
+            "unload: had problems running the unload method for %s." \
                                   % plugin.sname)
         return False
 
@@ -708,38 +750,56 @@ class PluginMgr(object):
     self.load_modules("*.py")
 
     parser = argparse.ArgumentParser(add_help=False,
-                description="list plugins")
-    parser.add_argument('-n', "--notloaded",
-              help="list plugins that are not loaded",
-              action="store_true")
-    parser.add_argument('-c', "--changed",
-              help="list plugins that are load but are changed on disk",
-              action="store_true")
-    parser.add_argument('package', help='the to list', default='', nargs='?')
-    self.api.get('commands.add')('list', self.cmd_list,
-                        lname='Plugin Manager', parser=parser)
+                                     description="list plugins")
+    parser.add_argument('-n',
+                        "--notloaded",
+                        help="list plugins that are not loaded",
+                        action="store_true")
+    parser.add_argument('-c',
+                        "--changed",
+                        help="list plugins that are load but are changed on disk",
+                        action="store_true")
+    parser.add_argument('package',
+                        help='the to list',
+                        default='',
+                        nargs='?')
+    self.api.get('commands.add')('list',
+                                 self.cmd_list,
+                                 lname='Plugin Manager',
+                                 parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
-                description="load a plugin")
+                                     description="load a plugin")
     parser.add_argument('plugin',
                         help='the plugin to load, don\'t include the .py',
-                        default='', nargs='?')
-    self.api.get('commands.add')('load', self.cmd_load,
-                        lname='Plugin Manager', parser=parser)
+                        default='',
+                        nargs='?')
+    self.api.get('commands.add')('load',
+                                 self.cmd_load,
+                                 lname='Plugin Manager',
+                                 parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
-                description="unload a plugin")
-    parser.add_argument('plugin', help='the plugin to unload',
-                        default='', nargs='?')
-    self.api.get('commands.add')('unload', self.cmd_unload,
-                        lname='Plugin Manager', parser=parser)
+                                     description="unload a plugin")
+    parser.add_argument('plugin',
+                        help='the plugin to unload',
+                        default='',
+                        nargs='?')
+    self.api.get('commands.add')('unload',
+                                 self.cmd_unload,
+                                 lname='Plugin Manager',
+                                 parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
-                description="reload a plugin")
-    parser.add_argument('plugin', help='the plugin to reload',
-                        default='', nargs='?')
-    self.api.get('commands.add')('reload', self.cmd_reload,
-                        lname='Plugin Manager', parser=parser)
+                                     description="reload a plugin")
+    parser.add_argument('plugin',
+                        help='the plugin to reload',
+                        default='',
+                        nargs='?')
+    self.api.get('commands.add')('reload',
+                                 self.cmd_reload,
+                                 lname='Plugin Manager',
+                                 parser=parser)
 
     self.api.get('commands.default')('list', self.sname)
     self.api.get('events.register')('savestate', self.savestate,

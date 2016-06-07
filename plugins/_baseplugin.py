@@ -13,10 +13,12 @@ from libs.persistentdict import PersistentDictEvent
 from libs.api import API
 
 class BasePlugin(object):
+  # pylint: disable=too-many-public-methods,too-many-instance-attributes
   """
   a base class for plugins
   """
   def __init__(self, name, sname, modpath, basepath, fullimploc):
+    # pylint: disable=too-many-arguments
     """
     initialize the instance
     The following things should not be done in __init__ in a plugin
@@ -37,20 +39,20 @@ class BasePlugin(object):
     self.api = API()
     self.loadedtime = time.time()
     self.savedir = os.path.join(self.api.BASEPATH, 'data',
-                                      'plugins', self.sname)
+                                'plugins', self.sname)
     try:
       os.makedirs(self.savedir)
     except OSError:
       pass
     self.savefile = os.path.join(self.api.BASEPATH, 'data',
-                                    'plugins', self.sname, 'settingvalues.txt')
+                                 'plugins', self.sname, 'settingvalues.txt')
     self.modpath = modpath
     self.basepath = basepath
     self.fullimploc = fullimploc
     self.pluginfile = os.path.join(basepath, modpath[1:])
     self.pluginlocation = os.path.normpath(
-                os.path.join(self.api.BASEPATH, 'plugins') + \
-                  os.sep + os.path.dirname(self.modpath))
+        os.path.join(self.api.BASEPATH, 'plugins') + \
+          os.sep + os.path.dirname(self.modpath))
 
     self.package = fullimploc.split('.')[1]
 
@@ -76,70 +78,97 @@ class BasePlugin(object):
       self.updateversion(self.settingvalues['_version'], self.version)
 
     self.api.get('log.adddtype')(self.sname)
-    setparser = argparse.ArgumentParser(add_help=False,
-                formatter_class=argparse.RawDescriptionHelpFormatter,
-                description=textwrap.dedent("""
+
+    parser = argparse.ArgumentParser(
+        add_help=False,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description=textwrap.dedent("""
           change a setting in the plugin
 
           if there are no arguments or 'list' is the first argument then
           it will list the settings for the plugin"""))
-    setparser.add_argument('name', help='the setting name',
-                           default='list', nargs='?')
-    setparser.add_argument('value', help='the new value of the setting',
-                           default='', nargs='?')
-    self.api.get('commands.add')('set', self.cmd_set, parser=setparser,
-                                 group='Base', history=False)
+    parser.add_argument('name',
+                        help='the setting name',
+                        default='list',
+                        nargs='?')
+    parser.add_argument('value',
+                        help='the new value of the setting',
+                        default='',
+                        nargs='?')
+    self.api.get('commands.add')('set',
+                                 self.cmd_set,
+                                 parser=parser,
+                                 group='Base',
+                                 history=False)
 
     parser = argparse.ArgumentParser(add_help=False,
-                 description='reset the plugin')
-    self.api.get('commands.add')('reset', self.cmd_reset,
-                                 parser=parser, group='Base')
+                                     description='reset the plugin')
+    self.api.get('commands.add')('reset',
+                                 self.cmd_reset,
+                                 parser=parser,
+                                 group='Base')
 
     parser = argparse.ArgumentParser(add_help=False,
-                 description='save the plugin state')
-    self.api.get('commands.add')('save', self.cmd_save,
-                                 parser=parser, group='Base')
+                                     description='save the plugin state')
+    self.api.get('commands.add')('save',
+                                 self.cmd_save,
+                                 parser=parser,
+                                 group='Base')
 
     parser = argparse.ArgumentParser(add_help=False,
-                 description='show plugin stats')
-    self.api.get('commands.add')('stats', self.cmd_stats,
-                                 parser=parser, group='Base')
+                                     description='show plugin stats')
+    self.api.get('commands.add')('stats',
+                                 self.cmd_stats,
+                                 parser=parser,
+                                 group='Base')
 
     parser = argparse.ArgumentParser(add_help=False,
-                 description='inspect a plugin')
-    parser.add_argument('-m', "--method",
-          help="get code for a method",
-              default='')
-    parser.add_argument('-o', "--object",
-          help="show an object of the plugin, can be method or variable",
-              default='')
-    parser.add_argument('-s', "--simple",
-          help="show a simple output",
-              action="store_true")
-    self.api.get('commands.add')('inspect', self.cmd_inspect,
-                                 parser=parser, group='Base')
+                                     description='inspect a plugin')
+    parser.add_argument('-m',
+                        "--method",
+                        help="get code for a method",
+                        default='')
+    parser.add_argument('-o',
+                        "--object",
+                        help="show an object of the plugin, can be method or variable",
+                        default='')
+    parser.add_argument('-s',
+                        "--simple",
+                        help="show a simple output",
+                        action="store_true")
+    self.api.get('commands.add')('inspect',
+                                 self.cmd_inspect,
+                                 parser=parser,
+                                 group='Base')
 
     parser = argparse.ArgumentParser(add_help=False,
-                 description='show help info for this plugin')
-    parser.add_argument('-a', "--api",
-          help="show functions this plugin has in the api",
-              action="store_true")
-    parser.add_argument('-c', "--commands",
-          help="show commands in this plugin",
-              action="store_true")
-    self.api.get('commands.add')('help', self.cmd_help,
-                                 parser=parser, group='Base')
+                                     description='show help info for this plugin')
+    parser.add_argument('-a',
+                        "--api",
+                        help="show functions this plugin has in the api",
+                        action="store_true")
+    parser.add_argument('-c',
+                        "--commands",
+                        help="show commands in this plugin",
+                        action="store_true")
+    self.api.get('commands.add')('help',
+                                 self.cmd_help,
+                                 parser=parser,
+                                 group='Base')
 
     parser = argparse.ArgumentParser(add_help=False,
-                 description='list functions in the api')
+                                     description='list functions in the api')
     parser.add_argument('api',
                         help='api to get details of',
-                        default='', nargs='?')
-    self.api.get('commands.add')('api', self.cmd_api,
-                                 parser=parser, group='Base')
+                        default='',
+                        nargs='?')
+    self.api.get('commands.add')('api',
+                                 self.cmd_api,
+                                 parser=parser,
+                                 group='Base')
 
     self.api.get('events.register')('%s_plugin_loaded' % self.sname,
-                                                self.afterload)
+                                    self.afterload)
 
     self.api.get('events.register')('muddisconnect', self.disconnect)
 
@@ -152,18 +181,19 @@ class BasePlugin(object):
     if oldversion != newversion and newversion > oldversion:
       for i in range(oldversion + 1, newversion + 1):
         self.api.get('send.msg')(
-                '%s: upgrading to version %s' % (self.sname, i),
-                secondary='upgrade')
+            '%s: upgrading to version %s' % (self.sname, i),
+            secondary='upgrade')
         if i in self.versionfuncs:
           self.versionfuncs[i]()
         else:
           self.api.get('send.msg')(
-                '%s: no function to upgrade to version %s' % (self.sname, i),
-                secondary='upgrade')
+              '%s: no function to upgrade to version %s' % (self.sname, i),
+              secondary='upgrade')
 
     self.settingvalues.sync()
 
   def cmd_inspect(self, args):
+    # pylint: disable=too-many-branches
     """
     show the plugin as it currently is in memory
     """
@@ -186,7 +216,7 @@ class BasePlugin(object):
       obj = getattr(self, tobj)
       if obj:
         if key:
-          if not (key in obj):
+          if key not in obj:
             try:
               key = int(key)
             except ValueError:
@@ -223,7 +253,7 @@ class BasePlugin(object):
     tmsg = []
     if args['api']:
       tmsg.extend(self.api.get('api.detail')("%s.%s" % (self.sname,
-                                                          args['api'])))
+                                                        args['api'])))
     else:
       apilist = self.api.get('api.list')(self.sname)
       if not apilist:
@@ -234,6 +264,7 @@ class BasePlugin(object):
     return True, tmsg
 
   def afterload(self, args):
+    # pylint: disable=unused-argument
     """
     do something after the load function is run
     """
@@ -249,6 +280,7 @@ class BasePlugin(object):
       self.api.get('events.register')('firstactive', self.afterfirstactive)
 
   def disconnect(self, args=None):
+    # pylint: disable=unused-argument
     """
     re-register to firstactive on disconnect
     """
@@ -273,7 +305,7 @@ class BasePlugin(object):
     @Ydependency@w    = the name of the plugin that will be a dependency
 
     this function returns no values"""
-    if not (dependency in self.dependencies):
+    if dependency not in self.dependencies:
       self.dependencies.append(dependency)
 
   # change the value of a setting
@@ -286,8 +318,9 @@ class BasePlugin(object):
     if value == 'default':
       value = self.settings[setting]['default']
     if setting in self.settings:
-      self.settingvalues[setting] = self.api.get('utils.verify')(value,
-                                          self.settings[setting]['stype'])
+      self.settingvalues[setting] = self.api.get('utils.verify')(
+          value,
+          self.settings[setting]['stype'])
       self.settingvalues.sync()
       return True
 
@@ -308,6 +341,7 @@ class BasePlugin(object):
     return stats
 
   def cmd_stats(self, args=None):
+    # pylint: disable=unused-argument
     """
     @G%(name)s@w - @B%(cmdname)s@w
     show stats, memory, profile, etc.. for this plugin
@@ -370,11 +404,11 @@ class BasePlugin(object):
               tvar = '%s%s@w' % (val, val.replace('@', '@@'))
             elif self.settings[var]['stype'] == 'timelength':
               tvar = self.api.get('utils.formattime')(
-                          self.api.get('utils.verify')(val, 'timelength'))
+                  self.api.get('utils.verify')(val, 'timelength'))
             return True, ['%s is now set to %s' % (var, tvar)]
           except ValueError:
             msg = ['Cannot convert %s to %s' % \
-                                    (val, self.settings[var]['stype'])]
+                              (val, self.settings[var]['stype'])]
             return True, msg
         return True, self.listvars()
       else:
@@ -382,6 +416,7 @@ class BasePlugin(object):
     return False, msg
 
   def cmd_save(self, args):
+    # pylint: disable=unused-argument
     """
     @G%(name)s@w - @B%(cmdname)s@w
     save plugin state
@@ -428,7 +463,7 @@ class BasePlugin(object):
           val = '%s%s@w' % (val, val.replace('@', '@@'))
         elif self.settings[i]['stype'] == 'timelength':
           val = self.api.get('utils.formattime')(
-                          self.api.get('utils.verify')(val, 'timelength'))
+              self.api.get('utils.verify')(val, 'timelength'))
         tmsg.append(tform % (i, val, self.settings[i]['help']))
     return tmsg
 
@@ -453,10 +488,15 @@ class BasePlugin(object):
       readonly = kwargs['readonly']
     else:
       readonly = False
-    if not (name in self.settingvalues):
+    if name not in self.settingvalues:
       self.settingvalues[name] = default
-    self.settings[name] = {'default':default, 'help':shelp,
-                  'stype':stype, 'nocolor':nocolor, 'readonly':readonly}
+    self.settings[name] = {
+        'default':default,
+        'help':shelp,
+        'stype':stype,
+        'nocolor':nocolor,
+        'readonly':readonly
+    }
 
   def cmd_reset(self, _=None):
     """
