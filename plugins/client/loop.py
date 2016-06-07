@@ -39,13 +39,17 @@ class Plugin(BasePlugin):
     BasePlugin.load(self)
 
     parser = argparse.ArgumentParser(add_help=False,
-                 description='loop a command')
-    parser.add_argument('cmd', help='the command to run',
-                        default='', nargs='?')
-    parser.add_argument('-c', "--count",
+                                     description='loop a command')
+    parser.add_argument('cmd',
+                        help='the command to run',
+                        default='',
+                        nargs='?')
+    parser.add_argument('-c',
+                        "--count",
                         help="how many times to execute the command",
                         default=1)
-    self.api.get('commands.add')('cmd', self.cmd_loop,
+    self.api.get('commands.add')('cmd',
+                                 self.cmd_loop,
                                  parser=parser)
 
     self.api.get('commands.default')('loop')

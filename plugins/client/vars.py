@@ -46,34 +46,45 @@ class Plugin(BasePlugin):
     BasePlugin.load(self)
 
     parser = argparse.ArgumentParser(add_help=False,
-                 description='add a variable')
-    parser.add_argument('name', help='the name of the variable',
-                        default='', nargs='?')
-    parser.add_argument('value', help='the value of the variable',
-                        default='', nargs='?')
-    self.api.get('commands.add')('add', self.cmd_add,
+                                     description='add a variable')
+    parser.add_argument('name',
+                        help='the name of the variable',
+                        default='',
+                        nargs='?')
+    parser.add_argument('value',
+                        help='the value of the variable',
+                        default='',
+                        nargs='?')
+    self.api.get('commands.add')('add',
+                                 self.cmd_add,
                                  parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
-                 description='remove a variable')
-    parser.add_argument('name', help='the variable to remove',
-                        default='', nargs='?')
-    self.api.get('commands.add')('remove', self.cmd_remove,
+                                     description='remove a variable')
+    parser.add_argument('name',
+                        help='the variable to remove',
+                        default='',
+                        nargs='?')
+    self.api.get('commands.add')('remove',
+                                 self.cmd_remove,
                                  parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
-                 description='list variables')
+                                     description='list variables')
     parser.add_argument('match',
-              help='list only variables that have this argument in their name',
-              default='', nargs='?')
-    self.api.get('commands.add')('list', self.cmd_list,
+                        help='list only variables that have this argument in their name',
+                        default='',
+                        nargs='?')
+    self.api.get('commands.add')('list',
+                                 self.cmd_list,
                                  parser=parser)
 
     self.api.get('commands.default')('list')
     #self.api.get('events.register')('from_client_event', self.checkvariable,
                                         #prio=1)
-    self.api.get('events.register')('from_client_event', self.checkline,
-                                        prio=99)
+    self.api.get('events.register')('from_client_event',
+                                    self.checkline,
+                                    prio=99)
 
   # get a variable
   def api_getv(self, varname):
@@ -99,7 +110,7 @@ class Plugin(BasePlugin):
     try:
       self._variables[varname] = value
       return True
-    except:
+    except Exception: # pylint: disable=broad-except
       return False
 
   # replace variables in data

@@ -8,7 +8,7 @@ Two types of aliases:
 
  * `#bp.alias.add 'port (.*)'
           'get {1} $portbag|wear {1}|enter|wear amulet|put {1} portbag'`
-  * This alias can be used with numbered positions from the words following after the alias
+  * This alias can be used with numbered positions
 """
 import os
 import re
@@ -55,61 +55,87 @@ class Plugin(BasePlugin):
                                 readonly=True)
 
     parser = argparse.ArgumentParser(add_help=False,
-                 description='add an alias')
-    parser.add_argument('original', help='the input to replace',
-                        default='', nargs='?')
-    parser.add_argument('replacement', help='the string to replace it with',
-                        default='', nargs='?')
-    parser.add_argument('-o', "--overwrite",
+                                     description='add an alias')
+    parser.add_argument('original',
+                        help='the input to replace',
+                        default='',
+                        nargs='?')
+    parser.add_argument('replacement',
+                        help='the string to replace it with',
+                        default='',
+                        nargs='?')
+    parser.add_argument('-o',
+                        "--overwrite",
                         help="overwrite an alias if it already exists",
                         action="store_true")
-    parser.add_argument('-d', "--disable", help="disable the alias",
+    parser.add_argument('-d', "--disable",
+                        help="disable the alias",
                         action="store_true")
-    parser.add_argument('-g', "--group", help="the alias group", default="")
-    self.api.get('commands.add')('add', self.cmd_add,
+    parser.add_argument('-g',
+                        "--group",
+                        help="the alias group",
+                        default="")
+    self.api.get('commands.add')('add',
+                                 self.cmd_add,
                                  parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
-                 description='remove an alias')
-    parser.add_argument('alias', help='the alias to remove',
-                        default='', nargs='?')
-    self.api.get('commands.add')('remove', self.cmd_remove,
+                                     description='remove an alias')
+    parser.add_argument('alias',
+                        help='the alias to remove',
+                        default='',
+                        nargs='?')
+    self.api.get('commands.add')('remove',
+                                 self.cmd_remove,
                                  parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
-                 description='list aliases')
+                                     description='list aliases')
     parser.add_argument('match',
-                    help='list only aliases that have this argument in them',
-                    default='', nargs='?')
-    self.api.get('commands.add')('list', self.cmd_list,
+                        help='list only aliases that have this argument in them',
+                        default='',
+                        nargs='?')
+    self.api.get('commands.add')('list',
+                                 self.cmd_list,
                                  parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
-                 description='toggle enabled flag')
-    parser.add_argument('alias', help='the alias to toggle',
-                        default='', nargs='?')
-    self.api.get('commands.add')('toggle', self.cmd_toggle,
+                                     description='toggle enabled flag')
+    parser.add_argument('alias',
+                        help='the alias to toggle',
+                        default='',
+                        nargs='?')
+    self.api.get('commands.add')('toggle',
+                                 self.cmd_toggle,
                                  parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
-                 description='toggle all aliases in a group')
-    parser.add_argument('group', help='the group to toggle',
-                        default='', nargs='?')
-    parser.add_argument('-d', "--disable", help="disable the group",
+                                     description='toggle all aliases in a group')
+    parser.add_argument('group',
+                        help='the group to toggle',
+                        default='',
+                        nargs='?')
+    parser.add_argument('-d',
+                        "--disable",
+                        help="disable the group",
                         action="store_true")
-    self.api.get('commands.add')('groupt', self.cmd_grouptoggle,
+    self.api.get('commands.add')('groupt',
+                                 self.cmd_grouptoggle,
                                  parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
-                 description='get detail for an alias')
-    parser.add_argument('alias', help='the alias to get details for',
-                        default='', nargs='?')
-    self.api.get('commands.add')('detail', self.cmd_detail,
+                                     description='get detail for an alias')
+    parser.add_argument('alias',
+                        help='the alias to get details for',
+                        default='',
+                        nargs='?')
+    self.api.get('commands.add')('detail',
+                                 self.cmd_detail,
                                  parser=parser)
 
     self.api.get('commands.default')('list')
     self.api.get('events.register')('from_client_event', self.checkalias,
-                                        prio=2)
+                                    prio=2)
 
   def checkalias(self, args):
     """
@@ -132,7 +158,7 @@ class Plugin(BasePlugin):
           self.api.get('send.msg')('args: %s' % tlistn)
           try:
             datan = self._aliases[mem]['alias'].format(*tlistn)
-          except:
+          except Exception: # pylint: disable=broad-except
             self.api.get('send.traceback')('alias %s had an issue' % (mem))
         else:
           cre = re.compile('^%s' % mem)
@@ -248,13 +274,13 @@ class Plugin(BasePlugin):
     if args['alias']:
       alias = self.lookup_alias(args['alias'])
       if alias:
-        if not ('hits' in self._aliases[alias]):
+        if 'hits' not in self._aliases[alias]:
           self._aliases[alias]['hits'] = 0
-        if not (alias in self.sessionhits):
+        if alias not in self.sessionhits:
           self.sessionhits[alias] = 0
         tmsg.append('%-12s : %d' % ('Num', self._aliases[alias]['num']))
-        tmsg.append('%-12s : %s' % ('Enabled',
-                            'Y' if self._aliases[alias]['enabled'] else 'N'))
+        tmsg.append('%-12s : %s' % \
+            ('Enabled', 'Y' if self._aliases[alias]['enabled'] else 'N'))
         tmsg.append('%-12s : %d' % ('Total Hits',
                                     self._aliases[alias]['hits']))
         tmsg.append('%-12s : %d' % ('Session Hits', self.sessionhits[alias]))
@@ -287,7 +313,7 @@ class Plugin(BasePlugin):
     state = not args['disable']
     if args['group']:
       for i in self._aliases:
-        if not ('group' in self._aliases[i]):
+        if 'group' not in self._aliases[i]:
           self._aliases[i]['group'] = ''
 
         if self._aliases[i]['group'] == args['group']:
@@ -295,9 +321,9 @@ class Plugin(BasePlugin):
           togglea.append('%s' % self._aliases[i]['num'])
 
       if togglea:
-        tmsg.append('The following aliases were %s: %s' % (
-                        'enabled' if state else 'disabled',
-                        ','.join(togglea)))
+        tmsg.append('The following aliases were %s: %s' % \
+              ('enabled' if state else 'disabled',
+               ','.join(togglea)))
       else:
         tmsg.append('No aliases were modified')
 
@@ -342,14 +368,14 @@ class Plugin(BasePlugin):
     """
     tmsg = []
     for alias in sorted(self._aliases.iteritems(),
-                                    key=lambda (x, y): y['num']):
+                        key=lambda (x, y): y['num']):
       item = alias[0]
       if not match or match in item:
         lalias = self.api.get('colors.stripansi')(self._aliases[item]['alias'])
         if len(lalias) > 30:
           lalias = lalias[:27] + '...'
-        tmsg.append("%4s %2s  %-10s %-20s : %s@w" % (
-                      self._aliases[item]['num'],
+        tmsg.append("%4s %2s  %-10s %-20s : %s@w" % \
+                     (self._aliases[item]['num'],
                       'Y' if self._aliases[item]['enabled'] else 'N',
                       self._aliases[item]['group'],
                       item,

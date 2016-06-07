@@ -61,61 +61,92 @@ class Plugin(BasePlugin):
                                 readonly=True)
 
     parser = argparse.ArgumentParser(add_help=False,
-                 description='add a action')
-    parser.add_argument('regex', help='the regex to match',
-                        default='', nargs='?')
-    parser.add_argument('action', help='the action to take',
-                        default='', nargs='?')
-    parser.add_argument('send', help='where to send the action',
-                        default='execute', nargs='?',
+                                     description='add a action')
+    parser.add_argument('regex',
+                        help='the regex to match',
+                        default='',
+                        nargs='?')
+    parser.add_argument('action',
+                        help='the action to take',
+                        default='',
+                        nargs='?')
+    parser.add_argument('send',
+                        help='where to send the action',
+                        default='execute',
+                        nargs='?',
                         choices=self.api.get('api.getchildren')('send'))
-    parser.add_argument('-c', "--color", help="match colors (@@colors)",
+    parser.add_argument('-c',
+                        "--color",
+                        help="match colors (@@colors)",
                         action="store_true")
-    parser.add_argument('-d', "--disable",
-                        help="disable the action", action="store_true")
-    parser.add_argument('-g', "--group", help="the action group", default="")
-    parser.add_argument('-o', "--overwrite",
+    parser.add_argument('-d',
+                        "--disable",
+                        help="disable the action",
+                        action="store_true")
+    parser.add_argument('-g',
+                        "--group",
+                        help="the action group",
+                        default="")
+    parser.add_argument('-o',
+                        "--overwrite",
                         help="overwrite an action if it already exists",
                         action="store_true")
-    self.api.get('commands.add')('add', self.cmd_add,
-              parser=parser)
+    self.api.get('commands.add')('add',
+                                 self.cmd_add,
+                                 parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
-                 description='list actions')
+                                     description='list actions')
     parser.add_argument('match',
-                      help='list only actions that have this argument in them',
-                      default='', nargs='?')
-    self.api.get('commands.add')('list', self.cmd_list,
+                        help='list only actions that have this argument in them',
+                        default='',
+                        nargs='?')
+    self.api.get('commands.add')('list',
+                                 self.cmd_list,
                                  parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
-                 description='remove an action')
-    parser.add_argument('action', help='the action to remove',
-                        default='', nargs='?')
-    self.api.get('commands.add')('remove', self.cmd_remove,
+                                     description='remove an action')
+    parser.add_argument('action',
+                        help='the action to remove',
+                        default='',
+                        nargs='?')
+    self.api.get('commands.add')('remove',
+                                 self.cmd_remove,
                                  parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
-                 description='toggle enabled flag')
-    parser.add_argument('action', help='the action to toggle',
-                        default='', nargs='?')
-    self.api.get('commands.add')('toggle', self.cmd_toggle,
+                                     description='toggle enabled flag')
+    parser.add_argument('action',
+                        help='the action to toggle',
+                        default='',
+                        nargs='?')
+    self.api.get('commands.add')('toggle',
+                                 self.cmd_toggle,
                                  parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
-                 description='get detail for an action')
-    parser.add_argument('action', help='the action to get details for',
-                        default='', nargs='?')
-    self.api.get('commands.add')('detail', self.cmd_detail,
+                                     description='get detail for an action')
+    parser.add_argument('action',
+                        help='the action to get details for',
+                        default='',
+                        nargs='?')
+    self.api.get('commands.add')('detail',
+                                 self.cmd_detail,
                                  parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
-                 description='toggle all actions in a group')
-    parser.add_argument('group', help='the group to toggle',
-                        default='', nargs='?')
-    parser.add_argument('-d', "--disable", help="disable the group",
+                                     description='toggle all actions in a group')
+    parser.add_argument('group',
+                        help='the group to toggle',
+                        default='',
+                        nargs='?')
+    parser.add_argument('-d',
+                        "--disable",
+                        help="disable the group",
                         action="store_true")
-    self.api.get('commands.add')('groupt', self.cmd_grouptoggle,
+    self.api.get('commands.add')('groupt',
+                                 self.cmd_grouptoggle,
                                  parser=parser)
 
     #self.api.get('commands.add')('stats', self.cmd_stats,
@@ -163,10 +194,10 @@ class Plugin(BasePlugin):
         mat = trigre.match(datatomatch)
         self.api.get('send.msg')('attempting to match %s' % datatomatch)
         if mat:
-          if not (i in self.sessionhits):
+          if i in self.sessionhits:
             self.sessionhits[i] = 0
           self.sessionhits[i] = self.sessionhits[i] + 1
-          if not ('hits' in self.actions[i]):
+          if 'hits' in self.actions[i]:
             self.actions[i]['hits'] = 0
           self.actions[i]['hits'] = self.actions[i]['hits'] + 1
           self.api.get('send.msg')('matched line: %s to action %s' % (data, i))
@@ -199,14 +230,14 @@ class Plugin(BasePlugin):
         self.api.get('setting.change')('nextnum', num + 1)
 
       self.actions[args['regex']] = {
-        'num': num,
-        'regex':args['regex'],
-        'action':args['action'],
-        'send':args['send'],
-        'matchcolor':args['color'],
-        'enabled':not args['disable'],
-        'group':args['group']
-        }
+          'num': num,
+          'regex':args['regex'],
+          'action':args['action'],
+          'send':args['send'],
+          'matchcolor':args['color'],
+          'enabled':not args['disable'],
+          'group':args['group']
+      }
       self.actions.sync()
 
       self.compiledregex[args['regex']] = re.compile(args['regex'])
@@ -276,9 +307,9 @@ class Plugin(BasePlugin):
           togglea.append('%s' % self.actions[i]['num'])
 
       if togglea:
-        tmsg.append('The following actions were %s: %s' % (
-                        'enabled' if state else 'disabled',
-                        ','.join(togglea)))
+        tmsg.append('The following actions were %s: %s' % \
+              ('enabled' if state else 'disabled',
+               ','.join(togglea)))
       else:
         tmsg.append('No actions were modified')
 
@@ -298,21 +329,21 @@ class Plugin(BasePlugin):
     if args['action']:
       action = self.lookup_action(args['action'])
       if action:
-        if not ('hits' in self.actions[action]):
+        if 'hits' in self.actions[action]:
           self.actions[action]['hits'] = 0
-        if not (action in self.sessionhits):
+        if action in self.sessionhits:
           self.sessionhits[action] = 0
         tmsg.append('%-12s : %d' % ('Num', self.actions[action]['num']))
-        tmsg.append('%-12s : %s' % ('Enabled',
-                            'Y' if self.actions[action]['enabled'] else 'N'))
+        tmsg.append('%-12s : %s' % \
+            ('Enabled', 'Y' if self.actions[action]['enabled'] else 'N'))
         tmsg.append('%-12s : %d' % ('Total Hits',
-                            self.actions[action]['hits']))
+                                    self.actions[action]['hits']))
         tmsg.append('%-12s : %d' % ('Session Hits', self.sessionhits[action]))
         tmsg.append('%-12s : %s' % ('Regex', self.actions[action]['regex']))
         tmsg.append('%-12s : %s' % ('Action', self.actions[action]['action']))
         tmsg.append('%-12s : %s' % ('Group', self.actions[action]['group']))
         tmsg.append('%-12s : %s' % ('Match Color',
-                            self.actions[action]['matchcolor']))
+                                    self.actions[action]['matchcolor']))
       else:
         return True, ['@RAction does not exits@w : \'%s\'' % (args['action'])]
 
@@ -334,7 +365,8 @@ class Plugin(BasePlugin):
         action = self.api.get('colors.stripansi')(item['action'])
         if len(action) > 30:
           action = action[:27] + '...'
-        tmsg.append("%4s %2s  %-10s %-32s : %s@w" % (item['num'],
+        tmsg.append("%4s %2s  %-10s %-32s : %s@w" % \
+                     (item['num'],
                       'Y' if item['enabled'] else 'N',
                       item['group'],
                       regex,
