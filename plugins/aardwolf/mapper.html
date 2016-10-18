@@ -121,7 +121,7 @@
         </div>
        </div>
     <div class="nav">
-        <div class="divpluginname">aardwolf.iceage</div>
+        <div class="divpluginname">aardwolf.mapper</div>
     </div>
     </div>
 
@@ -135,6 +135,29 @@
   <li><a href="#" data-toggle="collapse" data-target="#commandsMenu">
            Commands <i class="glyphicon glyphicon-chevron-right"></i>
            <ul class="list-unstyled collapse" id="commandsMenu">
+  <li><a href="#" data-toggle="collapse" data-target="#cmdgroupDBMenu">
+           DB <i class="glyphicon glyphicon-chevron-right"></i>
+           <ul class="list-unstyled collapse" id="cmdgroupDBMenu">
+  <li><a href="#cmddbbackup">dbbackup</a></li>
+  <li><a href="#cmddbclose">dbclose</a></li>
+  <li><a href="#cmddbmodify">dbmodify</a></li>
+  <li><a href="#cmddbremove">dbremove</a></li>
+  <li><a href="#cmddbselect">dbselect</a></li>
+  <li><a href="#cmddbvac">dbvac</a></li>
+</ul></li>
+  <li><a href="#" data-toggle="collapse" data-target="#cmdgroupmapperMenu">
+           mapper <i class="glyphicon glyphicon-chevron-right"></i>
+           <ul class="list-unstyled collapse" id="cmdgroupmapperMenu">
+  <li><a href="#cmdarea">area</a></li>
+  <li><a href="#cmdfind">find</a></li>
+  <li><a href="#cmdgoto">goto</a></li>
+  <li><a href="#cmdnext">next</a></li>
+  <li><a href="#cmdpurgeroom">purgeroom</a></li>
+  <li><a href="#cmdresume">resume</a></li>
+  <li><a href="#cmdshowroom">showroom</a></li>
+  <li><a href="#cmdspw">spw</a></li>
+  <li><a href="#cmdwalk">walk</a></li>
+</ul></li>
   <li><a href="#" data-toggle="collapse" data-target="#cmdgroupBaseMenu">
            Base <i class="glyphicon glyphicon-chevron-right"></i>
            <ul class="list-unstyled collapse" id="cmdgroupBaseMenu">
@@ -147,22 +170,236 @@
   <li><a href="#cmdstats">stats</a></li>
 </ul></li>
 </ul></li>
+  <li><a href="#" data-toggle="collapse" data-target="#settingsMenu">
+           Settings <i class="glyphicon glyphicon-chevron-right"></i>
+           <ul class="list-unstyled collapse" id="settingsMenu">
+  <li><a href="#setshownotes">shownotes</a></li>
+  <li><a href="#setmaxdepth">maxdepth</a></li>
+</ul></li>
+  <li><a href="#" data-toggle="collapse" data-target="#apiMenu">
+           API <i class="glyphicon glyphicon-chevron-right"></i>
+           <ul class="list-unstyled collapse" id="apiMenu">
+  <li><a href="#setmodifymany">modifymany</a></li>
+  <li><a href="#setmodify">modify</a></li>
+  <li><a href="#setselect">select</a></li>
+  <li><a href="#setgetrow">getrow</a></li>
+</ul></li>
         </div>
 
         <div class="col-xs-12 col-sm-9">
         <div class="indenth2"><h2 id="about" class="bph2">About</h2>
 
-<p>This plugin adds events for Aardwolf Ice Ages.</p>
+<p>This plugin is a mapper plugin</p>
+
+</div><div class="indenth1"><h1 id="dont-care-about-terrains-and-environment-since-i-aint-graphical" class="bph1">don't care about terrains and environment since I ain't graphical</h1>
 
 </div>
 <h2 id="commands" class="bph2">Commands</h2>
+<div class="indenth3">
+<h3 id="cmdgroupDB" class="bph3">DB</h3>
+</div>
+<div class="indenth4">
+<h4 id="cmddbbackup" class="bph4">dbbackup</h4>
+<pre><code>
+usage: <span style="color:#5c5cff">#bp.mapper.dbbackup</span><span style="color:#e5e5e5"> [-h] [name]</span>
+
+backup the database
+
+positional arguments:
+  name        the name to backup to
+
+optional arguments:
+  -h, --help  show help (default: False)
+
+</code></pre>
+<h4 id="cmddbclose" class="bph4">dbclose</h4>
+<pre><code>
+usage: <span style="color:#5c5cff">#bp.mapper.dbclose</span><span style="color:#e5e5e5"> [-h]</span>
+
+close the database
+
+optional arguments:
+  -h, --help  show help (default: False)
+
+</code></pre>
+<h4 id="cmddbmodify" class="bph4">dbmodify</h4>
+<pre><code>
+usage: <span style="color:#5c5cff">#bp.mapper.dbmodify</span><span style="color:#e5e5e5"> [-h] [stmt]</span>
+
+run a sql update/insert against the database
+
+positional arguments:
+  stmt        the sql statement
+
+optional arguments:
+  -h, --help  show help (default: False)
+
+</code></pre>
+<h4 id="cmddbremove" class="bph4">dbremove</h4>
+<pre><code>
+usage: <span style="color:#5c5cff">#bp.mapper.dbremove</span><span style="color:#e5e5e5"> [-h] [table] [rownumber]</span>
+
+remove a row from a table
+
+positional arguments:
+  table       the table to remove the row from
+  rownumber   the row number to remove (default: -1)
+
+optional arguments:
+  -h, --help  show help (default: False)
+
+</code></pre>
+<h4 id="cmddbselect" class="bph4">dbselect</h4>
+<pre><code>
+usage: <span style="color:#5c5cff">#bp.mapper.dbselect</span><span style="color:#e5e5e5"> [-h] [stmt]</span>
+
+run a sql statement against the database
+
+positional arguments:
+  stmt        the sql statement
+
+optional arguments:
+  -h, --help  show help (default: False)
+
+</code></pre>
+<h4 id="cmddbvac" class="bph4">dbvac</h4>
+<pre><code>
+usage: <span style="color:#5c5cff">#bp.mapper.dbvac</span><span style="color:#e5e5e5"> [-h]</span>
+
+vacuum the database
+
+optional arguments:
+  -h, --help  show help (default: False)
+
+</code></pre>
+</div>
+<div class="indenth3">
+<h3 id="cmdgroupmapper" class="bph3">mapper</h3>
+</div>
+<div class="indenth4">
+<h4 id="cmdarea" class="bph4">area</h4>
+<pre><code>
+usage: <span style="color:#5c5cff">#bp.mapper.area</span><span style="color:#e5e5e5"> [-e] [-h] [room] [area]</span>
+
+lookup a room in a specific area
+
+positional arguments:
+  room         a string (default: None)
+  area         a string (default: None)
+
+optional arguments:
+  -e, --exact  the argument is the exact name (default: False)
+  -h, --help   show help (default: False)
+
+</code></pre>
+<h4 id="cmdfind" class="bph4">find</h4>
+<pre><code>
+usage: <span style="color:#5c5cff">#bp.mapper.find</span><span style="color:#e5e5e5"> [-e] [-h] [room]</span>
+
+lookup a room
+
+positional arguments:
+  room         a string (default: None)
+
+optional arguments:
+  -e, --exact  the argument is the exact name (default: False)
+  -h, --help   show help (default: False)
+
+</code></pre>
+<h4 id="cmdgoto" class="bph4">goto</h4>
+<pre><code>
+usage: <span style="color:#5c5cff">#bp.mapper.goto</span><span style="color:#e5e5e5"> [-h] [room]</span>
+
+goto a room
+
+positional arguments:
+  room        the room number (default: None)
+
+optional arguments:
+  -h, --help  show help (default: False)
+
+</code></pre>
+<h4 id="cmdnext" class="bph4">next</h4>
+<pre><code>
+usage: <span style="color:#5c5cff">#bp.mapper.next</span><span style="color:#e5e5e5"> [-h]</span>
+
+goto the next room from the previous search result
+
+optional arguments:
+  -h, --help  show help (default: False)
+
+</code></pre>
+<h4 id="cmdpurgeroom" class="bph4">purgeroom</h4>
+<pre><code>
+usage: <span style="color:#5c5cff">#bp.mapper.purgeroom</span><span style="color:#e5e5e5"> [-h] [room]</span>
+
+purge a room
+
+positional arguments:
+  room        the room number (default: None)
+
+optional arguments:
+  -h, --help  show help (default: False)
+
+</code></pre>
+<h4 id="cmdresume" class="bph4">resume</h4>
+<pre><code>
+usage: <span style="color:#5c5cff">#bp.mapper.resume</span><span style="color:#e5e5e5"> [-h]</span>
+
+resume going to a room
+
+optional arguments:
+  -h, --help  show help (default: False)
+
+</code></pre>
+<h4 id="cmdshowroom" class="bph4">showroom</h4>
+<pre><code>
+usage: <span style="color:#5c5cff">#bp.mapper.showroom</span><span style="color:#e5e5e5"> [-h] [room]</span>
+
+show mapper information for a room
+
+positional arguments:
+  room        the room number (default: None)
+
+optional arguments:
+  -h, --help  show help (default: False)
+
+</code></pre>
+<h4 id="cmdspw" class="bph4">spw</h4>
+<pre><code>
+usage: <span style="color:#5c5cff">#bp.mapper.spw</span><span style="color:#e5e5e5"> [-h] [start] [end]</span>
+
+get speedwalk for a path
+
+positional arguments:
+  start       the room number (default: None)
+  end         the room number (default: None)
+
+optional arguments:
+  -h, --help  show help (default: False)
+
+</code></pre>
+<h4 id="cmdwalk" class="bph4">walk</h4>
+<pre><code>
+usage: <span style="color:#5c5cff">#bp.mapper.walk</span><span style="color:#e5e5e5"> [-h] [room]</span>
+
+walk to room (no portals)
+
+positional arguments:
+  room        the room number (default: None)
+
+optional arguments:
+  -h, --help  show help (default: False)
+
+</code></pre>
+</div>
 <div class="indenth3">
 <h3 id="cmdgroupBase" class="bph3">Base</h3>
 </div>
 <div class="indenth4">
 <h4 id="cmdapi" class="bph4">api</h4>
 <pre><code>
-usage: <span style="color:#5c5cff">#bp.iceage.api</span><span style="color:#e5e5e5"> [-h] [api]</span>
+usage: <span style="color:#5c5cff">#bp.mapper.api</span><span style="color:#e5e5e5"> [-h] [api]</span>
 
 list functions in the api
 
@@ -175,7 +412,7 @@ optional arguments:
 </code></pre>
 <h4 id="cmdhelp" class="bph4">help</h4>
 <pre><code>
-usage: <span style="color:#5c5cff">#bp.iceage.help</span><span style="color:#e5e5e5"> [-a] [-c] [-h]</span>
+usage: <span style="color:#5c5cff">#bp.mapper.help</span><span style="color:#e5e5e5"> [-a] [-c] [-h]</span>
 
 show help info for this plugin
 
@@ -187,7 +424,7 @@ optional arguments:
 </code></pre>
 <h4 id="cmdinspect" class="bph4">inspect</h4>
 <pre><code>
-usage: <span style="color:#5c5cff">#bp.iceage.inspect</span><span style="color:#e5e5e5"> [-m METHOD] [-o OBJECT] [-s] [-h]</span>
+usage: <span style="color:#5c5cff">#bp.mapper.inspect</span><span style="color:#e5e5e5"> [-m METHOD] [-o OBJECT] [-s] [-h]</span>
 
 inspect a plugin
 
@@ -203,7 +440,7 @@ optional arguments:
 </code></pre>
 <h4 id="cmdreset" class="bph4">reset</h4>
 <pre><code>
-usage: <span style="color:#5c5cff">#bp.iceage.reset</span><span style="color:#e5e5e5"> [-h]</span>
+usage: <span style="color:#5c5cff">#bp.mapper.reset</span><span style="color:#e5e5e5"> [-h]</span>
 
 reset the plugin
 
@@ -213,7 +450,7 @@ optional arguments:
 </code></pre>
 <h4 id="cmdsave" class="bph4">save</h4>
 <pre><code>
-usage: <span style="color:#5c5cff">#bp.iceage.save</span><span style="color:#e5e5e5"> [-h]</span>
+usage: <span style="color:#5c5cff">#bp.mapper.save</span><span style="color:#e5e5e5"> [-h]</span>
 
 save the plugin state
 
@@ -223,7 +460,7 @@ optional arguments:
 </code></pre>
 <h4 id="cmdset" class="bph4">set</h4>
 <pre><code>
-usage: <span style="color:#5c5cff">#bp.iceage.set</span><span style="color:#e5e5e5"> [-h] [name] [value]</span>
+usage: <span style="color:#5c5cff">#bp.mapper.set</span><span style="color:#e5e5e5"> [-h] [name] [value]</span>
 
 change a setting in the plugin
 
@@ -240,13 +477,63 @@ optional arguments:
 </code></pre>
 <h4 id="cmdstats" class="bph4">stats</h4>
 <pre><code>
-usage: <span style="color:#5c5cff">#bp.iceage.stats</span><span style="color:#e5e5e5"> [-h]</span>
+usage: <span style="color:#5c5cff">#bp.mapper.stats</span><span style="color:#e5e5e5"> [-h]</span>
 
 show plugin stats
 
 optional arguments:
   -h, --help  show help (default: False)
 
+</code></pre>
+</div>
+<h2 id="settings" class="bph2">Settings</h2>
+<div class="indenth4">
+<h3 id="setshownotes" class="bph4">shownotes</h3>
+<pre><code>
+show notes when entering a room
+</code></pre>
+<h3 id="setmaxdepth" class="bph4">maxdepth</h3>
+<pre><code>
+max depth to search
+</code></pre>
+</div>
+<h2 id="api" class="bph2">API</h2>
+<div class="indenth4">
+<h3 id="setmodifymany" class="bph4">modifymany</h3>
+<pre><code>
+<span style="color:#00ff00">mapper.modifymany</span><span style="color:#e5e5e5">(</span><span style="color:#ffff00">stmt</span><span style="color:#e5e5e5">, </span><span style="color:#ffff00">data</span><span style="color:#e5e5e5">)</span>
+
+    update many rows in a database
+
+
+original defined in plugins/core/sqldb.py
+</code></pre>
+<h3 id="setmodify" class="bph4">modify</h3>
+<pre><code>
+<span style="color:#00ff00">mapper.modify</span><span style="color:#e5e5e5">(</span><span style="color:#ffff00">stmt</span><span style="color:#e5e5e5">, </span><span style="color:#ffff00">data=None</span><span style="color:#e5e5e5">)</span>
+
+    modify the database
+
+
+original defined in plugins/core/sqldb.py
+</code></pre>
+<h3 id="setselect" class="bph4">select</h3>
+<pre><code>
+<span style="color:#00ff00">mapper.select</span><span style="color:#e5e5e5">(</span><span style="color:#ffff00">stmt</span><span style="color:#e5e5e5">)</span>
+
+    run a select stmt against the db
+
+
+original defined in plugins/core/sqldb.py
+</code></pre>
+<h3 id="setgetrow" class="bph4">getrow</h3>
+<pre><code>
+<span style="color:#00ff00">mapper.getrow</span><span style="color:#e5e5e5">(</span><span style="color:#ffff00">rowid</span><span style="color:#e5e5e5">, </span><span style="color:#ffff00">ttable</span><span style="color:#e5e5e5">)</span>
+
+    get a row from a table
+
+
+original defined in plugins/core/sqldb.py
 </code></pre>
 </div>
         </div><!-- /.col-xs-12 main -->

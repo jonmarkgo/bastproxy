@@ -121,7 +121,7 @@
         </div>
        </div>
     <div class="nav">
-        <div class="divpluginname">aardwolf.iceage</div>
+        <div class="divpluginname">aardwolf.eqsets</div>
     </div>
     </div>
 
@@ -135,6 +135,11 @@
   <li><a href="#" data-toggle="collapse" data-target="#commandsMenu">
            Commands <i class="glyphicon glyphicon-chevron-right"></i>
            <ul class="list-unstyled collapse" id="commandsMenu">
+  <li><a href="#" data-toggle="collapse" data-target="#cmdgroupeqsetsMenu">
+           eqsets <i class="glyphicon glyphicon-chevron-right"></i>
+           <ul class="list-unstyled collapse" id="cmdgroupeqsetsMenu">
+  <li><a href="#cmdadd">add</a></li>
+</ul></li>
   <li><a href="#" data-toggle="collapse" data-target="#cmdgroupBaseMenu">
            Base <i class="glyphicon glyphicon-chevron-right"></i>
            <ul class="list-unstyled collapse" id="cmdgroupBaseMenu">
@@ -157,12 +162,37 @@
 </div>
 <h2 id="commands" class="bph2">Commands</h2>
 <div class="indenth3">
+<h3 id="cmdgroupeqsets" class="bph3">eqsets</h3>
+</div>
+<div class="indenth4">
+<h4 id="cmdadd" class="bph4">add</h4>
+<pre><code>
+usage: <span style="color:#5c5cff">#bp.eqsets.add</span><span style="color:#e5e5e5"> [-w WEARLOC] [-c CONTAINER] [-h] [item] [set]</span>
+
+add an item to a set
+
+positional arguments:
+  item                  the item serial number
+  set                   the set to add the item to
+
+optional arguments:
+  -w WEARLOC, --wearloc WEARLOC
+                        the location to wear this item, see the wear flag
+                        column in the 'wearable' mud command
+  -c CONTAINER, --container CONTAINER
+                        the container this item belongs in, must be a serial
+                        number
+  -h, --help            show help (default: False)
+
+</code></pre>
+</div>
+<div class="indenth3">
 <h3 id="cmdgroupBase" class="bph3">Base</h3>
 </div>
 <div class="indenth4">
 <h4 id="cmdapi" class="bph4">api</h4>
 <pre><code>
-usage: <span style="color:#5c5cff">#bp.iceage.api</span><span style="color:#e5e5e5"> [-h] [api]</span>
+usage: <span style="color:#5c5cff">#bp.eqsets.api</span><span style="color:#e5e5e5"> [-h] [api]</span>
 
 list functions in the api
 
@@ -175,7 +205,7 @@ optional arguments:
 </code></pre>
 <h4 id="cmdhelp" class="bph4">help</h4>
 <pre><code>
-usage: <span style="color:#5c5cff">#bp.iceage.help</span><span style="color:#e5e5e5"> [-a] [-c] [-h]</span>
+usage: <span style="color:#5c5cff">#bp.eqsets.help</span><span style="color:#e5e5e5"> [-a] [-c] [-h]</span>
 
 show help info for this plugin
 
@@ -187,7 +217,7 @@ optional arguments:
 </code></pre>
 <h4 id="cmdinspect" class="bph4">inspect</h4>
 <pre><code>
-usage: <span style="color:#5c5cff">#bp.iceage.inspect</span><span style="color:#e5e5e5"> [-m METHOD] [-o OBJECT] [-s] [-h]</span>
+usage: <span style="color:#5c5cff">#bp.eqsets.inspect</span><span style="color:#e5e5e5"> [-m METHOD] [-o OBJECT] [-s] [-h]</span>
 
 inspect a plugin
 
@@ -203,7 +233,7 @@ optional arguments:
 </code></pre>
 <h4 id="cmdreset" class="bph4">reset</h4>
 <pre><code>
-usage: <span style="color:#5c5cff">#bp.iceage.reset</span><span style="color:#e5e5e5"> [-h]</span>
+usage: <span style="color:#5c5cff">#bp.eqsets.reset</span><span style="color:#e5e5e5"> [-h]</span>
 
 reset the plugin
 
@@ -213,7 +243,7 @@ optional arguments:
 </code></pre>
 <h4 id="cmdsave" class="bph4">save</h4>
 <pre><code>
-usage: <span style="color:#5c5cff">#bp.iceage.save</span><span style="color:#e5e5e5"> [-h]</span>
+usage: <span style="color:#5c5cff">#bp.eqsets.save</span><span style="color:#e5e5e5"> [-h]</span>
 
 save the plugin state
 
@@ -223,7 +253,7 @@ optional arguments:
 </code></pre>
 <h4 id="cmdset" class="bph4">set</h4>
 <pre><code>
-usage: <span style="color:#5c5cff">#bp.iceage.set</span><span style="color:#e5e5e5"> [-h] [name] [value]</span>
+usage: <span style="color:#5c5cff">#bp.eqsets.set</span><span style="color:#e5e5e5"> [-h] [name] [value]</span>
 
 change a setting in the plugin
 
@@ -240,7 +270,7 @@ optional arguments:
 </code></pre>
 <h4 id="cmdstats" class="bph4">stats</h4>
 <pre><code>
-usage: <span style="color:#5c5cff">#bp.iceage.stats</span><span style="color:#e5e5e5"> [-h]</span>
+usage: <span style="color:#5c5cff">#bp.eqsets.stats</span><span style="color:#e5e5e5"> [-h]</span>
 
 show plugin stats
 
