@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import signal
-from curio import run, spawn, SignalSet, CancelledError, tcp_server, current_task
+from curio import run, spawn, SignalQueue, CancelledError, tcp_server, current_task
 from libs.net.client import Client
 
 proxys = None
@@ -18,11 +18,13 @@ class Proxy:
                                                 self.port, self.addclient))
 
     async def addclient(self, client, addr):
+        print('adding client', addr)
         task = await current_task()
         self.connections[task.id] = Client(task, client, addr, self)
         await self.connections[task.id].handle_connection()
 
     def removeclient(self, clientid):
+        print('Remove client', self.connections)
         del self.connections[clientid]
 
     async def shutdown_clients(self):
@@ -44,22 +46,23 @@ class Proxy:
 
 async def main(host, port):
     while True:
-        async with SignalSet(signal.SIGHUP, signal.SIGINT) as sigset:
+        async with SignalQueue(signal.SIGTERM, signal.SIGINT) as sigset:
             print('Starting the server on port %s' % port)
             global proxys
             proxys = Proxy(host, port)
             await proxys.start()
 
-            signum = await sigset.wait()
+            signum = await sigset.get()
+
             await proxys.shutdown()
 
             if signum == signal.SIGINT:
-                print('got keyboard interrupt, stopping')
+                print('got keyboard interrupt, proxy was shutdown')
                 break
 
+            if signum == signal.SIGTERM:
+                print('got term signal, proxy was shutdown')
+                break
 
 if __name__ == '__main__':
-  try:
-    run(main('', 25000))
-  except KeyboardInterrupt:
-    run(proxys.shutdown())
+  run(main('', 25000))

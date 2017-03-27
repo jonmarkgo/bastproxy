@@ -46,6 +46,7 @@ class Client(object):
       data = await self._sock.recv(4096)
       if not data:
         self.connected = False
+        print('client - receive: calling shutdown')
         await self.shutdown()
         return None
       data = data.decode()
@@ -104,9 +105,11 @@ class Client(object):
           await self.send('!!\n')
       finally:
           traceback.print_exc()
-          self._proxy.removeclient(self.task.id)
+          print('client - handle_connection calling remove_client')
+          #self._proxy.removeclient(self.task.id)
 
   async def shutdown(self):
       await self.close()
+      print('client - shutdown calling remove_client')
       self._proxy.removeclient(self.task.id)
       await self.task.cancel()
