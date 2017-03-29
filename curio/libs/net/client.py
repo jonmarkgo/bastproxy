@@ -21,6 +21,7 @@ class Client(object):
     self.pwtries = 0
     self.connected = False
     self.connectedtime = 0
+    self.shutdown = False
 
     if sock:
       self.connected = True
@@ -106,10 +107,13 @@ class Client(object):
       finally:
           traceback.print_exc()
           print('client - handle_connection calling remove_client')
-          #self._proxy.removeclient(self.task.id)
+          await self.shutdown()
 
   async def shutdown(self):
+    if not self.shutdown:
+      self.shutdown = True
       await self.close()
       print('client - shutdown calling remove_client')
       self._proxy.removeclient(self.task.id)
       await self.task.cancel()
+
