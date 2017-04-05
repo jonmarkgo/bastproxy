@@ -63,11 +63,12 @@ def dbcreate(sqldb, plugin, **kwargs):
       """
       sqldb.__init__(self, plugin, **kwargs)
 
-      self.version = 15
+      self.version = 16
 
       self.versionfuncs[13] = self.addrarexp_v13
       self.versionfuncs[14] = self.addnoexp_v14
       self.versionfuncs[15] = self.addextendedgq_v15
+      self.versionfuncs[16] = self.addhardcoreopk_v16
 
       self.addtable('stats', """CREATE TABLE stats(
             stat_id INTEGER NOT NULL PRIMARY KEY autoincrement,
@@ -98,6 +99,7 @@ def dbcreate(sqldb, plugin, **kwargs):
             redos INT default 0
           );""", keyfield='stat_id')
 
+#
       self.addtable('quests', """CREATE TABLE quests(
             quest_id INTEGER NOT NULL PRIMARY KEY autoincrement,
             starttime INT default 0,
@@ -110,9 +112,11 @@ def dbcreate(sqldb, plugin, **kwargs):
             daily INT default 0,
             totqp INT default 0,
             gold INT default 0,
-            tier INT default 0,
+            tierqp INT default 0,
             mccp INT default 0,
             lucky INT default 0,
+            opk INT default 0,
+            hardcore INT default 0,
             tp INT default 0,
             trains INT default 0,
             pracs INT default 0,
@@ -649,6 +653,61 @@ def dbcreate(sqldb, plugin, **kwargs):
       cur.executemany(stmt2, oldgqt)
       cur.close()
 
+    def addhardcoreopk_v16(self):
+      """
+      add noexp to each mobkill
+      """
+      if not self.checktableexists('quests'):
+        return
+
+      olditems = self.select('SELECT * FROM quests ORDER BY quest_id ASC')
+
+      cur = self.dbconn.cursor()
+      cur.execute('DROP TABLE IF EXISTS quests;')
+      cur.close()
+      self.close()
+
+      self.open()
+      cur = self.dbconn.cursor()
+
+      cur.execute("""CREATE TABLE quests(
+            quest_id INTEGER NOT NULL PRIMARY KEY autoincrement,
+            starttime INT default 0,
+            finishtime INT default 0,
+            mobname TEXT default "Unknown",
+            mobarea TEXT default "Unknown",
+            mobroom TEXT default "Unknown",
+            qp INT default 0,
+            double INT default 0,
+            daily INT default 0,
+            totqp INT default 0,
+            gold INT default 0,
+            tierqp INT default 0,
+            mccp INT default 0,
+            lucky INT default 0,
+            opk INT default 0,
+            hardcore INT default 0,
+            tp INT default 0,
+            trains INT default 0,
+            pracs INT default 0,
+            level INT default -1,
+            failed INT default 0
+          );""")
+      cur.close()
+
+      for item in olditems:
+        item['tierqp'] = item['tier']
+        item['opk'] = 0
+        item['hardcore'] = 0
+
+      cur = self.dbconn.cursor()
+      stmt2 = """INSERT INTO quests VALUES (:quest_id, :starttime, :finishtime,
+                    :mobname, :mobarea, :mobroom, :qp, :double, :daily, :totqp,
+                    :gold, :tierqp, :mccp, :lucky, :opk, :hardcore, :tp,
+                    :trains, :pracs, :level, :failed)"""
+      cur.executemany(stmt2, olditems)
+      cur.close()
+
   return Statdb(plugin, **kwargs)
 
 
@@ -1046,13 +1105,17 @@ class Plugin(AardwolfBasePlugin):
     tqrow = self.statdb.select(
         """SELECT AVG(finishtime - starttime) as avetime,
                       SUM(qp) as qp,
-                      SUM(tier) as tier,
-                      AVG(tier) as tierave,
-                      SUM(mccp) as mccp,
-                      AVG(mccp) as mccpave,
-                      SUM(lucky) as lucky,
                       AVG(qp) as qpquestave,
+                      AVG(tierqp) as tierqpave,
+                      SUM(tierqp) as tierqp,
+                      AVG(mccp) as mccpave,
+                      SUM(mccp) as mccp,
                       AVG(lucky) as luckyave,
+                      SUM(lucky) as lucky,
+                      AVG(opk) as opkave,
+                      SUM(opk) as opk,
+                      AVG(hardcore) as hardcoreave,
+                      SUM(hardcore) as hardcore,
                       SUM(tp) as tp,
                       AVG(tp) as tpave,
                       SUM(trains) as trains,
@@ -1094,8 +1157,12 @@ class Plugin(AardwolfBasePlugin):
         format_float(stats['mccpave'], "/quest")))
     msg.append(self._format_row("Lucky", stats['lucky'],
         format_float(stats['luckyave'], "/quest")))
-    msg.append(self._format_row("Tier", stats['tier'],
-        format_float(stats['tierave'], "/quest")))
+    msg.append(self._format_row("Tier", stats['tierqp'],
+        format_float(stats['tierqpave'], "/quest")))
+    msg.append(self._format_row("OPK", stats['opk'],
+        format_float(stats['opkave'], "/quest")))
+    msg.append(self._format_row("Hardcore", stats['hardcore'],
+        format_float(stats['hardcoreave'], "/quest")))
     msg.append(self._format_row("QP Per Quest", "",
         format_float(stats['dboverallave'], "/quest")))
     msg.append(self._format_row("Gold",
@@ -1118,9 +1185,9 @@ class Plugin(AardwolfBasePlugin):
       lastitems = self.statdb.getlast('quests', int(count))
       if len(lastitems) > 0:
         msg.append('')
-        msg.append("@G%-6s %-2s %-2s %-2s %-2s %-3s" \
+        msg.append("@G%-6s %-2s %-2s %-2s %-2s %-2s %-2s %-3s" \
                         " %-2s %-2s %-2s %-2s %-4s %-3s   %s" % ("ID", "QP",
-                        "MC", "TR", "LK", "DBL", "TL", "TP", "TN",
+                        "MC", "TR", "LK", "PK", "HC", "DBL", "TL", "TP", "TN",
                         "PR", "Gold", "Lvl",  "Time"))
         msg.append(div)
 
@@ -1137,11 +1204,11 @@ class Plugin(AardwolfBasePlugin):
                                                     item['starttime'])
           if int(item['failed']) == 1:
             ttime = 'Failed'
-          msg.append("%-6s %2s %2s %2s %2s %3s" \
+          msg.append("%-6s %2s %2s %2s %2s %2s %2s %3s" \
                         " %2s %2s %2s %2s %4s %3s %8s" % (
                         item['quest_id'], item['qp'],
-                        item['mccp'], item['tier'], item['lucky'],
-                        dbl, item['totqp'], item['tp'],
+                        item['mccp'], item['tierqp'], item['lucky'], item['opk'],
+                        item['hardcore'], dbl, item['totqp'], item['tp'],
                         item['trains'], item['pracs'], item['gold'],
                         leveld['level'],  ttime))
 
