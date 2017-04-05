@@ -107,9 +107,15 @@ class Plugin(AardwolfBasePlugin):
     if args['mccp'] > 0:
       msg.append('%s+%s%s' % (infocolor,
             statcolor, args['mccp']))
-    if args['tier'] > 0:
+    if args['tierqp'] > 0:
       msg.append('%s+%s%s' % (infocolor,
-            statcolor, args['tier']))
+            statcolor, args['tierqp']))
+    if args['opk'] > 0:
+      msg.append('%s+%s%s' % (infocolor,
+            statcolor, args['opk']))
+    if args['hardcore'] > 0:
+      msg.append('%s+%s%s' % (infocolor,
+            statcolor, args['hardcore']))
     if args['daily'] == 1:
       msg.append('%s+%s%s' % (infocolor,
             statcolor, 'E'))
