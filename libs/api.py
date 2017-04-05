@@ -246,7 +246,8 @@ class API(object):
         args = getargs(apif)
 
         tmsg.append('@G%s@w(%s)' % (apiname, args))
-        tmsg.append(apif.__doc__ % tdict)
+        if apif.__doc__:
+          tmsg.append(apif.__doc__ % tdict)
 
         tmsg.append('')
         if apiapath:
