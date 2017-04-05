@@ -42,22 +42,12 @@ class Plugin(AardwolfBasePlugin):
     self.queststuff.clear()
     self.queststuff['finishtime'] = -1
     self.queststuff['starttime'] = time.time()
+    self.queststuff['killedtime'] = -1
     self.queststuff['mobname'] = ''
     self.queststuff['mobarea'] = ''
     self.queststuff['mobroom'] = ''
-    self.queststuff['totqp'] = 0
-    self.queststuff['daily'] = 0
-    self.queststuff['double'] = 0
-    self.queststuff['qp'] = 0
-    self.queststuff['gold'] = 0
-    self.queststuff['tier'] = 0
-    self.queststuff['mccp'] = 0
-    self.queststuff['lucky'] = 0
-    self.queststuff['tp'] = 0
     self.queststuff['level'] = self.api.get('aardu.getactuallevel')(
                             self.api.get('GMCP.getv')('char.status.level'))
-    self.queststuff['trains'] = 0
-    self.queststuff['pracs'] = 0
     self.queststuff['failed'] = 0
 
   def quest(self, args):
@@ -80,17 +70,7 @@ class Plugin(AardwolfBasePlugin):
       self.api.get('events.eraise')('aard_quest_killed', self.queststuff)
     elif questi['action'] == 'comp':
       self.queststuff['finishtime'] = time.time()
-      self.queststuff['qp'] = questi['qp']
-      self.queststuff['tier'] = questi['tierqp']
-      self.queststuff['pracs'] = questi['pracs']
-      self.queststuff['trains'] = questi['trains']
-      self.queststuff['tp'] = questi['tp']
-      self.queststuff['mccp'] = questi['mccp']
-      self.queststuff['lucky'] = questi['lucky']
-      self.queststuff['daily'] = questi['daily']
-      self.queststuff['double'] = questi['double']
-      self.queststuff['totqp'] = questi['totqp']
-      self.queststuff['gold'] = questi['gold']
+      self.queststuff.update(questi)
       self.api.get('events.eraise')('aard_quest_comp',
                                     copy.deepcopy(self.queststuff))
     elif questi['action'] == 'fail' or questi['action'] == 'timeout':
