@@ -1,8 +1,8 @@
+#pylint: disable=too-many-lines, no-member
 """
 This plugin reads and parses invmon data from Aardwolf
 """
 import argparse
-import re
 from plugins.aardwolf._aardwolfbaseplugin import AardwolfBasePlugin
 
 NAME = 'Aardwolf Eq cmds, parser'
@@ -16,11 +16,20 @@ AUTOLOAD = False
 OPTIONALLOCS = [8, 9, 10, 11, 25, 28, 29, 30, 31, 32]
 
 class Item(object):
-  def __init__(self, attributes):
-    self._dump_shallow_attrs = ['curcontainer', 'origcontainer']
+  """
+  a class to represent an item
+  """
+  def __init__(self, attributes, plugin, loadfromdb=True):
+    """
+    init the class, if eqdb is loaded, update from the db
+    """
+    self._dump_shallow_attrs = ['curcontainer', 'origcontainer',
+                                'plugin', 'api']
 
     self.score = 'Unkn'
     self.wearslot = None
+    self.plugin = plugin
+    self.api = self.plugin.api
 
     self.upditem(attributes)
 
@@ -28,11 +37,23 @@ class Item(object):
     self.origcontainer = None
     self.hasbeenided = False
 
+    if self.api('plugins.isloaded')('eqdb') and loadfromdb:
+      dbdata = self.api('eqdb.getitem')(self.serial)
+      if dbdata:
+        self.upditem(dbdata)
+
+
   def upditem(self, attributes):
-    for k, v in attributes.items():
-      setattr(self, k, v)
+    """
+    takes a dictionary and uses setitem to set items
+    """
+    for key, value in attributes.items():
+      setattr(self, key, value)
 
   def checkattr(self, attr):
+    """
+    check for an attribute
+    """
     if hasattr(self, attr) and self.__dict__[attr]:
       return True
 
@@ -40,8 +61,15 @@ class Item(object):
 
 
 class EqContainer(object):
+  """
+  a class to manipulate containers
+  """
   def __init__(self, plugin, cid, cmd=None, cmdregex=None,
-                  startregex=None, endregex=None):
+               startregex=None, endregex=None):
+    #pylint: disable=too-many-arguments
+    """
+    init the class
+    """
     ## cid = container ID "83744667"
     ## cmd = command to send to get data "invdata 83744667"
     ## cmdregex = regex that matches command "^invdata 83744667$"
@@ -62,11 +90,14 @@ class EqContainer(object):
     self._dump_shallow_attrs = ['plugin', 'api', 'cmdqueue', 'itemcache']
 
     self.cmdqueue.addcmdtype(self.cid, self.cmd, self.cmdregex,
-                       beforef=self.databefore, afterf=self.dataafter)
+                             beforef=self.databefore, afterf=self.dataafter)
 
     self.reset()
 
   def __str__(self):
+    """
+    a string representation of the container
+    """
     return 'Container: %s' % self.cid
 
   def count(self):
@@ -115,6 +146,7 @@ class EqContainer(object):
     """
     refresh data
     """
+    self.api('send.msg')('refreshing %s' % self.cid)
     self.cmdqueue.addtoqueue(self.cid, '')
 
   def databefore(self):
@@ -122,12 +154,14 @@ class EqContainer(object):
     this will be called before the the command
     """
     self.api.get('triggers.add')('%sstart' % self.cid,
-      self.startregex,
-      enabled=False, group='%sdata' % self.cid, omit=True)
+                                 self.startregex,
+                                 enabled=False, group='%sdata' % self.cid,
+                                 omit=True)
 
     self.api.get('triggers.add')('%send' % self.cid,
-      self.endregex,
-      enabled=False, group='%sdata' % self.cid, omit=True)
+                                 self.endregex,
+                                 enabled=False, group='%sdata' % self.cid,
+                                 omit=True)
 
     self.api.get('events.register')('trigger_%sstart' % self.cid, self.datastart)
     self.api.get('events.register')('trigger_%send' % self.cid, self.dataend)
@@ -139,8 +173,8 @@ class EqContainer(object):
       self.api.get('triggers.remove')('dataline', force=True)
 
     self.api.get('triggers.add')('dataline',
-      "^\s*(\d+),(.*),(.+),(.+),(.+),(.+),(.+),(.+)$",
-      enabled=True, group='dataline', omit=True)
+                                 r"^\s*(\d+),(.*),(.+),(.+),(.+),(.+),(.+),(.+)$",
+                                 enabled=True, group='dataline', omit=True)
 
     self.api.get('events.register')('trigger_dataline', self.dataline,
                                     plugin=self.plugin.sname)
@@ -176,17 +210,18 @@ class EqContainer(object):
       #self.api.get('send.msg')('invdata args: %s' % args)
       try:
         attributes = self.api.get('itemu.dataparse')(line, 'eqdata')
-        titem = Item(attributes)
+        titem = Item(attributes, self.plugin)
         self.itemcache[titem.serial] = titem
         #self.api.get('send.msg')('invdata parsed item: %s' % titem)
         self.add(titem.serial)
-        if titem.itype == 11 and not (titem.serial in self.plugin.containers):
+        if titem.itype == 11 and titem.serial not in self.plugin.containers:
           self.plugin.containers[titem.serial] = EqContainer(self.plugin, titem.serial)
       except (IndexError, ValueError):
         self.api.get('send.msg')('incorrect invdata line: %s' % line)
         self.api('send.traceback')()
 
   def dataend(self, args):
+    #pylint: disable=unused-argument
     """
     found end of data for this container
     """
@@ -239,6 +274,7 @@ class EqContainer(object):
     return ''.join(header)
 
   def build(self, args):
+    #pylint: disable=too-many-nested-blocks,too-many-branches,too-many-statements
     """
     build a container
     """
@@ -252,6 +288,7 @@ class EqContainer(object):
 
     if len(self.items) < 1:
       msg.append('You have nothing in %s' % self.cid)
+      msg.append('')
     else:
       items = []
       numstyles = {}
@@ -264,23 +301,23 @@ class EqContainer(object):
         doit = True
         sitem = []
         if not args['nogroup'] and stylekey in numstyles:
-          if not (stylekey) in foundgroup:
+          if stylekey not in foundgroup:
             foundgroup[stylekey] = 1
           foundgroup[stylekey] = foundgroup[stylekey] + 1
           doit = False
           numstyles[stylekey]['item'].pop(numstyles[stylekey]['countcol'])
           numstyles[stylekey]['item'].insert(numstyles[stylekey]['countcol'],
-                                    "(%3d) " % foundgroup[stylekey])
+                                             "(%3d) " % foundgroup[stylekey])
           if args['serial'] and foundgroup[stylekey] == 2:
             numstyles[stylekey]['item'].pop(numstyles[stylekey]['serialcol'])
             numstyles[stylekey]['item'].insert(
-                                    numstyles[stylekey]['serialcol'],
-                                      "%-12s" % "Many")
+                numstyles[stylekey]['serialcol'],
+                "%-12s" % "Many")
 
         if doit:
           if not args['nogroup']:
             sitem.append(" %3s  " % " ")
-            if not (stylekey in numstyles):
+            if stylekey not in numstyles:
               numstyles[stylekey] = {'item':sitem, 'countcol':len(sitem) - 1,
                                      'serial':item.serial}
 
@@ -334,23 +371,44 @@ class EqContainer(object):
     return msg
 
 class Inventory(EqContainer):
+  """
+  inventory class
+  """
   def __init__(self, plugin):
+    """
+    init the class
+    """
     EqContainer.__init__(self, plugin, 'Inventory', cmd='invdata',
                          cmdregex='^invdata$', startregex="{invdata}")
 
   def build(self, args):
+    """
+    override the build method to include what is in the keyring and vault
+    """
     msg = EqContainer.build(self, args)
 
-    if 'Keyring' in self.plugin.containers and \
-        self.plugin.containers['Keyring'].count() > 0:
-      msg.append("@C(%2d)@W ** Item(s) on Keyring **@w" % \
-                                  self.plugin.containers['Keyring'].count())
-      msg.append("")
+    if 'Keyring' in self.plugin.containers:
+      keyring = self.plugin.containers['Keyring']
+      if keyring.count() > 0:
+        msg.append(keyring.getitemcountmsg())
+        msg.append("")
+
+    if 'Vault' in self.plugin.containers:
+      vault = self.plugin.containers['Vault']
+      if vault.seenvault and vault.itemtotal > 0:
+        msg.append(vault.getitemcountmsg())
+        msg.append("")
 
     return msg
 
 class Worn(EqContainer):
+  """
+  worn eq class
+  """
   def __init__(self, plugin):
+    """
+    init the class
+    """
     EqContainer.__init__(self, plugin, 'Worn', cmd='eqdata',
                          cmdregex='^eqdata$', startregex="{eqdata}",
                          endregex="{/eqdata}")
@@ -363,7 +421,7 @@ class Worn(EqContainer):
     """
     wearlocs = self.api.get('itemu.wearlocs')()
     self.items = []
-    for i in xrange(0, len(wearlocs)):
+    for dummy in xrange(0, len(wearlocs)):
       self.items.append(-1)
 
   def get(self, serial):
@@ -373,6 +431,7 @@ class Worn(EqContainer):
     self.api('send.execute')('remove %s' % (serial))
 
   def put(self, serial, location=None):
+    #pylint: disable=arguments-differ
     """
     put an item into container
     """
@@ -384,10 +443,11 @@ class Worn(EqContainer):
         cmd = cmd + ' ' + location
     self.api('send.execute')(cmd)
 
-  def add(self, serial, wearloc):
+  def add(self, serial, place=None):
     """
     wear an item
     """
+    wearloc = place
     if wearloc:
       del self.items[wearloc]
     self.itemcache[serial].curcontainer = self
@@ -417,17 +477,18 @@ class Worn(EqContainer):
       #self.api.get('send.msg')('invdata args: %s' % args)
       try:
         attributes = self.api.get('itemu.dataparse')(line, 'eqdata')
-        titem = Item(attributes)
+        titem = Item(attributes, plugin=self.plugin)
         self.itemcache[titem.serial] = titem
         #self.api.get('send.msg')('invdata parsed item: %s' % titem)
         self.add(titem.serial, titem.wearslot)
-        if titem.itype == 11 and not (titem.serial in self.plugin.containers):
+        if titem.itype == 11 and titem.serial not in self.plugin.containers:
           self.plugin.containers[titem.serial] = EqContainer(self.plugin, titem.serial)
       except (IndexError, ValueError):
         self.api.get('send.msg')('incorrect invdata line: %s' % line)
         self.api('send.traceback')()
 
   def build_wornitem(self, item, wearloc, args):
+    #pylint: disable=too-many-branches
     """
     build the output of a worn item
     """
@@ -473,8 +534,8 @@ class Worn(EqContainer):
     sitem.append('(')
     try:
       sitem.append("@G%3s@w" % item.level)
-    except:
-      print(item)
+    except Exception: #pylint: disable=broad-except
+      print item
     sitem.append(') ')
 
     if args['serial']:
@@ -496,7 +557,7 @@ class Worn(EqContainer):
     build the output of a container
     """
     emptyitem = Item({'cname':"@r< empty >@w", 'shortflags':"", 'level':'',
-                  'serial':''})
+                      'serial':''}, plugin=self.plugin, loadfromdb=False)
 
     wearlocs = self.api.get('itemu.wearlocs')()
     self.api.get('send.msg')('build_worn args: %s' % args)
@@ -561,7 +622,13 @@ class Worn(EqContainer):
     return msg
 
 class Keyring(EqContainer):
+  """
+  a class for the keyring
+  """
   def __init__(self, plugin):
+    """
+    init the class
+    """
     EqContainer.__init__(self, plugin, 'Keyring', cmd='keyring data',
                          cmdregex='^keyring data$', startregex="{keyring}",
                          endregex="{/keyring}")
@@ -572,6 +639,13 @@ class Keyring(EqContainer):
     """
     self.api('send.execute')('keyring get %s' % serial)
 
+  def getitemcountmsg(self):
+    """
+    get the message for the items in the keyring
+    """
+    return "@C(%2d)@W ** Item(s) on Keyring **@w" % \
+                            self.plugin.containers['Keyring'].count()
+
   def put(self, serial):
     """
     put an item into the keyring
@@ -579,15 +653,25 @@ class Keyring(EqContainer):
     self.api('send.execute')('keyring put %s' % serial)
 
 class Vault(EqContainer):
+  """
+  a class for the vault
+  """
   def __init__(self, plugin):
+    """
+    init the class
+    """
     EqContainer.__init__(self, plugin, 'Vault', cmd='vault data',
                          cmdregex='^vault data$', startregex="{vault}",
                          endregex="{/vault}")
     self.itemcount = 0
     self.itemtotal = 0
     self.itemmax = 0
+    self.seenvault = False
 
   def refresh(self):
+    """
+    refresh the inventory only if the room is a bank
+    """
     if 'bank' in self.api('GMCP.getv')('room.info')['details']:
       EqContainer.refresh(self)
 
@@ -609,9 +693,10 @@ class Vault(EqContainer):
     """
     EqContainer.databefore(self)
 
-    self.api.get('triggers.add')('%scount' % self.cid,
-      "^{vaultcounts}(?P<items>.*),(?P<totalitems>.*),(?P<maxitems>.*){/vaultcounts}$",
-      omit=True)
+    self.api.get('triggers.add')(
+        '%scount' % self.cid,
+        "^{vaultcounts}(?P<items>.*),(?P<totalitems>.*),(?P<maxitems>.*){/vaultcounts}$",
+        omit=True)
 
     self.api.get('events.register')('trigger_%scount' % self.cid, self.vaultcount)
 
@@ -619,6 +704,7 @@ class Vault(EqContainer):
     """
     get the vaultcount line
     """
+    self.seenvault = True
     self.itemcount = args['items']
     self.itemtotal = args['totalitems']
     self.itemmax = args['maxitems']
@@ -627,19 +713,31 @@ class Vault(EqContainer):
 
     self.api.get('triggers.remove')('%scount' % self.cid, force=True)
 
+  def getitemcountmsg(self):
+    """
+    get the item count message
+    """
+    msg = []
+    msg.append("@wYou have @Y%s@w of @Y%s@w items stored in your vault." % \
+                                (self.itemcount, self.itemmax))
+    if self.itemtotal > self.itemcount:
+      msg.append(
+        "Including keep flagged items, you have @Y%s@w items in your vault." % \
+          (self.itemtotal))
+    return "\n".join(msg)
+
   def build(self, args):
+    """
+    override the build method to show total # of items in vault
+    """
     msg = EqContainer.build(self, args)
 
-    msg.append("@wYou have @Y%s@w of @Y%s@w items stored in your vault." % \
-                                (len(self.items), self.itemmax))
-
-    #if self.itemcount != self.itemtotal:
-      #msg.append("@wIncluding keep flagged items, you have @Y%s@w item in your vault.@w" % \
-        #self.itemtotal)
+    msg.append(self.getitemcountmsg())
 
     return msg
 
 class Plugin(AardwolfBasePlugin):
+  #pylint: disable=too-many-public-methods
   """
   a plugin to handle equipment related actions
   invmon, eqdata, inv
@@ -689,89 +787,140 @@ class Plugin(AardwolfBasePlugin):
     AardwolfBasePlugin.load(self)
 
     parser = argparse.ArgumentParser(add_help=False,
-                 description='show equipment worn')
-    parser.add_argument('-n', "--noflags",
+                                     description='show equipment worn')
+    parser.add_argument('-n',
+                        "--noflags",
                         help="don't show flags, default False",
                         action="store_true")
-    parser.add_argument('-c', "--score", help="show score, default False",
-              action="store_true")
-    parser.add_argument('-s', "--serial", help="show serial, default False",
-              action="store_true")
-    self.api.get('commands.add')('eq', self.cmd_eq,
-                                parser=parser, format=False, preamble=False)
+    parser.add_argument('-c', "--score",
+                        help="show score, default False",
+                        action="store_true")
+    parser.add_argument('-s', "--serial",
+                        help="show serial, default False",
+                        action="store_true")
+    self.api.get('commands.add')('eq',
+                                 self.cmd_eq,
+                                 parser=parser,
+                                 format=False,
+                                 preamble=False)
 
     parser = argparse.ArgumentParser(add_help=False,
-                 description='show inventory or a container')
-    parser.add_argument('container', help='the container to see',
-                        default='Inventory', nargs='?')
-    parser.add_argument('-n', "--noflags",
+                                     description='show inventory of a container')
+    parser.add_argument('container',
+                        help='the container to see',
+                        default='Inventory',
+                        nargs='?')
+    parser.add_argument('-n',
+                        "--noflags",
                         help="don't show flags, default False",
                         action="store_true")
-    parser.add_argument('-c', "--score", help="show score, default False",
-              action="store_true")
-    parser.add_argument('-s', "--serial", help="show serial, default False",
-              action="store_true")
-    parser.add_argument('-g', "--nogroup",
+    parser.add_argument('-c',
+                        "--score",
+                        help="show score, default False",
+                        action="store_true")
+    parser.add_argument('-s',
+                        "--serial",
+                        help="show serial, default False",
+                        action="store_true")
+    parser.add_argument('-g',
+                        "--nogroup",
                         help="don't group items, default False",
                         action="store_true")
-    self.api.get('commands.add')('inv', self.cmd_inv,
-                                parser=parser, format=False, preamble=False)
+    self.api.get('commands.add')('inv',
+                                 self.cmd_inv,
+                                 parser=parser,
+                                 format=False,
+                                 preamble=False)
 
     parser = argparse.ArgumentParser(add_help=False,
-                 description='refresh eq')
-    self.api.get('commands.add')('refresh', self.cmd_refresh,
-                                parser=parser)
+                                     description='refresh eq')
+    self.api.get('commands.add')('refresh',
+                                 self.cmd_refresh,
+                                 parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
-                 description='get an item')
-    parser.add_argument('item', help='the item to get', default='', nargs='?')
-    parser.add_argument('otherargs', help='the rest of the args',
-                        default=[], nargs='*')
-    self.api.get('commands.add')('get', self.cmd_get,
-                                parser=parser, format=False, preamble=False)
+                                     description='get an item and put it in inventory')
+    parser.add_argument('item',
+                        help='the item to get',
+                        default='',
+                        nargs='?')
+    parser.add_argument('otherargs',
+                        help='the rest of the args',
+                        default=[],
+                        nargs='*')
+    self.api.get('commands.add')('get',
+                                 self.cmd_get,
+                                 parser=parser,
+                                 format=False,
+                                 preamble=False)
 
     parser = argparse.ArgumentParser(add_help=False,
-                 description='get an item')
-    parser.add_argument('item', help='the item to get', default='', nargs='?')
-    parser.add_argument('otherargs', help='the rest of the args',
-                        default=[], nargs='*')
-    self.api.get('commands.add')('put', self.cmd_put,
-                                parser=parser, format=False, preamble=False)
+                                     description='put an item into a container')
+    parser.add_argument('item',
+                        help='the item to get',
+                        default='',
+                        nargs='?')
+    parser.add_argument('otherargs',
+                        help='the rest of the args',
+                        default=[],
+                        nargs='*')
+    self.api.get('commands.add')('put',
+                                 self.cmd_put,
+                                 parser=parser,
+                                 format=False,
+                                 preamble=False)
 
     parser = argparse.ArgumentParser(add_help=False,
-                 description='show an item from the cache')
-    parser.add_argument('item', help='the item to show', default='', nargs='?')
-    self.api.get('commands.add')('icache', self.cmd_icache,
-                                parser=parser)
+                                     description='show an item from the cache')
+    parser.add_argument('item',
+                        help='the item to show',
+                        default='',
+                        nargs='?')
+    self.api.get('commands.add')('icache',
+                                 self.cmd_icache,
+                                 parser=parser)
 
     self.api.get('triggers.add')('dead',
-      "^You die.$",
-      enabled=True, group='dead')
+                                 r"^You die.$",
+                                 enabled=True,
+                                 group='dead')
 
-    self.api.get('triggers.add')('badinvdata1',
-      "^Syntax: invdata                - view all inv data.$",
-      enabled=True, group='badinvdata')
+    self.api.get('triggers.add')(
+        'badinvdata1',
+        r"^Syntax: invdata                - view all inv data.$",
+        enabled=True,
+        group='badinvdata')
 
-    self.api.get('triggers.add')('badinvdata2',
-      "^      : invdata <container id> - view all inv data in a container.$",
-      enabled=True, group='badinvdata')
+    self.api.get('triggers.add')(
+        'badinvdata2',
+        r"^      : invdata <container id> - view all inv data in a container.$",
+        enabled=True,
+        group='badinvdata')
 
-    self.api.get('triggers.add')('badinvdata3',
-      "^      : invdata ansi           - remove color codes from output.$",
-      enabled=True, group='badinvdata')
+    self.api.get('triggers.add')(
+        'badinvdata3',
+        r"^      : invdata ansi           - remove color codes from output.$",
+        enabled=True,
+        group='badinvdata')
 
-    self.api.get('triggers.add')('badinvdata4',
-      "^      : invdata <container> ansi - remove color codes from output.$",
-      enabled=True, group='badinvdata')
+    self.api.get('triggers.add')(
+        'badinvdata4',
+        r"^      : invdata <container> ansi - remove color codes from output.$",
+        enabled=True,
+        group='badinvdata')
 
-    self.api.get('triggers.add')('invmon',
-      "^\{invmon\}(?P<action>.*),(?P<serial>.*)," \
-        "(?P<container>.*),(?P<location>.*)$",
-      enabled=True, group='invmon')
+    self.api.get('triggers.add')(
+        'invmon',
+        r"^\{invmon\}(?P<action>.*),(?P<serial>.*)," \
+          r"(?P<container>.*),(?P<location>.*)$",
+        enabled=True,
+        group='invmon')
 
-    self.api.get('triggers.add')('invitem',
-      "^\{invitem\}(?P<data>.*)$",
-      enabled=True, matchcolor=True)
+    self.api.get('triggers.add')(
+        'invitem',
+        r"^\{invitem\}(?P<data>.*)$",
+        enabled=True,
+        matchcolor=True)
 
 
     self.api.get('events.register')('trigger_dead', self.dead)
@@ -797,7 +946,7 @@ class Plugin(AardwolfBasePlugin):
   # return the item worn at a specified location
   def api_getworn(self, location):
     """
-    get the item that is worn at location
+    get the item that is worn at a location
     """
     try:
       int(location)
@@ -834,6 +983,7 @@ class Plugin(AardwolfBasePlugin):
     self.cmdqueue.resetqueue()
 
   def cmd_refresh(self, args):
+    #pylint: disable=unused-argument
     """
     refresh eq
     """
@@ -861,7 +1011,7 @@ class Plugin(AardwolfBasePlugin):
   # get a container
   def api_getcontainer(self, container):
     """
-    get an item from the cache
+    get a container
     """
     try:
       container = int(container)
@@ -951,7 +1101,6 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.afterfirstactive(self)
     for container in self.containers:
-      print 'refreshing %s' % container
       self.containers[container].refresh()
 
   def dead(self, _):
@@ -984,7 +1133,7 @@ class Plugin(AardwolfBasePlugin):
     """
     find and item by serial or identifier
     """
-    if type(item) == Item:
+    if isinstance(item, Item):
       return item
 
     try:
@@ -1043,14 +1192,16 @@ class Plugin(AardwolfBasePlugin):
       self.api_putincontainer(item, destination)
 
     else:
-      args = '%s %s' % (item,
-              ' '.join(['%s' % self.find_item(x) for x in args['otherargs']]))
+      args = '%s %s' % \
+        (item,
+         ' '.join(['%s' % self.find_item(x) for x in args['otherargs']]))
       self.api.get('send.msg')('sending \'put %s\'' % args)
       self.api.get('send.execute')('put %s %s' % (item, args))
 
     return True, []
 
   def checkvaliditem(self, item):
+    #pylint: disable=no-self-use
     """
     check to see if an item is valid
     """
@@ -1072,7 +1223,7 @@ class Plugin(AardwolfBasePlugin):
     if data['serial'] in self.itemcache:
       self.itemcache[data['serial']].upditem(data)
     else:
-      titem = Item(data)
+      titem = Item(data, plugin=self)
       self.itemcache[titem.serial] = titem
     #self.api.get('send.msg')('invitem parsed item: %s' % titem)
 
@@ -1103,6 +1254,7 @@ class Plugin(AardwolfBasePlugin):
       return True, ["container %s does not exist" % container]
 
   def invmon(self, args):
+    #pylint: disable=too-many-branches,too-many-statements
     """
     do the appropriate action when seeing an invmon message
     """
@@ -1176,7 +1328,6 @@ class Plugin(AardwolfBasePlugin):
     elif action == 9:
     # put into vault
       self.containers['Vault'].add(serial)
-      pass
     elif action == 10:
     # take from vault
       self.containers['Vault'].remove(serial)
