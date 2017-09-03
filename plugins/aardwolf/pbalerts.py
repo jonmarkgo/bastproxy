@@ -28,10 +28,10 @@ class Plugin(AardwolfBasePlugin):
     initialize the instance
     """
     AardwolfBasePlugin.__init__(self, *args, **kwargs)
-    self.api.get('dependency.add')('utils.pb')
-    self.api.get('dependency.add')('aardwolf.gq')
-    self.api.get('dependency.add')('aardwolf.quest')
-    self.api.get('dependency.add')('aardwolf.iceage')
+    self.api('dependency.add')('utils.pb')
+    self.api('dependency.add')('aardwolf.gq')
+    self.api('dependency.add')('aardwolf.quest')
+    self.api('dependency.add')('aardwolf.iceage')
 
     self.evmap = {}
     self.evmap['quests'] = {'event':'aard_quest_ready',
@@ -49,7 +49,6 @@ class Plugin(AardwolfBasePlugin):
     self.evmap['daily'] = {'event':'aard_daily_available',
                             'function':self._daily,
                             'help':'flag for sending alerts for daily blessing'}
-
 
 
   def load(self):
@@ -87,50 +86,50 @@ class Plugin(AardwolfBasePlugin):
     """
     send a pushbullet note that a gq has been declared
     """
-    proxy = self.api.get('managers.getm')('proxy')
+    proxy = self.api('managers.getm')('proxy')
     times = time.asctime(time.localtime())
     msg = '%s:%s - A GQuest has been declared for levels %s to %s. (%s)' % (
               proxy.host, proxy.port,
               args['lowlev'], args['highlev'], times)
-    self.api.get('pb.note')('New GQuest', msg)
+    self.api('pb.note')('New GQuest', msg)
 
   def _quest(self, _=None):
     """
     send an pushbullet note that it is time to quest
     """
-    proxy = self.api.get('managers.getm')('proxy')
+    proxy = self.api('managers.getm')('proxy')
     times = time.asctime(time.localtime())
     msg = '%s:%s - Time to quest! (%s)' % (
               proxy.host, proxy.port, times)
-    self.api.get('pb.note')('Quest Time', msg)
+    self.api('pb.note')('Quest Time', msg)
 
   def _iceage(self, _=None):
     """
     send an pushbullet note that an iceage approaches
     """
-    proxy = self.api.get('managers.getm')('proxy')
+    proxy = self.api('managers.getm')('proxy')
     times = time.asctime(time.localtime())
     msg = '%s:%s - An ice age approaches! (%s)' % (
               proxy.host, proxy.port, times)
-    self.api.get('pb.note')('Ice Age', msg)
+    self.api('pb.note')('Ice Age', msg)
 
   def _reboot(self, _=None):
     """
     send an pushbullet note that Aardwolf is rebooting
     """
-    proxy = self.api.get('managers.getm')('proxy')
+    proxy = self.api('managers.getm')('proxy')
     times = time.asctime(time.localtime())
     msg = '%s:%s - Aardwolf is rebooting (%s)' % (
               proxy.host, proxy.port, times)
-    self.api.get('pb.note')('Reboot', msg)
+    self.api('pb.note')('Reboot', msg)
 
   def _daily(self, _=None):
     """
     send a pushbullet note when daily blessing is available
     """
     self.api('send.msg')('got daily blessing event')
-    proxy = self.api.get('managers.getm')('proxy')
+    proxy = self.api('managers.getm')('proxy')
     times = time.asctime(time.localtime())
     msg = '%s:%s - Daily blessing is available (%s)' % (
               proxy.host, proxy.port, times)
-    self.api.get('pb.note')('Daily Blessing', msg)
+    self.api('pb.note')('Daily Blessing', msg)
