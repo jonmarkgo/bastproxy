@@ -33,21 +33,59 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('dependency.add')('aardwolf.quest')
     self.api.get('dependency.add')('aardwolf.iceage')
 
+    self.evmap = {}
+    self.evmap['quests'] = {'event':'aard_quest_ready',
+                            'function':self._quest,
+                            'help':'flag for sending alerts for quests'}
+    self.evmap['gqs'] = {'event':'aard_gq_declared',
+                            'function':self._gqdeclared,
+                            'help':'flag for sending alerts for gqs'}
+    self.evmap['iceage'] = {'event':'aard_iceage',
+                            'function':self._iceage,
+                            'help':'flag for sending alerts for an ice age'}
+    self.evmap['reboot'] = {'event':'aard_reboot',
+                            'function':self._reboot,
+                            'help':'flag for sending alerts for a reboot'}
+    self.evmap['daily'] = {'event':'aard_daily_available',
+                            'function':self._daily,
+                            'help':'flag for sending alerts for daily blessing'}
+
+
+
   def load(self):
     """
     load the plugins
     """
     AardwolfBasePlugin.load(self)
 
-    self.api.get('events.register')('aard_gq_declared', self._gqdeclared)
-    self.api.get('events.register')('aard_quest_ready', self._quest)
-    self.api.get('events.register')('aard_iceage', self._iceage)
-    self.api.get('events.register')('aard_reboot', self._reboot)
-    self.api.get('events.register')('aard_daily_available', self._daily)
+    for tevent in self.evmap.keys():
+      self.api('setting.add')(tevent, True, bool,
+                                self.evmap[tevent]['help'])
+
+      tbool = self.api('setting.gets')(tevent)
+      if tbool:
+        self.api('events.register')(self.evmap[tevent]['event'],
+                                        self.evmap[tevent]['function'])
+
+      self.api('events.register')('var_pbalerts_%s' % tevent, self.varchange)
+
+  def varchange(self, args):
+    """
+    unregister events
+    """
+    tevent = args['var']
+    tbool = self.api('setting.gets')(tevent)
+
+    if tbool:
+      self.api('events.register')(self.evmap[tevent]['event'],
+                                      self.evmap[tevent]['function'])
+    else:
+      self.api('events.unregister')(self.evmap[tevent]['event'],
+                                      self.evmap[tevent]['function'])
 
   def _gqdeclared(self, args):
     """
-    send an pushbullet note that a gq has been declared
+    send a pushbullet note that a gq has been declared
     """
     proxy = self.api.get('managers.getm')('proxy')
     times = time.asctime(time.localtime())
