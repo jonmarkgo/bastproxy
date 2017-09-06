@@ -189,7 +189,6 @@ class Plugin(AardwolfBasePlugin):
       self.currentitem['leadsto'] = item.strip()
     elif 'Affect Mods' in data:
       self.affectmods = True
-      print 'Affect Mods', data
       item = data.split(':')[1]
       item = item.replace('@W', '')
       item = item.replace('@w', '')
@@ -237,6 +236,9 @@ class Plugin(AardwolfBasePlugin):
     self.api.get('events.eraise')('itemid_%s' % self.currentitem['serial'],
                             {'item':self.api.get('eq.getitem')(
 				      self.currentitem['serial'])})
+    self.api.get('events.eraise')('itemid_all' % self.currentitem['serial'],
+                            {'item':self.api.get('eq.getitem')(
+                                      self.currentitem['serial'])})
     ### Get the item from eq and update it
 
   # identify an item
