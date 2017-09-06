@@ -21,8 +21,8 @@ def convert(tinput):
     return [convert(element) for element in tinput]
   elif isinstance(tinput, unicode):
     return tinput.encode('utf-8')
-  else:
-    return tinput
+
+  return tinput
 
 def convertkeystoint(tdict):
   """
@@ -149,8 +149,8 @@ class PersistentDict(dict):
           tstuff = loader(fileobj, object_hook=convert)
           nstuff = convertkeystoint(tstuff)
           return self.update(nstuff)
-        else:
-          return self.update(loader(fileobj))
+
+        return self.update(loader(fileobj))
       except Exception:  # pylint: disable=broad-except
         #if not ('log' in self.filename):
         #  api('send.traceback')("Error when loading %s" % loader)

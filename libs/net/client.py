@@ -148,4 +148,3 @@ class Client(Telnet):
     self.api('events.eraise')('client_disconnected', {'client':self})
     self.api('events.unregister')('to_client_event', self.addtooutbuffer)
     Telnet.handle_close(self)
-

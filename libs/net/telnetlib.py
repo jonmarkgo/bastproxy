@@ -506,4 +506,3 @@ class Telnet(asyncore.dispatcher):
     self.eof = (not buf)
     self.rawq = self.rawq + buf
     self.msg('rawq', self.rawq)
-

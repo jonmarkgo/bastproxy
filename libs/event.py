@@ -26,4 +26,3 @@ class Event(object):
     return a string representation of the timer
     """
     return 'Event %-10s : %-15s' % (self.name, self.plugin)
-

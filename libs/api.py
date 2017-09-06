@@ -124,8 +124,8 @@ class API(object):
     this function returns the manager instance"""
     if name in self.MANAGERS:
       return self.MANAGERS[name]
-    else:
-      return None
+
+    return None
 
   # add a manager
   def addmanager(self, name, manager):
@@ -375,4 +375,3 @@ def test():
 
 if __name__ == '__main__':
   test()
-
