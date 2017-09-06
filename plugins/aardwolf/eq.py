@@ -724,6 +724,8 @@ class Vault(EqContainer):
       msg.append(
         "Including keep flagged items, you have @Y%s@w items in your vault." % \
           (self.itemtotal))
+
+    msg.append("")
     return "\n".join(msg)
 
   def build(self, args):
