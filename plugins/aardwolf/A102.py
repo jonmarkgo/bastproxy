@@ -74,8 +74,8 @@ class Plugin(BasePlugin):
 
     self.reconnecting = False
 
-    self.api.get('api.add')('sendpacket', self.api_sendpacket)
-    self.api.get('api.add')('toggle', self.api_toggle)
+    self.api('api.add')('sendpacket', self.api_sendpacket)
+    self.api('api.add')('toggle', self.api_toggle)
 
   def load(self):
     """
@@ -83,13 +83,13 @@ class Plugin(BasePlugin):
     """
     BasePlugin.load(self)
 
-    self.api.get('events.register')('A102_from_server', self.a102fromserver)
-    self.api.get('events.register')('A102_from_client', self.a102fromclient)
-    self.api.get('events.register')('A102:server-enabled', self.a102request)
-    self.api.get('events.register')('muddisconnect', self.disconnect)
+    self.api('events.register')('A102_from_server', self.a102fromserver)
+    self.api('events.register')('A102_from_client', self.a102fromclient)
+    self.api('events.register')('A102:server-enabled', self.a102request)
+    self.api('events.register')('muddisconnect', self.disconnect)
 
-    self.api.get('options.addserveroption')(self.sname, SERVER)
-    self.api.get('options.addclientoption')(self.sname, CLIENT)
+    self.api('options.addserveroption')(self.sname, SERVER)
+    self.api('options.addclientoption')(self.sname, CLIENT)
 
   # Send an A102 packet
   def api_sendpacket(self, message):
@@ -99,9 +99,7 @@ class Plugin(BasePlugin):
     Format: IAC SB A102 <atcp message text> IAC SE
 
     this function returns no values"""
-    from libs.api import API
-    api = API()
-    api.get('events.eraise')('to_mud_event', {'data':'%s%s%s%s%s%s' % \
+    self.api('events.eraise')('to_mud_event', {'data':'%s%s%s%s%s%s' % \
           (IAC, SB, A102, message.replace(IAC, IAC+IAC), IAC, SE),
           'raw':True, 'dtype':A102})
 
@@ -109,7 +107,7 @@ class Plugin(BasePlugin):
     """
     this function is registered with the muddisconnect hook
     """
-    self.api.get('send.msg')('setting reconnect to true')
+    self.api('send.msg')('setting reconnect to true')
     self.reconnecting = True
 
   # toggle an a102 option
@@ -139,33 +137,33 @@ class Plugin(BasePlugin):
     if mstate:
       mstate = 1
       if self.optionstates[aoption] == 0:
-        self.api.get('send.msg')('Enabling A102 option: %s' % \
+        self.api('send.msg')('Enabling A102 option: %s' % \
                                               AOPTIONREV[aoption])
         cmd = '%s%s' % (chr(aoption), ON)
-        self.api.get('A102.sendpacket')(cmd)
+        self.api('A102.sendpacket')(cmd)
       self.optionstates[aoption] = self.optionstates[aoption] + 1
 
     else:
       mstate = 2
       self.optionstates[aoption] = self.optionstates[aoption] - 1
       if self.optionstates[aoption] == 0:
-        self.api.get('send.msg')('Disabling A102 option: %s' % \
+        self.api('send.msg')('Disabling A102 option: %s' % \
                                               AOPTIONREV[aoption])
         cmd = '%s%s' % (chr(aoption), OFF)
-        self.api.get('A102.sendpacket')(cmd)
+        self.api('A102.sendpacket')(cmd)
 
   def a102fromserver(self, args):
     """
     handle stuff from the server
     """
-    self.api.get('events.eraise')('A102', args)
-    self.api.get('events.eraise')('A102:%s' % args['option'], args)
+    self.api('events.eraise')('A102', args)
+    self.api('events.eraise')('A102:%s' % args['option'], args)
 
   def a102request(self, _=None):
     """
     this function is called when the a102 option is enabled
     """
-    self.api.get('send.msg')('cleaning a102 queues')
+    self.api('send.msg')('cleaning a102 queues')
     if not self.reconnecting:
       for i in self.a102optionqueue:
         self.a102toggleoption(i['option'], i['toggle'])
@@ -174,21 +172,21 @@ class Plugin(BasePlugin):
       for i in self.optionstates:
         tnum = self.optionstates[i]
         if tnum > 0:
-          self.api.get('send.msg')('Re-Enabling A102 option: %s' % \
+          self.api('send.msg')('Re-Enabling A102 option: %s' % \
                                                     AOPTIONREV[i])
           cmd = '%s%s' % (i, 1)
-          self.api.get('A102.sendpacket')(cmd)
+          self.api('A102.sendpacket')(cmd)
         else:
-          self.api.get('send.msg')('Re-Disabling A102 option: %s' % \
+          self.api('send.msg')('Re-Disabling A102 option: %s' % \
                                                     AOPTIONREV[i])
           cmd = '%s%s' % (i, 2)
-          self.api.get('A102.sendpacket')(cmd)
+          self.api('A102.sendpacket')(cmd)
 
   def a102fromclient(self, args):
     """
     this function is called when we receive an a102 option from the client
     """
-    proxy = self.api.get('managers.getm')('proxy')
+    proxy = self.api('managers.getm')('proxy')
     data = args['data']
     option = ord(data[0])
     mstate = ord(data[1])
@@ -223,13 +221,13 @@ class SERVER(BaseTelnetOption):
       self.telnetobj.msg('A102: sending IAC DO A102', level=2, mtype='A102')
       self.telnetobj.send(IAC + DO + A102)
       self.telnetobj.options[ord(A102)] = True
-      self.api.get('events.eraise')('A102:server-enabled', {})
+      self.api('events.eraise')('A102:server-enabled', {})
 
     elif command == SE:
       if not self.telnetobj.options[ord(A102)]:
         print '##BUG: Enabling A102, missed negotiation'
         self.telnetobj.options[ord(A102)] = True
-        self.api.get('events.eraise')('A102:server-enabled', {})
+        self.api('events.eraise')('A102:server-enabled', {})
 
       tdata = {}
       tdata['option'] = ord(sbdata[0])
@@ -237,11 +235,11 @@ class SERVER(BaseTelnetOption):
       tdata['server'] = self.telnetobj
       self.telnetobj.msg('A102: got %s,%s from server' % \
               (tdata['option'], tdata['flag']), level=2, mtype='A102')
-      self.api.get('events.eraise')('to_client_event',
+      self.api('events.eraise')('to_client_event',
                   {'original':'%s%s%s%s%s%s' % (IAC, SB, A102,
                   sbdata.replace(IAC, IAC+IAC), IAC, SE),
                   'raw':True, 'dtype':A102})
-      self.api.get('events.eraise')('A102_from_server', tdata)
+      self.api('events.eraise')('A102_from_server', tdata)
 
 # Client
 class CLIENT(BaseTelnetOption):
@@ -266,6 +264,6 @@ class CLIENT(BaseTelnetOption):
       self.telnetobj.msg('A102:setting options[A102] to True', mtype='A102')
       self.telnetobj.options[ord(A102)] = True
     elif command == SE:
-      self.api.get('events.eraise')('A102_from_client',
+      self.api('events.eraise')('A102_from_client',
                                 {'data': sbdata, 'client':self.telnetobj})
 
