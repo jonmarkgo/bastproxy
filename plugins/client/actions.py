@@ -8,6 +8,7 @@ seen from the mud
   [Python Regular Expression HOWTO](https://docs.python.org/2/howto/regex.html)
   * The action can use trigger groups
 """
+# TODO: change this to use the underlying mechanisms in triggers
 import re
 import argparse
 import os
@@ -46,9 +47,6 @@ class Plugin(BasePlugin):
 
     self.saveactionsfile = os.path.join(self.savedir, 'actions.txt')
     self.actions = PersistentDict(self.saveactionsfile, 'c')
-
-    for i in self.actions:
-      self.compiledregex[i] = re.compile(self.actions[i]['regex'])
 
   def load(self):
     """
@@ -121,9 +119,15 @@ class Plugin(BasePlugin):
                         help='the action to toggle',
                         default='',
                         nargs='?')
+    action = parser.add_mutually_exclusive_group()
+    action.add_argument('-t', '--toggle', action='store_const', dest='togact', const='toggle', default='toggle', help='toggle the action')
+    action.add_argument('-d', '--disable', action='store_const', dest='togact', const='disable', help='disable the action')
+    action.add_argument('-e', '--enable', action='store_const', dest='togact', const='enable', help='enable the action')
+
     self.api.get('commands.add')('toggle',
                                  self.cmd_toggle,
                                  parser=parser)
+
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='get detail for an action')
@@ -141,20 +145,59 @@ class Plugin(BasePlugin):
                         help='the group to toggle',
                         default='',
                         nargs='?')
-    parser.add_argument('-d',
-                        "--disable",
-                        help="disable the group",
-                        action="store_true")
+    action = parser.add_mutually_exclusive_group()
+    action.add_argument('-t', '--toggle', action='store_const', dest='togact', const='toggle', default='toggle', help='toggle the action')
+    action.add_argument('-d', '--disable', action='store_const', dest='togact', const='disable', help='disable the action')
+    action.add_argument('-e', '--enable', action='store_const', dest='togact', const='enable', help='enable the action')
     self.api.get('commands.add')('groupt',
                                  self.cmd_grouptoggle,
                                  parser=parser)
 
-    #self.api.get('commands.add')('stats', self.cmd_stats,
-    #                             shelp='show action stats')
+    for action in self.actions.values():
+      self.register_action(action)
 
-    self.api.get('events.register')('from_mud_event',
-                                    self.checkactions, prio=5)
 #    self.api.get('events.register')('plugin_stats', self.getpluginstats)
+
+  def register_action(self, action):
+    """
+    register an action as a trigger
+    """
+    if 'triggername' not in action:
+      action['triggername'] = "action_%s" % action['num']
+    self.api.get('triggers.add')(action['triggername'],
+                    action['regex'])
+    self.api.get('events.register')('trigger_%s' % action['triggername'],
+                                    self.action_matched)
+
+  def unregister_action(self, action):
+    """
+    unregister an action
+    """
+    self.api.get('events.unregister')('trigger_%s' % action['triggername'],
+                                     self.action_matched)
+    self.api.get('triggers.remove')(action['triggername'])
+
+  def action_matched(self, args):
+    """
+    do something when an action is matched
+    """
+    actionnum = int(args['triggername'].split('_')[-1])
+    action = self.lookup_action(actionnum)
+    if action:
+      akey = action['regex']
+      if akey not in self.sessionhits:
+        self.sessionhits[akey] = 0
+      self.sessionhits[akey] = self.sessionhits[akey] + 1
+      action['hits'] = action['hits'] + 1
+      self.api.get('send.msg')('matched line: %s to action %s' % (args['line'],
+                                                                  akey))
+      templ = Template(action['action'])
+      newaction = templ.safe_substitute(args)
+      sendtype = 'send.' + action['send']
+      self.api.get('send.msg')('sent %s to %s' % (newaction, sendtype))
+      self.api.get(sendtype)(newaction)
+    else:
+      self.api.get('send.error')("Bug: could not find action for trigger %s" % args['triggername'])
 
   def lookup_action(self, action):
     """
@@ -166,7 +209,7 @@ class Plugin(BasePlugin):
       nitem = None
       for titem in self.actions.keys():
         if num == self.actions[titem]['num']:
-          nitem = titem
+          nitem = self.actions[titem]
           break
 
     except ValueError:
@@ -174,40 +217,6 @@ class Plugin(BasePlugin):
         nitem = action
 
     return nitem
-
-  @timeit
-  def checkactions(self, args):
-    """
-    check a line of text from the mud
-    the is called whenever the from_mud_event is raised
-    """
-    data = args['noansi']
-    colordata = args['convertansi']
-
-    for i in self.actions:
-      if self.actions[i]['enabled']:
-        trigre = self.compiledregex[i]
-        datatomatch = data
-        if 'matchcolor' in self.actions[i] and \
-            self.actions[i]['matchcolor']:
-          datatomatch = colordata
-        mat = trigre.match(datatomatch)
-        self.api.get('send.msg')('attempting to match %s' % datatomatch)
-        if mat:
-          if i in self.sessionhits:
-            self.sessionhits[i] = 0
-          self.sessionhits[i] = self.sessionhits[i] + 1
-          if 'hits' in self.actions[i]:
-            self.actions[i]['hits'] = 0
-          self.actions[i]['hits'] = self.actions[i]['hits'] + 1
-          self.api.get('send.msg')('matched line: %s to action %s' % (data, i))
-          templ = Template(self.actions[i]['action'])
-          newaction = templ.safe_substitute(mat.groupdict())
-          sendtype = 'send.' + self.actions[i]['send']
-          self.api.get('send.msg')('sent %s to %s' % (newaction, sendtype))
-          self.api.get(sendtype)(newaction)
-
-    return args
 
   def cmd_add(self, args):
     """
@@ -230,17 +239,19 @@ class Plugin(BasePlugin):
         self.api.get('setting.change')('nextnum', num + 1)
 
       self.actions[args['regex']] = {
-          'num': num,
-          'regex':args['regex'],
+          'num':num,
+          'hits':0,
+          'regex': args['regex'],
           'action':args['action'],
           'send':args['send'],
           'matchcolor':args['color'],
           'enabled':not args['disable'],
-          'group':args['group']
+          'group':args['group'],
+          'triggername':"action_%s" % num
       }
       self.actions.sync()
 
-      self.compiledregex[args['regex']] = re.compile(args['regex'])
+      self.register_action(self.actions[args['regex']])
 
       return True, ['added action %s - regex: %s' % (num, args['regex'])]
 
@@ -279,13 +290,20 @@ class Plugin(BasePlugin):
     toggle the enabled flag
     """
     tmsg = []
+
+    if args['togact'] == 'disable':
+      state = False
+    elif args['togact'] == 'enable':
+      state = True
+    else:
+      state = "toggle"
     if args['action']:
-      retval = self.toggleaction(args['action'])
-      if retval:
-        if self.actions[retval]['enabled']:
-          tmsg.append("@GEnabled action@w : '%s'" % (retval))
+      action = self.toggleaction(args['action'], flag=state)
+      if action:
+        if action['enabled']:
+          tmsg.append("@GEnabled action@w : '%s'" % (action['num']))
         else:
-          tmsg.append("@GDisabled action@w : '%s'" % (retval))
+          tmsg.append("@GDisabled action@w : '%s'" % (action['num']))
       else:
         tmsg.append("@GDoes not exist@w : '%s'" % (args['action']))
       return True, tmsg
@@ -299,11 +317,16 @@ class Plugin(BasePlugin):
     """
     tmsg = []
     togglea = []
-    state = not args['disable']
+    if args['togact'] == 'disable':
+      state = False
+    elif args['togact'] == 'enable':
+      state = True
+    else:
+      state = "toggle"
     if args['group']:
       for i in self.actions:
         if self.actions[i]['group'] == args['group']:
-          self.actions[i]['enabled'] = state
+          action = self.toggleaction(self.actions[i]['num'], flag=state)
           togglea.append('%s' % self.actions[i]['num'])
 
       if togglea:
@@ -320,32 +343,33 @@ class Plugin(BasePlugin):
   def cmd_detail(self, args):
     """
     @G%(name)s@w - @B%(cmdname)s@w
-      Add a action
-      @CUsage@w: add @Y<originalstring>@w @M<replacementstring>@w
-        @Yoriginalstring@w    = The original string to be replaced
-        @Mreplacementstring@w = The new string
+      get details of an action
+      @CUsage@w: detail 1
+        @Yaction@w    = the action to get details, either the number or regex
     """
     tmsg = []
     if args['action']:
       action = self.lookup_action(args['action'])
       if action:
-        if 'hits' in self.actions[action]:
-          self.actions[action]['hits'] = 0
-        if action in self.sessionhits:
-          self.sessionhits[action] = 0
-        tmsg.append('%-12s : %d' % ('Num', self.actions[action]['num']))
+        if 'hits' not in action:
+          action['hits'] = 0
+        if action['regex'] not in self.sessionhits:
+          self.sessionhits[action['regex']] = 0
+        tmsg.append('%-12s : %d' % ('Num', action['num']))
         tmsg.append('%-12s : %s' % \
-            ('Enabled', 'Y' if self.actions[action]['enabled'] else 'N'))
+            ('Enabled', 'Y' if action['enabled'] else 'N'))
         tmsg.append('%-12s : %d' % ('Total Hits',
-                                    self.actions[action]['hits']))
-        tmsg.append('%-12s : %d' % ('Session Hits', self.sessionhits[action]))
-        tmsg.append('%-12s : %s' % ('Regex', self.actions[action]['regex']))
-        tmsg.append('%-12s : %s' % ('Action', self.actions[action]['action']))
-        tmsg.append('%-12s : %s' % ('Group', self.actions[action]['group']))
+                                    action['hits']))
+        tmsg.append('%-12s : %d' % ('Session Hits', self.sessionhits[action['regex']]))
+        tmsg.append('%-12s : %s' % ('Regex', action['regex']))
+        tmsg.append('%-12s : %s' % ('Action', action['action']))
+        tmsg.append('%-12s : %s' % ('Group', action['group']))
         tmsg.append('%-12s : %s' % ('Match Color',
-                                    self.actions[action]['matchcolor']))
+                                    action['matchcolor']))
+        tmsg.append('%-12s : %s' % ('Trigger Name',
+                                    action['triggername']))
       else:
-        return True, ['@RAction does not exits@w : \'%s\'' % (args['action'])]
+        return True, ['@RAction does not exist@w : \'%s\'' % (args['action'])]
 
       return True, tmsg
     else:
@@ -353,7 +377,7 @@ class Plugin(BasePlugin):
 
   def listactions(self, match):
     """
-    return a table of strings that list actiones
+    return a table of strings that list actions
     """
     tmsg = []
     for action in sorted(self.actions.keys()):
@@ -385,20 +409,28 @@ class Plugin(BasePlugin):
     internally remove a action
     """
     action = self.lookup_action(item)
-    print 'lookup_action', item, 'returned', action
-    if action >= 0:
-      del self.actions[action]
+
+    if action and action['regex'] in self.actions:
+      self.unregister_action(action)
+      del self.actions[action['regex']]
       self.actions.sync()
 
     return action
 
-  def toggleaction(self, item):
+  def toggleaction(self, item, flag="toggle"):
     """
     toggle an action
     """
     action = self.lookup_action(item)
     if action:
-      self.actions[action]['enabled'] = not self.actions[action]['enabled']
+      if flag == "toggle":
+        action['enabled'] = not action['enabled']
+      else:
+        action['enabled'] = bool(flag)
+      if action['enabled']:
+        self.register_action(action)
+      else:
+        self.unregister_action(action)
 
     return action
 
@@ -406,6 +438,9 @@ class Plugin(BasePlugin):
     """
     clear all actiones
     """
+    for action in self.actions.values():
+      self.unregister_action(action)
+
     self.actions.clear()
     self.actions.sync()
 
