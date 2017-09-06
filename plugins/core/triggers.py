@@ -78,8 +78,6 @@ class Plugin(BasePlugin):
     """
     a plugin was unloaded
     """
-    self.api('send.msg')('removing triggers for plugin %s' % args['name'],
-                         secondary=args['name'])
     self.api('%s.removeplugin' % self.sname)(args['name'])
 
   # add a trigger
@@ -128,6 +126,7 @@ class Plugin(BasePlugin):
       args['argtypes'] = {}
     args['plugin'] = plugin
     args['hits'] = 0
+    args['triggername'] = triggername
     try:
       self.triggers[triggername] = args
       self.triggers[triggername]['compiled'] = re.compile(args['regex'])
@@ -197,10 +196,7 @@ class Plugin(BasePlugin):
     this function returns no values"""
     self.api.get('send.msg')('removing triggers for plugin %s' % plugin,
                              secondary=plugin)
-    tkeys = self.triggers.keys()
-    for i in tkeys:
-      if self.triggers[i]['plugin'] == plugin:
-        self.api.get('triggers.remove')(i)
+    [self.api.get('triggers.remove')(i['triggername']) for i in self.triggers.values() if i['plugin'] == plugin]
 
   # toggle a trigger
   def api_toggle(self, triggername, flag):
@@ -263,29 +259,29 @@ class Plugin(BasePlugin):
     else:
       triggers = sorted(self.triggers,
                         key=lambda item: self.triggers[item]['priority'])
-      for i in triggers:
+      enabledt = [trig for trig in triggers if self.triggers[trig]['enabled']]
+      for i in enabledt:
         if i in self.triggers:
-          if self.triggers[i]['enabled']:
-            trigre = self.triggers[i]['compiled']
-            if 'matchcolor' in self.triggers[i] \
-                and self.triggers[i]['matchcolor']:
-              mat = trigre.match(colordata)
-            else:
-              mat = trigre.match(data)
-            if mat:
-              targs = mat.groupdict()
-              if 'argtypes' in self.triggers[i]:
-                for arg in self.triggers[i]['argtypes']:
-                  if arg in targs:
-                    targs[arg] = self.triggers[i]['argtypes'][arg](targs[arg])
-              targs['line'] = data
-              targs['colorline'] = colordata
-              targs['triggername'] = i
-              self.triggers[i]['hits'] = self.triggers[i]['hits'] + 1
-              args = self.raisetrigger(i, targs, args)
-              if i in self.triggers:
-                if self.triggers[i]['stopevaluating']:
-                  break
+          trigre = self.triggers[i]['compiled']
+          if 'matchcolor' in self.triggers[i] \
+              and self.triggers[i]['matchcolor']:
+            mat = trigre.match(colordata)
+          else:
+            mat = trigre.match(data)
+          if mat:
+            targs = mat.groupdict()
+            if 'argtypes' in self.triggers[i]:
+              for arg in self.triggers[i]['argtypes']:
+                if arg in targs:
+                  targs[arg] = self.triggers[i]['argtypes'][arg](targs[arg])
+            targs['line'] = data
+            targs['colorline'] = colordata
+            targs['triggername'] = i
+            self.triggers[i]['hits'] = self.triggers[i]['hits'] + 1
+            args = self.raisetrigger(i, targs, args)
+            if i in self.triggers:
+              if self.triggers[i]['stopevaluating']:
+                break
 
     self.raisetrigger('all', {'line':data, 'triggername':'all'}, args)
     time2 = time.time()
