@@ -8,7 +8,6 @@ seen from the mud
   [Python Regular Expression HOWTO](https://docs.python.org/2/howto/regex.html)
   * The action can use trigger groups
 """
-# TODO: change this to use the underlying mechanisms in triggers
 import re
 import argparse
 import os
@@ -54,7 +53,7 @@ class Plugin(BasePlugin):
     """
     BasePlugin.load(self)
 
-    self.api.get('setting.add')('nextnum', 0, int,
+    self.api('setting.add')('nextnum', 0, int,
                                 'the number of the next action added',
                                 readonly=True)
 
@@ -72,7 +71,7 @@ class Plugin(BasePlugin):
                         help='where to send the action',
                         default='execute',
                         nargs='?',
-                        choices=self.api.get('api.getchildren')('send'))
+                        choices=self.api('api.getchildren')('send'))
     parser.add_argument('-c',
                         "--color",
                         help="match colors (@@colors)",
@@ -89,7 +88,7 @@ class Plugin(BasePlugin):
                         "--overwrite",
                         help="overwrite an action if it already exists",
                         action="store_true")
-    self.api.get('commands.add')('add',
+    self.api('commands.add')('add',
                                  self.cmd_add,
                                  parser=parser)
 
@@ -99,7 +98,7 @@ class Plugin(BasePlugin):
                         help='list only actions that have this argument in them',
                         default='',
                         nargs='?')
-    self.api.get('commands.add')('list',
+    self.api('commands.add')('list',
                                  self.cmd_list,
                                  parser=parser)
 
@@ -109,7 +108,7 @@ class Plugin(BasePlugin):
                         help='the action to remove',
                         default='',
                         nargs='?')
-    self.api.get('commands.add')('remove',
+    self.api('commands.add')('remove',
                                  self.cmd_remove,
                                  parser=parser)
 
@@ -120,11 +119,16 @@ class Plugin(BasePlugin):
                         default='',
                         nargs='?')
     action = parser.add_mutually_exclusive_group()
-    action.add_argument('-t', '--toggle', action='store_const', dest='togact', const='toggle', default='toggle', help='toggle the action')
-    action.add_argument('-d', '--disable', action='store_const', dest='togact', const='disable', help='disable the action')
-    action.add_argument('-e', '--enable', action='store_const', dest='togact', const='enable', help='enable the action')
-
-    self.api.get('commands.add')('toggle',
+    action.add_argument('-t', '--toggle', action='store_const',
+                        dest='togact', const='toggle',
+                        default='toggle', help='toggle the action')
+    action.add_argument('-d', '--disable', action='store_const',
+                        dest='togact', const='disable',
+                        help='disable the action')
+    action.add_argument('-e', '--enable', action='store_const',
+                        dest='togact', const='enable',
+                        help='enable the action')
+    self.api('commands.add')('toggle',
                                  self.cmd_toggle,
                                  parser=parser)
 
@@ -135,7 +139,7 @@ class Plugin(BasePlugin):
                         help='the action to get details for',
                         default='',
                         nargs='?')
-    self.api.get('commands.add')('detail',
+    self.api('commands.add')('detail',
                                  self.cmd_detail,
                                  parser=parser)
 
@@ -146,17 +150,23 @@ class Plugin(BasePlugin):
                         default='',
                         nargs='?')
     action = parser.add_mutually_exclusive_group()
-    action.add_argument('-t', '--toggle', action='store_const', dest='togact', const='toggle', default='toggle', help='toggle the action')
-    action.add_argument('-d', '--disable', action='store_const', dest='togact', const='disable', help='disable the action')
-    action.add_argument('-e', '--enable', action='store_const', dest='togact', const='enable', help='enable the action')
-    self.api.get('commands.add')('groupt',
+    action.add_argument('-t', '--toggle', action='store_const',
+                        dest='togact', const='toggle',
+                        default='toggle', help='toggle the action')
+    action.add_argument('-d', '--disable', action='store_const',
+                        dest='togact', const='disable',
+                        help='disable the action')
+    action.add_argument('-e', '--enable', action='store_const',
+                        dest='togact', const='enable',
+                        help='enable the action')
+    self.api('commands.add')('groupt',
                                  self.cmd_grouptoggle,
                                  parser=parser)
 
     for action in self.actions.values():
       self.register_action(action)
 
-#    self.api.get('events.register')('plugin_stats', self.getpluginstats)
+#    self.api('events.register')('plugin_stats', self.getpluginstats)
 
   def register_action(self, action):
     """
@@ -164,18 +174,18 @@ class Plugin(BasePlugin):
     """
     if 'triggername' not in action:
       action['triggername'] = "action_%s" % action['num']
-    self.api.get('triggers.add')(action['triggername'],
+    self.api('triggers.add')(action['triggername'],
                     action['regex'])
-    self.api.get('events.register')('trigger_%s' % action['triggername'],
+    self.api('events.register')('trigger_%s' % action['triggername'],
                                     self.action_matched)
 
   def unregister_action(self, action):
     """
     unregister an action
     """
-    self.api.get('events.unregister')('trigger_%s' % action['triggername'],
+    self.api('events.unregister')('trigger_%s' % action['triggername'],
                                      self.action_matched)
-    self.api.get('triggers.remove')(action['triggername'])
+    self.api('triggers.remove')(action['triggername'])
 
   def action_matched(self, args):
     """
@@ -189,15 +199,16 @@ class Plugin(BasePlugin):
         self.sessionhits[akey] = 0
       self.sessionhits[akey] = self.sessionhits[akey] + 1
       action['hits'] = action['hits'] + 1
-      self.api.get('send.msg')('matched line: %s to action %s' % (args['line'],
+      self.api('send.msg')('matched line: %s to action %s' % (args['line'],
                                                                   akey))
       templ = Template(action['action'])
       newaction = templ.safe_substitute(args)
       sendtype = 'send.' + action['send']
-      self.api.get('send.msg')('sent %s to %s' % (newaction, sendtype))
-      self.api.get(sendtype)(newaction)
+      self.api('send.msg')('sent %s to %s' % (newaction, sendtype))
+      self.api(sendtype)(newaction)
     else:
-      self.api.get('send.error')("Bug: could not find action for trigger %s" % args['triggername'])
+      self.api('send.error')("Bug: could not find action for trigger %s" % \
+                              args['triggername'])
 
   def lookup_action(self, action):
     """
@@ -235,8 +246,8 @@ class Plugin(BasePlugin):
       if args['regex'] in self.actions:
         num = self.actions[args['regex']]['num']
       else:
-        num = self.api.get('setting.gets')('nextnum')
-        self.api.get('setting.change')('nextnum', num + 1)
+        num = self.api('setting.gets')('nextnum')
+        self.api('setting.change')('nextnum', num + 1)
 
       self.actions[args['regex']] = {
           'num':num,
@@ -360,7 +371,8 @@ class Plugin(BasePlugin):
             ('Enabled', 'Y' if action['enabled'] else 'N'))
         tmsg.append('%-12s : %d' % ('Total Hits',
                                     action['hits']))
-        tmsg.append('%-12s : %d' % ('Session Hits', self.sessionhits[action['regex']]))
+        tmsg.append('%-12s : %d' % ('Session Hits',
+                                    self.sessionhits[action['regex']]))
         tmsg.append('%-12s : %s' % ('Regex', action['regex']))
         tmsg.append('%-12s : %s' % ('Action', action['action']))
         tmsg.append('%-12s : %s' % ('Group', action['group']))
@@ -383,10 +395,10 @@ class Plugin(BasePlugin):
     for action in sorted(self.actions.keys()):
       item = self.actions[action]
       if not match or match in item:
-        regex = self.api.get('colors.stripansi')(item['regex'])
+        regex = self.api('colors.stripansi')(item['regex'])
         if len(regex) > 30:
           regex = regex[:27] + '...'
-        action = self.api.get('colors.stripansi')(item['action'])
+        action = self.api('colors.stripansi')(item['action'])
         if len(action) > 30:
           action = action[:27] + '...'
         tmsg.append("%4s %2s  %-10s %-32s : %s@w" % \
