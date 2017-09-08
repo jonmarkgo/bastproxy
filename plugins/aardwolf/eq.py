@@ -153,52 +153,52 @@ class EqContainer(object):
     """
     this will be called before the the command
     """
-    self.api.get('triggers.add')('%sstart' % self.cid,
+    self.api('triggers.add')('%sstart' % self.cid,
                                  self.startregex,
                                  enabled=False, group='%sdata' % self.cid,
                                  omit=True)
 
-    self.api.get('triggers.add')('%send' % self.cid,
+    self.api('triggers.add')('%send' % self.cid,
                                  self.endregex,
                                  enabled=False, group='%sdata' % self.cid,
                                  omit=True)
 
-    self.api.get('events.register')('trigger_%sstart' % self.cid, self.datastart)
-    self.api.get('events.register')('trigger_%send' % self.cid, self.dataend)
+    self.api('events.register')('trigger_%sstart' % self.cid, self.datastart)
+    self.api('events.register')('trigger_%send' % self.cid, self.dataend)
 
-    self.api.get('send.msg')('enabling %sdata triggers' % self.cid)
-    self.api.get('triggers.togglegroup')('%sdata' % self.cid, True)
+    self.api('send.msg')('enabling %sdata triggers' % self.cid)
+    self.api('triggers.togglegroup')('%sdata' % self.cid, True)
 
-    if self.api.get('triggers.gett')('dataline'):
-      self.api.get('triggers.remove')('dataline', force=True)
+    if self.api('triggers.gett')('dataline'):
+      self.api('triggers.remove')('dataline', force=True)
 
-    self.api.get('triggers.add')('dataline',
+    self.api('triggers.add')('dataline',
                                  r"^\s*(\d+),(.*),(.+),(.+),(.+),(.+),(.+),(.+)$",
                                  enabled=True, group='dataline', omit=True)
 
-    self.api.get('events.register')('trigger_dataline', self.dataline,
+    self.api('events.register')('trigger_dataline', self.dataline,
                                     plugin=self.plugin.sname)
 
   def dataafter(self):
     """
     this will be called after the command
     """
-    self.api.get('send.msg')('disabling %sdata triggers' % self.cid)
-    self.api.get('triggers.togglegroup')('%sdata' % self.cid, False)
-    self.api.get('events.unregister')('trigger_dataline', self.dataline)
-    self.api.get('triggers.remove')('dataline')
+    self.api('send.msg')('disabling %sdata triggers' % self.cid)
+    self.api('triggers.togglegroup')('%sdata' % self.cid, False)
+    self.api('events.unregister')('trigger_dataline', self.dataline)
+    self.api('triggers.remove')('dataline')
 
-    self.api.get('events.unregister')('trigger_%sstart' % self.cid, self.datastart)
-    self.api.get('events.unregister')('trigger_%send' % self.cid, self.dataend)
+    self.api('events.unregister')('trigger_%sstart' % self.cid, self.datastart)
+    self.api('events.unregister')('trigger_%send' % self.cid, self.dataend)
 
-    self.api.get('triggers.remove')('%sstart' % self.cid)
-    self.api.get('triggers.remove')('%send' % self.cid)
+    self.api('triggers.remove')('%sstart' % self.cid)
+    self.api('triggers.remove')('%send' % self.cid)
 
   def datastart(self, args):
     """
     found beginning of data for this container
     """
-    self.api.get('send.msg')('found {invdata}: %s' % args)
+    self.api('send.msg')('found {invdata}: %s' % args)
     self.reset()
 
   def dataline(self, args):
@@ -207,17 +207,17 @@ class EqContainer(object):
     """
     line = args['colorline'].strip()
     if line != self.startregex:
-      #self.api.get('send.msg')('invdata args: %s' % args)
+      #self.api('send.msg')('invdata args: %s' % args)
       try:
-        attributes = self.api.get('itemu.dataparse')(line, 'eqdata')
+        attributes = self.api('itemu.dataparse')(line, 'eqdata')
         titem = Item(attributes, self.plugin)
         self.itemcache[titem.serial] = titem
-        #self.api.get('send.msg')('invdata parsed item: %s' % titem)
+        #self.api('send.msg')('invdata parsed item: %s' % titem)
         self.add(titem.serial)
         if titem.itype == 11 and titem.serial not in self.plugin.containers:
           self.plugin.containers[titem.serial] = EqContainer(self.plugin, titem.serial)
       except (IndexError, ValueError):
-        self.api.get('send.msg')('incorrect invdata line: %s' % line)
+        self.api('send.msg')('incorrect invdata line: %s' % line)
         self.api('send.traceback')()
 
   def dataend(self, args):
@@ -244,8 +244,8 @@ class EqContainer(object):
     if not args['noflags']:
       header.append('(')
       count = 0
-      flagaardcolors = self.api.get('itemu.itemflagscolors')()
-      for flag in self.api.get('itemu.itemflags')():
+      flagaardcolors = self.api('itemu.itemflagscolors')()
+      for flag in self.api('itemu.itemflags')():
         colour = flagaardcolors[flag]
         count = count + 1
         if count == 1:
@@ -278,7 +278,7 @@ class EqContainer(object):
     """
     build a container
     """
-    self.api.get('send.msg')('build_container args: %s' % args)
+    self.api('send.msg')('build_container args: %s' % args)
 
     msg = ['Items in %s:' % self.cid]
 
@@ -325,8 +325,8 @@ class EqContainer(object):
             sitem.append('(')
 
             count = 0
-            flagaardcolors = self.api.get('itemu.itemflagscolors')()
-            for flag in self.api.get('itemu.itemflags')():
+            flagaardcolors = self.api('itemu.itemflagscolors')()
+            for flag in self.api('itemu.itemflags')():
               aardcolour = flagaardcolors[flag]
               count = count + 1
               if flag in item.shortflags:
@@ -419,7 +419,7 @@ class Worn(EqContainer):
     """
     reset worn eq
     """
-    wearlocs = self.api.get('itemu.wearlocs')()
+    wearlocs = self.api('itemu.wearlocs')()
     self.items = []
     for dummy in xrange(0, len(wearlocs)):
       self.items.append(-1)
@@ -474,17 +474,17 @@ class Worn(EqContainer):
     """
     line = args['colorline'].strip()
     if line != self.startregex:
-      #self.api.get('send.msg')('invdata args: %s' % args)
+      #self.api('send.msg')('invdata args: %s' % args)
       try:
-        attributes = self.api.get('itemu.dataparse')(line, 'eqdata')
+        attributes = self.api('itemu.dataparse')(line, 'eqdata')
         titem = Item(attributes, plugin=self.plugin)
         self.itemcache[titem.serial] = titem
-        #self.api.get('send.msg')('invdata parsed item: %s' % titem)
+        #self.api('send.msg')('invdata parsed item: %s' % titem)
         self.add(titem.serial, titem.wearslot)
         if titem.itype == 11 and titem.serial not in self.plugin.containers:
           self.plugin.containers[titem.serial] = EqContainer(self.plugin, titem.serial)
       except (IndexError, ValueError):
-        self.api.get('send.msg')('incorrect invdata line: %s' % line)
+        self.api('send.msg')('incorrect invdata line: %s' % line)
         self.api('send.traceback')()
 
   def build_wornitem(self, item, wearloc, args):
@@ -494,7 +494,7 @@ class Worn(EqContainer):
     """
     sitem = []
 
-    wearlocs = self.api.get('itemu.wearlocs')()
+    wearlocs = self.api('itemu.wearlocs')()
 
     sitem.append('@G[@w')
 
@@ -513,8 +513,8 @@ class Worn(EqContainer):
       sitem.append('(')
 
       count = 0
-      flagaardcolors = self.api.get('itemu.itemflagscolors')()
-      for flag in self.api.get('itemu.itemflags')():
+      flagaardcolors = self.api('itemu.itemflagscolors')()
+      for flag in self.api('itemu.itemflags')():
         aardcolour = flagaardcolors[flag]
         count = count + 1
         if item.checkattr('shortflags') and flag in item.shortflags:
@@ -559,8 +559,8 @@ class Worn(EqContainer):
     emptyitem = Item({'cname':"@r< empty >@w", 'shortflags':"", 'level':'',
                       'serial':''}, plugin=self.plugin, loadfromdb=False)
 
-    wearlocs = self.api.get('itemu.wearlocs')()
-    self.api.get('send.msg')('build_worn args: %s' % args)
+    wearlocs = self.api('itemu.wearlocs')()
+    self.api('send.msg')('build_worn args: %s' % args)
     msg = ['You are using:']
     header = []
 
@@ -571,8 +571,8 @@ class Worn(EqContainer):
     if not args['noflags']:
       header.append('(')
       count = 0
-      flagaardcolors = self.api.get('itemu.itemflagscolors')()
-      for flag in self.api.get('itemu.itemflags')():
+      flagaardcolors = self.api('itemu.itemflagscolors')()
+      for flag in self.api('itemu.itemflags')():
         colour = flagaardcolors[flag]
         count = count + 1
         if count == 1:
@@ -693,12 +693,12 @@ class Vault(EqContainer):
     """
     EqContainer.databefore(self)
 
-    self.api.get('triggers.add')(
+    self.api('triggers.add')(
         '%scount' % self.cid,
         "^{vaultcounts}(?P<items>.*),(?P<totalitems>.*),(?P<maxitems>.*){/vaultcounts}$",
         omit=True)
 
-    self.api.get('events.register')('trigger_%scount' % self.cid, self.vaultcount)
+    self.api('events.register')('trigger_%scount' % self.cid, self.vaultcount)
 
   def vaultcount(self, args):
     """
@@ -709,9 +709,9 @@ class Vault(EqContainer):
     self.itemtotal = args['totalitems']
     self.itemmax = args['maxitems']
 
-    self.api.get('events.unregister')('trigger_%scount' % self.cid, self.vaultcount)
+    self.api('events.unregister')('trigger_%scount' % self.cid, self.vaultcount)
 
-    self.api.get('triggers.remove')('%scount' % self.cid, force=True)
+    self.api('triggers.remove')('%scount' % self.cid, force=True)
 
   def getitemcountmsg(self):
     """
@@ -768,18 +768,18 @@ class Plugin(AardwolfBasePlugin):
 
     self._dump_shallow_attrs.append('itemcache')
 
-    self.api.get('dependency.add')('aardwolf.itemu')
-    self.api.get('dependency.add')('cmdq')
+    self.api('dependency.add')('aardwolf.itemu')
+    self.api('dependency.add')('cmdq')
 
-    self.api.get('api.add')('getitem', self.api_getitem)
-    self.api.get('api.add')('getcontainer', self.api_getcontainer)
-    self.api.get('api.add')('get', self.api_putininventory)
-    self.api.get('api.add')('put', self.api_putincontainer)
-    self.api.get('api.add')('findname', self.api_findname)
-    self.api.get('api.add')('getworn', self.api_getworn)
-    self.api.get('api.add')('equip', self.api_equipitem)
-    self.api.get('api.add')('unequip', self.api_unequipitem)
-    self.api.get('api.add')('addidentify', self.api_addidentify)
+    self.api('api.add')('getitem', self.api_getitem)
+    self.api('api.add')('getcontainer', self.api_getcontainer)
+    self.api('api.add')('get', self.api_putininventory)
+    self.api('api.add')('put', self.api_putincontainer)
+    self.api('api.add')('findname', self.api_findname)
+    self.api('api.add')('getworn', self.api_getworn)
+    self.api('api.add')('equip', self.api_equipitem)
+    self.api('api.add')('unequip', self.api_unequipitem)
+    self.api('api.add')('addidentify', self.api_addidentify)
 
 
   def load(self):
@@ -800,7 +800,7 @@ class Plugin(AardwolfBasePlugin):
     parser.add_argument('-s', "--serial",
                         help="show serial, default False",
                         action="store_true")
-    self.api.get('commands.add')('eq',
+    self.api('commands.add')('eq',
                                  self.cmd_eq,
                                  parser=parser,
                                  format=False,
@@ -828,7 +828,7 @@ class Plugin(AardwolfBasePlugin):
                         "--nogroup",
                         help="don't group items, default False",
                         action="store_true")
-    self.api.get('commands.add')('inv',
+    self.api('commands.add')('inv',
                                  self.cmd_inv,
                                  parser=parser,
                                  format=False,
@@ -836,7 +836,7 @@ class Plugin(AardwolfBasePlugin):
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='refresh eq')
-    self.api.get('commands.add')('refresh',
+    self.api('commands.add')('refresh',
                                  self.cmd_refresh,
                                  parser=parser)
 
@@ -850,7 +850,7 @@ class Plugin(AardwolfBasePlugin):
                         help='the rest of the args',
                         default=[],
                         nargs='*')
-    self.api.get('commands.add')('get',
+    self.api('commands.add')('get',
                                  self.cmd_get,
                                  parser=parser,
                                  format=False,
@@ -866,7 +866,7 @@ class Plugin(AardwolfBasePlugin):
                         help='the rest of the args',
                         default=[],
                         nargs='*')
-    self.api.get('commands.add')('put',
+    self.api('commands.add')('put',
                                  self.cmd_put,
                                  parser=parser,
                                  format=False,
@@ -878,58 +878,58 @@ class Plugin(AardwolfBasePlugin):
                         help='the item to show',
                         default='',
                         nargs='?')
-    self.api.get('commands.add')('icache',
+    self.api('commands.add')('icache',
                                  self.cmd_icache,
                                  parser=parser)
 
-    self.api.get('triggers.add')('dead',
+    self.api('triggers.add')('dead',
                                  r"^You die.$",
                                  enabled=True,
                                  group='dead')
 
-    self.api.get('triggers.add')(
+    self.api('triggers.add')(
         'badinvdata1',
         r"^Syntax: invdata                - view all inv data.$",
         enabled=True,
         group='badinvdata')
 
-    self.api.get('triggers.add')(
+    self.api('triggers.add')(
         'badinvdata2',
         r"^      : invdata <container id> - view all inv data in a container.$",
         enabled=True,
         group='badinvdata')
 
-    self.api.get('triggers.add')(
+    self.api('triggers.add')(
         'badinvdata3',
         r"^      : invdata ansi           - remove color codes from output.$",
         enabled=True,
         group='badinvdata')
 
-    self.api.get('triggers.add')(
+    self.api('triggers.add')(
         'badinvdata4',
         r"^      : invdata <container> ansi - remove color codes from output.$",
         enabled=True,
         group='badinvdata')
 
-    self.api.get('triggers.add')(
+    self.api('triggers.add')(
         'invmon',
         r"^\{invmon\}(?P<action>.*),(?P<serial>.*)," \
           r"(?P<container>.*),(?P<location>.*)$",
         enabled=True,
         group='invmon')
 
-    self.api.get('triggers.add')(
+    self.api('triggers.add')(
         'invitem',
         r"^\{invitem\}(?P<data>.*)$",
         enabled=True,
         matchcolor=True)
 
 
-    self.api.get('events.register')('trigger_dead', self.dead)
-    self.api.get('events.register')('trigger_invitem', self.trigger_invitem)
-    self.api.get('events.register')('trigger_invmon', self.invmon)
+    self.api('events.register')('trigger_dead', self.dead)
+    self.api('events.register')('trigger_invitem', self.trigger_invitem)
+    self.api('events.register')('trigger_invmon', self.invmon)
 
-    self.cmdqueue = self.api.get('cmdq.baseclass')()(self)
+    self.cmdqueue = self.api('cmdq.baseclass')()(self)
 
     self.containers['Inventory'] = Inventory(self)
     self.containers['Worn'] = Worn(self)
@@ -957,7 +957,7 @@ class Plugin(AardwolfBasePlugin):
       except KeyError:
         return None
     except ValueError:
-      wearlocsrev = self.api.get('itemu.wearlocs')(True)
+      wearlocsrev = self.api('itemu.wearlocs')(True)
       if location in wearlocsrev:
         container = self.containers['Worn']
         return self.itemcache[container.items[wearlocsrev[location]]]
@@ -1166,9 +1166,9 @@ class Plugin(AardwolfBasePlugin):
     args = ' '.join(tlist)
 
     # need to parse all items for identifiers
-    self.api.get('send.msg')('serial is not a number, sending \'get %s\'' % \
+    self.api('send.msg')('serial is not a number, sending \'get %s\'' % \
                                                       args)
-    self.api.get('send.execute')('get %s' % args)
+    self.api('send.execute')('get %s' % args)
 
     return True, []
 
@@ -1197,8 +1197,8 @@ class Plugin(AardwolfBasePlugin):
       args = '%s %s' % \
         (item,
          ' '.join(['%s' % self.find_item(x) for x in args['otherargs']]))
-      self.api.get('send.msg')('sending \'put %s\'' % args)
-      self.api.get('send.execute')('put %s %s' % (item, args))
+      self.api('send.msg')('sending \'put %s\'' % args)
+      self.api('send.execute')('put %s %s' % (item, args))
 
     return True, []
 
@@ -1220,20 +1220,20 @@ class Plugin(AardwolfBasePlugin):
     """
     run when an invitem is seen
     """
-    #self.api.get('send.msg')('invitem args: %s' % args)
-    data = self.api.get('itemu.dataparse')(args['data'], 'eqdata')
+    #self.api('send.msg')('invitem args: %s' % args)
+    data = self.api('itemu.dataparse')(args['data'], 'eqdata')
     if data['serial'] in self.itemcache:
       self.itemcache[data['serial']].upditem(data)
     else:
       titem = Item(data, plugin=self)
       self.itemcache[titem.serial] = titem
-    #self.api.get('send.msg')('invitem parsed item: %s' % titem)
+    #self.api('send.msg')('invitem parsed item: %s' % titem)
 
   def cmd_eq(self, args):
     """
     show eq
     """
-    self.api.get('send.msg')('cmd_eq args: %s' % args)
+    self.api('send.msg')('cmd_eq args: %s' % args)
 
     return True, self.containers['Worn'].build(args)
 
@@ -1241,7 +1241,7 @@ class Plugin(AardwolfBasePlugin):
     """
     show inventory
     """
-    self.api.get('send.msg')('cmd_inv args: %s' % args)
+    self.api('send.msg')('cmd_inv args: %s' % args)
 
     container = args['container']
 
@@ -1267,13 +1267,13 @@ class Plugin(AardwolfBasePlugin):
       location = int(args['location'])
     except ValueError:
       self.api('send.error')('the invmon line has bad data: %s' % args['line'])
-    #self.api.get('send.msg')('action: %s, item: %s' % (action, serial))
+    #self.api('send.msg')('action: %s, item: %s' % (action, serial))
     if action == 1:
     # Remove an item
       if serial in self.containers['Worn'].items:
         self.containers['Worn'].remove(serial)
         self.containers['Inventory'].add(serial, place=0)
-        self.api.get('events.eraise')('eq_removed',
+        self.api('events.eraise')('eq_removed',
                                       {'item':self.itemcache[serial]})
       else:
         self.containers['Worn'].refresh()
@@ -1283,7 +1283,7 @@ class Plugin(AardwolfBasePlugin):
       if serial in self.containers['Inventory'].items:
         self.containers['Inventory'].remove(serial)
         self.containers['Worn'].add(serial, location)
-        self.api.get('events.eraise')('eq_worn',
+        self.api('events.eraise')('eq_worn',
                                       {'item':self.itemcache[serial],
                                        'location':location})
       else:
@@ -1297,7 +1297,7 @@ class Plugin(AardwolfBasePlugin):
           #for item in self.containers[serial].items:
             #del self.itemcache[item]
         self.containers['Inventory'].remove(serial)
-        self.api.get('events.eraise')('inventory_removed', {'item':titem})
+        self.api('events.eraise')('inventory_removed', {'item':titem})
         #del self.itemcache[serial]
       else:
         self.containers['Inventory'].refresh()
@@ -1308,7 +1308,7 @@ class Plugin(AardwolfBasePlugin):
         titem = self.itemcache[serial]
         if titem.itype == 11:
           self.containers[serial].refresh()
-        self.api.get('events.eraise')('inventory_added', {'item':titem})
+        self.api('events.eraise')('inventory_added', {'item':titem})
       except KeyError:
         self.containers['Inventory'].refresh()
     elif action == 5:

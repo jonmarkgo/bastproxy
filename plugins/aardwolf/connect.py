@@ -29,7 +29,7 @@ class Plugin(BasePlugin):
     self.sentquest = False
 
     # the firstactive flag
-    self.api.get('api.add')('firstactive', self.api_firstactive)
+    self.api('api.add')('firstactive', self.api_firstactive)
 
   def load(self):
     """
@@ -37,18 +37,18 @@ class Plugin(BasePlugin):
     """
     BasePlugin.load(self)
 
-    self.api.get('triggers.add')('reconnect',
+    self.api('triggers.add')('reconnect',
             "^############# Reconnecting to Game #############$")
 
-    self.api.get('events.register')('GMCP:char', self._char)
-    self.api.get('events.register')('GMCP:room.info', self._roominfo)
-    self.api.get('events.register')('trigger_reconnect', self.reconnect)
-    self.api.get('events.register')('client_connected', self.clientconnected)
+    self.api('events.register')('GMCP:char', self._char)
+    self.api('events.register')('GMCP:room.info', self._roominfo)
+    self.api('events.register')('trigger_reconnect', self.reconnect)
+    self.api('events.register')('client_connected', self.clientconnected)
 
-    self.api.get('events.register')('GMCP:server-enabled', self.enablemods)
+    self.api('events.register')('GMCP:server-enabled', self.enablemods)
 
-    state = self.api.get('GMCP.getv')('char.status.state')
-    proxy = self.api.get('managers.getm')('proxy')
+    state = self.api('GMCP.getv')('char.status.state')
+    proxy = self.api('managers.getm')('proxy')
     if state == 3 and proxy and proxy.connected:
       self.enablemods()
       self.clientconnected()
@@ -57,23 +57,23 @@ class Plugin(BasePlugin):
     """
     do stuff when a client connects
     """
-    proxy = self.api.get('managers.getm')('proxy')
+    proxy = self.api('managers.getm')('proxy')
     if proxy.connected:
-      self.api.get('GMCP.sendpacket')("request room")
-      self.api.get('GMCP.sendpacket')("request quest")
-      self.api.get('GMCP.sendpacket')("request char")
+      self.api('GMCP.sendpacket')("request room")
+      self.api('GMCP.sendpacket')("request quest")
+      self.api('GMCP.sendpacket')("request char")
 
   def enablemods(self, _=None):
     """
     enable modules for aardwolf
     """
-    self.api.get('GMCP.sendpacket')("rawcolor on")
-    self.api.get('GMCP.sendpacket')("group on")
-    self.api.get('GMCP.togglemodule')('Char', True)
-    self.api.get('GMCP.togglemodule')('Room', True)
-    self.api.get('GMCP.togglemodule')('Comm', True)
-    self.api.get('GMCP.togglemodule')('Group', True)
-    self.api.get('GMCP.togglemodule')('Core', True)
+    self.api('GMCP.sendpacket')("rawcolor on")
+    self.api('GMCP.sendpacket')("group on")
+    self.api('GMCP.togglemodule')('Char', True)
+    self.api('GMCP.togglemodule')('Room', True)
+    self.api('GMCP.togglemodule')('Comm', True)
+    self.api('GMCP.togglemodule')('Group', True)
+    self.api('GMCP.togglemodule')('Core', True)
 
   def reconnect(self, _=None):
     """
@@ -89,8 +89,8 @@ class Plugin(BasePlugin):
     self.gotchar = False
     self.gotroom = False
     self.sentchar = False
-    self.api.get('events.register')('GMCP:char', self._char)
-    self.api.get('events.register')('GMCP:room.info', self._roominfo)
+    self.api('events.register')('GMCP:char', self._char)
+    self.api('events.register')('GMCP:room.info', self._roominfo)
 
   # returns the firstactive flag
   def api_firstactive(self):
@@ -102,16 +102,16 @@ class Plugin(BasePlugin):
     """
     send the firstactive event
     """
-    proxy = self.api.get('managers.getm')('proxy')
+    proxy = self.api('managers.getm')('proxy')
     if self.gotchar and self.gotroom and proxy and proxy.connected:
-      self.api.get('events.unregister')('GMCP:char', self._char)
-      self.api.get('events.unregister')('GMCP:room.info', self._roominfo)
+      self.api('events.unregister')('GMCP:char', self._char)
+      self.api('events.unregister')('GMCP:room.info', self._roominfo)
       self.connected = True
       self.firstactive = True
       self.sentquest = False
       self.sentchar = False
-      self.api.get('send.msg')('sending first active')
-      self.api.get('events.eraise')('firstactive', {})
+      self.api('send.msg')('sending first active')
+      self.api('events.eraise')('firstactive', {})
 
   def checkall(self):
     """
@@ -125,16 +125,16 @@ class Plugin(BasePlugin):
        or self.api('GMCP.getv')('char.worth.gold') == None:
 
       if not self.sentchar:
-        self.api.get('GMCP.sendpacket')("request char")
+        self.api('GMCP.sendpacket')("request char")
         self.sentchar = True
 
       haveall = False
     if self.api('GMCP.getv')('room.info.num') == None:
-      self.api.get('GMCP.sendpacket')("request room")
+      self.api('GMCP.sendpacket')("request room")
       haveall = False
     if self.api('GMCP.getv')('quest.action') == None and not self.sentquest:
       self.sentquest = True
-      self.api.get('GMCP.sendpacket')("request quest")
+      self.api('GMCP.sendpacket')("request quest")
       haveall = False
 
     if haveall:
@@ -147,7 +147,7 @@ class Plugin(BasePlugin):
     """
     if self.checkall():
       self.gotchar = True
-      state = self.api.get('GMCP.getv')('char.status.state')
+      state = self.api('GMCP.getv')('char.status.state')
 
       if state == 3:
         self.sendfirstactive()

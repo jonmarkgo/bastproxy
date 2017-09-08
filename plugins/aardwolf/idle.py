@@ -27,13 +27,13 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.load(self)
 
-    self.api.get('triggers.add')('glaze',
+    self.api('triggers.add')('glaze',
                     "^Your eyes glaze over.$")
-    self.api.get('events.register')('trigger_glaze', self.glaze)
+    self.api('events.register')('trigger_glaze', self.glaze)
 
   def glaze(self, args):
     """
     show that the trigger fired
     """
-    self.api.get('send.execute')('look')
+    self.api('send.execute')('look')
 

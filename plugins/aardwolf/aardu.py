@@ -119,11 +119,11 @@ class Plugin(AardwolfBasePlugin):
   def __init__(self, *args, **kwargs):
     AardwolfBasePlugin.__init__(self, *args, **kwargs)
 
-    self.api.get('api.add')('getactuallevel', self.api_getactuallevel)
-    self.api.get('api.add')('convertlevel', self.api_convertlevel)
-    self.api.get('api.add')('classabb', self.api_classabb)
-    self.api.get('api.add')('rewardtable', self.api_rewardtable)
-    self.api.get('api.add')('parsedamageline', self.api_parsedamageline)
+    self.api('api.add')('getactuallevel', self.api_getactuallevel)
+    self.api('api.add')('convertlevel', self.api_convertlevel)
+    self.api('api.add')('classabb', self.api_classabb)
+    self.api('api.add')('rewardtable', self.api_rewardtable)
+    self.api('api.add')('parsedamageline', self.api_parsedamageline)
 
   def load(self):
     """
@@ -141,10 +141,10 @@ class Plugin(AardwolfBasePlugin):
     @Yredos@w  = the # of redos, default to GMCP value
 
     this function returns the total levels"""
-    level = level or self.api.get('GMCP.getv')('char.status.level') or 0
-    remort = remort or self.api.get('GMCP.getv')('char.base.remorts') or 0
-    tier = tier or self.api.get('GMCP.getv')('char.base.tier') or 0
-    redos = int(redos or self.api.get('GMCP.getv')('char.base.redos') or 0)
+    level = level or self.api('GMCP.getv')('char.status.level') or 0
+    remort = remort or self.api('GMCP.getv')('char.base.remorts') or 0
+    tier = tier or self.api('GMCP.getv')('char.base.tier') or 0
+    redos = int(redos or self.api('GMCP.getv')('char.base.redos') or 0)
     if redos == 0:
       return (tier * 7 * 201) + ((remort - 1) * 201) + level
     else:

@@ -29,13 +29,13 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.load(self)
 
-    self.api.get('setting.add')('channel', 'gt', str,
+    self.api('setting.add')('channel', 'gt', str,
                         'the channel to send the repop message')
-    self.api.get('setting.add')('format',
+    self.api('setting.add')('format',
                         "@r[@RRepop@r]@w ${zone} @R@@ @w${time}", str,
                         'the format of the message')
 
-    self.api.get('events.register')('GMCP:comm.repop', self.repop)
+    self.api('events.register')('GMCP:comm.repop', self.repop)
 
   def repop(self, args):
     """
@@ -43,9 +43,9 @@ class Plugin(AardwolfBasePlugin):
     """
     zone = args['data']['zone']
     ttime = time.strftime('%X', time.localtime())
-    chan = self.api.get('setting.gets')('channel')
+    chan = self.api('setting.gets')('channel')
 
-    templ = Template(self.api.get('setting.gets')('format'))
+    templ = Template(self.api('setting.gets')('format'))
     datan = templ.safe_substitute({'zone':zone, 'time':ttime})
 
-    self.api.get('send.execute')(chan + ' ' + datan)
+    self.api('send.execute')(chan + ' ' + datan)

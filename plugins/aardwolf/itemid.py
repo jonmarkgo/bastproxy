@@ -36,11 +36,11 @@ class Plugin(AardwolfBasePlugin):
 
     self.currentitem = {}
 
-    self.api.get('dependency.add')('aardwolf.itemu')
+    self.api('dependency.add')('aardwolf.itemu')
 
-    self.api.get('api.add')('identify', self.api_identify)
-    self.api.get('api.add')('format', self.api_formatitem)
-    self.api.get('api.add')('show', self.api_showitem)
+    self.api('api.add')('identify', self.api_identify)
+    self.api('api.add')('format', self.api_formatitem)
+    self.api('api.add')('show', self.api_showitem)
 
   def load(self):
     """
@@ -48,54 +48,54 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.load(self)
 
-    self.api.get('setting.add')('idcmd', True, str,
+    self.api('setting.add')('idcmd', True, str,
                       'identify')
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='id an item')
     parser.add_argument('serial', help='the item to id', default='', nargs='?')
-    self.api.get('commands.add')('id', self.cmd_id,
+    self.api('commands.add')('id', self.cmd_id,
                                 parser=parser, format=False, preamble=False)
 
-    self.api.get('triggers.add')('invdetailsstart',
+    self.api('triggers.add')('invdetailsstart',
       "^\{invdetails\}$", group='invdetails',
       enabled=False, omit=True)
 
-    self.api.get('triggers.add')('invdetailsline',
+    self.api('triggers.add')('invdetailsline',
       "^\{(?!/*invdetails)(?P<header>.*)\}(?P<data>.*)$", group='invdetails',
       enabled=False, omit=True)
 
-    self.api.get('triggers.add')('invdetailsend',
+    self.api('triggers.add')('invdetailsend',
       "^\{/invdetails\}$",
       enabled=False, group='invdetails', omit=True)
 
-    self.api.get('triggers.add')('identifyon',
+    self.api('triggers.add')('identifyon',
       "\+-*\+",
       enabled=False, group='identify', omit=True)
 
-    self.api.get('triggers.add')('identify1',
+    self.api('triggers.add')('identify1',
       '^\|\s*(?P<data>.*)\s*\|$', group='identify',
       enabled=False, omit=True)
 
-    self.api.get('events.register')('trigger_invdetailsstart',
+    self.api('events.register')('trigger_invdetailsstart',
                                       self.invdetailsstart)
-    self.api.get('events.register')('trigger_invdetailsend',
+    self.api('events.register')('trigger_invdetailsend',
                                       self.invdetailsend)
-    self.api.get('events.register')('trigger_invdetailsline',
+    self.api('events.register')('trigger_invdetailsline',
                                       self.invdetailsline)
-    self.api.get('events.register')('trigger_identifyon', self.identifyon)
-    self.api.get('events.register')('trigger_identify1', self.identifyline)
+    self.api('events.register')('trigger_identifyon', self.identifyon)
+    self.api('events.register')('trigger_identify1', self.identifyline)
 
   def sendcmd(self, cmd):
     """
     send a command
     """
-    self.api.get('send.msg')('sending cmd: %s' % cmd)
+    self.api('send.msg')('sending cmd: %s' % cmd)
     if 'invdetails' in cmd:
-      self.api.get('triggers.togglegroup')('invdetails', True)
+      self.api('triggers.togglegroup')('invdetails', True)
     elif 'identify' in cmd:
-      self.api.get('triggers.togglegroup')('identify', True)
-    self.api.get('send.execute')(cmd)
+      self.api('triggers.togglegroup')('identify', True)
+    self.api('send.execute')(cmd)
 
   def addmod(self, ltype, mod):
     """
@@ -116,18 +116,18 @@ class Plugin(AardwolfBasePlugin):
     start gathering the invdetails data
     """
     self.currentitem = {}
-    self.api.get('send.msg')('found {invdetails}')
+    self.api('send.msg')('found {invdetails}')
 
   def invdetailsline(self, args):
     """
     parse a line of invdetails
     """
-    self.api.get('send.msg')('invdetailsline args: %s' % args)
+    self.api('send.msg')('invdetailsline args: %s' % args)
     header = args['header']
     data = args['data']
-    self.api.get('send.msg')('match: %s - %s' % (header,
+    self.api('send.msg')('match: %s - %s' % (header,
                                                   data))
-    titem = self.api.get('itemu.dataparse')(data,
+    titem = self.api('itemu.dataparse')(data,
                                             header)
     if header == 'invheader':
       self.currentitem = titem
@@ -135,14 +135,14 @@ class Plugin(AardwolfBasePlugin):
       self.addmod(header, titem)
     else:
       self.currentitem[header] = titem
-    self.api.get('send.msg')('invdetails parsed item: %s' % titem)
+    self.api('send.msg')('invdetails parsed item: %s' % titem)
 
   def invdetailsend(self, args):
     """
     reset current when seeing an {/invdetails}
     """
-    self.api.get('send.msg')('found {/invdetails}')
-    self.api.get('triggers.togglegroup')('invdetails', False)
+    self.api('send.msg')('found {/invdetails}')
+    self.api('triggers.togglegroup')('invdetails', False)
 
   def identifyon(self, args):
     """
@@ -151,9 +151,9 @@ class Plugin(AardwolfBasePlugin):
     """
     self.dividercount = self.dividercount + 1
     if self.dividercount == 1:
-      self.api.get('send.msg')('found identify')
-      self.api.get('triggers.togglegroup')('identifydata', True)
-      self.api.get('events.register')('trigger_emptyline', self.identifyend)
+      self.api('send.msg')('found identify')
+      self.api('triggers.togglegroup')('identifydata', True)
+      self.api('events.register')('trigger_emptyline', self.identifyend)
     elif self.dividercount == 2:
       self.pastkeywords = True
     if self.affectmods:
@@ -225,19 +225,19 @@ class Plugin(AardwolfBasePlugin):
 
     this raise an itemid_<serial> event
     """
-    self.api.get('events.unregister')('trigger_emptyline', self.identifyend)
-    self.api.get('triggers.togglegroup')('identify', False)
+    self.api('events.unregister')('trigger_emptyline', self.identifyend)
+    self.api('triggers.togglegroup')('identify', False)
     self.pastkeywords = False
     self.dividercount = 0
     if self.currentitem['serial'] in self.waitingforid:
       del self.waitingforid[self.currentitem['serial']]
-    titem = self.api.get('eq.addidentify')(self.currentitem['serial'],
+    titem = self.api('eq.addidentify')(self.currentitem['serial'],
                                           self.currentitem)
-    self.api.get('events.eraise')('itemid_%s' % self.currentitem['serial'],
-                            {'item':self.api.get('eq.getitem')(
+    self.api('events.eraise')('itemid_%s' % self.currentitem['serial'],
+                            {'item':self.api('eq.getitem')(
 				      self.currentitem['serial'])})
-    self.api.get('events.eraise')('itemid_all' % self.currentitem['serial'],
-                            {'item':self.api.get('eq.getitem')(
+    self.api('events.eraise')('itemid_all' % self.currentitem['serial'],
+                            {'item':self.api('eq.getitem')(
                                       self.currentitem['serial'])})
     ### Get the item from eq and update it
 
@@ -248,13 +248,13 @@ class Plugin(AardwolfBasePlugin):
 
     this function returns None if the identify data has to gathered,
     or the item if is in the cache"""
-    titem = self.api.get('eq.getitem')(serial)
+    titem = self.api('eq.getitem')(serial)
     if titem.hasbeenided:
       return titem
     else:
       self.waitingforid[serial] = True
       if titem.curcontainer and titem.curcontainer.cid != 'Inventory':
-        self.api.get('eq.get')(serial)
+        self.api('eq.get')(serial)
       self.sendcmd('invdetails %s' % serial)
       self.sendcmd('identify %s' % serial)
       self.api('events.register')('itemid_%s' % titem.serial, self.putincontainer,
@@ -270,15 +270,15 @@ class Plugin(AardwolfBasePlugin):
     titem = args['item']
 
     if titem.origcontainer and titem.origcontainer.cid != 'Inventory':
-      self.api.get('eq.put')(titem.serial)
+      self.api('eq.put')(titem.serial)
 
   def event_showitem(self, args):
     """
     this function is for showing an item when using the id command,
     it registers with itemid_<serial>
     """
-    self.api.get('events.unregister')(args['eventname'], self.event_showitem)
-    self.api.get('itemid.show')(args['item'].serial)
+    self.api('events.unregister')(args['eventname'], self.event_showitem)
+    self.api('itemid.show')(args['item'].serial)
 
   def cmd_id(self, args):
     """
@@ -288,16 +288,16 @@ class Plugin(AardwolfBasePlugin):
     if args['serial']:
       #try:
       serial = int(args['serial'])
-      titem = self.api.get('eq.getitem')(serial)
+      titem = self.api('eq.getitem')(serial)
       if not titem:
         msg.append('Could not find %s' % serial)
       else:
         if titem.hasbeenided:
-          self.api.get('itemid.show')(serial)
+          self.api('itemid.show')(serial)
         else:
-          self.api.get('events.register')('itemid_%s' % serial,
+          self.api('events.register')('itemid_%s' % serial,
                                           self.event_showitem)
-          self.api.get('itemid.identify')(serial)
+          self.api('itemid.identify')(serial)
       #except ValueError:
         #msg.append('%s is not a serial number' % args['serial'])
     else:
@@ -317,7 +317,7 @@ class Plugin(AardwolfBasePlugin):
 
     printstring = '| %s%-11s@w: %s%s'
     ttext = printstring % (linecolour, linename, datacolor, data)
-    newnum = 66 - len(self.api.get('colors.stripcolor')(ttext))
+    newnum = 66 - len(self.api('colors.stripcolor')(ttext))
     tstring = "%" + str(newnum) + "s@w|"
     ttext = ttext + tstring % ""
 
@@ -334,8 +334,8 @@ class Plugin(AardwolfBasePlugin):
     data = str(data)
     data2 = str(data2)
 
-    adddata = 24 + self.api.get('colors.lengthdiff')(data)
-    adddata2 = 17 + self.api.get('colors.lengthdiff')(data2)
+    adddata = 24 + self.api('colors.lengthdiff')(data)
+    adddata2 = 17 + self.api('colors.lengthdiff')(data2)
 
     printstring = '| %s%-11s@w: @W%-' + str(adddata) + 's %s%-7s@w: @W%-' + \
             str(adddata2) + 's@w|'
@@ -355,18 +355,18 @@ class Plugin(AardwolfBasePlugin):
     data = str(data)
     data2 = str(data2)
 
-    adddata = 20 + self.api.get('colors.lengthdiff')(data)
+    adddata = 20 + self.api('colors.lengthdiff')(data)
 
     printstring = '| %s%-11s@w: @W%-' + str(adddata) + 's'
 
     ttext = printstring % (linecolour, linename, data)
 
     if linename2:
-      adddata2 = 14 + self.api.get('colors.lengthdiff')(data2)
+      adddata2 = 14 + self.api('colors.lengthdiff')(data2)
       printstring2 = ' %s%-13s:  @W%-' + str(adddata2) + 's@w|'
       ttext = ttext + printstring2 % (linecolour, linename2, data2)
     else:
-      newnum = 66 - len(self.api.get('colors.stripcolor')(ttext))
+      newnum = 66 - len(self.api('colors.stripcolor')(ttext))
       tstring = "%" + str(newnum) + "s@w|"
       ttext = ttext + tstring % ""
 
@@ -541,7 +541,7 @@ class Plugin(AardwolfBasePlugin):
     linelen = 50
 
     serial = int(serial)
-    item = self.api.get('eq.getitem')(serial)
+    item = self.api('eq.getitem')(serial)
 
     iteml = [divider]
 
@@ -561,7 +561,7 @@ class Plugin(AardwolfBasePlugin):
 
     if item.checkattr('curcontainer'):
       if item.curcontainer.cid == 'Worn':
-        wearlocs = self.api.get('itemu.wearlocs')()
+        wearlocs = self.api('itemu.wearlocs')()
         iteml.append(self.formatsingleline('Location', '@R',
                                          'Worn - %s' % wearlocs[item.wearslot]))
       else:
@@ -569,7 +569,7 @@ class Plugin(AardwolfBasePlugin):
                                          item.curcontainer.cid))
 
     if item.checkattr('itype') and item.checkattr('level'):
-      objtypes = self.api.get('itemu.objecttypes')()
+      objtypes = self.api('itemu.objecttypes')()
       ntype = item.itype.capitalize()
       iteml.append(self.formatdoubleline('Type', '@c', ntype,
                                          'Level', item.level))
@@ -677,7 +677,7 @@ class Plugin(AardwolfBasePlugin):
       iteml.append(divider)
       header = 'Skill Mods'
       for i in item.skillmod:
-        spell = self.api.get('skills.gets')(i)
+        spell = self.api('skills.gets')(i)
         color = '@R'
         if int(item.skillmod[i]) > 0:
           color = '@G'
@@ -693,7 +693,7 @@ class Plugin(AardwolfBasePlugin):
       for i in xrange(1, 5):
         key = 'sn%s' % i
         if item.spells[key] and item.spells[key] != 0:
-          spell = self.api.get('skills.gets')(item.spells[key])
+          spell = self.api('skills.gets')(item.spells[key])
           plural = ''
           if int(item.spells['uses']) > 1:
             plural = 's'
@@ -743,11 +743,11 @@ class Plugin(AardwolfBasePlugin):
     command
 
     this function returns nothing"""
-    item = self.api.get('eq.getitem')(serial)
+    item = self.api('eq.getitem')(serial)
     if item:
       if item.hasbeenided:
-        tstuff = self.api.get('itemid.format')(serial)
+        tstuff = self.api('itemid.format')(serial)
 
-        self.api.get('send.client')('\n'.join(tstuff), preamble=False)
+        self.api('send.client')('\n'.join(tstuff), preamble=False)
       else:
-        self.api.get('send.execute')('#bp.itemid.id %s' % serial)
+        self.api('send.execute')('#bp.itemid.id %s' % serial)

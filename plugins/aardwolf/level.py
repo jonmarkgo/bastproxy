@@ -34,170 +34,170 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.load(self)
 
-    self.api.get('setting.add')('preremort', False, bool,
+    self.api('setting.add')('preremort', False, bool,
                                 'flag for pre remort')
-    self.api.get('setting.add')('remortcomp', False, bool,
+    self.api('setting.add')('remortcomp', False, bool,
                                 'flag for remort completion')
-    self.api.get('setting.add')('tiering', False, bool, 'flag for tiering')
-    self.api.get('setting.add')('seen2', False, bool,
+    self.api('setting.add')('tiering', False, bool, 'flag for tiering')
+    self.api('setting.add')('seen2', False, bool,
                                 'we saw a state 2 after tiering')
 
-    self.api.get('watch.add')('shloud', '^superhero loud$')
-    self.api.get('watch.add')('shsilent', '^superhero silent$')
-    self.api.get('watch.add')('shconfirm', '^superhero confirm$')
-    self.api.get('watch.add')('shloudconfirm', '^superhero loud confirm$')
+    self.api('watch.add')('shloud', '^superhero loud$')
+    self.api('watch.add')('shsilent', '^superhero silent$')
+    self.api('watch.add')('shconfirm', '^superhero confirm$')
+    self.api('watch.add')('shloudconfirm', '^superhero loud confirm$')
 
-    self.api.get('triggers.add')('lvlpup',
+    self.api('triggers.add')('lvlpup',
         "^Congratulations, hero. You have increased your powers!$")
-    self.api.get('triggers.add')('lvlpupbless',
+    self.api('triggers.add')('lvlpupbless',
         "^You gain a powerup\.$")
-    self.api.get('triggers.add')('lvllevel',
+    self.api('triggers.add')('lvllevel',
         "^You raise a level! You are now level (?P<level>\d*).$",
         argtypes={'level':int})
-    self.api.get('triggers.add')('lvlsh',
+    self.api('triggers.add')('lvlsh',
         "^Congratulations! You are now a superhero!$",
         argtypes={'level':int})
-    self.api.get('triggers.add')('lvlbless',
+    self.api('triggers.add')('lvlbless',
         "^You gain a level - you are now level (?P<level>\d*).$",
         argtypes={'level':int})
-    self.api.get('triggers.add')('lvlgains',
+    self.api('triggers.add')('lvlgains',
         "^You gain (?P<hp>\d*) hit points, (?P<mp>\d*) mana, "\
           "(?P<mv>\d*) moves, (?P<pr>\d*) practices and (?P<tr>\d*) trains.$",
         enabled=False, group='linfo',
         argtypes={'hp':int, 'mn':int, 'mv':int, 'pr':int, 'tr':int})
-    self.api.get('triggers.add')('lvlblesstrain',
+    self.api('triggers.add')('lvlblesstrain',
         "^You gain (?P<tr>\d*) extra trains? daily blessing bonus.$",
         enabled=False, group='linfo',
         argtypes={'tr':int})
-    self.api.get('triggers.add')('lvlpupgains',
+    self.api('triggers.add')('lvlpupgains',
         "^You gain (?P<tr>\d*) trains.$",
         enabled=False, group='linfo',
         argtypes={'tr':int})
-    self.api.get('triggers.add')('lvlbonustrains',
+    self.api('triggers.add')('lvlbonustrains',
         "^Lucky! You gain an extra (?P<tr>\d*) training sessions?!$",
         enabled=False, group='linfo',
         argtypes={'tr':int})
-    self.api.get('triggers.add')('lvlbonusstat',
+    self.api('triggers.add')('lvlbonusstat',
         "^You gain a bonus (?P<stat>.*) point!$",
         enabled=False, group='linfo')
 
-    self.api.get('triggers.add')('lvlshbadstar',
+    self.api('triggers.add')('lvlshbadstar',
         "^%s$" % re.escape("*******************************" \
               "****************************************"),
         enabled=False, group='superhero')
-    self.api.get('triggers.add')('lvlshbad',
+    self.api('triggers.add')('lvlshbad',
         "^Use either: 'superhero loud'   - (?P<mins>.*) mins of " \
           "double xp, (?P<qp>.*)qp and (?P<gold>.*) gold$",
         enabled=False, group='superhero')
-    self.api.get('triggers.add')('lvlshnogold',
+    self.api('triggers.add')('lvlshnogold',
         "^You must be carrying at least 500,000 gold coins.$",
         enabled=False, group='superhero')
-    self.api.get('triggers.add')('lvlshnoqp',
+    self.api('triggers.add')('lvlshnoqp',
         "^You must have at least 1000 quest points.$",
         enabled=False, group='superhero')
 
-    self.api.get('triggers.add')('lvlpreremort',
+    self.api('triggers.add')('lvlpreremort',
         "^You are now flagged as remorting.$",
         enabled=True, group='remort')
-    self.api.get('triggers.add')('lvlremortcomp',
+    self.api('triggers.add')('lvlremortcomp',
         "^\* Remort transformation complete!$",
         enabled=True, group='remort')
-    self.api.get('triggers.add')('lvltier',
+    self.api('triggers.add')('lvltier',
         "^## You have already remorted the max number of times.$",
         enabled=True, group='remort')
 
-    self.api.get('events.register')('trigger_lvlpup', self._lvl)
-    self.api.get('events.register')('trigger_lvlpupbless', self._lvl)
-    self.api.get('events.register')('trigger_lvllevel', self._lvl)
-    self.api.get('events.register')('trigger_lvlbless', self._lvl)
-    self.api.get('events.register')('trigger_lvlgains', self._lvlgains)
-    self.api.get('events.register')('trigger_lvlpupgains', self._lvlgains)
-    self.api.get('events.register')('trigger_lvlblesstrain',
+    self.api('events.register')('trigger_lvlpup', self._lvl)
+    self.api('events.register')('trigger_lvlpupbless', self._lvl)
+    self.api('events.register')('trigger_lvllevel', self._lvl)
+    self.api('events.register')('trigger_lvlbless', self._lvl)
+    self.api('events.register')('trigger_lvlgains', self._lvlgains)
+    self.api('events.register')('trigger_lvlpupgains', self._lvlgains)
+    self.api('events.register')('trigger_lvlblesstrain',
                                     self._lvlblesstrains)
-    self.api.get('events.register')('trigger_lvlbonustrains',
+    self.api('events.register')('trigger_lvlbonustrains',
                                     self._lvlbonustrains)
-    self.api.get('events.register')('trigger_lvlbonusstat',
+    self.api('events.register')('trigger_lvlbonusstat',
                                     self._lvlbonusstat)
 
-    self.api.get('events.register')('trigger_lvlshbadstar',
+    self.api('events.register')('trigger_lvlshbadstar',
                                     self._superherobad)
-    self.api.get('events.register')('trigger_lvlshbad', self._superherobad)
-    self.api.get('events.register')('trigger_lvlshnogold',
+    self.api('events.register')('trigger_lvlshbad', self._superherobad)
+    self.api('events.register')('trigger_lvlshnogold',
                                     self._superherobad)
-    self.api.get('events.register')('trigger_lvlshnoqp', self._superherobad)
+    self.api('events.register')('trigger_lvlshnoqp', self._superherobad)
 
-    self.api.get('events.register')('watch_shloud', self.cmd_superhero)
-    self.api.get('events.register')('watch_shsilent', self.cmd_superhero)
-    self.api.get('events.register')('watch_shconfirm', self.cmd_superhero)
-    self.api.get('events.register')('watch_shloudconfirm', self.cmd_superhero)
+    self.api('events.register')('watch_shloud', self.cmd_superhero)
+    self.api('events.register')('watch_shsilent', self.cmd_superhero)
+    self.api('events.register')('watch_shconfirm', self.cmd_superhero)
+    self.api('events.register')('watch_shloudconfirm', self.cmd_superhero)
 
-    self.api.get('events.register')('trigger_lvlpreremort', self._preremort)
-    self.api.get('events.register')('trigger_lvlremortcomp', self._remortcomp)
-    self.api.get('events.register')('trigger_lvltier', self._tier)
+    self.api('events.register')('trigger_lvlpreremort', self._preremort)
+    self.api('events.register')('trigger_lvlremortcomp', self._remortcomp)
+    self.api('events.register')('trigger_lvltier', self._tier)
 
   def _gmcpstatus(self, _=None):
     """
     check gmcp status when tiering
     """
-    state = self.api.get('GMCP.getv')('char.status.state')
+    state = self.api('GMCP.getv')('char.status.state')
     if state == 2:
-      self.api.get('ouput.client')('seen2')
-      self.api.get('setting.change')('seen2', True)
-      self.api.get('events.unregister')('GMCP:char.status', self._gmcpstatus)
-      self.api.get('events.register')('GMCP:char.base', self._gmcpbase)
+      self.api('ouput.client')('seen2')
+      self.api('setting.change')('seen2', True)
+      self.api('events.unregister')('GMCP:char.status', self._gmcpstatus)
+      self.api('events.register')('GMCP:char.base', self._gmcpbase)
 
   def _gmcpbase(self, _=None):
     """
     look for a new base when we remort
     """
-    self.api.get('send.client')('called char.base')
-    state = self.api.get('GMCP.getv')('char.status.state')
-    tiering = self.api.get('setting.gets')('tiering')
-    seen2 = self.api.get('setting.gets')('seen2')
+    self.api('send.client')('called char.base')
+    state = self.api('GMCP.getv')('char.status.state')
+    tiering = self.api('setting.gets')('tiering')
+    seen2 = self.api('setting.gets')('seen2')
     if tiering and seen2 and state == 3:
-      self.api.get('send.client')('in char.base')
-      self.api.get('events.unregister')('GMCP:char.base', self._gmcpstatus)
+      self.api('send.client')('in char.base')
+      self.api('events.unregister')('GMCP:char.base', self._gmcpstatus)
       self._lvl({'level':1})
 
   def _tier(self, _=None):
     """
     about to tier
     """
-    self.api.get('setting.change')('tiering', True)
-    self.api.get('send.client')('tiering')
-    self.api.get('events.register')('GMCP:char.status', self._gmcpstatus)
+    self.api('setting.change')('tiering', True)
+    self.api('send.client')('tiering')
+    self.api('events.register')('GMCP:char.status', self._gmcpstatus)
 
   def _remortcomp(self, _=None):
     """
     do stuff when a remort is complete
     """
-    self.api.get('setting.change')('preremort', False)
-    self.api.get('setting.change')('remortcomp',  True)
+    self.api('setting.change')('preremort', False)
+    self.api('setting.change')('remortcomp',  True)
     self._lvl({'level':1})
 
   def _preremort(self, _=None):
     """
     set the preremort flag
     """
-    self.api.get('setting.change')('preremort', True)
-    self.api.get('events.eraise')('aard_level_preremort', {})
+    self.api('setting.change')('preremort', True)
+    self.api('events.eraise')('aard_level_preremort', {})
 
   def cmd_superhero(self, _=None):
     """
     figure out what is done when superhero is typed
     """
-    self.api.get('send.client')('superhero was typed')
-    self.api.get('triggers.togglegroup')('superhero', True)
+    self.api('send.client')('superhero was typed')
+    self.api('triggers.togglegroup')('superhero', True)
     self._lvl({'level':201})
 
   def _superherobad(self, _=None):
     """
     undo things that we typed if we didn't really superhero
     """
-    self.api.get('send.client')('didn\'t sh though')
-    self.api.get('triggers.togglegroup')('superhero', False)
-    self.api.get('triggers.togglegroup')('linfo', False)
-    self.api.get('events.unregister')('trigger_emptyline', self._finish)
+    self.api('send.client')('didn\'t sh though')
+    self.api('triggers.togglegroup')('superhero', False)
+    self.api('triggers.togglegroup')('linfo', False)
+    self.api('events.unregister')('trigger_emptyline', self._finish)
 
   def resetlevel(self):
     """
@@ -237,17 +237,17 @@ class Plugin(AardwolfBasePlugin):
     self.resetlevel()
     if 'triggername' in args and (args['triggername'] == 'lvlpup' \
         or args['triggername'] == 'lvlpupbless'):
-      self.levelinfo['level'] = self.api.get('GMCP.getv')('char.status.level')
-      self.levelinfo['totallevels'] = self.api.get('aardu.getactuallevel')()
+      self.levelinfo['level'] = self.api('GMCP.getv')('char.status.level')
+      self.levelinfo['totallevels'] = self.api('aardu.getactuallevel')()
       self.levelinfo['type'] = 'pup'
     else:
       self.levelinfo['level'] = args['level']
-      self.levelinfo['totallevels'] = self.api.get('aardu.getactuallevel')(
+      self.levelinfo['totallevels'] = self.api('aardu.getactuallevel')(
                                                             args['level'])
       self.levelinfo['type'] = 'level'
 
-    self.api.get('triggers.togglegroup')('linfo', True)
-    self.api.get('events.register')('trigger_emptyline', self._finish)
+    self.api('triggers.togglegroup')('linfo', True)
+    self.api('events.register')('trigger_emptyline', self._finish)
 
 
   def _lvlblesstrains(self, args):
@@ -284,32 +284,32 @@ class Plugin(AardwolfBasePlugin):
     """
     finish up and raise the level event
     """
-    remortcomp = self.api.get('setting.gets')('remortcomp')
-    tiering = self.api.get('setting.gets')('tiering')
+    remortcomp = self.api('setting.gets')('remortcomp')
+    tiering = self.api('setting.gets')('tiering')
     if self.levelinfo['trains'] == 0 and not remortcomp or tiering:
       return
     self.levelinfo['finishtime'] = time.time()
     self.levelinfo.sync()
-    self.api.get('triggers.togglegroup')('linfo', False)
-    self.api.get('events.unregister')('trigger_emptyline', self._finish)
-    self.api.get('events.eraise')('aard_level_gain',
+    self.api('triggers.togglegroup')('linfo', False)
+    self.api('events.unregister')('trigger_emptyline', self._finish)
+    self.api('events.eraise')('aard_level_gain',
                                   copy.deepcopy(self.levelinfo))
     if self.levelinfo['level'] == 200 and self.levelinfo['type'] == 'level':
-      self.api.get('send.msg')('raising hero event', 'level')
-      self.api.get('events.eraise')('aard_level_hero', {})
+      self.api('send.msg')('raising hero event', 'level')
+      self.api('events.eraise')('aard_level_hero', {})
     elif self.levelinfo['level'] == 201 and self.levelinfo['type'] == 'level':
-      self.api.get('send.msg')('raising superhero event', 'level')
-      self.api.get('events.eraise')('aard_level_superhero', {})
+      self.api('send.msg')('raising superhero event', 'level')
+      self.api('events.eraise')('aard_level_superhero', {})
     elif self.levelinfo['level'] == 1:
-      if self.api.get('setting.gets')('tiering'):
-        self.api.get('send.msg')('raising tier event', 'level')
-        self.api.get('setting.change')('tiering', False)
-        self.api.get('setting.change')('seen2', False)
-        self.api.get('events.eraise')('aard_level_tier', {})
+      if self.api('setting.gets')('tiering'):
+        self.api('send.msg')('raising tier event', 'level')
+        self.api('setting.change')('tiering', False)
+        self.api('setting.change')('seen2', False)
+        self.api('events.eraise')('aard_level_tier', {})
       else:
-        self.api.get('send.msg')('raising remort event', 'level')
-        self.api.get('setting.change')('remortcomp', False)
-        self.api.get('events.eraise')('aard_level_remort', {})
+        self.api('send.msg')('raising remort event', 'level')
+        self.api('setting.change')('remortcomp', False)
+        self.api('events.eraise')('aard_level_remort', {})
 
   def savestate(self):
     """

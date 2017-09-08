@@ -49,7 +49,7 @@ class Plugin(AardwolfBasePlugin):
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='show next daily')
-    self.api.get('commands.add')('next', self.cmd_next,
+    self.api('commands.add')('next', self.cmd_next,
                                 parser=parser)
 
     self.api('events.register')('trigger_daily1', self.dailytime)
@@ -134,6 +134,6 @@ class Plugin(AardwolfBasePlugin):
     check to see if daily has been seen
     """
     if self.nextdaily == -1:
-      state = self.api.get('GMCP.getv')('char.status.state')
+      state = self.api('GMCP.getv')('char.status.state')
       if state == 3:
         self.api('send.execute')('daily')

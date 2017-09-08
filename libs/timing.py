@@ -14,7 +14,7 @@ def timeit(func):
     the wrapper to time a function
     """
     time1 = default_timer()
-    API.get('send.msg')('%s: started %s' % (func.func_name, arg), 'timing')
+    API('send.msg')('%s: started %s' % (func.func_name, arg), 'timing')
     res = func(*arg)
     time2 = default_timer()
     API('log.adddtype')('timing')

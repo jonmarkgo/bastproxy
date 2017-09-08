@@ -131,10 +131,10 @@ def dbcreate(sqldb, plugin, **kwargs):
         narea['texture'] = ''
       #for i in narea:
         #narea[i] = self.fixsql(str(narea[i]))
-      self.api.get('send.msg')('data: %s' % narea)
+      self.api('send.msg')('data: %s' % narea)
       cur = self.dbconn.cursor()
       stmt = self.converttoinsert('areas', replace=True)
-      self.api.get('send.msg')('stmt: %s' % stmt)
+      self.api('send.msg')('stmt: %s' % stmt)
       cur.execute(stmt, narea)
       self.dbconn.commit()
       cur.close()
@@ -282,7 +282,7 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.__init__(self, *args, **kwargs)
 
-    self.api.get('dependency.add')('sqldb')
+    self.api('dependency.add')('sqldb')
 
     self.mapperdb = None
     self.current_room = None
@@ -304,32 +304,32 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.load(self)
 
-    self.api.get('setting.add')('maxdepth', 300, int,
+    self.api('setting.add')('maxdepth', 300, int,
                         'max depth to search')
 
-    self.api.get('log.console')(self.sname)
-    self.api.get('log.client')(self.sname)
+    self.api('log.console')(self.sname)
+    self.api('log.client')(self.sname)
 
-    self.mapperdb = dbcreate(self.api.get('sqldb.baseclass')(), self,
+    self.mapperdb = dbcreate(self.api('sqldb.baseclass')(), self,
                            dbname='mapper', dbdir=self.savedir)
 
     self.api('send.msg')('mapperdb: %s' % self.mapperdb)
 
-    self.api.get('setting.add')('shownotes', True, bool,
+    self.api('setting.add')('shownotes', True, bool,
                       'show notes when entering a room')
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='show mapper information for a room')
     parser.add_argument('room', help='the room number',
                         default=None, nargs='?', type=int)
-    self.api.get('commands.add')('showroom', self.cmd_showroom,
+    self.api('commands.add')('showroom', self.cmd_showroom,
                                 parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='purge a room')
     parser.add_argument('room', help='the room number',
                         default=None, nargs='?', type=int)
-    self.api.get('commands.add')('purgeroom', self.cmd_purgeroom,
+    self.api('commands.add')('purgeroom', self.cmd_purgeroom,
                                 parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
@@ -338,7 +338,7 @@ class Plugin(AardwolfBasePlugin):
                         default=None, nargs='?')
     parser.add_argument('-e', "--exact", help="the argument is the exact name",
               action="store_true")
-    self.api.get('commands.add')('find', self.cmd_find,
+    self.api('commands.add')('find', self.cmd_find,
                                 parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
@@ -349,31 +349,31 @@ class Plugin(AardwolfBasePlugin):
                         default=None, nargs='?')
     parser.add_argument('-e', "--exact", help="the argument is the exact name",
               action="store_true")
-    self.api.get('commands.add')('area', self.cmd_area,
+    self.api('commands.add')('area', self.cmd_area,
                                 parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='goto the next room from the previous search result')
-    self.api.get('commands.add')('next', self.cmd_next,
+    self.api('commands.add')('next', self.cmd_next,
                                 parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='resume going to a room')
-    self.api.get('commands.add')('resume', self.cmd_resume,
+    self.api('commands.add')('resume', self.cmd_resume,
                                 parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='goto a room')
     parser.add_argument('room', help='the room number',
                         default=None, nargs='?', type=int)
-    self.api.get('commands.add')('goto', self.cmd_goto,
+    self.api('commands.add')('goto', self.cmd_goto,
                                 parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='walk to room (no portals)')
     parser.add_argument('room', help='the room number',
                         default=None, nargs='?', type=int)
-    self.api.get('commands.add')('walk', self.cmd_walk,
+    self.api('commands.add')('walk', self.cmd_walk,
                                 parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
@@ -382,7 +382,7 @@ class Plugin(AardwolfBasePlugin):
                         default=None, nargs='?', type=int)
     parser.add_argument('end', help='the room number',
                         default=None, nargs='?', type=int)
-    self.api.get('commands.add')('spw', self.cmd_speedwalk,
+    self.api('commands.add')('spw', self.cmd_speedwalk,
                                 parser=parser)
 
     self.api('triggers.add')('noportal',
@@ -391,21 +391,21 @@ class Plugin(AardwolfBasePlugin):
               "^You cannot (recall|return home) from this room\.")
 
     ## backup the db every 4 hours
-    #self.api.get('timers.add')('mapper_backup', self.backupdb,
+    #self.api('timers.add')('mapper_backup', self.backupdb,
                                 #60*60*4, time='0000')
 
-    #self.api.get('setting.add')('backupstart', '0000', 'miltime',
+    #self.api('setting.add')('backupstart', '0000', 'miltime',
                       #'the time for a db backup, like 1200 or 2000')
-    #self.api.get('setting.add')('backupinterval', '4h', 'timelength',
+    #self.api('setting.add')('backupinterval', '4h', 'timelength',
                       #'the interval to backup the db, default every 4 hours')
-    #self.api.get('events.register')('map_backupstart', self.changetimer)
-    #self.api.get('events.register')('map_backupinternval', self.changetimer)
+    #self.api('events.register')('map_backupstart', self.changetimer)
+    #self.api('events.register')('map_backupinternval', self.changetimer)
 
-    self.api.get('events.register')('trigger_noportal', self.noportal)
-    self.api.get('events.register')('trigger_norecall', self.norecall)
+    self.api('events.register')('trigger_noportal', self.noportal)
+    self.api('events.register')('trigger_norecall', self.norecall)
 
-    self.api.get('events.register')('GMCP:room.area', self.updatearea)
-    self.api.get('events.register')('GMCP:room.info', self.updateroom)
+    self.api('events.register')('GMCP:room.area', self.updatearea)
+    self.api('events.register')('GMCP:room.info', self.updateroom)
 
   def comparerooms(self, room1, room2):
     """
@@ -433,11 +433,11 @@ class Plugin(AardwolfBasePlugin):
     """
     do something when the reportminutes changes
     """
-    self.api.get('timers.remove')('mapper_backup')
-    self.api.get('timers.add')('mapper_backup',
+    self.api('timers.remove')('mapper_backup')
+    self.api('timers.add')('mapper_backup',
                       self.backupdb,
-                      self.api.get('setting.gets')('backupinterval'),
-                      time=self.api.get('setting.gets')('backupstart'))
+                      self.api('setting.gets')('backupinterval'),
+                      time=self.api('setting.gets')('backupstart'))
 
   def backupdb(self):
     """
@@ -756,9 +756,6 @@ class Plugin(AardwolfBasePlugin):
     if not end:
       return False, ['Please specify an end room']
 
-    print 'spw start: %s' % start
-    print 'spw end: %s' % end
-
     path, reason, depth = self.findpath(str(start), str(end))
 
     if path:
@@ -842,7 +839,6 @@ class Plugin(AardwolfBasePlugin):
       if str(dest) == str(end) and levellock <= charlevel and \
             ((walkone == None) or (len(direction) > len(walkone))):
         # if one room away, walk there (don't portal), but prefer a cexit
-        print 'found walkone'
         walkone = direction
 
     if walkone != None:
@@ -857,13 +853,6 @@ class Plugin(AardwolfBasePlugin):
     ftd = {}
     f = ""
     next_room = 0
-
-    #if type(src) ~= "number" then
-        #src = string.match(src, "^(nomap_.+)$") or tonumber(src)
-    #end
-    #if type(dst) ~= "number" then
-        #dst = string.match(dst, "^(nomap_.+)$") or tonumber(dst)
-    #end
 
     if start == end:
       return {}, 'start == end', 0

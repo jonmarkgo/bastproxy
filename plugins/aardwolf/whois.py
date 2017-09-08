@@ -33,56 +33,56 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.load(self)
 
-    self.api.get('watch.add')('whois', '^(whoi|whois)$')
+    self.api('watch.add')('whois', '^(whoi|whois)$')
 
-    self.api.get('triggers.add')('whoisheader',
+    self.api('triggers.add')('whoisheader',
       "^\[.*\]\s+.*\s*\((?P<sex>\w+)\s+\w+\)$",
       enabled=False,
       group='whois')
-    self.api.get('triggers.add')('whoisclasses',
+    self.api('triggers.add')('whoisclasses',
       "^\[Multiclass Player: (?P<classes>.*) \]$",
       enabled=False,
       group='whois')
-    self.api.get('triggers.add')('whois1',
+    self.api('triggers.add')('whois1',
       "^(?P<name1>[\w\s]*)\s*:\s*\[\s*(?P<val1>[\w\d\s]*)\s*\]\s*$",
       enabled=False,
       group='whois')
-    self.api.get('triggers.add')('whois2',
+    self.api('triggers.add')('whois2',
       "^(?P<name1>[\w\s]*)\s*:\s*\[\s*(?P<val1>[\w\d\s]*)\s*\]" \
         "\s*(?P<name2>[\w\s]*)\s*:\s*\[\s*(?P<val2>[\w\d\s]*)\s*\]\s*$",
       enabled=False,
       group='whois')
-    self.api.get('triggers.add')('whois3',
+    self.api('triggers.add')('whois3',
       "^(?P<name1>[\w\s]*)\s*:\s*\[\s*(?P<val1>[\w\d\s]*)\s*\]" \
         "\s*(?P<name2>[\w\s]*)\s*:\s*\[\s*(?P<val2>[\w\d\s]*)\s*\]" \
         "\s*(?P<name3>[\w\s]*)\s*:\s*\[\s*(?P<val3>[\w\d\s]*)\s*\]\s*$",
       enabled=False,
       group='whois')
-    self.api.get('triggers.add')('whoispowerup',
+    self.api('triggers.add')('whoispowerup',
       "^(?P<name1>[\w\s]*)\s*:\s*\[\s*(?P<val1>[\w\d\s]*)\s*\]" \
         "\s*([\w\s]*)\s*:\s*\[\s*(?P<pval1>[\w\d\s]*)\s*\]\s*\[\s*" \
         "(?P<pval2>[\w\d\s]*)\s*\]\s*$",
       enabled=False,
       group='whois')
-    self.api.get('triggers.add')('whoisend',
+    self.api('triggers.add')('whoisend',
       "^-{74,74}$",
       enabled=False)
 
-    self.api.get('events.register')('watch_whois', self._whois)
-    self.api.get('events.register')('trigger_whoisheader', self._whoisheader)
-    self.api.get('events.register')('trigger_whoisclasses', self._whoisclasses)
-    self.api.get('events.register')('trigger_whois1', self._whoisstats)
-    self.api.get('events.register')('trigger_whois2', self._whoisstats)
-    self.api.get('events.register')('trigger_whois3', self._whoisstats)
-    self.api.get('events.register')('trigger_whoispowerup', self._whoisstats)
-    self.api.get('events.register')('trigger_whoisend', self._whoisend)
+    self.api('events.register')('watch_whois', self._whois)
+    self.api('events.register')('trigger_whoisheader', self._whoisheader)
+    self.api('events.register')('trigger_whoisclasses', self._whoisclasses)
+    self.api('events.register')('trigger_whois1', self._whoisstats)
+    self.api('events.register')('trigger_whois2', self._whoisstats)
+    self.api('events.register')('trigger_whois3', self._whoisstats)
+    self.api('events.register')('trigger_whoispowerup', self._whoisstats)
+    self.api('events.register')('trigger_whoisend', self._whoisend)
 
   def _whois(self, args=None):
     """
     reset the whois info when a "whois" command is sent
     """
     self.whois.clear()
-    self.api.get('triggers.togglegroup')('whois', True)
+    self.api('triggers.togglegroup')('whois', True)
     return args
 
   def _whoisstats(self, args=None):
@@ -109,31 +109,31 @@ class Plugin(AardwolfBasePlugin):
     """
     do stuff when we see the whois header
     """
-    self.whois["name"] = self.api.get('GMCP.getv')('char.base.name')
-    self.whois['level'] = self.api.get('GMCP.getv')('char.status.level')
-    self.whois['tiers'] = self.api.get('GMCP.getv')('char.base.tier')
-    self.whois['redos'] = int(self.api.get('GMCP.getv')('char.base.redos'))
-    self.whois['race'] = self.api.get('GMCP.getv')('char.base.race').lower()
+    self.whois["name"] = self.api('GMCP.getv')('char.base.name')
+    self.whois['level'] = self.api('GMCP.getv')('char.status.level')
+    self.whois['tiers'] = self.api('GMCP.getv')('char.base.tier')
+    self.whois['redos'] = int(self.api('GMCP.getv')('char.base.redos'))
+    self.whois['race'] = self.api('GMCP.getv')('char.base.race').lower()
     self.whois['sex'] = args['sex'].lower()
-    self.whois['subclass'] = self.api.get('GMCP.getv')(
+    self.whois['subclass'] = self.api('GMCP.getv')(
                                             'char.base.subclass').lower()
     self.whois['powerupsall'] = 0
     self.whois['powerupsmort'] = 0
-    self.whois['remorts'] = self.api.get('GMCP.getv')('char.base.remorts')
+    self.whois['remorts'] = self.api('GMCP.getv')('char.base.remorts')
     if self.whois['remorts'] == 1:
-      classabs = self.api.get('aardu.classabb')()
+      classabs = self.api('aardu.classabb')()
       self.whois['classes'] = []
       self.whois['classes'].append({'remort':1,
-              'class':classabs[self.api.get('GMCP.getv')(
+              'class':classabs[self.api('GMCP.getv')(
                                       'char.base.class').lower()]})
 
-    self.api.get('triggers.toggle')('whoisend', True)
+    self.api('triggers.toggle')('whoisend', True)
 
   def _whoisclasses(self, args):
     """
     add classes
     """
-    classabs = self.api.get('aardu.classabb')()
+    classabs = self.api('aardu.classabb')()
     tlist = args['classes'].split("/")
     remorts = len(tlist)
     self.whois['classes'] = []
@@ -148,14 +148,14 @@ class Plugin(AardwolfBasePlugin):
     """
     send a whois
     """
-    self.whois['totallevels'] = self.api.get('aardu.getactuallevel')(
+    self.whois['totallevels'] = self.api('aardu.getactuallevel')(
                       self.whois['level'], self.whois['remorts'],
                       self.whois['tiers'], self.whois['redos'])
     self.whois.sync()
-    self.api.get('triggers.togglegroup')('whois', False)
-    self.api.get('triggers.toggle')('whoisend', False)
-    self.api.get('events.eraise')('aard_whois', copy.deepcopy(self.whois))
-    self.api.get('send.msg')('whois: %s' % self.whois)
+    self.api('triggers.togglegroup')('whois', False)
+    self.api('triggers.toggle')('whoisend', False)
+    self.api('events.eraise')('aard_whois', copy.deepcopy(self.whois))
+    self.api('send.msg')('whois: %s' % self.whois)
 
   def savestate(self):
     """

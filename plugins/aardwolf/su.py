@@ -27,8 +27,8 @@ class Plugin(AardwolfBasePlugin):
     self.spellupfile = os.path.join(self.savedir, 'spellups.txt')
     self.spellups = PersistentDict(self.spellupfile, 'c')
 
-    self.api.get('dependency.add')('aardwolf.skills')
-    self.api.get('dependency.add')('aardwolf.move')
+    self.api('dependency.add')('aardwolf.skills')
+    self.api('dependency.add')('aardwolf.move')
 
     self.initspellups()
 
@@ -41,24 +41,24 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.load(self)
 
-    self.api.get('setting.add')('enabled', True, bool,
+    self.api('setting.add')('enabled', True, bool,
                       'auto spellup is enabled')
-    self.api.get('setting.add')('waiting', -1, int,
+    self.api('setting.add')('waiting', -1, int,
                       'the spell that was just cast',
                       readonly=True)
-    self.api.get('setting.add')('nocast', False, bool,
+    self.api('setting.add')('nocast', False, bool,
                       'in a nocast room',
                       readonly=True)
-    self.api.get('setting.add')('nomoves', False, bool,
+    self.api('setting.add')('nomoves', False, bool,
                       'need more moves',
                       readonly=True)
-    self.api.get('setting.add')('nomana', False, bool,
+    self.api('setting.add')('nomana', False, bool,
                       'need more mana',
                       readonly=True)
-    self.api.get('setting.add')('nocastrooms', {}, dict,
+    self.api('setting.add')('nocastrooms', {}, dict,
                       'list of nocast rooms',
                       readonly=True)
-    self.api.get('setting.add')('currentroom', -1, int,
+    self.api('setting.add')('currentroom', -1, int,
                       'the current room',
                       readonly=True)
 
@@ -70,7 +70,7 @@ class Plugin(AardwolfBasePlugin):
     parser.add_argument('-o', "--override",
           help="add even if the spell is not flagged as a spellup by the mud",
               action="store_true")
-    self.api.get('commands.add')('add', self.cmd_sadd,
+    self.api('commands.add')('add', self.cmd_sadd,
               parser=parser, group='Spellups on Self')
 
     parser = argparse.ArgumentParser(add_help=False,
@@ -78,7 +78,7 @@ class Plugin(AardwolfBasePlugin):
     parser.add_argument('match',
             help='list only spellups that have this argument in them',
             default='', nargs='?')
-    self.api.get('commands.add')('list', self.cmd_slist,
+    self.api('commands.add')('list', self.cmd_slist,
               parser=parser, group='Spellups on Self')
 
     parser = argparse.ArgumentParser(add_help=False,
@@ -86,7 +86,7 @@ class Plugin(AardwolfBasePlugin):
     parser.add_argument('spell',
               help='the spells to remove, use \'all\' to remove all spellups',
               default=[], nargs='*')
-    self.api.get('commands.add')('rem', self.cmd_srem,
+    self.api('commands.add')('rem', self.cmd_srem,
               parser=parser, group='Spellups on Self')
 
     parser = argparse.ArgumentParser(add_help=False,
@@ -94,7 +94,7 @@ class Plugin(AardwolfBasePlugin):
     parser.add_argument('spell',
             help='the spells to enable, use \'all\' to enable all spellups',
             default=[], nargs='*')
-    self.api.get('commands.add')('en', self.cmd_en,
+    self.api('commands.add')('en', self.cmd_en,
               parser=parser, group='Spellups on Self')
 
     parser = argparse.ArgumentParser(add_help=False,
@@ -102,27 +102,27 @@ class Plugin(AardwolfBasePlugin):
     parser.add_argument('spell',
             help='the spells to disable, use \'all\' to disable all spellups',
             default=[], nargs='*')
-    self.api.get('commands.add')('dis', self.cmd_dis,
+    self.api('commands.add')('dis', self.cmd_dis,
               shelp='disable a spellup on self',
               parser=parser, group='Spellups on Self')
 
     parser = argparse.ArgumentParser(add_help=False,
               description='check all information to cast spells')
-    self.api.get('commands.add')('check', self.cmd_check,
+    self.api('commands.add')('check', self.cmd_check,
               shelp='check data status for casting', group='Spellups on Self')
 
-    self.api.get('events.register')('GMCP:char.vitals', self._charvitals)
-    self.api.get('events.register')('GMCP:char.status', self._charstatus)
-    self.api.get('events.register')('moved_room', self._moved)
-    self.api.get('events.register')('skill_fail', self._skillfail)
-    self.api.get('events.register')('aard_skill_affon', self._affon)
-    self.api.get('events.register')('aard_skill_affoff', self._affoff)
-    self.api.get('events.register')('aard_skill_recoff', self._recoff)
-    self.api.get('events.register')('su_enabled', self.enabledchange)
-    self.api.get('events.register')('skills_affected_update', self.nextspell)
-    self.api.get('events.register')('aard_skill_gain', self.skillgain)
+    self.api('events.register')('GMCP:char.vitals', self._charvitals)
+    self.api('events.register')('GMCP:char.status', self._charstatus)
+    self.api('events.register')('moved_room', self._moved)
+    self.api('events.register')('skill_fail', self._skillfail)
+    self.api('events.register')('aard_skill_affon', self._affon)
+    self.api('events.register')('aard_skill_affoff', self._affoff)
+    self.api('events.register')('aard_skill_recoff', self._recoff)
+    self.api('events.register')('su_enabled', self.enabledchange)
+    self.api('events.register')('skills_affected_update', self.nextspell)
+    self.api('events.register')('aard_skill_gain', self.skillgain)
 
-    if self.api.get('skills.isuptodate')():
+    if self.api('skills.isuptodate')():
       self._charstatus()
 
   def skillgain(self, args=None):
@@ -156,8 +156,8 @@ class Plugin(AardwolfBasePlugin):
     """
     catch an affon event
     """
-    if args['sn'] == self.api.get('setting.gets')('waiting'):
-      self.api.get('setting.change')('waiting', -1)
+    if args['sn'] == self.api('setting.gets')('waiting'):
+      self.api('setting.change')('waiting', -1)
     self.nextspell()
 
   def _affoff(self, args):
@@ -176,32 +176,32 @@ class Plugin(AardwolfBasePlugin):
     """
     catch a skill fail event
     """
-    self.api.get('send.msg')('skillfail: %s' % args)
+    self.api('send.msg')('skillfail: %s' % args)
     spellnum = args['sn']
-    skill = self.api.get('skills.gets')(spellnum)
-    waiting = self.api.get('setting.gets')('waiting')
+    skill = self.api('skills.gets')(spellnum)
+    waiting = self.api('setting.gets')('waiting')
     if args['reason'] == 'nomana':
-      self.api.get('setting.change')('waiting', -1)
-      self.api.get('setting.change')('nomana', True)
-      self.lastmana = self.api.get('GMCP.getv')('char.vitals.mana')
+      self.api('setting.change')('waiting', -1)
+      self.api('setting.change')('nomana', True)
+      self.lastmana = self.api('GMCP.getv')('char.vitals.mana')
     elif args['reason'] == 'nocastroom':
-      self.api.get('setting.change')('waiting', -1)
-      self.api.get('setting.change')('nocast', True)
-      nocastrooms = self.api.get('setting.gets')('nocastrooms')
-      currentroom = self.api.get('setting.gets')('currentroom')
+      self.api('setting.change')('waiting', -1)
+      self.api('setting.change')('nocast', True)
+      nocastrooms = self.api('setting.gets')('nocastrooms')
+      currentroom = self.api('setting.gets')('currentroom')
       nocastrooms[currentroom] = True
     elif args['reason'] == 'fighting' or args['reason'] == 'notactive':
-      self.api.get('setting.change')('waiting', -1)
+      self.api('setting.change')('waiting', -1)
     elif args['reason'] == 'nomoves':
-      self.api.get('setting.change')('waiting', -1)
-      self.api.get('setting.change')('nomoves', True)
-      self.lastmana = self.api.get('GMCP.getv')('char.vitals.moves')
+      self.api('setting.change')('waiting', -1)
+      self.api('setting.change')('nomoves', True)
+      self.lastmana = self.api('GMCP.getv')('char.vitals.moves')
     elif waiting == spellnum:
       if args['reason'] == 'lostconc':
-        self.api.get('skills.sendcmd')(waiting)
+        self.api('skills.sendcmd')(waiting)
       elif args['reason'] == 'alreadyaff':
-        self.api.get('setting.change')('waiting', -1)
-        self.api.get('send.client')(
+        self.api('setting.change')('waiting', -1)
+        self.api('send.client')(
           "@BSpellup - disabled %s because you are already affected" % \
                                   skill['name'])
         if spellnum in self.spellups['self']:
@@ -211,22 +211,22 @@ class Plugin(AardwolfBasePlugin):
         self.nextspell()
       elif args['reason'] == 'recblock':
         # do stuff when blocked by a recovery
-        self.api.get('setting.change')('waiting', -1)
+        self.api('setting.change')('waiting', -1)
         self.nextspell()
       elif args['reason'] == 'dontknow':
         # do stuff when spell/skill isn't learned
         # don't disable it, hopefully the spell/skill has been updated and
         # won't be cast through nextspell
-        self.api.get('setting.change')('waiting', -1)
+        self.api('setting.change')('waiting', -1)
         self.nextspell()
       elif args['reason'] == 'wrongtarget':
         # do stuff when a wrong target
-        self.api.get('setting.change')('waiting', -1)
+        self.api('setting.change')('waiting', -1)
         self.nextspell()
       elif args['reason'] == 'disabled':
-        self.api.get('setting.change')('waiting', -1)
-        skill = self.api.get('skills.gets')(spellnum)
-        self.api.get('send.client')(
+        self.api('setting.change')('waiting', -1)
+        skill = self.api('skills.gets')(spellnum)
+        self.api('send.client')(
           "@BSpellup - disabled %s because it is disabled mudside" % \
                                   skill['name'])
         if spellnum in self.spellups['self']:
@@ -239,13 +239,13 @@ class Plugin(AardwolfBasePlugin):
     """
     reset stuff if we move
     """
-    self.api.get('setting.change')('currentroom', args['to']['num'])
-    nocastrooms = self.api.get('setting.gets')('nocastrooms')
+    self.api('setting.change')('currentroom', args['to']['num'])
+    nocastrooms = self.api('setting.gets')('nocastrooms')
     if args['to']['num'] in nocastrooms:
-      self.api.get('setting.change')('nocast', True)
+      self.api('setting.change')('nocast', True)
     else:
-      lastval = self.api.get('setting.gets')('nocast')
-      self.api.get('setting.change')('nocast', False)
+      lastval = self.api('setting.gets')('nocast')
+      self.api('setting.change')('nocast', False)
       if lastval:
         self.nextspell()
 
@@ -253,25 +253,25 @@ class Plugin(AardwolfBasePlugin):
     """
     check if we have more mana and moves
     """
-    if self.api.get('setting.gets')('nomana'):
-      newmana = self.api.get('GMCP.getv')('char.vitals.mana')
+    if self.api('setting.gets')('nomana'):
+      newmana = self.api('GMCP.getv')('char.vitals.mana')
       if newmana > self.lastmana:
         self.lastmana = -1
-        self.api.get('setting.change')('nomana', False)
+        self.api('setting.change')('nomana', False)
         self.nextspell()
-    if self.api.get('setting.gets')('nomoves'):
-      newmoves = self.api.get('GMCP.getv')('char.vitals.moves')
+    if self.api('setting.gets')('nomoves'):
+      newmoves = self.api('GMCP.getv')('char.vitals.moves')
       if newmoves > self.lastmoves:
         self.lastmoves = -1
-        self.api.get('setting.change')('nomoves', False)
+        self.api('setting.change')('nomoves', False)
         self.nextspell()
 
   def _charstatus(self, _=None):
     """
     check if we have more mana and moves
     """
-    status = self.api.get('GMCP.getv')('char.status.state')
-    if status == 3 and self.api.get('skills.isuptodate')():
+    status = self.api('GMCP.getv')('char.status.state')
+    if status == 3 and self.api('skills.isuptodate')():
       self.nextspell()
 
   @timeit
@@ -279,25 +279,25 @@ class Plugin(AardwolfBasePlugin):
     """
     check to cast the next spell
     """
-    proxy = self.api.get('managers.getm')('proxy')
+    proxy = self.api('managers.getm')('proxy')
     if not proxy:
       return False
-    self.api.get('send.msg')('waiting type: %s' % \
-                      type(self.api.get('setting.gets')('waiting')))
-    self.api.get('send.msg')('currentstatus = %s' % \
-                      self.api.get('GMCP.getv')('char.status.state'))
+    self.api('send.msg')('waiting type: %s' % \
+                      type(self.api('setting.gets')('waiting')))
+    self.api('send.msg')('currentstatus = %s' % \
+                      self.api('GMCP.getv')('char.status.state'))
 
-    if self.api.get('setting.gets')('nomoves') \
-        or self.api.get('setting.gets')('nomana') \
-        or self.api.get('setting.gets')('nocast') \
-        or self.api.get('setting.gets')('waiting') != -1 \
-        or not self.api.get('setting.gets')('enabled') \
-        or not self.api.get('skills.isuptodate')() or \
-       self.api.get('GMCP.getv')('char.status.state') != 3:
-      self.api.get('send.msg')('checked returned False')
+    if self.api('setting.gets')('nomoves') \
+        or self.api('setting.gets')('nomana') \
+        or self.api('setting.gets')('nocast') \
+        or self.api('setting.gets')('waiting') != -1 \
+        or not self.api('setting.gets')('enabled') \
+        or not self.api('skills.isuptodate')() or \
+       self.api('GMCP.getv')('char.status.state') != 3:
+      self.api('send.msg')('checked returned False')
       return False
 
-    self.api.get('send.msg')('checked returned True')
+    self.api('send.msg')('checked returned True')
     return True
 
   @timeit
@@ -305,13 +305,13 @@ class Plugin(AardwolfBasePlugin):
     """
     try to cast the next spell
     """
-    self.api.get('send.msg')('nextspell')
+    self.api('send.msg')('nextspell')
     if self.check():
       for i in self.spellups['sorder']:
         if self.spellups['self'][i]['enabled']:
-          if self.api.get('skills.canuse')(i):
-            self.api.get('setting.change')('waiting', int(i))
-            self.api.get('skills.sendcmd')(i)
+          if self.api('skills.canuse')(i):
+            self.api('setting.change')('waiting', int(i))
+            self.api('skills.sendcmd')(i)
             return
 
   def savestate(self):
@@ -326,13 +326,13 @@ class Plugin(AardwolfBasePlugin):
     add a spell internally
     """
     msg = []
-    spell = self.api.get('skills.gets')(spellnum)
+    spell = self.api('skills.gets')(spellnum)
 
     if not spell:
       msg.append('%-20s: does not exist' % spellnum)
       return msg
 
-    if not override and not self.api.get('skills.isspellup')(spell['sn']):
+    if not override and not self.api('skills.isspellup')(spell['sn']):
       msg.append('%-20s: not a spellup' % spell['name'])
       return msg
 
@@ -354,13 +354,13 @@ class Plugin(AardwolfBasePlugin):
     """
     add a spellup
     """
-    #self.api.get('send.client')('sadd arguments: %s' % args)
+    #self.api('send.client')('sadd arguments: %s' % args)
     msg = []
     if len(args['spell']) < 1:
       return False, ['Please supply a spell']
 
     if args['spell'][0] == 'all':
-      spellups = self.api.get('skills.getspellups')()
+      spellups = self.api('skills.getspellups')()
       for spell in spellups:
         if spell['percent'] > 1:
           tmsg = self._addselfspell(spell['sn'])
@@ -397,14 +397,14 @@ class Plugin(AardwolfBasePlugin):
               'Num', 'Name', 'A', 'P', 'B', 'D', 'NP', 'NL'))
       msg.append('@B' + '-'* 60)
       for i in self.spellups['sorder']:
-        skill = self.api.get('skills.gets')(i)
+        skill = self.api('skills.gets')(i)
         if not match or match in skill['name']:
           msg.append('%-3s - %-30s : %2s %2s %2s %2s  %-2s  %-2s' % (
                 self.spellups['sorder'].index(i),
                 skill['name'],
-                'A' if self.api.get('skills.isaffected')(i) else '',
-                'P' if self.api.get('setting.gets')('waiting') == i else '',
-                'B' if self.api.get('skills.isblockedbyrecovery')(i) else '',
+                'A' if self.api('skills.isaffected')(i) else '',
+                'P' if self.api('setting.gets')('waiting') == i else '',
+                'B' if self.api('skills.isblockedbyrecovery')(i) else '',
                 'D' if not self.spellups['self'][i]['enabled'] else '',
                 'NP' if skill['percent'] == 1 else '',
                 'NL' if skill['percent'] == 0 else '',))
@@ -428,7 +428,7 @@ class Plugin(AardwolfBasePlugin):
 
     else:
       for spella in args['spell']:
-        spell = self.api.get('skills.gets')(spella)
+        spell = self.api('skills.gets')(spella)
 
         if not spell:
           msg.append('%s does not exist' % spella)
@@ -462,7 +462,7 @@ class Plugin(AardwolfBasePlugin):
 
     else:
       for spellnum in args['spell']:
-        skill = self.api.get('skills.gets')(spellnum)
+        skill = self.api('skills.gets')(spellnum)
         if skill:
           if skill['sn'] in self.spellups['sorder']:
             self.spellups['self'][skill['sn']]['enabled'] = True
@@ -492,7 +492,7 @@ class Plugin(AardwolfBasePlugin):
 
     else:
       for spellnum in args['spell']:
-        skill = self.api.get('skills.gets')(spellnum)
+        skill = self.api('skills.gets')(spellnum)
         if skill:
           if skill['sn'] in self.spellups['sorder']:
             self.spellups['self'][skill['sn']]['enabled'] = False
@@ -512,25 +512,25 @@ class Plugin(AardwolfBasePlugin):
     tmsg = []
     tformat = '%-25s : %-10s - %s'
     tmsg.append(tformat % ('enabled',
-                self.api.get('setting.gets')('enabled'),
+                self.api('setting.gets')('enabled'),
                 'should be True to cast spells'))
     tmsg.append(tformat % ('waiting',
-                self.api.get('setting.gets')('waiting'),
+                self.api('setting.gets')('waiting'),
                 'the spell that was last cast, should be -1 to cast spells'))
     tmsg.append(tformat % ('nocast',
-                self.api.get('setting.gets')('nocast'),
+                self.api('setting.gets')('nocast'),
                 'the current room is nocast, should be False to cast spells'))
     tmsg.append(tformat % ('nomoves',
-                self.api.get('setting.gets')('nomoves'),
+                self.api('setting.gets')('nomoves'),
                 'ran out of moves, should be False to cast spells'))
     tmsg.append(tformat % ('nomana',
-                self.api.get('setting.gets')('nomana'),
+                self.api('setting.gets')('nomana'),
                 'ran out of mana, should be False to cast spells'))
     tmsg.append(tformat % ('Skills are up to date',
-                self.api.get('skills.isuptodate')(),
+                self.api('skills.isuptodate')(),
                 'should be True to cast spells'))
     tmsg.append(tformat % ('Char state',
-                self.api.get('GMCP.getv')('char.status.state'),
+                self.api('GMCP.getv')('char.status.state'),
                 'should be 3 to cast spells'))
     return True, tmsg
 

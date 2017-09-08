@@ -34,7 +34,7 @@ class Plugin(AardwolfBasePlugin):
 
     self.cmdqueue = None
 
-    self.api.get('dependency.add')('cmdq')
+    self.api('dependency.add')('cmdq')
 
   def load(self):
     """
@@ -42,92 +42,92 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.load(self)
 
-    self.cmdqueue = self.api.get('cmdq.baseclass')()(self)
+    self.cmdqueue = self.api('cmdq.baseclass')()(self)
 
     self.cmdqueue.addcmdtype('cpcheck', 'campaign check', "^campaign check$",
                        beforef=self.cpcheckbefore, afterf=self.cpcheckafter)
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='show cp info')
-    self.api.get('commands.add')('show', self.cmd_show,
+    self.api('commands.add')('show', self.cmd_show,
                                 parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='refresh cp info')
-    self.api.get('commands.add')('refresh', self.cmd_refresh,
+    self.api('commands.add')('refresh', self.cmd_refresh,
                                 parser=parser)
 
-    self.api.get('watch.add')('cp_check',
+    self.api('watch.add')('cp_check',
       '^(cp|campa|campai|campaig|campaign) (c|ch|che|chec|check)$')
 
-    self.api.get('triggers.add')('cpnew',
+    self.api('triggers.add')('cpnew',
       "^Commander Barcett tells you " \
         "'Type 'campaign info' to see what you must kill.'$")
-    self.api.get('triggers.add')('cpnone',
+    self.api('triggers.add')('cpnone',
       "^You are not currently on a campaign.$",
       enabled=False, group='cpcheck', omit=True)
-    self.api.get('triggers.add')('cptime',
+    self.api('triggers.add')('cptime',
       "^You have (?P<time>.*) to finish this campaign.$",
       enabled=False, group='cpcheck', omit=True)
-    self.api.get('triggers.add')('cpmob',
+    self.api('triggers.add')('cpmob',
       "^You still have to kill \* (?P<mob>.*) " \
             "\((?P<location>.*?)(?P<dead> - Dead|)\)$",
       enabled=False, group='cpcheck', omit=True)
-    self.api.get('triggers.add')('cpscramble',
+    self.api('triggers.add')('cpscramble',
       "Note: One or more target names in this " \
             "campaign might be slightly scrambled.$",
       enabled=False, group='cpcheck', omit=True)
-    self.api.get('triggers.add')('cpneedtolevel',
+    self.api('triggers.add')('cpneedtolevel',
       "^You will have to level before you" \
                 " can go on another campaign.$",
       enabled=False,
       group='cpin')
 #Note: One or more target names in this campaign might be slightly scrambled.
-    self.api.get('triggers.add')('cpcantake',
+    self.api('triggers.add')('cpcantake',
       "^You may take a campaign at this level.$",
       enabled=False,
       group='cpin')
-    self.api.get('triggers.add')('cpshnext',
+    self.api('triggers.add')('cpshnext',
       "^You cannot take another campaign for (?P<time>.*).$",
       enabled=False,
       group='cpin')
-    self.api.get('triggers.add')('cpmobdead',
+    self.api('triggers.add')('cpmobdead',
       "^Congratulations, that was one of your CAMPAIGN mobs!$",
       enabled=False,
       group='cpin')
-    self.api.get('triggers.add')('cpcomplete',
+    self.api('triggers.add')('cpcomplete',
       "^CONGRATULATIONS! You have completed your campaign.$",
       enabled=False,
       group='cpin')
-    self.api.get('triggers.add')('cpclear',
+    self.api('triggers.add')('cpclear',
       "^Campaign cleared.$",
       enabled=False,
       group='cpin')
-    self.api.get('triggers.add')('cpreward',
+    self.api('triggers.add')('cpreward',
       "^\s*Reward of (?P<amount>\d+) (?P<type>.+) .+ added.$",
       enabled=False,
       group='cprew',
       argtypes={'amount':int})
-    self.api.get('triggers.add')('cpcompdone',
+    self.api('triggers.add')('cpcompdone',
       "^--------------------------" \
             "------------------------------------$",
       enabled=False,
       group='cpdone')
 
-    self.api.get('events.register')('trigger_cpnew', self._cpnew)
-    self.api.get('events.register')('trigger_cpnone', self._cpnone)
-    self.api.get('events.register')('trigger_cptime', self._cptime)
-    #self.api.get('events.register')('watch_cp_check', self._cpcheckcmd)
-    self.api.get('events.register')('trigger_cpmob', self._cpmob)
-    self.api.get('events.register')('trigger_cpneedtolevel',
+    self.api('events.register')('trigger_cpnew', self._cpnew)
+    self.api('events.register')('trigger_cpnone', self._cpnone)
+    self.api('events.register')('trigger_cptime', self._cptime)
+    #self.api('events.register')('watch_cp_check', self._cpcheckcmd)
+    self.api('events.register')('trigger_cpmob', self._cpmob)
+    self.api('events.register')('trigger_cpneedtolevel',
                                     self._cpneedtolevel)
-    self.api.get('events.register')('trigger_cpcantake', self._cpcantake)
-    self.api.get('events.register')('trigger_cpshnext', self._cpshnext)
-    self.api.get('events.register')('trigger_cpmobdead', self._cpmobdead)
-    self.api.get('events.register')('trigger_cpcomplete', self._cpcomplete)
-    self.api.get('events.register')('trigger_cpclear', self._cpclear)
-    self.api.get('events.register')('trigger_cpreward', self._cpreward)
-    self.api.get('events.register')('trigger_cpcompdone', self._cpcompdone)
+    self.api('events.register')('trigger_cpcantake', self._cpcantake)
+    self.api('events.register')('trigger_cpshnext', self._cpshnext)
+    self.api('events.register')('trigger_cpmobdead', self._cpmobdead)
+    self.api('events.register')('trigger_cpcomplete', self._cpcomplete)
+    self.api('events.register')('trigger_cpclear', self._cpclear)
+    self.api('events.register')('trigger_cpreward', self._cpreward)
+    self.api('events.register')('trigger_cpcompdone', self._cpcompdone)
 
   def cmd_show(self, args):
     """
@@ -167,14 +167,14 @@ class Plugin(AardwolfBasePlugin):
     """
     self.mobsleft = []
     self.cpinfotimer = {}
-    self.api.get('triggers.togglegroup')('cpcheck', True)
+    self.api('triggers.togglegroup')('cpcheck', True)
 
   def cpcheckafter(self):
     """
     function to run after the command is finished
     """
-    self.api.get('triggers.togglegroup')("cpin", True)
-    self.api.get('triggers.togglegroup')('cpcheck', False)
+    self.api('triggers.togglegroup')("cpin", True)
+    self.api('triggers.togglegroup')('cpcheck', False)
 
   def afterfirstactive(self, _=None):
     """
@@ -196,8 +196,8 @@ class Plugin(AardwolfBasePlugin):
     self.cpinfo['qp'] = 0
     self.cpinfo['bonusqp'] = 0
     self.cpinfo['failed'] = 0
-    self.cpinfo['level'] = self.api.get('aardu.getactuallevel')(
-                        self.api.get('GMCP.getv')('char.status.level'))
+    self.cpinfo['level'] = self.api('aardu.getactuallevel')(
+                        self.api('GMCP.getv')('char.status.level'))
     self.cpinfo['starttime'] = time.time()
     self.cpinfo['finishtime'] = 0
     self.cpinfo['oncp'] = True
@@ -209,7 +209,7 @@ class Plugin(AardwolfBasePlugin):
     """
     handle a new cp
     """
-    self.api.get('send.msg')('cpnew: %s' % args)
+    self.api('send.msg')('cpnew: %s' % args)
     self._cpreset()
     self.cmdqueue.addtoqueue('cpcheck', '')
 
@@ -217,13 +217,13 @@ class Plugin(AardwolfBasePlugin):
     """
     handle a none cp
     """
-    self.api.get('send.msg')('cpnone')
+    self.api('send.msg')('cpnone')
     self.cpinfo['oncp'] = False
     self.savestate()
-    self.api.get('triggers.togglegroup')('cpcheck', False)
-    self.api.get('triggers.togglegroup')('cpin', False)
-    self.api.get('triggers.togglegroup')('cprew', False)
-    self.api.get('triggers.togglegroup')('cpdone', False)
+    self.api('triggers.togglegroup')('cpcheck', False)
+    self.api('triggers.togglegroup')('cpin', False)
+    self.api('triggers.togglegroup')('cprew', False)
+    self.api('triggers.togglegroup')('cpdone', False)
     #check(EnableTimer("cp_timer", false))
     self.cpinfotimer = {}
     self.cmdqueue.cmddone('cpcheck')
@@ -232,17 +232,17 @@ class Plugin(AardwolfBasePlugin):
     """
     handle cp time
     """
-    self.api.get('send.msg')('handling cp time')
-    self.api.get('send.msg')('%s' % self.cpinfo)
+    self.api('send.msg')('handling cp time')
+    self.api('send.msg')('%s' % self.cpinfo)
     if not self.cpinfo['mobs']:
-      self.api.get('send.msg')('copying mobsleft')
+      self.api('send.msg')('copying mobsleft')
       self.cpinfo['mobs'] = self.mobsleft[:]
-      self.api.get('events.eraise')('aard_cp_mobsorig',
+      self.api('events.eraise')('aard_cp_mobsorig',
                     copy.deepcopy({'mobsleft':self.mobsleft}))
       self.savestate()
 
-    self.api.get('send.msg')('raising aard_cp_mobsleft %s' % self.mobsleft)
-    self.api.get('events.eraise')('aard_cp_mobsleft',
+    self.api('send.msg')('raising aard_cp_mobsleft %s' % self.mobsleft)
+    self.api('events.eraise')('aard_cp_mobsleft',
                     copy.deepcopy({'mobsleft':self.mobsleft}))
 
     self.cmdqueue.cmddone('cpcheck')
@@ -273,28 +273,28 @@ class Plugin(AardwolfBasePlugin):
     handle cpmob
     """
     name = args['mob']
-    mobdead = self.api.get('utils.verify')(args['dead'], bool)
+    mobdead = self.api('utils.verify')(args['dead'], bool)
     location = args['location']
 
     if not name or not location:
-      self.api.get('send.msg')("error parsing line: %s" % args['line'])
+      self.api('send.msg')("error parsing line: %s" % args['line'])
     else:
       self.mobsleft.append({'name':name,
-                      'nocolorname':self.api.get('colors.stripansi')(name),
+                      'nocolorname':self.api('colors.stripansi')(name),
                       'location':location, 'mobdead':mobdead})
 
   def _cpmobdead(self, _=None):
     """
     handle cpmobdead
     """
-    self.api.get('events.register')('aard_mobkill', self._mobkillevent)
-    #self.api.get('send.execute')("cp check")
+    self.api('events.register')('aard_mobkill', self._mobkillevent)
+    #self.api('send.execute')("cp check")
 
   def _cpcomplete(self, _=None):
     """
     handle cpcomplete
     """
-    self.api.get('triggers.togglegroup')('cprew', True)
+    self.api('triggers.togglegroup')('cprew', True)
     self.cpinfo['finishtime'] = time.time()
     self.cpinfo['oncp'] = False
     self.savestate()
@@ -305,16 +305,16 @@ class Plugin(AardwolfBasePlugin):
     """
     rtype = args['type']
     ramount = int(args['amount'])
-    rewardt = self.api.get('aardu.rewardtable')()
+    rewardt = self.api('aardu.rewardtable')()
     self.cpinfo[rewardt[rtype]] = ramount
     self.savestate()
-    self.api.get('triggers.togglegroup')('cpdone', True)
+    self.api('triggers.togglegroup')('cpdone', True)
 
   def _cpcompdone(self, _=None):
     """
     handle cpcompdone
     """
-    self.api.get('events.register')('trigger_all', self._triggerall)
+    self.api('events.register')('trigger_all', self._triggerall)
 
   def _triggerall(self, args=None):
     """
@@ -324,18 +324,18 @@ class Plugin(AardwolfBasePlugin):
       mat = re.match('^You receive (?P<bonus>\d*) quest points bonus ' \
                   'for your first campaign completed today.$', args['line'])
       self.cpinfo['bonusqp'] = int(mat.groupdict()['bonus'])
-      self.api.get('events.unregister')('trigger_all', self._triggerall)
-      self.api.get('events.eraise')('aard_cp_comp', copy.deepcopy(self.cpinfo))
+      self.api('events.unregister')('trigger_all', self._triggerall)
+      self.api('events.eraise')('aard_cp_comp', copy.deepcopy(self.cpinfo))
     elif re.match("^You have completed (\d*) campaigns today.$", args['line']):
-      self.api.get('events.unregister')('trigger_all', self._triggerall)
-      self.api.get('events.eraise')('aard_cp_comp', copy.deepcopy(self.cpinfo))
+      self.api('events.unregister')('trigger_all', self._triggerall)
+      self.api('events.eraise')('aard_cp_comp', copy.deepcopy(self.cpinfo))
 
   def _cpclear(self, _=None):
     """
     handle cpclear
     """
     self.cpinfo['failed'] = 1
-    self.api.get('events.eraise')('aard_cp_failed', copy.deepcopy(self.cpinfo))
+    self.api('events.eraise')('aard_cp_failed', copy.deepcopy(self.cpinfo))
     self._cpnone()
 
   def _cpcheckcmd(self, args=None):
@@ -344,22 +344,22 @@ class Plugin(AardwolfBasePlugin):
     """
     self.mobsleft = []
     self.cpinfotimer = {}
-    self.api.get('triggers.togglegroup')('cpcheck', True)
+    self.api('triggers.togglegroup')('cpcheck', True)
     return args
 
   def _mobkillevent(self, args):
     """
     this will be registered to the mobkill hook
     """
-    self.api.get('send.msg')('checking kill %s' % args['name'])
-    self.api.get('events.unregister')('aard_mobkill', self._mobkillevent)
+    self.api('send.msg')('checking kill %s' % args['name'])
+    self.api('events.unregister')('aard_mobkill', self._mobkillevent)
 
     found = False
     removeitem = None
     for i in range(len(self.mobsleft)):
       tmob = self.mobsleft[i]
       if tmob['name'] == args['name']:
-        self.api.get('send.msg')('found %s' % tmob['name'])
+        self.api('send.msg')('found %s' % tmob['name'])
         found = True
         removeitem = i
 
@@ -367,10 +367,10 @@ class Plugin(AardwolfBasePlugin):
       del(self.mobsleft[removeitem])
 
     if found:
-      self.api.get('events.eraise')('aard_cp_mobsleft',
+      self.api('events.eraise')('aard_cp_mobsleft',
                         copy.deepcopy({'mobsleft':self.mobsleft}))
     else:
-      self.api.get('send.msg')("BP CP: could not find mob: %s" % args['name'])
+      self.api('send.msg')("BP CP: could not find mob: %s" % args['name'])
       self.cmdqueue.addtoqueue('cpcheck', '')
 
   def savestate(self):

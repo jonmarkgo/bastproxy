@@ -116,12 +116,12 @@ class Plugin(AardwolfBasePlugin):
   def __init__(self, *args, **kwargs):
     AardwolfBasePlugin.__init__(self, *args, **kwargs)
 
-    self.api.get('api.add')('dataparse', self.api_dataparse)
-    self.api.get('api.add')('wearlocs', self.api_wearlocs)
-    self.api.get('api.add')('objecttypes', self.api_objecttypes)
-    self.api.get('api.add')('itemflags', self.api_itemflags)
-    self.api.get('api.add')('itemflagscolors', self.api_itemflagscolors)
-    self.api.get('api.add')('itemflagsname', self.api_itemflagsname)
+    self.api('api.add')('dataparse', self.api_dataparse)
+    self.api('api.add')('wearlocs', self.api_wearlocs)
+    self.api('api.add')('objecttypes', self.api_objecttypes)
+    self.api('api.add')('itemflags', self.api_itemflags)
+    self.api('api.add')('itemflagscolors', self.api_itemflagscolors)
+    self.api('api.add')('itemflagsname', self.api_itemflagsname)
 
     self.invlayout = {}
     self.invlayout['invheader'] = ["serial", "level", "itype", "worth",
@@ -223,8 +223,8 @@ class Plugin(AardwolfBasePlugin):
         titem[name] = value
 
       if layoutname == 'eqdata':
-        titem['name'] = self.api.get('colors.stripcolor')(titem['cname'])
+        titem['name'] = self.api('colors.stripcolor')(titem['cname'])
 
       return titem
     else:
-      self.api.get('send.msg')('layout %s not found' % layoutname)
+      self.api('send.msg')('layout %s not found' % layoutname)

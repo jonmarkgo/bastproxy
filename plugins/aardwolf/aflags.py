@@ -34,28 +34,28 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.load(self)
 
-    self.cmdqueue = self.api.get('cmdq.baseclass')()(self)
+    self.cmdqueue = self.api('cmdq.baseclass')()(self)
     self.cmdqueue.addcmdtype('aflags', 'aflags', "^aflags$",
               beforef=self.aflagsbefore, afterf=self.aflagsafter)
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='refresh affect flags')
-    self.api.get('commands.add')('refresh', self.cmd_refresh,
+    self.api('commands.add')('refresh', self.cmd_refresh,
                                  parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='check to see if affected by a flag')
     parser.add_argument('flag', help='the flag to check',
                         default='', nargs='?')
-    self.api.get('commands.add')('check', self.cmd_check,
+    self.api('commands.add')('check', self.cmd_check,
                                  parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='list affect flags')
-    self.api.get('commands.add')('list', self.cmd_list,
+    self.api('commands.add')('list', self.cmd_list,
                                  parser=parser)
 
-    self.api.get('triggers.add')('aflagsstart',
+    self.api('triggers.add')('aflagsstart',
             "^Affect Flags: (?P<flags>.*)$", enabled=False,
             group="aflags")
 

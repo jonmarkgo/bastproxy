@@ -79,7 +79,7 @@ class Plugin(AardwolfBasePlugin):
   def __init__(self, *args, **kwargs):
     AardwolfBasePlugin.__init__(self, *args, **kwargs)
 
-    self.api.get('dependency.add')('aardwolf.eq')
+    self.api('dependency.add')('aardwolf.eq')
 
   def load(self):
     """
@@ -91,7 +91,7 @@ class Plugin(AardwolfBasePlugin):
                  description='show needed aarch items')
     parser.add_argument('filter', help='a word in an aarch piece to check for',
                         default='', nargs='?')
-    self.api.get('commands.add')('need', self.cmd_need,
+    self.api('commands.add')('need', self.cmd_need,
                                 parser=parser)
 
   def cmd_need(self, args):
@@ -102,7 +102,7 @@ class Plugin(AardwolfBasePlugin):
     all = AARCHITEMS.keys()
     have = []
 
-    aarchi = self.api.get('eq.findname')('(Aarchaeology)')
+    aarchi = self.api('eq.findname')('(Aarchaeology)')
     items = 0
     pam = 0
     for item in aarchi:
