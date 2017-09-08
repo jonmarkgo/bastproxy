@@ -3,9 +3,9 @@ This is an example plugin about how to use triggers
 
 ## Using
 ### Add the regex
- * ```self.api.get('triggers.add')('testtrig', "^some test$")```
+ * ```self.api('triggers.add')('testtrig', "^some test$")```
 ### Register a function to the event
- * ```self.api.get('events.register('trigger_testtrig', somefunc)
+ * ```self.api('events.register('trigger_testtrig', somefunc)
 """
 from plugins._baseplugin import BasePlugin
 
@@ -33,14 +33,14 @@ class Plugin(BasePlugin):
     """
     BasePlugin.load(self)
 
-    self.api.get('triggers.add')(
+    self.api('triggers.add')(
         'example_trigger',
         r"^(?P<name>.*) flicks a (?P<insect>.*) off his bar\.$")
-    self.api.get('events.register')('trigger_example_trigger', self.testtrigger)
+    self.api('events.register')('trigger_example_trigger', self.testtrigger)
 
   def testtrigger(self, args):
     """
     show that the trigger fired
     """
-    self.api.get('send.client')('Trigger fired: args returned %s' % args)
+    self.api('send.client')('Trigger fired: args returned %s' % args)
 
