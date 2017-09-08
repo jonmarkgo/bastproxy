@@ -55,6 +55,7 @@
 <li><a href="/bastproxy/plugins/aardwolf/mapper.html">mapper</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/mobk.html">mobk</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/move.html">move</a></li>
+<li><a href="/bastproxy/plugins/aardwolf/pbalerts.html">pbalerts</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/quest.html">quest</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/repop.html">repop</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/scanh.html">scanh</a></li>
@@ -227,7 +228,7 @@ optional arguments:
 </code></pre>
 <h4 id="cmdgroupt" class="bph4">groupt</h4>
 <pre><code>
-usage: <span style="color:#5c5cff">#bp.actions.groupt</span><span style="color:#e5e5e5"> [-d] [-h] [group]</span>
+usage: <span style="color:#5c5cff">#bp.actions.groupt</span><span style="color:#e5e5e5"> [-t | -d | -e] [-h] [group]</span>
 
 toggle all actions in a group
 
@@ -235,7 +236,9 @@ positional arguments:
   group          the group to toggle
 
 optional arguments:
-  -d, --disable  disable the group (default: False)
+  -t, --toggle   toggle the action (default: toggle)
+  -d, --disable  disable the action (default: None)
+  -e, --enable   enable the action (default: None)
   -h, --help     show help (default: False)
 
 </code></pre>
@@ -267,15 +270,18 @@ optional arguments:
 </code></pre>
 <h4 id="cmdtoggle" class="bph4">toggle</h4>
 <pre><code>
-usage: <span style="color:#5c5cff">#bp.actions.toggle</span><span style="color:#e5e5e5"> [-h] [action]</span>
+usage: <span style="color:#5c5cff">#bp.actions.toggle</span><span style="color:#e5e5e5"> [-t | -d | -e] [-h] [action]</span>
 
 toggle enabled flag
 
 positional arguments:
-  action      the action to toggle
+  action         the action to toggle
 
 optional arguments:
-  -h, --help  show help (default: False)
+  -t, --toggle   toggle the action (default: toggle)
+  -d, --disable  disable the action (default: None)
+  -e, --enable   enable the action (default: None)
+  -h, --help     show help (default: False)
 
 </code></pre>
 </div>

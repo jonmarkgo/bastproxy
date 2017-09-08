@@ -55,6 +55,7 @@
 <li><a href="/bastproxy/plugins/aardwolf/mapper.html">mapper</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/mobk.html">mobk</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/move.html">move</a></li>
+<li><a href="/bastproxy/plugins/aardwolf/pbalerts.html">pbalerts</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/quest.html">quest</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/repop.html">repop</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/scanh.html">scanh</a></li>
@@ -183,19 +184,19 @@
 </div><div class="indenth3"><h3 id="registering-an-event-from-a-plugin" class="bph3">Registering an event from a plugin</h3>
 
 <ul>
-<li><code>self.api.get('events.register')(eventname, function)</code></li>
+<li><code>self.api('events.register')(eventname, function)</code></li>
 </ul>
 
 </div><div class="indenth3"><h3 id="unregistering-an-event" class="bph3">Unregistering an event</h3>
 
 <ul>
-<li><code>self.api.get('events.unregister')(eventname, function)</code></li>
+<li><code>self.api('events.unregister')(eventname, function)</code></li>
 </ul>
 
 </div><div class="indenth3"><h3 id="raising-an-event" class="bph3">Raising an event</h3>
 
 <ul>
-<li><code>self.api.get('events.eraise')(eventname, argtable)</code></li>
+<li><code>self.api('events.eraise')(eventname, argtable)</code></li>
 </ul>
 
 </div>
