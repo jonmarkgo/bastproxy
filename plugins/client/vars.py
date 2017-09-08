@@ -35,9 +35,9 @@ class Plugin(BasePlugin):
 
     self.variablefile = os.path.join(self.savedir, 'variables.txt')
     self._variables = PersistentDict(self.variablefile, 'c')
-    self.api.get('api.add')('getv', self.api_getv)
-    self.api.get('api.add')('setv', self.api_setv)
-    self.api.get('api.add')('replace', self.api_replace)
+    self.api('api.add')('getv', self.api_getv)
+    self.api('api.add')('setv', self.api_setv)
+    self.api('api.add')('replace', self.api_replace)
 
   def load(self):
     """
@@ -55,7 +55,7 @@ class Plugin(BasePlugin):
                         help='the value of the variable',
                         default='',
                         nargs='?')
-    self.api.get('commands.add')('add',
+    self.api('commands.add')('add',
                                  self.cmd_add,
                                  parser=parser)
 
@@ -65,7 +65,7 @@ class Plugin(BasePlugin):
                         help='the variable to remove',
                         default='',
                         nargs='?')
-    self.api.get('commands.add')('remove',
+    self.api('commands.add')('remove',
                                  self.cmd_remove,
                                  parser=parser)
 
@@ -75,14 +75,14 @@ class Plugin(BasePlugin):
                         help='list only variables that have this argument in their name',
                         default='',
                         nargs='?')
-    self.api.get('commands.add')('list',
+    self.api('commands.add')('list',
                                  self.cmd_list,
                                  parser=parser)
 
-    self.api.get('commands.default')('list')
-    #self.api.get('events.register')('from_client_event', self.checkvariable,
+    self.api('commands.default')('list')
+    #self.api('events.register')('from_client_event', self.checkvariable,
                                         #prio=1)
-    self.api.get('events.register')('from_client_event',
+    self.api('events.register')('from_client_event',
                                     self.checkline,
                                     prio=99)
 
@@ -132,7 +132,7 @@ class Plugin(BasePlugin):
     datan = self.api('vars.replace')(data)
 
     if datan != data:
-      self.api.get('send.msg')('replacing "%s" with "%s"' % (data.strip(),
+      self.api('send.msg')('replacing "%s" with "%s"' % (data.strip(),
                                                              datan.strip()))
       args['fromdata'] = datan
       args['beforevar'] = data

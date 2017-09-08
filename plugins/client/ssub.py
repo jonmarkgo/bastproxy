@@ -47,7 +47,7 @@ class Plugin(BasePlugin):
                         help='the string to replace it with',
                         default='',
                         nargs='?')
-    self.api.get('commands.add')('add',
+    self.api('commands.add')('add',
                                  self.cmd_add,
                                  parser=parser)
 
@@ -57,7 +57,7 @@ class Plugin(BasePlugin):
                         help='the substitute to remove',
                         default='',
                         nargs='?')
-    self.api.get('commands.add')('remove',
+    self.api('commands.add')('remove',
                                  self.cmd_remove,
                                  parser=parser)
 
@@ -67,18 +67,18 @@ class Plugin(BasePlugin):
                         help='list only substitutes that have this argument in them',
                         default='',
                         nargs='?')
-    self.api.get('commands.add')('list',
+    self.api('commands.add')('list',
                                  self.cmd_list,
                                  parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='clear all substitutes')
-    self.api.get('commands.add')('clear',
+    self.api('commands.add')('clear',
                                  self.cmd_clear,
                                  parser=parser)
 
-    self.api.get('commands.default')('list')
-    self.api.get('events.register')('from_mud_event', self.findsub)
+    self.api('commands.default')('list')
+    self.api('events.register')('from_mud_event', self.findsub)
 
   def findsub(self, args):
     """
@@ -90,7 +90,7 @@ class Plugin(BasePlugin):
       for mem in self._substitutes.keys():
         if mem in data:
           data = data.replace(mem,
-                              self.api.get('color.convertcolors')(
+                              self.api('color.convertcolors')(
                                   self._substitutes[mem]['sub']))
       args['original'] = data
       return args

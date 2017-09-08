@@ -48,11 +48,11 @@ class Plugin(BasePlugin):
                         "--count",
                         help="how many times to execute the command",
                         default=1)
-    self.api.get('commands.add')('cmd',
+    self.api('commands.add')('cmd',
                                  self.cmd_loop,
                                  parser=parser)
 
-    self.api.get('commands.default')('loop')
+    self.api('commands.default')('loop')
 
   def cmd_loop(self, args):
     """
@@ -66,8 +66,8 @@ class Plugin(BasePlugin):
       templ = Template(args['cmd'])
       for i in xrange(1, count + 1):
         datan = templ.safe_substitute({'num':i, 'count':i})
-        self.api.get('send.msg')('sending cmd: %s' % datan)
-        self.api.get('send.execute')(datan)
+        self.api('send.msg')('sending cmd: %s' % datan)
+        self.api('send.execute')(datan)
       return True, ['"%s" was sent %s times' % (args['cmd'], count)]
     else:
       tmsg.append("@RPlease include all arguments@w")
