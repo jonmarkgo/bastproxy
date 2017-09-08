@@ -28,13 +28,13 @@ class Plugin(BasePlugin):
     """
     BasePlugin.__init__(self, *args, **kwargs)
 
-    self.api.get('dependency.add')('ssc')
+    self.api('dependency.add')('ssc')
 
     self.proxypw = None
     self.proxyvpw = None
     self.mudpw = None
 
-    self.api.get('api.add')('restart', self.api_restart)
+    self.api('api.add')('restart', self.api_restart)
 
   def load(self):
     """
@@ -53,24 +53,24 @@ class Plugin(BasePlugin):
     self.api('setting.add')('linelen', 79, int,
                             'the line length for data')
 
-    self.api.get('commands.add')('clients',
+    self.api('commands.add')('clients',
                                  self.cmd_clients,
                                  shelp='list clients that are connected')
 
-    self.api.get('commands.add')('disconnect',
+    self.api('commands.add')('disconnect',
                                  self.cmd_disconnect,
                                  shelp='disconnect from the mud')
 
-    self.api.get('commands.add')('connect',
+    self.api('commands.add')('connect',
                                  self.cmd_connect,
                                  shelp='connect to the mud')
 
-    self.api.get('commands.add')('restart',
+    self.api('commands.add')('restart',
                                  self.cmd_restart,
                                  shelp='restart the proxy',
                                  format=False)
 
-    self.api.get('commands.add')('shutdown',
+    self.api('commands.add')('shutdown',
                                  self.cmd_shutdown,
                                  shelp='shutdown the proxy')
 
@@ -105,7 +105,7 @@ class Plugin(BasePlugin):
     """
     show all clients
     """
-    proxy = self.api.get('managers.getm')('proxy')
+    proxy = self.api('managers.getm')('proxy')
     clientformat = '%-6s %-17s %-7s %-17s %-s'
     tmsg = ['']
     if proxy:
@@ -113,7 +113,7 @@ class Plugin(BasePlugin):
       tmsg.append('Port: %s' % proxy.port)
       if proxy.connectedtime:
         tmsg.append('PROXY: connected for %s' % \
-            self.api.get('utils.timedeltatostring')(proxy.connectedtime,
+            self.api('utils.timedeltatostring')(proxy.connectedtime,
                                                     time.mktime(time.localtime())))
       else:
         tmsg.append('PROXY: disconnected')
@@ -123,13 +123,13 @@ class Plugin(BasePlugin):
                                   'Client', 'Connected'))
       tmsg.append('@B' + 60 * '-')
       for i in proxy.clients:
-        ttime = self.api.get('utils.timedeltatostring')(i.connectedtime,
+        ttime = self.api('utils.timedeltatostring')(i.connectedtime,
                                                         time.mktime(time.localtime()))
 
         tmsg.append(clientformat % ('Active', i.host[:17], i.port,
                                     i.ttype[:17], ttime))
       for i in proxy.vclients:
-        ttime = self.api.get('utils.timedeltatostring')(i.connectedtime,
+        ttime = self.api('utils.timedeltatostring')(i.connectedtime,
                                                         time.mktime(time.localtime()))
         tmsg.append(clientformat % ('View', i.host[:17], i.port,
                                     i.ttype[:17], ttime))
@@ -141,7 +141,7 @@ class Plugin(BasePlugin):
     """
     disconnect from the mud
     """
-    proxy = self.api.get('managers.getm')('proxy')
+    proxy = self.api('managers.getm')('proxy')
     proxy.handle_close()
 
     return True, ['Attempted to close the connection to the mud']
@@ -151,12 +151,12 @@ class Plugin(BasePlugin):
     """
     disconnect from the mud
     """
-    proxy = self.api.get('managers.getm')('proxy')
+    proxy = self.api('managers.getm')('proxy')
     if proxy.connected:
       return True, ['The proxy is currently connected']
     else:
-      proxy.connectmud(self.api.get('setting.gets')('mudhost'),
-                       self.api.get('setting.gets')('mudport'))
+      proxy.connectmud(self.api('setting.gets')('mudhost'),
+                       self.api('setting.gets')('mudport'))
 
       return True, ['Connecting to the mud']
 
@@ -182,7 +182,7 @@ class Plugin(BasePlugin):
     """
     check for mud settings
     """
-    proxy = self.api.get('managers.getm')('proxy')
+    proxy = self.api('managers.getm')('proxy')
     tmsg = []
     divider = '@R------------------------------------------------@w'
     if not proxy.connected:
@@ -228,7 +228,7 @@ class Plugin(BasePlugin):
     self.api('send.client')("Respawning bastproxy on port: %s in 10 seconds" \
                                               % listen_port)
 
-    self.api.get('timers.add')('restart', self.timer_restart, 5, onetime=True)
+    self.api('timers.add')('restart', self.timer_restart, 5, onetime=True)
 
   def timer_restart(self):
     """

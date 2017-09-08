@@ -33,8 +33,8 @@ class Plugin(BasePlugin):
   def load(self):
     BasePlugin.load(self)
 
-    self.api.get('options.addserveroption')(self.sname, SERVER)
-    self.api.get('options.addclientoption')(self.sname, CLIENT)
+    self.api('options.addserveroption')(self.sname, SERVER)
+    self.api('options.addclientoption')(self.sname, CLIENT)
 
 class SERVER(BaseTelnetOption):
   """
