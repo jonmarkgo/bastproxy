@@ -4,6 +4,7 @@ This plugin sends mail
 import smtplib
 import os
 import argparse
+import signal
 from datetime import datetime
 
 from plugins._baseplugin import BasePlugin
@@ -17,7 +18,7 @@ AUTHOR = 'Bast'
 VERSION = 1
 
 # This keeps the plugin from being autoloaded if set to False
-AUTOLOAD = True
+AUTOLOAD = False
 
 
 class Plugin(BasePlugin):
@@ -30,7 +31,7 @@ class Plugin(BasePlugin):
     """
     BasePlugin.__init__(self, *args, **kwargs)
     self.password = ''
-    self.api.get('api.add')('send', self.api_send)
+    self.api('api.add')('send', self.api_send)
 
   def load(self):
     """
@@ -38,14 +39,14 @@ class Plugin(BasePlugin):
     """
     BasePlugin.load(self)
 
-    self.api.get('events.register')('client_connected', self.checkpassword)
+    self.api('events.register')('client_connected', self.checkpassword)
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='set the password for the mail account')
     parser.add_argument('password',
                         help='the top level api to show (optional)',
                         default='', nargs='?')
-    self.api.get('commands.add')('password', self.cmd_pw,
+    self.api('commands.add')('password', self.cmd_pw,
                                         parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
@@ -56,43 +57,43 @@ class Plugin(BasePlugin):
     parser.add_argument('message',
                         help='the message of the test email (optional)',
                         default='Msg from bastproxy', nargs='?')
-    self.api.get('commands.add')('test', self.cmd_test,
+    self.api('commands.add')('test', self.cmd_test,
                                         parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='check to make sure all settings are applied')
-    self.api.get('commands.add')('check', self.cmd_check,
+    self.api('commands.add')('check', self.cmd_check,
                       parser=parser)
 
-    self.api.get('setting.add')('server', '', str,
+    self.api('setting.add')('server', '', str,
                                 'the smtp server to send mail through')
-    self.api.get('setting.add')('port', '', int,
+    self.api('setting.add')('port', '', int,
                                 'the port to use when sending mail')
-    self.api.get('setting.add')('username', '', str,
+    self.api('setting.add')('username', '', str,
                                 'the username to connect as',
                   nocolor=True)
-    self.api.get('setting.add')('to', '', str, 'the address to send mail to',
+    self.api('setting.add')('to', '', str, 'the address to send mail to',
                   nocolor=True)
-    self.api.get('setting.add')('from', '', str,
+    self.api('setting.add')('from', '', str,
                                 'the address to send mail from',
                   nocolor=True)
-    self.api.get('setting.add')('ssl', '', bool,
+    self.api('setting.add')('ssl', '', bool,
                           'set this to True if the connection will use ssl')
 
-    if self.api.get('setting.gets')('username') != '':
-      self.api.get('send.client')('Please set the mail password')
+    if self.api('setting.gets')('username') != '':
+      self.api('send.client')('Please set the mail password')
 
   def check(self):
     """
     check to make sure all data need to send mail is available
     """
-    self.api.get('setting.gets')('server')
-    if not self.api.get('setting.gets')('server') or \
-       not self.api.get('setting.gets')('port') or \
-       not self.api.get('setting.gets')('username') or \
+    self.api('setting.gets')('server')
+    if not self.api('setting.gets')('server') or \
+       not self.api('setting.gets')('port') or \
+       not self.api('setting.gets')('username') or \
        not self.password or \
-       not self.api.get('setting.gets')('from') or \
-       not self.api.get('setting.gets')('to'):
+       not self.api('setting.gets')('from') or \
+       not self.api('setting.gets')('to'):
       return False
 
     return True
@@ -109,7 +110,7 @@ class Plugin(BasePlugin):
     if self.check():
       senddate = datetime.strftime(datetime.now(), '%Y-%m-%d')
       if not mailto:
-        mailto = self.api.get('setting.gets')('to')
+        mailto = self.api('setting.gets')('to')
       mhead = """Date: %s
 From: %s
 To: %s
@@ -117,42 +118,48 @@ Subject: %s
 X-Mailer: My-Mail
 
 %s""" % (senddate,
-          self.api.get('setting.gets')('from'), mailto, subject, msg)
+          self.api('setting.gets')('from'), mailto, subject, msg)
+
+      oldchild = signal.get_signal(signal.SIGCHLD)
 
       try:
+        signal.signal(signal.SIGCHLD, signal.SIG_IGN)
 
         pid = os.fork()
         if pid == 0:
-          server = '%s:%s' % (self.api.get('setting.gets')('server'),
-                                    self.api.get('setting.gets')('port'))
+          server = '%s:%s' % (self.api('setting.gets')('server'),
+                                    self.api('setting.gets')('port'))
           server = smtplib.SMTP(server)
-          if self.api.get('setting.gets')('ssl'):
+          if self.api('setting.gets')('ssl'):
             server.starttls()
-          server.login(self.api.get('setting.gets')('username'), self.password)
-          server.sendmail(self.api.get('setting.gets')('from'), mailto, mhead)
+          server.login(self.api('setting.gets')('username'), self.password)
+          server.sendmail(self.api('setting.gets')('from'), mailto, mhead)
           server.quit()
           os._exit(os.EX_OK)
 
 
       except:
-        server = '%s:%s' % (self.api.get('setting.gets')('server'),
-                              self.api.get('setting.gets')('port'))
+        server = '%s:%s' % (self.api('setting.gets')('server'),
+                              self.api('setting.gets')('port'))
         server = smtplib.SMTP(server)
-        if self.api.get('setting.gets')('ssl'):
+        if self.api('setting.gets')('ssl'):
           server.starttls()
-        server.login(self.api.get('setting.gets')('username'), self.password)
-        server.sendmail(self.api.get('setting.gets')('from'), mailto, mhead)
+        server.login(self.api('setting.gets')('username'), self.password)
+        server.sendmail(self.api('setting.gets')('from'), mailto, mhead)
         server.quit()
+
+    if signal.get_signal(signal.SIGCHLD) != oldchild:
+      signal.signal(signal.SIGCHLD, oldchild)
 
   def checkpassword(self, _):
     """
     check the password
     """
-    if self.api.get('setting.gets')('username'):
+    if self.api('setting.gets')('username'):
       if not self.password:
-        self.api.get('send.client')(
+        self.api('send.client')(
                       '@CPlease set the email password for account: @M%s@w' \
-                % self.api.get('setting.gets')('username').replace('@', '@@'))
+                % self.api('setting.gets')('username').replace('@', '@@'))
 
   def cmd_pw(self, args):
     """
@@ -173,17 +180,17 @@ X-Mailer: My-Mail
     """
     msg = []
     items = []
-    if not self.api.get('setting.gets')('server'):
+    if not self.api('setting.gets')('server'):
       items.append('server')
-    if not self.api.get('setting.gets')('port'):
+    if not self.api('setting.gets')('port'):
       items.append('port')
-    if not self.api.get('setting.gets')('username'):
+    if not self.api('setting.gets')('username'):
       items.append('username')
     if not self.password:
       items.append('password')
-    if not self.api.get('setting.gets')('from'):
+    if not self.api('setting.gets')('from'):
       items.append('from')
-    if not self.api.get('setting.gets')('to'):
+    if not self.api('setting.gets')('to'):
       items.append('to')
     if items:
       msg.append('Please set the following:')
@@ -203,7 +210,7 @@ X-Mailer: My-Mail
     subject = args['subject']
     msg = args['message']
     if self.check():
-      self.api.get('mail.send')(subject, msg)
+      self.api('mail.send')(subject, msg)
       return True, ['Attempted to send test message',
                               'Please check your email']
     else:

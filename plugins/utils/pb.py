@@ -32,7 +32,7 @@ class Plugin(BasePlugin):
     initialize the instance
     """
     BasePlugin.__init__(self, *args, **kwargs)
-    self.api.get('dependency.add')('ssc')
+    self.api('dependency.add')('ssc')
 
     self.apikey = None
 
@@ -111,7 +111,7 @@ class Plugin(BasePlugin):
 
     rval = {}
     found = False
-    nchannel = channel or self.api.get('setting.gets')('channel')
+    nchannel = channel or self.api('setting.gets')('channel')
     if nchannel:
       for i in pbc.channels:
         if str(i.channel_tag) == nchannel:
@@ -152,7 +152,7 @@ class Plugin(BasePlugin):
     pbc = PUSHBULLET(apikey)
 
     rval = {}
-    nchannel = channel or self.api.get('setting.gets')('channel')
+    nchannel = channel or self.api('setting.gets')('channel')
     if nchannel:
       for i in pbc.channels:
         if str(i.channel_tag) == nchannel:
