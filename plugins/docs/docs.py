@@ -44,7 +44,7 @@ class Plugin(BasePlugin):
 
     parser = argparse.ArgumentParser(add_help=False,
                  description='create documentation')
-    self.api.get('commands.add')('build', self.cmd_build,
+    self.api('commands.add')('build', self.cmd_build,
                                  parser=parser, group='Documentation')
 
   def buildtoc(self, toc):
@@ -125,7 +125,6 @@ class Plugin(BasePlugin):
 
     return False
 
-
   def buildpluginmenu(self, plugininfo):
     """
     build the plugin menu
@@ -134,12 +133,12 @@ class Plugin(BasePlugin):
 
     ptree = {}
     for i in plugininfo.keys():
-      pmod = self.api.get('plugins.getp')(plugininfo[i]['modpath'])
+      pmod = self.api('plugins.getp')(plugininfo[i]['modpath'])
 
       try:
         testdoc = sys.modules[pmod.fullimploc].__doc__
       except AttributeError:
-        self.api.get('send.msg')('Plugin %s is not loaded' % \
+        self.api('send.msg')('Plugin %s is not loaded' % \
                                                 plugininfo[i]['modpath'])
         continue
 
@@ -251,7 +250,7 @@ class Plugin(BasePlugin):
       for node in doc.xpath('//h1|//h2|//h3|//h4|//h5'):
         toc.append((int(node.tag[-1]), node.attrib.get('id'), node.text))
     except:
-      self.api.get('send.traceback')('error parsing html')
+      self.api('send.traceback')('error parsing html')
       print html
 
     return toc
@@ -307,34 +306,30 @@ class Plugin(BasePlugin):
     tlist = plugin['fullimploc'].split('.')
     pdir = tlist[1]
 
-    pmod = self.api.get('plugins.getp')(plugin['modpath'])
+    pmod = self.api('plugins.getp')(plugin['modpath'])
 
     if pmod and self.checknodocs(pmod):
-      self.api.get('send.msg')(
+      self.api('send.msg')(
                         'skipping %s' % plugin['fullimploc'])
       return
 
-    self.api.get('send.msg')('building %s' % plugin['fullimploc'])
+    self.api('send.msg')('building %s' % plugin['fullimploc'])
 
     try:
       testdoc = sys.modules[pmod.fullimploc].__doc__
     except AttributeError:
-      self.api.get('send.msg')('Plugin %s is not loaded' % plugin['modpath'])
+      self.api('send.msg')('Plugin %s is not loaded' % plugin['modpath'])
       return
 
     wplugin = plugin['fullimploc'].split('.')
 
     wpluginname = '.'.join(wplugin[1:])
 
-    #testdoc = __doc__
-
-    #testdoc = self.api.get('colors.colortohtml')(testdoc)
-
     aboutb = markdown2.markdown(testdoc,
                                   extras=['header-ids', 'fenced-code-blocks',
                                           'wiki-tables'])
 
-    aboutb = self.api.get('colors.colortohtml')(aboutb)
+    aboutb = self.api('colors.colortohtml')(aboutb)
 
     aboutl = []
 
@@ -349,7 +344,7 @@ class Plugin(BasePlugin):
 
     body = self.addtableclasses(nbody)
 
-    cmds = self.api.get('commands.list')(pmod.sname, format=False)
+    cmds = self.api('commands.list')(pmod.sname, cformat=False)
 
     groups = {}
     for i in sorted(cmds.keys()):
@@ -372,8 +367,8 @@ class Plugin(BasePlugin):
           cmds.append('<h4 id="cmd%(NAME)s" class="bph4">%(NAME)s</h4>' % {
                     'NAME':i})
           cmds.append('<pre><code>')
-          chelp = self.api.get('commands.cmdhelp')(pmod.sname, i)
-          chelp = self.api.get('colors.colortohtml')(escape(chelp))
+          chelp = self.api('commands.cmdhelp')(pmod.sname, i)
+          chelp = self.api('colors.colortohtml')(escape(chelp))
           cmds.extend(chelp.split('\n'))
           cmds.append('</code></pre>')
         cmds.append('</div>')
@@ -387,8 +382,8 @@ class Plugin(BasePlugin):
         cmds.append('<h4 id="cmd%(NAME)s" class="bph4">%(NAME)s</h4>' % {
                   'NAME':i})
         cmds.append('<pre><code>')
-        chelp = self.api.get('commands.cmdhelp')(pmod.sname, i)
-        chelp = self.api.get('colors.colortohtml')(escape(chelp))
+        chelp = self.api('commands.cmdhelp')(pmod.sname, i)
+        chelp = self.api('colors.colortohtml')(escape(chelp))
         cmds.extend(chelp.split('\n'))
         cmds.append('</code></pre>')
     cmds.append('</div>')
@@ -402,7 +397,7 @@ class Plugin(BasePlugin):
         settings.append('<h3 id="set%(NAME)s" class="bph4">%(NAME)s</h3>' % {
                           'NAME':i})
         settings.append('<pre><code>')
-        settings.append('%s' % self.api.get('colors.colortohtml')(
+        settings.append('%s' % self.api('colors.colortohtml')(
           escape(pmod.settings[i]['help'])))
         settings.append('</code></pre>')
 
@@ -410,7 +405,7 @@ class Plugin(BasePlugin):
 
       body.extend(settings)
 
-    papis = self.api.get('api.getchildren')(pmod.sname)
+    papis = self.api('apichildren')(pmod.sname)
 
     if len(papis) > 0:
       apis = ['<h2 id="api" class="bph2">API</h2>']
@@ -420,8 +415,8 @@ class Plugin(BasePlugin):
         apis.append('<h3 id="set%(NAME)s" class="bph4">%(NAME)s</h3>' % {
                           'NAME':i})
         apis.append('<pre><code>')
-        tapi = '\n'.join(self.api.get('api.detail')('%s.%s' % (pmod.sname, i)))
-        tapi = self.api.get('colors.colortohtml')(escape(tapi))
+        tapi = '\n'.join(self.api('api.detail')('%s.%s' % (pmod.sname, i)))
+        tapi = self.api('colors.colortohtml')(escape(tapi))
         apis.extend(tapi.split('\n'))
         apis.append('</code></pre>')
 
@@ -485,7 +480,7 @@ class Plugin(BasePlugin):
 
     temppath = os.path.join(self.pluginlocation, 'templates',
                                           'template-dark.html')
-    plugininfo = self.api.get('plugins.allplugininfo')()
+    plugininfo = self.api('plugins.allplugininfo')()
 
     with open(temppath, 'r') as content_file:
       template = content_file.read()
