@@ -162,7 +162,7 @@ class PluginMgr(object):
       if i in self.plugins or i in self.pluginl:
         continue
 
-      self.api.get('send.msg')('%s: loading dependency %s' % (pluginname, i),
+      self.api('send.msg')('%s: loading dependency %s' % (pluginname, i),
                                pluginname)
 
       name, path = self.findplugin(i)
@@ -432,10 +432,10 @@ class PluginMgr(object):
                                         force=force, runload=load)
 
       if modname == 'log':
-        self.api.get('log.adddtype')(self.sname)
-        self.api.get('log.console')(self.sname)
-        self.api.get('log.adddtype')('upgrade')
-        self.api.get('log.console')('upgrade')
+        self.api('log.adddtype')(self.sname)
+        self.api('log.console')(self.sname)
+        self.api('log.adddtype')('upgrade')
+        self.api('log.console')('upgrade')
 
     if not load:
       testsort = sorted(self.plugins.values(),
@@ -445,7 +445,7 @@ class PluginMgr(object):
           #check dependencies here
           self.loadplugin(i)
         except Exception: # pylint: disable=broad-except
-          self.api.get('send.traceback')(
+          self.api('send.traceback')(
               "load: had problems running the load method for %s." \
                           % i.fullimploc)
           del sys.modules[i.fullimploc]
@@ -516,10 +516,10 @@ class PluginMgr(object):
       if fullimploc in sys.modules:
         return sys.modules[fullimploc].SNAME, 'already'
 
-      self.api.get('send.msg')('importing %s' % fullimploc, self.sname)
+      self.api('send.msg')('importing %s' % fullimploc, self.sname)
       _module = __import__(fullimploc)
       _module = sys.modules[fullimploc]
-      self.api.get('send.msg')('imported %s' % fullimploc, self.sname)
+      self.api('send.msg')('imported %s' % fullimploc, self.sname)
       load = True
 
       if 'AUTOLOAD' in _module.__dict__ and not force:
@@ -543,7 +543,7 @@ class PluginMgr(object):
           self.add_plugin(_module, modpath, basepath, fullimploc, runload)
 
         else:
-          self.api.get('send.msg')('Module %s has no Plugin class' % \
+          self.api('send.msg')('Module %s has no Plugin class' % \
                                               _module.NAME,
                                    self.sname)
 
@@ -553,7 +553,7 @@ class PluginMgr(object):
       else:
         if fullimploc in sys.modules:
           del sys.modules[fullimploc]
-        self.api.get('send.msg')(
+        self.api('send.msg')(
             'Not loading %s (%s) because autoload is False' % \
                                     (_module.NAME, fullimploc),
             self.sname)
@@ -562,7 +562,7 @@ class PluginMgr(object):
       if fullimploc in sys.modules:
         del sys.modules[fullimploc]
 
-      self.api.get('send.traceback')(
+      self.api('send.traceback')(
           "Module '%s' refuses to import/load." % fullimploc)
       return False, 'error'
 
@@ -575,24 +575,24 @@ class PluginMgr(object):
       _module = sys.modules[fullimploc]
       try:
         if "proxy_import" in _module.__dict__:
-          self.api.get('send.client')(
+          self.api('send.client')(
               'unload: unloading %s' % fullimploc)
           if "unload" in _module.__dict__:
             try:
               _module.unload()
             except Exception: # pylint: disable=broad-except
-              self.api.get('send.traceback')(
+              self.api('send.traceback')(
                   "unload: module %s didn't unload properly." % fullimploc)
 
           if not self.remove_plugin(_module.SNAME):
-            self.api.get('send.client')(
+            self.api('send.client')(
                 'could not remove plugin %s' % fullimploc)
 
         del sys.modules[fullimploc]
-        self.api.get('send.client')("unload: unloaded %s." % fullimploc)
+        self.api('send.client')("unload: unloaded %s." % fullimploc)
 
       except Exception: # pylint: disable=broad-except
-        self.api.get('send.traceback')(
+        self.api('send.traceback')(
             "unload: had problems unloading %s." % fullimploc)
         return False
 
@@ -634,7 +634,7 @@ class PluginMgr(object):
     for plugin in testsort:
       if plugin.sname != reloadedplugin:
         if reloadedplugin in plugin.dependencies:
-          self.api.get('send.msg')('reloading dependent %s of %s' % \
+          self.api('send.msg')('reloading dependent %s of %s' % \
                       (plugin.sname, reloadedplugin))
           plugin.savestate()
           self.reload_module(plugin.sname, True)
@@ -643,23 +643,23 @@ class PluginMgr(object):
     """
     check dependencies and run the load function
     """
-    self.api.get('send.msg')('loading dependencies for %s' % \
+    self.api('send.msg')('loading dependencies for %s' % \
                                   plugin.fullimploc,
                              self.sname)
     self.loaddependencies(plugin.sname, plugin.dependencies)
-    self.api.get('send.client')("load: loading %s with priority %s" % \
+    self.api('send.client')("load: loading %s with priority %s" % \
 			    (plugin.fullimploc, plugin.priority))
-    self.api.get('send.msg')('loading %s (%s: %s)' % \
+    self.api('send.msg')('loading %s (%s: %s)' % \
               (plugin.fullimploc, plugin.sname, plugin.name),
                              self.sname)
     plugin.load()
-    self.api.get('send.client')("load: loaded %s" % plugin.fullimploc)
-    self.api.get('send.msg')('loaded %s (%s: %s)' % \
+    self.api('send.client')("load: loaded %s" % plugin.fullimploc)
+    self.api('send.msg')('loaded %s (%s: %s)' % \
               (plugin.fullimploc, plugin.sname, plugin.name),
                              self.sname)
 
-    self.api.get('events.eraise')('%s_plugin_loaded' % plugin.sname, {})
-    self.api.get('events.eraise')('plugin_loaded', {'plugin':plugin.sname})
+    self.api('events.eraise')('%s_plugin_loaded' % plugin.sname, {})
+    self.api('events.eraise')('plugin_loaded', {'plugin':plugin.sname})
 
   def add_plugin(self, module, modpath, basepath, fullimploc, load=True):
     # pylint: disable=too-many-arguments
@@ -677,11 +677,11 @@ class PluginMgr(object):
     except AttributeError:
       pass
     if plugin.name in self.pluginl:
-      self.api.get('send.msg')('Plugin %s already exists' % plugin.name,
+      self.api('send.msg')('Plugin %s already exists' % plugin.name,
                                self.sname)
       return False
     if plugin.sname in self.plugins:
-      self.api.get('send.msg')('Plugin %s already exists' % plugin.sname,
+      self.api('send.msg')('Plugin %s already exists' % plugin.sname,
                                self.sname)
       return False
 
@@ -690,7 +690,7 @@ class PluginMgr(object):
         #check dependencies here
         self.loadplugin(plugin)
       except Exception: # pylint: disable=broad-except
-        self.api.get('send.traceback')(
+        self.api('send.traceback')(
             "load: had problems running the load method for %s." \
                                                 % fullimploc)
         del sys.modules[fullimploc]
@@ -713,12 +713,12 @@ class PluginMgr(object):
       plugin = self.plugins[pluginname]
       try:
         plugin.unload()
-        self.api.get('events.eraise')('%s_plugin_unload' % plugin.sname, {})
-        self.api.get('events.eraise')('plugin_unloaded', {'name':plugin.sname})
-        self.api.get('send.msg')('Plugin %s unloaded' % plugin.sname,
+        self.api('events.eraise')('%s_plugin_unload' % plugin.sname, {})
+        self.api('events.eraise')('plugin_unloaded', {'name':plugin.sname})
+        self.api('send.msg')('Plugin %s unloaded' % plugin.sname,
                                  self.sname, plugin.sname)
       except Exception: # pylint: disable=broad-except
-        self.api.get('send.traceback')(
+        self.api('send.traceback')(
             "unload: had problems running the unload method for %s." \
                                   % plugin.sname)
         return False
@@ -763,7 +763,7 @@ class PluginMgr(object):
                         help='the to list',
                         default='',
                         nargs='?')
-    self.api.get('commands.add')('list',
+    self.api('commands.add')('list',
                                  self.cmd_list,
                                  lname='Plugin Manager',
                                  parser=parser)
@@ -774,7 +774,7 @@ class PluginMgr(object):
                         help='the plugin to load, don\'t include the .py',
                         default='',
                         nargs='?')
-    self.api.get('commands.add')('load',
+    self.api('commands.add')('load',
                                  self.cmd_load,
                                  lname='Plugin Manager',
                                  parser=parser)
@@ -785,7 +785,7 @@ class PluginMgr(object):
                         help='the plugin to unload',
                         default='',
                         nargs='?')
-    self.api.get('commands.add')('unload',
+    self.api('commands.add')('unload',
                                  self.cmd_unload,
                                  lname='Plugin Manager',
                                  parser=parser)
@@ -796,14 +796,14 @@ class PluginMgr(object):
                         help='the plugin to reload',
                         default='',
                         nargs='?')
-    self.api.get('commands.add')('reload',
+    self.api('commands.add')('reload',
                                  self.cmd_reload,
                                  lname='Plugin Manager',
                                  parser=parser)
 
-    self.api.get('commands.default')('list', self.sname)
-    self.api.get('events.register')('savestate', self.savestate,
+    self.api('commands.default')('list', self.sname)
+    self.api('events.register')('savestate', self.savestate,
                                     plugin=self.sname)
 
-    self.api.get('timers.add')('save', self.savestate, 60, nodupe=True, log=False)
+    self.api('timers.add')('save', self.savestate, 60, nodupe=True, log=False)
 
