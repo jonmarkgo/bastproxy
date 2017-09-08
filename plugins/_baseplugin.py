@@ -77,7 +77,7 @@ class BasePlugin(object):
         self.settingvalues['_version'] != self.version:
       self.updateversion(self.settingvalues['_version'], self.version)
 
-    self.api.get('log.adddtype')(self.sname)
+    self.api('log.adddtype')(self.sname)
 
     parser = argparse.ArgumentParser(
         add_help=False,
@@ -95,7 +95,7 @@ class BasePlugin(object):
                         help='the new value of the setting',
                         default='',
                         nargs='?')
-    self.api.get('commands.add')('set',
+    self.api('commands.add')('set',
                                  self.cmd_set,
                                  parser=parser,
                                  group='Base',
@@ -103,21 +103,21 @@ class BasePlugin(object):
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='reset the plugin')
-    self.api.get('commands.add')('reset',
+    self.api('commands.add')('reset',
                                  self.cmd_reset,
                                  parser=parser,
                                  group='Base')
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='save the plugin state')
-    self.api.get('commands.add')('save',
+    self.api('commands.add')('save',
                                  self.cmd_save,
                                  parser=parser,
                                  group='Base')
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='show plugin stats')
-    self.api.get('commands.add')('stats',
+    self.api('commands.add')('stats',
                                  self.cmd_stats,
                                  parser=parser,
                                  group='Base')
@@ -136,7 +136,7 @@ class BasePlugin(object):
                         "--simple",
                         help="show a simple output",
                         action="store_true")
-    self.api.get('commands.add')('inspect',
+    self.api('commands.add')('inspect',
                                  self.cmd_inspect,
                                  parser=parser,
                                  group='Base')
@@ -151,7 +151,7 @@ class BasePlugin(object):
                         "--commands",
                         help="show commands in this plugin",
                         action="store_true")
-    self.api.get('commands.add')('help',
+    self.api('commands.add')('help',
                                  self.cmd_help,
                                  parser=parser,
                                  group='Base')
@@ -162,15 +162,15 @@ class BasePlugin(object):
                         help='api to get details of',
                         default='',
                         nargs='?')
-    self.api.get('commands.add')('api',
+    self.api('commands.add')('api',
                                  self.cmd_api,
                                  parser=parser,
                                  group='Base')
 
-    self.api.get('events.register')('%s_plugin_loaded' % self.sname,
+    self.api('events.register')('%s_plugin_loaded' % self.sname,
                                     self.afterload)
 
-    self.api.get('events.register')('muddisconnect', self.disconnect)
+    self.api('events.register')('muddisconnect', self.disconnect)
 
     self.resetflag = False
 
@@ -180,13 +180,13 @@ class BasePlugin(object):
     """
     if oldversion != newversion and newversion > oldversion:
       for i in range(oldversion + 1, newversion + 1):
-        self.api.get('send.msg')(
+        self.api('send.msg')(
             '%s: upgrading to version %s' % (self.sname, i),
             secondary='upgrade')
         if i in self.versionfuncs:
           self.versionfuncs[i]()
         else:
-          self.api.get('send.msg')(
+          self.api('send.msg')(
               '%s: no function to upgrade to version %s' % (self.sname, i),
               secondary='upgrade')
 
@@ -252,10 +252,10 @@ class BasePlugin(object):
     """
     tmsg = []
     if args['api']:
-      tmsg.extend(self.api.get('api.detail')("%s.%s" % (self.sname,
+      tmsg.extend(self.api('api.detail')("%s.%s" % (self.sname,
                                                         args['api'])))
     else:
-      apilist = self.api.get('api.list')(self.sname)
+      apilist = self.api('api.list')(self.sname)
       if not apilist:
         tmsg.append('nothing in the api')
       else:
@@ -268,24 +268,24 @@ class BasePlugin(object):
     """
     do something after the load function is run
     """
-    proxy = self.api.get('managers.getm')('proxy')
+    proxy = self.api('managers.getm')('proxy')
 
     if proxy and proxy.connected:
-      if self.api.get('api.has')('connect.firstactive'):
-        if self.api.get('connect.firstactive')():
+      if self.api('api.has')('connect.firstactive'):
+        if self.api('connect.firstactive')():
           self.afterfirstactive()
       else:
-        self.api.get('events.register')('firstactive', self.afterfirstactive)
+        self.api('events.register')('firstactive', self.afterfirstactive)
     else:
-      self.api.get('events.register')('firstactive', self.afterfirstactive)
+      self.api('events.register')('firstactive', self.afterfirstactive)
 
   def disconnect(self, args=None):
     # pylint: disable=unused-argument
     """
     re-register to firstactive on disconnect
     """
-    self.api.get('send.msg')('baseplugin, disconnect')
-    self.api.get('events.register')('firstactive', self.afterfirstactive)
+    self.api('send.msg')('baseplugin, disconnect')
+    self.api('events.register')('firstactive', self.afterfirstactive)
 
   # get the vaule of a setting
   def api_settinggets(self, setting):
@@ -294,7 +294,7 @@ class BasePlugin(object):
 
     this function returns the value of the setting, None if not found"""
     try:
-      return self.api.get('utils.verify')(self.settingvalues[setting],
+      return self.api('utils.verify')(self.settingvalues[setting],
                                           self.settings[setting]['stype'])
     except KeyError:
       return None
@@ -318,7 +318,7 @@ class BasePlugin(object):
     if value == 'default':
       value = self.settings[setting]['default']
     if setting in self.settings:
-      self.settingvalues[setting] = self.api.get('utils.verify')(
+      self.settingvalues[setting] = self.api('utils.verify')(
           value,
           self.settings[setting]['stype'])
       self.settingvalues.sync()
@@ -350,7 +350,7 @@ class BasePlugin(object):
     stats = self.getstats()
     tmsg = []
     for header in stats:
-      tmsg.append(self.api.get('utils.center')(header, '=', 60))
+      tmsg.append(self.api('utils.center')(header, '=', 60))
       for subtype in stats[header]['showorder']:
         tmsg.append('%-20s : %s' % (subtype, stats[header][subtype]))
 
@@ -360,10 +360,10 @@ class BasePlugin(object):
     """
     unload stuff
     """
-    self.api.get('send.msg')('unloading %s' % self.name)
+    self.api('send.msg')('unloading %s' % self.name)
 
     # remove anything out of the api
-    self.api.get('api.remove')(self.sname)
+    self.api('api.remove')(self.sname)
 
     #save the state
     self.savestate()
@@ -396,15 +396,15 @@ class BasePlugin(object):
           return True, ['%s is a readonly setting' % var]
         else:
           try:
-            self.api.get('setting.change')(var, val)
+            self.api('setting.change')(var, val)
             tvar = self.settingvalues[var]
             if self.settings[var]['nocolor']:
               tvar = tvar.replace('@', '@@')
             elif self.settings[var]['stype'] == 'color':
               tvar = '%s%s@w' % (val, val.replace('@', '@@'))
             elif self.settings[var]['stype'] == 'timelength':
-              tvar = self.api.get('utils.formattime')(
-                  self.api.get('utils.verify')(val, 'timelength'))
+              tvar = self.api('utils.formattime')(
+                  self.api('utils.verify')(val, 'timelength'))
             return True, ['%s is now set to %s' % (var, tvar)]
           except ValueError:
             msg = ['Cannot convert %s to %s' % \
@@ -433,17 +433,17 @@ class BasePlugin(object):
 
     msg.extend(sys.modules[self.fullimploc].__doc__.split('\n'))
     if args['commands']:
-      cmdlist = self.api.get('commands.list')(self.sname)
+      cmdlist = self.api('commands.list')(self.sname)
       if cmdlist:
-        msg.extend(self.api.get('commands.list')(self.sname))
+        msg.extend(self.api('commands.list')(self.sname))
         msg.append('@G' + '-' * 60 + '@w')
         msg.append('')
     if args['api']:
-      apilist = self.api.get('api.list')(self.sname)
+      apilist = self.api('api.list')(self.sname)
       if apilist:
         msg.append('API functions in %s' % self.sname)
         msg.append('@G' + '-' * 60 + '@w')
-        msg.extend(self.api.get('api.list')(self.sname))
+        msg.extend(self.api('api.list')(self.sname))
     return True, msg
 
   def listvars(self):
@@ -462,8 +462,8 @@ class BasePlugin(object):
         elif self.settings[i]['stype'] == 'color':
           val = '%s%s@w' % (val, val.replace('@', '@@'))
         elif self.settings[i]['stype'] == 'timelength':
-          val = self.api.get('utils.formattime')(
-              self.api.get('utils.verify')(val, 'timelength'))
+          val = self.api('utils.formattime')(
+              self.api('utils.verify')(val, 'timelength'))
         tmsg.append(tform % (i, val, self.settings[i]['help']))
     return tmsg
 
@@ -532,8 +532,8 @@ class BasePlugin(object):
     """
     if we are connected do
     """
-    self.api.get('send.msg')('baseplugin, firstactive')
-    self.api.get('events.unregister')('firstactive', self.afterfirstactive)
+    self.api('send.msg')('baseplugin, firstactive')
+    self.api('events.unregister')('firstactive', self.afterfirstactive)
 
   # add a function to the api
   def api_add(self, name, func):
