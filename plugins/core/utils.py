@@ -32,15 +32,15 @@ class Plugin(BasePlugin):
     """
     BasePlugin.__init__(self, *args, **kwargs)
 
-    self.api.get('api.add')('timedeltatostring', self.api_timedeltatostring)
-    self.api.get('api.add')('readablenumber', self.api_readablenumber)
-    self.api.get('api.add')('secondstodhms', self.api_secondstodhms)
-    self.api.get('api.add')('formattime', self.api_formattime)
-    self.api.get('api.add')('center', self.api_center)
-    self.api.get('api.add')('checklistformatch', self.api_checklistformatch)
-    self.api.get('api.add')('timelengthtosecs', self.api_timelengthtosecs)
-    self.api.get('api.add')('verify', self.api_verify)
-    self.api.get('api.add')('funccallerplugin', self.api_callerplugin)
+    self.api('api.add')('timedeltatostring', self.api_timedeltatostring)
+    self.api('api.add')('readablenumber', self.api_readablenumber)
+    self.api('api.add')('secondstodhms', self.api_secondstodhms)
+    self.api('api.add')('formattime', self.api_formattime)
+    self.api('api.add')('center', self.api_center)
+    self.api('api.add')('checklistformatch', self.api_checklistformatch)
+    self.api('api.add')('timelengthtosecs', self.api_timelengthtosecs)
+    self.api('api.add')('verify', self.api_verify)
+    self.api('api.add')('funccallerplugin', self.api_callerplugin)
 
   def load(self):
     """
@@ -137,7 +137,7 @@ class Plugin(BasePlugin):
     format a length of time into a string
     """
     msg = []
-    dtime = self.api.get('utils.secondstodhms')(length)
+    dtime = self.api('utils.secondstodhms')(length)
     years = False
     days = False
     hours = False
@@ -191,7 +191,7 @@ class Plugin(BasePlugin):
     """
     verify an @ color
     """
-    if self.api.get('colors.iscolor')(val):
+    if self.api('colors.iscolor')(val):
       return val
 
     raise ValueError
@@ -219,7 +219,7 @@ class Plugin(BasePlugin):
     try:
       ttime = int(usertime)
     except ValueError:
-      ttime = self.api.get('utils.timelengthtosecs')(usertime)
+      ttime = self.api('utils.timelengthtosecs')(usertime)
 
     if ttime != 0 and not ttime:
       raise ValueError
@@ -247,8 +247,8 @@ class Plugin(BasePlugin):
     """
     center a string with color codes
     """
-    convertcolors = self.api.get('colors.convertcolors')(tstr)
-    nocolor = self.api.get('colors.stripansi')(convertcolors)
+    convertcolors = self.api('colors.convertcolors')(tstr)
+    nocolor = self.api('colors.stripansi')(convertcolors)
 
     tlen = len(nocolor) + 4
     tdiff = length - tlen

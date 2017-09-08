@@ -553,7 +553,7 @@ class Sqldb(object):
       for row in cur.execute(stmt):
         result.append(row)
     except Exception: # pylint: disable=broad-except
-      self.api.get('send.traceback')('could not run sql statement : %s' % \
+      self.api('send.traceback')('could not run sql statement : %s' % \
                             stmt)
     cur.close()
     return result
@@ -573,7 +573,7 @@ class Sqldb(object):
       rowid = cur.lastrowid
       result = self.dbconn.commit()
     except Exception: # pylint: disable=broad-except
-      self.api.get('send.traceback')('could not run sql statement : %s' % \
+      self.api('send.traceback')('could not run sql statement : %s' % \
                             stmt)
 
     return rowid, result

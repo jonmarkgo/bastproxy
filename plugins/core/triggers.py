@@ -35,13 +35,13 @@ class Plugin(BasePlugin):
     self.regexlookup = {}
     self.triggergroups = {}
 
-    self.api.get('api.add')('add', self.api_addtrigger)
-    self.api.get('api.add')('remove', self.api_remove)
-    self.api.get('api.add')('toggle', self.api_toggle)
-    self.api.get('api.add')('gett', self.api_gett)
-    self.api.get('api.add')('togglegroup', self.api_togglegroup)
-    self.api.get('api.add')('toggleomit', self.api_toggleomit)
-    self.api.get('api.add')('removeplugin', self.api_removeplugin)
+    self.api('api.add')('add', self.api_addtrigger)
+    self.api('api.add')('remove', self.api_remove)
+    self.api('api.add')('toggle', self.api_toggle)
+    self.api('api.add')('gett', self.api_gett)
+    self.api('api.add')('togglegroup', self.api_togglegroup)
+    self.api('api.add')('toggleomit', self.api_toggleomit)
+    self.api('api.add')('removeplugin', self.api_removeplugin)
 
   def load(self):
     """
@@ -55,7 +55,7 @@ class Plugin(BasePlugin):
                         help='the trigger to detail',
                         default=[],
                         nargs='*')
-    self.api.get('commands.add')('detail',
+    self.api('commands.add')('detail',
                                  self.cmd_detail,
                                  parser=parser)
 
@@ -65,14 +65,14 @@ class Plugin(BasePlugin):
                         help='list only triggers that have this argument in them',
                         default='',
                         nargs='?')
-    self.api.get('commands.add')('list',
+    self.api('commands.add')('list',
                                  self.cmd_list,
                                  parser=parser)
 
-    self.api.get('events.register')('from_mud_event',
+    self.api('events.register')('from_mud_event',
                                     self.checktrigger, prio=1)
 
-    self.api.get('events.register')('plugin_unloaded', self.pluginunloaded)
+    self.api('events.register')('plugin_unloaded', self.pluginunloaded)
 
   def pluginunloaded(self, args):
     """
@@ -106,7 +106,7 @@ class Plugin(BasePlugin):
       return False
 
     if regex in self.regexlookup:
-      self.api.get('send.msg')(
+      self.api('send.msg')(
           'trigger %s tried to add a regex that already existed for %s' % \
               (triggername, self.regexlookup[regex]))
       return False
@@ -136,11 +136,11 @@ class Plugin(BasePlugin):
         if args['group'] not in self.triggergroups:
           self.triggergroups[args['group']] = []
         self.triggergroups[args['group']].append(triggername)
-      self.api.get('send.msg')(
+      self.api('send.msg')(
           'added trigger %s for plugin %s' % \
               (triggername, plugin), secondary=plugin)
     except Exception:  # pylint: disable=broad-except
-      self.api.get('send.traceback')(
+      self.api('send.traceback')(
           'Could not compile regex for trigger: %s : %s' % \
               (triggername, args['regex']))
       return False
@@ -158,23 +158,23 @@ class Plugin(BasePlugin):
     this function returns True if the trigger was removed,
                               False if it wasn't"""
     if triggername in self.triggers:
-      event = self.api.get('events.gete')(
+      event = self.api('events.gete')(
           self.triggers[triggername]['eventname'])
       plugin = self.triggers[triggername]['plugin']
       if event:
         if len(event['pluginlist']) > 0 and not force:
-          self.api.get('send.msg')(
+          self.api('send.msg')(
               'deletetrigger: trigger %s has functions registered' % triggername,
               secondary=plugin)
           return False
       plugin = self.triggers[triggername]['plugin']
       del self.regexlookup[self.triggers[triggername]['regex']]
       del self.triggers[triggername]
-      self.api.get('send.msg')('removed trigger %s' % triggername,
+      self.api('send.msg')('removed trigger %s' % triggername,
                                secondary=plugin)
       return True
     else:
-      self.api.get('send.msg')('deletetrigger: trigger %s does not exist' % \
+      self.api('send.msg')('deletetrigger: trigger %s does not exist' % \
                         triggername)
       return False
 
@@ -194,9 +194,9 @@ class Plugin(BasePlugin):
     @Yplugin@w   = The plugin name
 
     this function returns no values"""
-    self.api.get('send.msg')('removing triggers for plugin %s' % plugin,
+    self.api('send.msg')('removing triggers for plugin %s' % plugin,
                              secondary=plugin)
-    [self.api.get('triggers.remove')(i['triggername']) for i in self.triggers.values() if i['plugin'] == plugin]
+    [self.api('triggers.remove')(i['triggername']) for i in self.triggers.values() if i['plugin'] == plugin]
 
   # toggle a trigger
   def api_toggle(self, triggername, flag):
@@ -208,7 +208,7 @@ class Plugin(BasePlugin):
     if triggername in self.triggers:
       self.triggers[triggername]['enabled'] = flag
     else:
-      self.api.get('send.msg')('toggletrigger: trigger %s does not exist' % \
+      self.api('send.msg')('toggletrigger: trigger %s does not exist' % \
         triggername)
 
   # toggle the omit flag for a trigger
@@ -221,7 +221,7 @@ class Plugin(BasePlugin):
     if triggername in self.triggers:
       self.triggers[triggername]['omit'] = flag
     else:
-      self.api.get('send.msg')('toggletriggeromit: trigger %s does not exist' % \
+      self.api('send.msg')('toggletriggeromit: trigger %s does not exist' % \
         triggername)
 
   # toggle a trigger group
@@ -231,11 +231,11 @@ class Plugin(BasePlugin):
     @Yflag@w        = (optional) True to enable, False otherwise
 
     this function returns no values"""
-    self.api.get('send.msg')('toggletriggergroup: %s to %s' % \
+    self.api('send.msg')('toggletriggergroup: %s to %s' % \
                                                 (triggroup, flag))
     if triggroup in self.triggergroups:
       for i in self.triggergroups[triggroup]:
-        self.api.get('triggers.toggle')(i, flag)
+        self.api('triggers.toggle')(i, flag)
 
   def checktrigger(self, args):
     # pylint: disable=too-many-nested-blocks,too-many-branches
@@ -244,7 +244,7 @@ class Plugin(BasePlugin):
     called whenever the from_mud_event is raised
     """
     time1 = time.time()
-    self.api.get('send.msg')('checktrigger: %s started' % (args), 'timing')
+    self.api('send.msg')('checktrigger: %s started' % (args), 'timing')
     data = args['noansi']
     colordata = args['convertansi']
 
@@ -294,7 +294,7 @@ class Plugin(BasePlugin):
     raise a trigger event
     """
     time1 = time.time()
-    self.api.get('send.msg')('raisetrigger: %s started %s' % (triggername, args), 'timing')
+    self.api('send.msg')('raisetrigger: %s started %s' % (triggername, args), 'timing')
     try:
       eventname = self.triggers[triggername]['eventname']
     except KeyError:
@@ -302,11 +302,11 @@ class Plugin(BasePlugin):
     if triggername in self.triggers and self.triggers[triggername]['omit']:
       origargs['omit'] = True
 
-    tdat = self.api.get('events.eraise')(eventname, args)
-    self.api.get('send.msg')('trigger raiseevent returned: %s' % tdat)
+    tdat = self.api('events.eraise')(eventname, args)
+    self.api('send.msg')('trigger raiseevent returned: %s' % tdat)
     if tdat and 'newline' in tdat:
-      self.api.get('send.msg')('changing line from trigger')
-      origargs['original'] = self.api.get('colors.convertcolors')(tdat['newline'])
+      self.api('send.msg')('changing line from trigger')
+      origargs['original'] = self.api('colors.convertcolors')(tdat['newline'])
     if tdat and 'omit' in tdat and tdat['omit']:
       origargs['omit'] = True
     if triggername in self.triggers and self.triggers[triggername]['omit']:
@@ -378,7 +378,7 @@ class Plugin(BasePlugin):
       for trigger in args['trigger']:
         if trigger in self.triggers:
           eventname = self.triggers[trigger]['eventname']
-          eventstuff = self.api.get('events.detail')(eventname)
+          eventstuff = self.api('events.detail')(eventname)
           tmsg.append('%-13s : %s' % ('Name', trigger))
           tmsg.append('%-13s : %s' % ('Defined in',
                                       self.triggers[trigger]['plugin']))

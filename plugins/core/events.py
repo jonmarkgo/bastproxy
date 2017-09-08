@@ -4,13 +4,13 @@ This plugin handles events.
 
 ## Using
 ### Registering an event from a plugin
- * ```self.api.get('events.register')(eventname, function)```
+ * ```self.api('events.register')(eventname, function)```
 
 ### Unregistering an event
- * ```self.api.get('events.unregister')(eventname, function)```
+ * ```self.api('events.unregister')(eventname, function)```
 
 ### Raising an event
- * ```self.api.get('events.eraise')(eventname, argtable)```
+ * ```self.api('events.eraise')(eventname, argtable)```
 """
 import argparse
 import time
@@ -40,20 +40,20 @@ class Plugin(BasePlugin):
     self.events = {}
     self.pluginlookup = {}
 
-    self.api.get('api.add')('register', self.api_register)
-    self.api.get('api.add')('unregister', self.api_unregister)
-    self.api.get('api.add')('eraise', self.api_eraise)
-    self.api.get('api.add')('removeplugin', self.api_removeplugin)
-    self.api.get('api.add')('gete', self.api_getevent)
-    self.api.get('api.add')('detail', self.api_detail)
+    self.api('api.add')('register', self.api_register)
+    self.api('api.add')('unregister', self.api_unregister)
+    self.api('api.add')('eraise', self.api_eraise)
+    self.api('api.add')('removeplugin', self.api_removeplugin)
+    self.api('api.add')('gete', self.api_getevent)
+    self.api('api.add')('detail', self.api_detail)
 
   def load(self):
     """
     load the module
     """
     BasePlugin.load(self)
-    self.api.get('events.register')('log_plugin_loaded', self.logloaded)
-    self.api.get('events.eraise')('event_plugin_loaded', {})
+    self.api('events.register')('log_plugin_loaded', self.logloaded)
+    self.api('events.eraise')('event_plugin_loaded', {})
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='get details of an event')
@@ -61,7 +61,7 @@ class Plugin(BasePlugin):
                         help='the event name to get details for',
                         default=[],
                         nargs='*')
-    self.api.get('commands.add')('detail',
+    self.api('commands.add')('detail',
                                  self.cmd_detail,
                                  parser=parser)
 
@@ -72,11 +72,11 @@ class Plugin(BasePlugin):
                         help='list only events that have this argument in their name',
                         default='',
                         nargs='?')
-    self.api.get('commands.add')('list',
+    self.api('commands.add')('list',
                                  self.cmd_list,
                                  parser=parser)
 
-    self.api.get('events.register')('plugin_unloaded', self.pluginunloaded)
+    self.api('events.register')('plugin_unloaded', self.pluginunloaded)
 
   def pluginunloaded(self, args):
     """
@@ -144,7 +144,7 @@ class Plugin(BasePlugin):
       self.events[eventname][prio] = []
     if self.events[eventname][prio].count(func) == 0:
       self.events[eventname][prio].append(func)
-      self.api.get('send.msg')(
+      self.api('send.msg')(
           'adding function %s (plugin: %s) to event %s' \
               % (func, plugin, eventname), secondary=plugin)
     if plugin:
@@ -177,7 +177,7 @@ class Plugin(BasePlugin):
       keys.sort()
       for i in keys:
         if self.events[eventname][i].count(func) == 1:
-          self.api.get('send.msg')('removing function %s from event %s' % \
+          self.api('send.msg')('removing function %s from event %s' % \
               (func, eventname), secondary=plugin)
           self.events[eventname][i].remove(func)
           if len(self.events[eventname][i]) == 0:
@@ -193,14 +193,14 @@ class Plugin(BasePlugin):
     """  remove all registered functions that are specific to a plugin
     @Yplugin@w   = The plugin to remove events for
     this function returns no values"""
-    self.api.get('send.msg')('removing plugin %s' % plugin,
+    self.api('send.msg')('removing plugin %s' % plugin,
                              secondary=plugin)
     if plugin and plugin in self.pluginlookup:
       tkeys = self.pluginlookup[plugin]['events'].keys()
       for func in tkeys:
         events = list(self.pluginlookup[plugin]['events'][func])
         for event in events:
-          self.api.get('events.unregister')(event, func)
+          self.api('events.unregister')(event, func)
 
       self.pluginlookup[plugin]['events'] = {}
 
@@ -217,16 +217,32 @@ class Plugin(BasePlugin):
     calledfrom = self.api('utils.funccallerplugin')()
 
     if eventname != 'global_timer':
-      self.api.get('send.msg')('raiseevent %s' % eventname, secondary=calledfrom)
+      self.api('send.msg')('raiseevent %s' % eventname, secondary=calledfrom)
+      time1 = time.time()
+      self.api('send.msg')('api_eraise: %s started' % (eventname), 'timing')
     nargs = args.copy()
     nargs['eventname'] = eventname
     if eventname in self.events:
       self.api('send.msg')('event %s: %s' % (eventname, self.events[eventname]),
                            secondary=calledfrom)
+      if eventname != 'global_timer':
+        time3 = time.time()
+        self.api('send.msg')('api_eraise - keys: %s started' % (eventname), 'timing')
       keys = self.events[eventname].keys()
+      if eventname != 'global_timer':
+        time4 = time.time()
+        self.api('send.msg')('%s: %s - %0.3f ms' % \
+                ('api_eraise - keys', eventname, (time4-time3)*1000.0), 'timing')
       self.api('send.msg')('event %s: keys %s' % (eventname, keys), secondary=calledfrom)
       if keys:
+        if eventname != 'global_timer':
+          time3 = time.time()
+          self.api('send.msg')('api_eraise - keys sort: %s started' % (eventname), 'timing')
         keys.sort()
+        if eventname != 'global_timer':
+          time4 = time.time()
+          self.api('send.msg')('%s: %s - %0.3f ms' % \
+                  ('api_eraise - keys sort', eventname, (time4-time3)*1000.0), 'timing')
         for k in keys:
           for i in self.events[eventname][k][:]:
             try:
@@ -235,12 +251,12 @@ class Plugin(BasePlugin):
               except AttributeError:
                 plugin = ''
               if eventname != 'global_timer':
-                self.api.get('send.msg')(
+                self.api('send.msg')(
                     'event %s : calling function %s (%s) with args %s' % \
                         (eventname, i.__name__, plugin or 'Unknown', nargs),
                     secondary=[plugin, calledfrom])
                 time1 = time.time()
-                self.api.get('send.msg')(
+                self.api('send.msg')(
                   'event %s : calling function %s (%s) with args %s' % \
                   (eventname, i.__name__, plugin or 'Unknown', nargs), 'timing')
               tnargs = i(nargs)
@@ -250,19 +266,23 @@ class Plugin(BasePlugin):
                   'event %s : calling function %s (%s) with args %s - %0.3f ms' % \
                 (eventname, i.__name__, plugin or 'Unknown', nargs,
                   (time2-time1)*1000.0), 'timing')
-                self.api.get('send.msg')(
+                self.api('send.msg')(
                     'event %s : function %s (%s) returned %s' % \
                       (eventname, i.__name__, plugin or 'Unknown', tnargs),
                     secondary=[plugin, calledfrom])
               if tnargs:
                 nargs = tnargs
             except Exception:  # pylint: disable=broad-except
-              self.api.get('send.traceback')(
+              self.api('send.traceback')(
                   "error when calling function for event %s" % eventname)
     else:
       pass
-      #self.api.get('send.msg')('nothing to process for %s' % eventname)
-    #self.api.get('send.msg')('returning', nargs)
+      #self.api('send.msg')('nothing to process for %s' % eventname)
+    #self.api('send.msg')('returning', nargs)
+    if eventname != 'global_timer':
+      time2 = time.time()
+      self.api('send.msg')('%s: %s - %0.3f ms' % \
+              ('api_eraise', eventname, (time2-time1)*1000.0), 'timing')
     return nargs
 
   # get the details of an event
@@ -272,10 +292,10 @@ class Plugin(BasePlugin):
 
     this function returns a list of strings for the info"""
     tmsg = []
-    eventstuff = self.api.get('events.gete')(eventname)
+    eventstuff = self.api('events.gete')(eventname)
 
     tmsg.append('%-13s : %s' % ('Event', eventname))
-    tmsg.append('@B' + self.api.get('utils.center')('Registrations', '-', 60))
+    tmsg.append('@B' + self.api('utils.center')('Registrations', '-', 60))
     tmsg.append('%-4s : %-15s - %-s' % ('prio',
                                         'plugin',
                                         'function name'))
@@ -301,7 +321,7 @@ class Plugin(BasePlugin):
     tmsg = []
     if len(args['event']) > 0:
       for eventname in args['event']:
-        tmsg.extend(self.api.get('events.detail')(eventname))
+        tmsg.extend(self.api('events.detail')(eventname))
         tmsg.append('')
     else:
       tmsg.append('Please provide an event name')
@@ -328,6 +348,6 @@ class Plugin(BasePlugin):
     """
     initialize the event log types
     """
-    self.api.get('log.adddtype')(self.sname)
-    #self.api.get('log.console')(self.sname)
+    self.api('log.adddtype')(self.sname)
+    #self.api('log.console')(self.sname)
 

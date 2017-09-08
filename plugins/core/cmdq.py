@@ -56,20 +56,20 @@ class CmdQueue(object):
     """
     send the next command
     """
-    self.plugin.api.get('send.msg')('checking queue')
+    self.plugin.api('send.msg')('checking queue')
     if len(self.queue) == 0 or self.currentcmd:
       return
 
     cmdt = self.queue.pop(0)
     cmd = cmdt['cmd']
     cmdtype = cmdt['ctype']
-    self.plugin.api.get('send.msg')('sending cmd: %s (%s)' % (cmd, cmdtype))
+    self.plugin.api('send.msg')('sending cmd: %s (%s)' % (cmd, cmdtype))
 
     if cmdtype in self.cmds and self.cmds[cmdtype]['beforef']:
       self.cmds[cmdtype]['beforef']()
 
     self.currentcmd = cmdt
-    self.plugin.api.get('send.execute')(cmd)
+    self.plugin.api('send.execute')(cmd)
 
   def checkinqueue(self, cmd):
     """
@@ -85,12 +85,12 @@ class CmdQueue(object):
     """
     tell the queue that a command has finished
     """
-    self.plugin.api.get('send.msg')('running cmddone: %s' % cmdtype)
+    self.plugin.api('send.msg')('running cmddone: %s' % cmdtype)
     if not self.currentcmd:
       return
     if cmdtype == self.currentcmd['ctype']:
       if cmdtype in self.cmds and self.cmds[cmdtype]['afterf']:
-        self.plugin.api.get('send.msg')('running afterf: %s' % cmdtype)
+        self.plugin.api('send.msg')('running afterf: %s' % cmdtype)
         self.cmds[cmdtype]['afterf']()
       self.currentcmd = {}
       self.sendnext()
@@ -106,7 +106,7 @@ class CmdQueue(object):
             ('cmd' in self.currentcmd and self.currentcmd['cmd'] == cmd):
       return
     else:
-      self.plugin.api.get('send.msg')('added %s to queue' % cmd)
+      self.plugin.api('send.msg')('added %s to queue' % cmd)
       self.queue.append({'cmd':cmd, 'ctype':cmdtype})
       if not self.currentcmd:
         self.sendnext()
@@ -126,7 +126,7 @@ class Plugin(BasePlugin):
 
     self.reloaddependents = True
 
-    self.api.get('api.add')('baseclass', self.api_baseclass)
+    self.api('api.add')('baseclass', self.api_baseclass)
 
   def load(self):
     """

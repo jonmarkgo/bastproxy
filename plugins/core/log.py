@@ -63,23 +63,23 @@ class Plugin(BasePlugin):
 
     self.colors['error'] = '@x136'
 
-    self.api.get('api.add')('msg', self.api_msg)
-    self.api.get('api.add')('adddtype', self.api_adddtype)
-    self.api.get('api.add')('console', self.api_toggletoconsole)
-    self.api.get('api.add')('file', self.api_toggletofile)
-    self.api.get('api.add')('client', self.api_toggletoclient)
+    self.api('api.add')('msg', self.api_msg)
+    self.api('api.add')('adddtype', self.api_adddtype)
+    self.api('api.add')('console', self.api_toggletoconsole)
+    self.api('api.add')('file', self.api_toggletofile)
+    self.api('api.add')('client', self.api_toggletoclient)
 
-    self.api.get('log.adddtype')('default')
-    self.api.get('log.adddtype')('frommud')
-    self.api.get('log.adddtype')('startup')
-    self.api.get('log.adddtype')('error')
+    self.api('log.adddtype')('default')
+    self.api('log.adddtype')('frommud')
+    self.api('log.adddtype')('startup')
+    self.api('log.adddtype')('error')
 
-    self.api.get('log.client')('error')
-    self.api.get('log.console')('error')
-    self.api.get('log.console')('default')
-    self.api.get('log.console')('startup')
+    self.api('log.client')('error')
+    self.api('log.console')('error')
+    self.api('log.console')('default')
+    self.api('log.console')('startup')
 
-    #self.api.get('log.file')('default')
+    #self.api('log.file')('default')
 
 
   # add a datatype to the log
@@ -100,9 +100,9 @@ class Plugin(BasePlugin):
     tstring = '%s - %-10s : ' % (
         time.strftime('%a %b %d %Y %H:%M:%S', time.localtime()),
         dtype)
-    if self.api.get('api.has')('colors.convertcolors') and \
+    if self.api('api.has')('colors.convertcolors') and \
         dtype in self.colors:
-      tstring = self.api.get('colors.convertcolors')(self.colors[dtype] + tstring)
+      tstring = self.api('colors.convertcolors')(self.colors[dtype] + tstring)
     tmsg = [tstring]
     tmsg.append(msg)
 
@@ -110,15 +110,15 @@ class Plugin(BasePlugin):
     nontimestamp = msg
 
     if dtype in self.sendtoclient and self.sendtoclient[dtype]:
-      self.api.get('send.client')(timestampmsg)
+      self.api('send.client')(timestampmsg)
 
     if dtype in self.sendtoconsole and self.sendtoconsole[dtype]:
       print(timestampmsg, file=sys.stderr)
 
     if priority == 'primary':
       if dtype in self.sendtofile and self.sendtofile[dtype]['file']:
-        if self.api.get('api.has')('colors.stripansi'):
-          self.logtofile(self.api.get('colors.stripansi')(nontimestamp), dtype)
+        if self.api('api.has')('colors.stripansi'):
+          self.logtofile(self.api('colors.stripansi')(nontimestamp), dtype)
         else:
           self.logtofile(nontimestamp, dtype)
 
@@ -193,9 +193,9 @@ class Plugin(BasePlugin):
             (time.strftime(self.api.timestring, time.localtime()))
       msg = tstring + msg
 
-    if self.api.get('api.has')('colors.stripansi'):
+    if self.api('api.has')('colors.stripansi'):
       self.openlogs[self.currentlogs[dtype]].write(
-          self.api.get('colors.stripansi')(msg) + '\n')
+          self.api('colors.stripansi')(msg) + '\n')
     else:
       self.openlogs[self.currentlogs[dtype]].write(msg + '\n')
     self.openlogs[self.currentlogs[dtype]].flush()
@@ -210,7 +210,7 @@ class Plugin(BasePlugin):
     if datatype in self.sendtoclient and datatype != 'frommud':
       self.sendtoclient[datatype] = flag
 
-    self.api.get('send.msg')('setting %s to log to client' % \
+    self.api('send.msg')('setting %s to log to client' % \
                       datatype)
 
     self.sendtoclient.sync()
@@ -251,7 +251,7 @@ class Plugin(BasePlugin):
     if datatype in self.sendtoconsole and datatype != 'frommud':
       self.sendtoconsole[datatype] = flag
 
-    self.api.get('send.msg')('setting %s to log to console' % \
+    self.api('send.msg')('setting %s to log to console' % \
                       datatype, self.sname)
 
     self.sendtoconsole.sync()
@@ -296,7 +296,7 @@ class Plugin(BasePlugin):
 
       self.sendtofile[datatype] = {'file':tfile,
                                    'timestamp':timestamp}
-      self.api.get('send.msg')('setting %s to log to %s' % \
+      self.api('send.msg')('setting %s to log to %s' % \
                       (datatype, self.sendtofile[datatype]['file']),
                                self.sname)
       self.sendtofile.sync()
@@ -387,8 +387,8 @@ class Plugin(BasePlugin):
     #print('log api before adding', self.api.api)
 
     #print('log api after adding', self.api.api)
-    self.api.get('events.register')('from_mud_event', self.logmud)
-    self.api.get('events.register')('to_mud_event', self.logmud)
+    self.api('events.register')('from_mud_event', self.logmud)
+    self.api('events.register')('to_mud_event', self.logmud)
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description="""\
@@ -399,7 +399,7 @@ class Plugin(BasePlugin):
                         help='a list of datatypes to toggle',
                         default=[],
                         nargs='*')
-    self.api.get('commands.add')('client',
+    self.api('commands.add')('client',
                                  self.cmd_client,
                                  lname='Logger',
                                  parser=parser)
@@ -422,7 +422,7 @@ class Plugin(BasePlugin):
                         "--notimestamp",
                         help="do not log to file with a timestamp",
                         action="store_false")
-    self.api.get('commands.add')('file',
+    self.api('commands.add')('file',
                                  self.cmd_file,
                                  lname='Logger',
                                  parser=parser)
@@ -436,7 +436,7 @@ class Plugin(BasePlugin):
                         help='a list of datatypes to toggle',
                         default=[],
                         nargs='*')
-    self.api.get('commands.add')('console',
+    self.api('commands.add')('console',
                                  self.cmd_console,
                                  lname='Logger',
                                  parser=parser)
@@ -447,7 +447,7 @@ class Plugin(BasePlugin):
                         help='only list datatypes that have this argument in their name',
                         default='',
                         nargs='?')
-    self.api.get('commands.add')('types',
+    self.api('commands.add')('types',
                                  self.cmd_types,
                                  lname='Logger',
                                  parser=parser)

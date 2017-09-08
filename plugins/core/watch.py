@@ -31,9 +31,9 @@ class Plugin(BasePlugin):
     self.regexlookup = {}
     self.watchcmds = {}
 
-    self.api.get('api.add')('add', self.api_addwatch)
-    self.api.get('api.add')('remove', self.api_removewatch)
-    self.api.get('api.add')('removeplugin', self.api_removeplugin)
+    self.api('api.add')('add', self.api_addwatch)
+    self.api('api.add')('remove', self.api_removewatch)
+    self.api('api.add')('removeplugin', self.api_removeplugin)
 
   def load(self):
     """
@@ -41,10 +41,10 @@ class Plugin(BasePlugin):
     """
     BasePlugin.load(self)
 
-    #self.api.get('commands.add')('detail', self.cmd_detail,
+    #self.api('commands.add')('detail', self.cmd_detail,
                                  #shelp='details of an event')
 
-    self.api.get('events.register')('from_client_event', self.checkcmd)
+    self.api('events.register')('from_client_event', self.checkcmd)
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='list watches')
@@ -52,7 +52,7 @@ class Plugin(BasePlugin):
                         help='list only watches that have this argument in them',
                         default='',
                         nargs='?')
-    self.api.get('commands.add')('list',
+    self.api('commands.add')('list',
                                  self.cmd_list,
                                  parser=parser)
 
@@ -62,11 +62,11 @@ class Plugin(BasePlugin):
                         help='the trigger to detail',
                         default=[],
                         nargs='*')
-    self.api.get('commands.add')('detail',
+    self.api('commands.add')('detail',
                                  self.cmd_detail,
                                  parser=parser)
 
-    self.api.get('events.register')('plugin_unloaded', self.pluginunloaded)
+    self.api('events.register')('plugin_unloaded', self.pluginunloaded)
 
   def pluginunloaded(self, args):
     """
@@ -105,7 +105,7 @@ class Plugin(BasePlugin):
       for watch in args['watch']:
         if watch in self.watchcmds:
           eventname = self.watchcmds[watch]['eventname']
-          eventstuff = self.api.get('events.detail')(eventname)
+          eventstuff = self.api('events.detail')(eventname)
           tmsg.append('%-13s : %s' % ('Name', watch))
           tmsg.append('%-13s : %s' % ('Defined in',
                                       self.watchcmds[watch]['plugin']))
@@ -138,7 +138,7 @@ class Plugin(BasePlugin):
       return
 
     if regex in self.regexlookup:
-      self.api.get('send.msg')(
+      self.api('send.msg')(
           'watch %s tried to add a regex that already existed for %s' % \
                       (watchname, self.regexlookup[regex]), secondary=plugin)
       return
@@ -151,11 +151,11 @@ class Plugin(BasePlugin):
       self.watchcmds[watchname]['hits'] = 0
       self.watchcmds[watchname]['compiled'] = re.compile(args['regex'])
       self.regexlookup[args['regex']] = watchname
-      self.api.get('send.msg')(
+      self.api('send.msg')(
           'added watch %s for plugin %s' % \
                       (watchname, plugin), secondary=plugin)
     except Exception: # pylint: disable=broad-except
-      self.api.get('send.traceback')(
+      self.api('send.traceback')(
           'Could not compile regex for cmd watch: %s : %s' % \
                 (watchname, regex))
 
@@ -167,20 +167,20 @@ class Plugin(BasePlugin):
 
     this function returns no values"""
     if watchname in self.watchcmds:
-      event = self.api.get('events.gete')(self.watchcmds[watchname]['eventname'])
+      event = self.api('events.gete')(self.watchcmds[watchname]['eventname'])
       plugin = self.watchcmds[watchname]['plugin']
       if event:
         if len(event['pluginlist']) > 0 and not force:
-          self.api.get('send.msg')(
+          self.api('send.msg')(
               'removewatch: watch %s for plugin %s has functions registered' % \
                       (watchname, plugin), secondary=plugin)
           return False
       del self.regexlookup[self.watchcmds[watchname]['regex']]
       del self.watchcmds[watchname]
-      self.api.get('send.msg')('removed watch %s' % watchname,
+      self.api('send.msg')('removed watch %s' % watchname,
                                secondary=plugin)
     else:
-      self.api.get('send.msg')('removewatch: watch %s does not exist' % \
+      self.api('send.msg')('removewatch: watch %s does not exist' % \
                                             watchname)
 
   # remove all watches related to a plugin
@@ -189,12 +189,12 @@ class Plugin(BasePlugin):
     @Yplugin@w   = The plugin
 
     this function returns no values"""
-    self.api.get('send.msg')('removing watches for plugin %s' % plugin,
+    self.api('send.msg')('removing watches for plugin %s' % plugin,
                              secondary=plugin)
     tkeys = self.watchcmds.keys()
     for i in tkeys:
       if self.watchcmds[i]['plugin'] == plugin:
-        self.api.get('watch.remove')(i)
+        self.api('watch.remove')(i)
 
   def checkcmd(self, data):
     """
@@ -209,12 +209,11 @@ class Plugin(BasePlugin):
         targs = mat.groupdict()
         targs['cmdname'] = 'cmd_' + i
         targs['data'] = tdat
-        self.api.get('send.msg')('raising %s' % targs['cmdname'])
-        tdata = self.api.get('events.eraise')('watch_' + i, targs)
+        self.api('send.msg')('raising %s' % targs['cmdname'])
+        tdata = self.api('events.eraise')('watch_' + i, targs)
         if 'changed' in tdata:
           data['nfromdata'] = tdata['changed']
 
     if 'nfromdata' in data:
       data['fromdata'] = data['nfromdata']
     return data
-

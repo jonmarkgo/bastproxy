@@ -41,13 +41,13 @@ class Plugin(BasePlugin):
                         help='list the last <number> errors',
                         default='-1',
                         nargs='?')
-    self.api.get('commands.add')('show',
+    self.api('commands.add')('show',
                                  self.cmd_show,
                                  parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='clear errors')
-    self.api.get('commands.add')('clear',
+    self.api('commands.add')('clear',
                                  self.cmd_clear,
                                  parser=parser)
 
@@ -93,7 +93,7 @@ class Plugin(BasePlugin):
       msg.append('Please specify a number')
       return False, msg
 
-    errors = self.api.get('errors.gete')()
+    errors = self.api('errors.gete')()
 
     if len(errors) == 0:
       msg.append('There are no errors')
@@ -117,7 +117,7 @@ class Plugin(BasePlugin):
     """
     clear errors
     """
-    self.api.get('errors.clear')()
+    self.api('errors.clear')()
 
     return True, ['Errors cleared']
 
