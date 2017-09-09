@@ -50,12 +50,23 @@ class PluginMgr(object):
     """
     initialize the instance
     """
-    self.plugins = {}
-    self.pluginl = {}
-    self.pluginm = {}
-    self.pluginp = {}
-    self.options = {}
-    self.plugininfo = {}
+    #plugin.name  : Event Handler
+    #plugin.sname : events
+    #modpath      : /core/events.py
+    #fullimploc   : plugins.utils.pb
+
+    #key:   modpath
+    #value: {'class', 'module'}
+    self.loadedpluginsd = {}
+
+    self.pluginlookupbysname = {}
+    self.pluginlookupbyname = {}
+    self.pluginlookupbyfullimploc = {}
+
+    #key:   modpath
+    #value: {'sname', 'name', 'purpose', 'author',
+    #        'version', 'modpath', 'fullimploc'
+    self.allplugininfo = {}
 
     index = __file__.rfind(os.sep)
     if index == -1:
@@ -81,7 +92,7 @@ class PluginMgr(object):
     """
     return the plugininfo dictionary
     """
-    return self.plugininfo
+    return self.allplugininfo
 
   def findplugin(self, name):
     """
@@ -108,39 +119,33 @@ class PluginMgr(object):
     """
     find a plugin
     """
-    if plugin and plugin in self.plugins:
-      return plugin
-
-    fullimploc = 'plugins.' + plugin
-    for tplugin in self.plugins:
-      if self.plugins[tplugin].fullimploc == fullimploc:
-        return tplugin
-
-    return None
+    return self.api('plugins.getp')(plugin)
 
   # get a plugin instance
   def api_getmodule(self, pluginname):
     """  returns the module of a plugin
     @Ypluginname@w  = the plugin to check for"""
-    if pluginname in self.pluginm:
-      return self.pluginm[pluginname]
+    plugin = self.api('plugins.getp')(pluginname)
+
+    if plugin:
+      return self.loadedpluginsd[plugin.modpath]['module']
 
     return None
 
   # get a plugin instance
   def api_getp(self, pluginname):
-    """  get a plugin instance
-    @Ypluginname@w  = the plugin to get for"""
+    """  get a loaded plugin instance
+    @Ypluginname@w  = the plugin to get"""
 
     if isinstance(pluginname, basestring):
-      if pluginname in self.plugins:
-        return self.plugins[pluginname]
-      if pluginname in self.pluginl:
-        return self.pluginl[pluginname]
-      if pluginname in self.pluginm:
-        return self.pluginm[pluginname]
-      if pluginname in self.pluginp:
-        return self.pluginp[pluginname]
+      if pluginname in self.loadedpluginsd:
+        return self.loadedpluginsd[pluginname]['plugin']
+      if pluginname in self.pluginlookupbysname:
+        return self.loadedpluginsd[self.pluginlookupbysname[pluginname]]['plugin']
+      if pluginname in self.pluginlookupbyname:
+        return self.loadedpluginsd[self.pluginlookupbyname[pluginname]]['plugin']
+      if pluginname in self.pluginlookupbyfullimploc:
+        return self.loadedpluginsd[self.pluginlookupbyfullimploc[pluginname]]['plugin']
     elif isinstance(pluginname, BasePlugin):
       return pluginname
 
@@ -150,8 +155,11 @@ class PluginMgr(object):
   def api_isloaded(self, pluginname):
     """  check if a plugin is loaded
     @Ypluginname@w  = the plugin to check for"""
-    if pluginname in self.plugins or pluginname in self.pluginl:
+    plugin = self.api('plugins.getp')(pluginname)
+
+    if plugin:
       return True
+
     return False
 
   def loaddependencies(self, pluginname, dependencies):
@@ -159,7 +167,8 @@ class PluginMgr(object):
     load a list of modules
     """
     for i in dependencies:
-      if i in self.plugins or i in self.pluginl:
+      plugin = self.api('plugins.getp')(i)
+      if plugin:
         continue
 
       self.api('send.msg')('%s: loading dependency %s' % (pluginname, i),
@@ -176,16 +185,16 @@ class PluginMgr(object):
     """
     msg = []
     badplugins = self.updateallplugininfo()
-    for modpath in sorted(self.plugininfo.keys()):
-      sname = self.plugininfo[modpath]['sname']
-      fullimploc = self.plugininfo[modpath]['fullimploc']
-      if sname not in self.plugins:
+    for modpath in sorted(self.allplugininfo.keys()):
+      sname = self.allplugininfo[modpath]['sname']
+      fullimploc = self.allplugininfo[modpath]['fullimploc']
+      if modpath not in self.loadedpluginsd:
         msg.append("%-20s : %-25s %-10s %-5s %s@w" % \
                   (fullimploc.replace('plugins.', ''),
-                   self.plugininfo[modpath]['name'],
-                   self.plugininfo[modpath]['author'],
-                   self.plugininfo[modpath]['version'],
-                   self.plugininfo[modpath]['purpose']))
+                   self.allplugininfo[modpath]['name'],
+                   self.allplugininfo[modpath]['author'],
+                   self.allplugininfo[modpath]['version'],
+                   self.allplugininfo[modpath]['purpose']))
     if len(msg) > 0:
       msg.insert(0, '-' * 75)
       msg.insert(0, "%-20s : %-25s %-10s %-5s %s@w" % \
@@ -206,15 +215,18 @@ class PluginMgr(object):
     """
     msg = []
 
-    plugins = sorted(self.plugins.values(),
+    plugins = sorted([i['plugin'] for i in self.loadedpluginsd.values()],
                      key=operator.attrgetter('package'))
     packageheader = []
 
     msg.append("%-10s : %-25s %-10s %-5s %s@w" % \
                         ('Short Name', 'Name', 'Author', 'Vers', 'Purpose'))
     msg.append('-' * 75)
+
+    found = False
     for tpl in plugins:
       if tpl.ischangedondisk():
+        found = True
         if tpl.package not in packageheader:
           if len(packageheader) > 0:
             msg.append('')
@@ -232,7 +244,10 @@ class PluginMgr(object):
                   (tpl.sname, tpl.name,
                    tpl.author, tpl.version, tpl.purpose))
 
-    return msg
+    if found:
+      return msg
+    else:
+      return ['No plugins are changed on disk.']
 
   def getpackageplugins(self, package):
     """
@@ -241,7 +256,7 @@ class PluginMgr(object):
     msg = []
 
     plist = []
-    for plugin in self.plugins.values():
+    for plugin in [i['plugin'] for i in self.loadedpluginsd.values()]:
       if plugin.package == package:
         plist.append(plugin)
 
@@ -276,7 +291,7 @@ class PluginMgr(object):
     """
     msg = []
 
-    plugins = sorted(self.plugins.values(),
+    plugins = sorted([i['plugin'] for i in self.loadedpluginsd.values()],
                      key=operator.attrgetter('package'))
     packageheader = []
     msg.append("%-10s : %-25s %-10s %-5s %s@w" % \
@@ -342,12 +357,13 @@ class PluginMgr(object):
       else:
         modpath = _module_list[0].replace(self.basepath, '')
         sname, reason = self.load_module(modpath, self.basepath, True)
+        plugin = self.api('plugins.get')(sname)
         if sname:
           if reason == 'already':
             tmsg.append('Module %s is already loaded' % sname)
           else:
             tmsg.append('Load complete: %s - %s' % \
-                                          (sname, self.plugins[sname].name))
+                                          (sname, plugin.name))
         else:
           tmsg.append('Could not load: %s' % plugin)
       return True, tmsg
@@ -369,12 +385,12 @@ class PluginMgr(object):
 
     plugin = self.findloadedplugin(plugina)
 
-    if plugin and plugin in self.plugins:
-      if self.plugins[plugin].canreload:
-        if self.unload_module(self.plugins[plugin].fullimploc):
-          tmsg.append("Unloaded: %s" % plugin)
+    if plugin:
+      if plugin.canreload:
+        if self.unload_module(plugin.fullimploc):
+          tmsg.append("Unloaded: %s" % plugin.fullimploc)
         else:
-          tmsg.append("Could not unload:: %s" % plugin)
+          tmsg.append("Could not unload:: %s" % plugin.fullimploc)
       else:
         tmsg.append("That plugin can not be unloaded")
       return True, tmsg
@@ -399,17 +415,18 @@ class PluginMgr(object):
 
     plugin = self.findloadedplugin(plugina)
 
-    if plugin and plugin in self.plugins:
-      if self.plugins[plugin].canreload:
-        tret, _ = self.reload_module(plugin, True)
+    if plugin:
+      if plugin.canreload:
+        tret, _ = self.reload_module(plugin.modpath, True)
         if tret and tret != True:
-          tmsg.append("Reload complete: %s" % self.plugins[tret].fullimploc)
+          plugin = self.findloadedplugin(plugina)
+          tmsg.append("Reload complete: %s" % plugin.fullimploc)
           return True, tmsg
       else:
         tmsg.append("That plugin cannot be reloaded")
         return True, tmsg
     else:
-      tmsg.append('plugin %s does not exist' % plugin)
+      tmsg.append('plugin %s does not exist' % plugina)
       return True, tmsg
 
     return False, tmsg
@@ -438,7 +455,7 @@ class PluginMgr(object):
         self.api('log.console')('upgrade')
 
     if not load:
-      testsort = sorted(self.plugins.values(),
+      testsort = sorted([i['plugin'] for i in self.loadedpluginsd.values()],
                         key=operator.attrgetter('priority'))
       for i in testsort:
         try:
@@ -452,12 +469,12 @@ class PluginMgr(object):
 
   def updateallplugininfo(self):
     """
-    find plugins that are not in self.plugininfo
+    find plugins that are not in self.allplugininfo
     """
     _module_list = find_files(self.basepath, '*.py')
     _module_list.sort()
 
-    self.plugininfo = {}
+    self.allplugininfo = {}
     badplugins = []
 
     for fullpath in _module_list:
@@ -468,28 +485,29 @@ class PluginMgr(object):
       if not modname.startswith("_"):
         fullimploc = "plugins" + '.' + imploc
         if fullimploc in sys.modules:
-          self.plugininfo[modpath] = {}
-          self.plugininfo[modpath]['sname'] = self.pluginp[modpath].sname
-          self.plugininfo[modpath]['name'] = self.pluginp[modpath].name
-          self.plugininfo[modpath]['purpose'] = self.pluginp[modpath].purpose
-          self.plugininfo[modpath]['author'] = self.pluginp[modpath].author
-          self.plugininfo[modpath]['version'] = self.pluginp[modpath].version
-          self.plugininfo[modpath]['modpath'] = modpath
-          self.plugininfo[modpath]['fullimploc'] = fullimploc
+          plugin = self.api('plugins.getp')(modpath)
+          self.allplugininfo[modpath] = {}
+          self.allplugininfo[modpath]['sname'] = plugin.sname
+          self.allplugininfo[modpath]['name'] = plugin.name
+          self.allplugininfo[modpath]['purpose'] = plugin.purpose
+          self.allplugininfo[modpath]['author'] = plugin.author
+          self.allplugininfo[modpath]['version'] = plugin.version
+          self.allplugininfo[modpath]['modpath'] = modpath
+          self.allplugininfo[modpath]['fullimploc'] = fullimploc
 
         else:
           try:
             _module = __import__(fullimploc)
             _module = sys.modules[fullimploc]
 
-            self.plugininfo[modpath] = {}
-            self.plugininfo[modpath]['sname'] = _module.SNAME
-            self.plugininfo[modpath]['name'] = _module.NAME
-            self.plugininfo[modpath]['purpose'] = _module.PURPOSE
-            self.plugininfo[modpath]['author'] = _module.AUTHOR
-            self.plugininfo[modpath]['version'] = _module.VERSION
-            self.plugininfo[modpath]['modpath'] = modpath
-            self.plugininfo[modpath]['fullimploc'] = fullimploc
+            self.allplugininfo[modpath] = {}
+            self.allplugininfo[modpath]['sname'] = _module.SNAME
+            self.allplugininfo[modpath]['name'] = _module.NAME
+            self.allplugininfo[modpath]['purpose'] = _module.PURPOSE
+            self.allplugininfo[modpath]['author'] = _module.AUTHOR
+            self.allplugininfo[modpath]['version'] = _module.VERSION
+            self.allplugininfo[modpath]['modpath'] = modpath
+            self.allplugininfo[modpath]['fullimploc'] = fullimploc
 
             del sys.modules[fullimploc]
 
@@ -528,15 +546,15 @@ class PluginMgr(object):
       elif 'AUTOLOAD' not in _module.__dict__:
         load = False
 
-      if modpath not in self.plugininfo:
-        self.plugininfo[modpath] = {}
-        self.plugininfo[modpath]['sname'] = _module.SNAME
-        self.plugininfo[modpath]['name'] = _module.NAME
-        self.plugininfo[modpath]['purpose'] = _module.PURPOSE
-        self.plugininfo[modpath]['author'] = _module.AUTHOR
-        self.plugininfo[modpath]['version'] = _module.VERSION
-        self.plugininfo[modpath]['modpath'] = modpath
-        self.plugininfo[modpath]['fullimploc'] = fullimploc
+      if modpath not in self.allplugininfo:
+        self.allplugininfo[modpath] = {}
+        self.allplugininfo[modpath]['sname'] = _module.SNAME
+        self.allplugininfo[modpath]['name'] = _module.NAME
+        self.allplugininfo[modpath]['purpose'] = _module.PURPOSE
+        self.allplugininfo[modpath]['author'] = _module.AUTHOR
+        self.allplugininfo[modpath]['version'] = _module.VERSION
+        self.allplugininfo[modpath]['modpath'] = modpath
+        self.allplugininfo[modpath]['fullimploc'] = fullimploc
 
       if load:
         if "Plugin" in _module.__dict__:
@@ -602,8 +620,8 @@ class PluginMgr(object):
     """
     reload a module
     """
-    if modname in self.plugins:
-      plugin = self.plugins[modname]
+    if modname in self.loadedpluginsd:
+      plugin = self.api.get('plugins.getp')(modname)
       fullimploc = plugin.fullimploc
       basepath = plugin.basepath
       modpath = plugin.modpath
@@ -629,7 +647,7 @@ class PluginMgr(object):
     """
     reload all dependents
     """
-    testsort = sorted(self.plugins.values(),
+    testsort = sorted([i['plugin'] for i in self.loadedpluginsd.values()],
                       key=operator.attrgetter('priority'))
     for plugin in testsort:
       if plugin.sname != reloadedplugin:
@@ -676,12 +694,10 @@ class PluginMgr(object):
       plugin.priority = module.PRIORITY
     except AttributeError:
       pass
-    if plugin.name in self.pluginl:
+    pluginn = self.api('plugins.getp')(plugin.name)
+    plugins = self.api('plugins.getp')(plugin.sname)
+    if plugins or pluginn:
       self.api('send.msg')('Plugin %s already exists' % plugin.name,
-                               self.sname)
-      return False
-    if plugin.sname in self.plugins:
-      self.api('send.msg')('Plugin %s already exists' % plugin.sname,
                                self.sname)
       return False
 
@@ -695,10 +711,15 @@ class PluginMgr(object):
                                                 % fullimploc)
         del sys.modules[fullimploc]
         return False
-    self.pluginl[plugin.name] = plugin
-    self.plugins[plugin.sname] = plugin
-    self.pluginm[plugin.sname] = module
-    self.pluginp[modpath] = plugin
+
+    self.loadedpluginsd[modpath] = {}
+    self.loadedpluginsd[modpath]['plugin'] = plugin
+    self.loadedpluginsd[modpath]['module'] = module
+
+    self.pluginlookupbysname[plugin.sname] = modpath
+    self.pluginlookupbyname[plugin.name] = modpath
+    self.pluginlookupbyfullimploc[fullimploc] = modpath
+
     self.loadedplugins[modpath] = True
     self.loadedplugins.sync()
 
@@ -708,9 +729,8 @@ class PluginMgr(object):
     """
     remove a plugin
     """
-    plugin = None
-    if pluginname in self.plugins:
-      plugin = self.plugins[pluginname]
+    plugin = self.api('plugins.getp')(pluginname)
+    if plugin:
       try:
         plugin.unload()
         self.api('events.eraise')('%s_plugin_unload' % plugin.sname, {})
@@ -723,13 +743,17 @@ class PluginMgr(object):
                                   % plugin.sname)
         return False
 
-      del self.plugins[plugin.sname]
-      del self.pluginl[plugin.name]
-      del self.pluginm[plugin.sname]
+      del self.loadedpluginsd[plugin.modpath]
+
+      del self.pluginlookupbyfullimploc[plugin.fullimploc]
+      del self.pluginlookupbyname[plugin.name]
+      del self.pluginlookupbysname[plugin.sname]
+
       del self.loadedplugins[plugin.modpath]
       self.loadedplugins.sync()
 
       plugin = None
+      plugina = None
 
       return True
     else:
@@ -740,8 +764,8 @@ class PluginMgr(object):
     """
     save all plugins
     """
-    for i in self.plugins:
-      self.plugins[i].savestate()
+    for i in self.loadedpluginsd.values():
+      i['plugin'].savestate()
 
   def load(self):
     """
