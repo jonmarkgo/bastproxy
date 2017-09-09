@@ -37,6 +37,9 @@ class Plugin(BasePlugin):
 
     self.canreload = False
 
+    self.numglobalraised = 0
+    self.eventstats = {}
+
     self.events = {}
     self.pluginlookup = {}
 
@@ -95,6 +98,7 @@ class Plugin(BasePlugin):
       pluginslist = list of plugins that use this event
       funclist = a dictionary of funcnames, with their plugin,
               function name, and prio as values in a dictionary
+      numraised = the number of times this event was raised
     """
     pluginlist = []
     funcdict = {}
@@ -112,7 +116,8 @@ class Plugin(BasePlugin):
           funcdict[func]['priority'] = prio
           funcdict[func]['plugin'] = plugin
 
-      return {'pluginlist':pluginlist, 'funcdict':funcdict}
+      return {'pluginlist':pluginlist, 'funcdict':funcdict,
+              'numraised':self.eventstats[eventname]['numraised']}
 
     else:
       return {}
@@ -140,6 +145,9 @@ class Plugin(BasePlugin):
 
     if eventname not in self.events:
       self.events[eventname] = {}
+    if eventname not in self.eventstats:
+      self.eventstats[eventname] = {}
+      self.eventstats[eventname]['numraised'] = 0
     if prio not in self.events[eventname]:
       self.events[eventname][prio] = []
     if self.events[eventname][prio].count(func) == 0:
@@ -223,6 +231,8 @@ class Plugin(BasePlugin):
     nargs = args.copy()
     nargs['eventname'] = eventname
     if eventname in self.events:
+      self.eventstats[eventname]['numraised'] += 1
+      self.numglobalraised += 1
       self.api('send.msg')('event %s: %s' % (eventname, self.events[eventname]),
                            secondary=calledfrom)
       if eventname != 'global_timer':
@@ -294,21 +304,27 @@ class Plugin(BasePlugin):
     tmsg = []
     eventstuff = self.api('events.gete')(eventname)
 
-    tmsg.append('%-13s : %s' % ('Event', eventname))
-    tmsg.append('@B' + self.api('utils.center')('Registrations', '-', 60))
-    tmsg.append('%-4s : %-15s - %-s' % ('prio',
-                                        'plugin',
-                                        'function name'))
-    tmsg.append('@B' + '-' * 60)
-    if not eventstuff:
-      tmsg.append('None')
+    print(eventstuff)
+
+    if eventstuff:
+      tmsg.append('%-13s : %s' % ('Event', eventname))
+      tmsg.append('%-13s : %s' % ('Raised', eventstuff['numraised']))
+      tmsg.append('@B' + self.api('utils.center')('Registrations', '-', 60))
+      tmsg.append('%-4s : %-15s - %-s' % ('prio',
+                                          'plugin',
+                                          'function name'))
+      tmsg.append('@B' + '-' * 60)
+      if not eventstuff:
+        tmsg.append('None')
+      else:
+        for func in eventstuff['funcdict']:
+          eventfunc = eventstuff['funcdict'][func]
+          tmsg.append('%-4s : %-15s - %-s' % (eventfunc['priority'],
+                                              eventfunc['plugin'],
+                                              eventfunc['name']))
+      tmsg.append('')
     else:
-      for func in eventstuff['funcdict']:
-        eventfunc = eventstuff['funcdict'][func]
-        tmsg.append('%-4s : %-15s - %-s' % (eventfunc['priority'],
-                                            eventfunc['plugin'],
-                                            eventfunc['name']))
-    tmsg.append('')
+      tmsg.append('Event %s does not exist' % eventname)
     return tmsg
 
   def cmd_detail(self, args):
@@ -351,3 +367,22 @@ class Plugin(BasePlugin):
     self.api('log.adddtype')(self.sname)
     #self.api('log.console')(self.sname)
 
+  def summarystats(self, args):
+    # pylint: disable=unused-argument
+    """
+    return a one line stats summary
+    """
+    return self.summarytemplate % ("Events", "Total: %d   Raised: %d" % (
+                                        len(self.events), self.numglobalraised))
+
+  def getstats(self):
+    """
+    return stats for events
+    """
+    stats = BasePlugin.getstats(self)
+    stats['Events'] = {}
+    stats['Events']['showorder'] = ['Total', 'Raised']
+    stats['Events']['Total'] = len(self.events)
+    stats['Events']['Raised'] = self.numglobalraised
+
+    return stats
