@@ -357,7 +357,7 @@ class PluginMgr(object):
       else:
         modpath = _module_list[0].replace(self.basepath, '')
         sname, reason = self.load_module(modpath, self.basepath, True)
-        plugin = self.api('plugins.get')(sname)
+        plugin = self.api('plugins.getp')(sname)
         if sname:
           if reason == 'already':
             tmsg.append('Module %s is already loaded' % sname)
