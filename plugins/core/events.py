@@ -304,8 +304,6 @@ class Plugin(BasePlugin):
     tmsg = []
     eventstuff = self.api('events.gete')(eventname)
 
-    print(eventstuff)
-
     if eventstuff:
       tmsg.append('%-13s : %s' % ('Event', eventname))
       tmsg.append('%-13s : %s' % ('Raised', eventstuff['numraised']))
