@@ -440,7 +440,12 @@ class BasePlugin(object):
     """
     msg = []
 
-    msg.extend(sys.modules[self.fullimploc].__doc__.split('\n'))
+    if '.__init__' in self.fullimploc:
+      imploc = self.fullimploc.replace('.__init__', '')
+    else:
+      imploc = self.fullimploc
+
+    msg.extend(sys.modules[imploc].__doc__.split('\n'))
     if args['commands']:
       cmdlist = self.api('commands.list')(self.sname)
       if cmdlist:
