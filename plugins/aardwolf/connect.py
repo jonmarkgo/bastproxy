@@ -11,7 +11,7 @@ PURPOSE = 'setup aardwolf when first connecting'
 AUTHOR = 'Bast'
 VERSION = 1
 
-AUTOLOAD = True
+AUTOLOAD = False
 
 class Plugin(BasePlugin):
   """

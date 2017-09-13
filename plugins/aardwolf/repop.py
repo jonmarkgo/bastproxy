@@ -11,7 +11,7 @@ PURPOSE = 'Send repop messages to a channel'
 AUTHOR = 'Bast'
 VERSION = 1
 
-AUTOLOAD = True
+AUTOLOAD = False
 
 class Plugin(AardwolfBasePlugin):
   """
