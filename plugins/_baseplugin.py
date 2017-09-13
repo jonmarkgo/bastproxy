@@ -68,18 +68,10 @@ class BasePlugin(object):
     self.api.overload('setting', 'change', self.api_settingchange)
     self.api.overload('api', 'add', self.api_add)
 
-  def load(self):
+  def loadcommands(self):
     """
-    load stuff, do most things here
+    load the commands
     """
-    self.settingvalues.pload()
-
-    if '_version' in self.settingvalues and \
-        self.settingvalues['_version'] != self.version:
-      self.updateversion(self.settingvalues['_version'], self.version)
-
-    self.api('log.adddtype')(self.sname)
-
     parser = argparse.ArgumentParser(
         add_help=False,
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -168,6 +160,21 @@ class BasePlugin(object):
                                  self.cmd_api,
                                  parser=parser,
                                  group='Base')
+
+
+  def load(self):
+    """
+    load stuff, do most things here
+    """
+    self.settingvalues.pload()
+
+    if '_version' in self.settingvalues and \
+        self.settingvalues['_version'] != self.version:
+      self.updateversion(self.settingvalues['_version'], self.version)
+
+    self.api('log.adddtype')(self.sname)
+
+    self.loadcommands()
 
     self.api('events.register')('%s_plugin_loaded' % self.sname,
                                     self.afterload)
