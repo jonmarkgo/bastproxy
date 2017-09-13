@@ -35,6 +35,7 @@ class BasePlugin(object):
     self.versionfuncs = {}
     self.reloaddependents = False
     self.canreload = True
+    self.canreset = True
     self.resetflag = True
     self.api = API()
     self.loadedtime = time.time()
@@ -101,12 +102,13 @@ class BasePlugin(object):
                                  group='Base',
                                  history=False)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='reset the plugin')
-    self.api('commands.add')('reset',
-                                 self.cmd_reset,
-                                 parser=parser,
-                                 group='Base')
+    if self.canreset:
+      parser = argparse.ArgumentParser(add_help=False,
+                                      description='reset the plugin')
+      self.api('commands.add')('reset',
+                                  self.cmd_reset,
+                                  parser=parser,
+                                  group='Base')
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='save the plugin state')
@@ -504,8 +506,11 @@ class BasePlugin(object):
       reset the plugin
       @CUsage@w: reset
     """
-    self.reset()
-    return True, ['Plugin reset']
+    if self.canreset:
+      self.reset()
+      return True, ['Plugin reset']
+    else:
+      return True, ['This plugin cannot be reset']
 
   def ischangedondisk(self):
     """
@@ -521,12 +526,13 @@ class BasePlugin(object):
     """
     internal function to reset data
     """
-    self.resetflag = True
-    self.settingvalues.clear()
-    for i in self.settings:
-      self.settingvalues[i] = self.settings[i]['default']
-    self.settingvalues.sync()
-    self.resetflag = False
+    if self.canreset:
+      self.resetflag = True
+      self.settingvalues.clear()
+      for i in self.settings:
+        self.settingvalues[i] = self.settings[i]['default']
+      self.settingvalues.sync()
+      self.resetflag = False
 
   def afterfirstactive(self, _=None):
     """
