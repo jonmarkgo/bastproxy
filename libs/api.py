@@ -52,6 +52,8 @@ class API(object):
   # a dictionary of managers that could not be made into plugins
   MANAGERS = {}
 
+  starttime = ''
+
   def __init__(self):
     """
     initialize the class
