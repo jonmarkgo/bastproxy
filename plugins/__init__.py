@@ -1,7 +1,8 @@
 """
-make all functions that add things use kwargs instead of a table
-"""
+manages all plugins
 
+#TODO: make all functions that add things use kwargs instead of a table
+"""
 import glob
 import os
 import sys
@@ -56,15 +57,15 @@ class PluginMgr(object):
     #fullimploc   : plugins.utils.pb
 
     #key:   modpath
-    #value: {'class', 'module'}
+    #value: {'plugin', 'module'}
     self.loadedpluginsd = {}
 
     self.pluginlookupbysname = {}
     self.pluginlookupbyname = {}
     self.pluginlookupbyfullimploc = {}
 
-    #key:   modpath
-    #value: {'sname', 'name', 'purpose', 'author',
+    # key:   modpath
+    # value: {'sname', 'name', 'purpose', 'author',
     #        'version', 'modpath', 'fullimploc'
     self.allplugininfo = {}
 
@@ -162,6 +163,7 @@ class PluginMgr(object):
 
     return False
 
+  # load plugin dependencies
   def loaddependencies(self, pluginname, dependencies):
     """
     load a list of modules
@@ -179,6 +181,7 @@ class PluginMgr(object):
         modpath = name.replace(path, '')
         self.load_module(modpath, path, force=True)
 
+  # get all not loaded plugins
   def getnotloadedplugins(self):
     """
     create a message of all not loaded plugins
@@ -209,6 +212,7 @@ class PluginMgr(object):
 
     return msg
 
+  # get plugins that are change on disk
   def getchangedplugins(self):
     """
     create a message of plugins that are changed on disk
@@ -249,6 +253,7 @@ class PluginMgr(object):
     else:
       return ['No plugins are changed on disk.']
 
+  # get a message of plugins in a package
   def getpackageplugins(self, package):
     """
     create a message of plugins in a package
@@ -285,6 +290,7 @@ class PluginMgr(object):
 
     return msg
 
+  # create a message of all plugins
   def getallplugins(self):
     """
     create a message of all plugins
@@ -316,6 +322,7 @@ class PluginMgr(object):
                    tpl.author, tpl.version, tpl.purpose))
     return msg
 
+  # command to list plugins
   def cmd_list(self, args):
     """
     @G%(name)s@w - @B%(cmdname)s@w
@@ -334,6 +341,7 @@ class PluginMgr(object):
       msg.extend(self.getallplugins())
     return True, msg
 
+  # command to load plugins
   def cmd_load(self, args):
     """
     @G%(name)s@w - @B%(cmdname)s@w
@@ -370,6 +378,7 @@ class PluginMgr(object):
     else:
       return False, ['@Rplease specify a plugin@w']
 
+  # command to unload a plugin
   def cmd_unload(self, args):
     """
     @G%(name)s@w - @B%(cmdname)s@w
@@ -400,6 +409,7 @@ class PluginMgr(object):
 
     return False, ['@Rplease specify a plugin@w']
 
+  # command to reload a plugin
   def cmd_reload(self, args):
     """
     @G%(name)s@w - @B%(cmdname)s@w
@@ -431,6 +441,7 @@ class PluginMgr(object):
 
     return False, tmsg
 
+  # load all plugin modules
   def load_modules(self, tfilter):
     """
     load modules in all directories under plugins
@@ -467,6 +478,7 @@ class PluginMgr(object):
                           % i.fullimploc)
           del sys.modules[i.fullimploc]
 
+  # update all plugin info
   def updateallplugininfo(self):
     """
     find plugins that are not in self.allplugininfo
@@ -516,6 +528,7 @@ class PluginMgr(object):
 
     return badplugins
 
+  # load a module
   def load_module(self, modpath, basepath, force=False, runload=True):
     # pylint: disable=too-many-branches
     """
@@ -584,6 +597,7 @@ class PluginMgr(object):
           "Module '%s' refuses to import/load." % fullimploc)
       return False, 'error'
 
+  # unload a module
   def unload_module(self, fullimploc):
     """
     unload a module
@@ -616,6 +630,7 @@ class PluginMgr(object):
 
     return True
 
+  # reload a module
   def reload_module(self, modname, force=False):
     """
     reload a module
@@ -643,6 +658,7 @@ class PluginMgr(object):
     else:
       return False, ''
 
+  # reload all dependents
   def reloaddependents(self, reloadedplugin):
     """
     reload all dependents
@@ -657,6 +673,7 @@ class PluginMgr(object):
           plugin.savestate()
           self.reload_module(plugin.sname, True)
 
+  # load a plugin
   def loadplugin(self, plugin):
     """
     check dependencies and run the load function
@@ -725,6 +742,7 @@ class PluginMgr(object):
 
     return True
 
+  # remove a plugin
   def remove_plugin(self, pluginname):
     """
     remove a plugin
@@ -767,6 +785,7 @@ class PluginMgr(object):
     for i in self.loadedpluginsd.values():
       i['plugin'].savestate()
 
+  # load this plugin
   def load(self):
     """
     load various things
