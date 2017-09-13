@@ -74,6 +74,7 @@ import argparse
 import os
 import sys
 import socket
+import time
 #import signal
 from libs.api import API as BASEAPI
 
@@ -83,6 +84,7 @@ from libs import io # pylint: disable=unused-import
 sys.stderr = sys.stdout
 
 API = BASEAPI()
+BASEAPI.starttime = time.localtime()
 BASEAPI.loading = True
 
 def setuppaths():
@@ -250,4 +252,3 @@ def main():
 
 if __name__ == "__main__":
   main()
-
