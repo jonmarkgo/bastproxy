@@ -32,7 +32,7 @@ class Client(Telnet):
 
     if sock:
       self.connected = True
-      self.connectedtime = time.mktime(time.localtime())
+      self.connectedtime = time.localtime()
 
     self.api('events.register')('to_client_event',
                                 self.addtooutbufferevent, prio=99)
