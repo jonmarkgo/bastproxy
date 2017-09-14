@@ -87,12 +87,9 @@ class PluginMgr(BasePlugin):
     else:
       self.basepath = __file__[:index]
 
-    self.api = API()
     self.savefile = os.path.join(self.api.BASEPATH, 'data',
                                  'plugins', 'loadedplugins.txt')
     self.loadedplugins = PersistentDict(self.savefile, 'c')
-    self.sname = 'plugins'
-    self.lname = 'Plugin Manager'
 
     self.api.add(self.sname, 'isloaded', self.api_isloaded)
     self.api.add(self.sname, 'getp', self.api_getp)
