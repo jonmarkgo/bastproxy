@@ -42,7 +42,7 @@ def get_module_name(modpath):
   else:
     return '.'.join([base, mod]), mod
 
-class PluginMgr(object):
+class PluginMgr(BasePlugin):
   # pylint: disable=too-many-public-methods
   """
   a class to manage plugins
@@ -51,10 +51,22 @@ class PluginMgr(object):
     """
     initialize the instance
     """
-    #plugin.name  : Event Handler
-    #plugin.sname : events
-    #modpath      : /core/events.py
-    #fullimploc   : plugins.utils.pb
+    # Examples:
+    #   plugin.name  : Event Handler
+    #   plugin.sname : events
+    #   modpath      : /core/events.py
+    #   fullimploc   : plugins.utils.pb
+
+    #name, sname, modpath, basepath, fullimploc
+    BasePlugin.__init__(self,
+                        'Plugin Manager', #name,
+                        'plugins', #sname,
+                        "/__init__.py", #modpath
+                        "basepath", # basepath
+                        "plugins.__init__", # fullimploc
+                        )
+
+    self.canreload = False
 
     #key:   modpath
     #value: {'plugin', 'module'}
@@ -791,6 +803,8 @@ class PluginMgr(object):
     load various things
     """
     self.load_modules("*.py")
+
+    BasePlugin.loadcommands(self)
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description="list plugins")
