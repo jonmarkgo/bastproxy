@@ -197,16 +197,14 @@ class PluginMgr(BasePlugin):
     """
     msg = []
     badplugins = self.updateallplugininfo()
-    for modpath in sorted(self.allplugininfo.keys()):
-      sname = self.allplugininfo[modpath]['sname']
-      fullimploc = self.allplugininfo[modpath]['fullimploc']
-      if modpath not in self.loadedpluginsd:
-        msg.append("%-20s : %-25s %-10s %-5s %s@w" % \
-                  (fullimploc.replace('plugins.', ''),
-                   self.allplugininfo[modpath]['name'],
-                   self.allplugininfo[modpath]['author'],
-                   self.allplugininfo[modpath]['version'],
-                   self.allplugininfo[modpath]['purpose']))
+    pdiff = set(self.allplugininfo) - set(self.loadedpluginsd)
+    for modpath in sorted(pdiff):
+      msg.append("%-20s : %-25s %-10s %-5s %s@w" % \
+                  (self.allplugininfo[modpath]['fullimploc'].replace('plugins.', ''),
+                  self.allplugininfo[modpath]['name'],
+                  self.allplugininfo[modpath]['author'],
+                  self.allplugininfo[modpath]['version'],
+                  self.allplugininfo[modpath]['purpose']))
     if len(msg) > 0:
       msg.insert(0, '-' * 75)
       msg.insert(0, "%-20s : %-25s %-10s %-5s %s@w" % \
