@@ -56,6 +56,10 @@ class Plugin(BasePlugin):
     take two times and return a string of the difference
     in the form ##d:##h:##m:##s
     """
+    if type(stime) == time.struct_time:
+      stime = time.mktime(stime)
+    if type(etime) == time.struct_time:
+      etime = time.mktime(etime)
     delay = datetime.timedelta(seconds=abs(etime - stime))
     if delay.days > 0:
       tstr = str(delay)
