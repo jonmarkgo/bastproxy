@@ -34,6 +34,7 @@ class BasePlugin(object):
     self.dependencies = []
     self.versionfuncs = {}
     self.reloaddependents = False
+    self.summarytemplate = "%20s : %s"
     self.canreload = True
     self.canreset = True
     self.resetflag = True
