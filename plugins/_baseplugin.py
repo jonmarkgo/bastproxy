@@ -13,7 +13,7 @@ from libs.persistentdict import PersistentDictEvent
 from libs.api import API
 
 class BasePlugin(object):
-  # pylint: disable=too-many-public-methods,too-many-instance-attributes
+  # pylint: disable=too-many-instance-attributes
   """
   a base class for plugins
   """
@@ -63,13 +63,13 @@ class BasePlugin(object):
 
     self._dump_shallow_attrs = ['api']
 
-    self.api.overload('dependency', 'add', self.api_dependencyadd)
-    self.api.overload('setting', 'add', self.api_settingadd)
-    self.api.overload('setting', 'gets', self.api_settinggets)
-    self.api.overload('setting', 'change', self.api_settingchange)
-    self.api.overload('api', 'add', self.api_add)
+    self.api.overload('dependency', 'add', self._api_dependencyadd)
+    self.api.overload('setting', 'add', self._api_settingadd)
+    self.api.overload('setting', 'gets', self._api_settinggets)
+    self.api.overload('setting', 'change', self._api_settingchange)
+    self.api.overload('api', 'add', self._api_add)
 
-  def loadcommands(self):
+  def _loadcommands(self):
     """
     load the commands
     """
@@ -90,32 +90,32 @@ class BasePlugin(object):
                         default='',
                         nargs='?')
     self.api('commands.add')('set',
-                                 self.cmd_set,
-                                 parser=parser,
-                                 group='Base',
-                                 history=False)
+                             self._cmd_set,
+                             parser=parser,
+                             group='Base',
+                             history=False)
 
     if self.canreset:
       parser = argparse.ArgumentParser(add_help=False,
-                                      description='reset the plugin')
+                                       description='reset the plugin')
       self.api('commands.add')('reset',
-                                  self.cmd_reset,
-                                  parser=parser,
-                                  group='Base')
+                               self._cmd_reset,
+                               parser=parser,
+                               group='Base')
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='save the plugin state')
     self.api('commands.add')('save',
-                                 self.cmd_save,
-                                 parser=parser,
-                                 group='Base')
+                             self._cmd_save,
+                             parser=parser,
+                             group='Base')
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='show plugin stats')
     self.api('commands.add')('stats',
-                                 self.cmd_stats,
-                                 parser=parser,
-                                 group='Base')
+                             self._cmd_stats,
+                             parser=parser,
+                             group='Base')
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='inspect a plugin')
@@ -132,9 +132,9 @@ class BasePlugin(object):
                         help="show a simple output",
                         action="store_true")
     self.api('commands.add')('inspect',
-                                 self.cmd_inspect,
-                                 parser=parser,
-                                 group='Base')
+                             self._cmd_inspect,
+                             parser=parser,
+                             group='Base')
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='show help info for this plugin')
@@ -147,9 +147,9 @@ class BasePlugin(object):
                         help="show commands in this plugin",
                         action="store_true")
     self.api('commands.add')('help',
-                                 self.cmd_help,
-                                 parser=parser,
-                                 group='Base')
+                             self._cmd_help,
+                             parser=parser,
+                             group='Base')
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='list functions in the api')
@@ -158,9 +158,9 @@ class BasePlugin(object):
                         default='',
                         nargs='?')
     self.api('commands.add')('api',
-                                 self.cmd_api,
-                                 parser=parser,
-                                 group='Base')
+                             self._cmd_api,
+                             parser=parser,
+                             group='Base')
 
 
   def load(self):
@@ -171,20 +171,20 @@ class BasePlugin(object):
 
     if '_version' in self.settingvalues and \
         self.settingvalues['_version'] != self.version:
-      self.updateversion(self.settingvalues['_version'], self.version)
+      self._updateversion(self.settingvalues['_version'], self.version)
 
     self.api('log.adddtype')(self.sname)
 
-    self.loadcommands()
+    self._loadcommands()
 
     self.api('events.register')('%s_plugin_loaded' % self.sname,
-                                    self.afterload)
+                                self._afterload)
 
     self.api('events.register')('muddisconnect', self.disconnect)
 
     self.resetflag = False
 
-  def updateversion(self, oldversion, newversion):
+  def _updateversion(self, oldversion, newversion):
     """
     update plugin data
     """
@@ -202,7 +202,7 @@ class BasePlugin(object):
 
     self.settingvalues.sync()
 
-  def cmd_inspect(self, args):
+  def _cmd_inspect(self, args):
     # pylint: disable=too-many-branches
     """
     show the plugin as it currently is in memory
@@ -256,14 +256,14 @@ class BasePlugin(object):
 
     return True, tmsg
 
-  def cmd_api(self, args):
+  def _cmd_api(self, args):
     """
     list functions in the api for a plugin
     """
     tmsg = []
     if args['api']:
       tmsg.extend(self.api('api.detail')("%s.%s" % (self.sname,
-                                                        args['api'])))
+                                                    args['api'])))
     else:
       apilist = self.api('api.list')(self.sname)
       if not apilist:
@@ -273,7 +273,7 @@ class BasePlugin(object):
 
     return True, tmsg
 
-  def afterload(self, args):
+  def _afterload(self, args):
     # pylint: disable=unused-argument
     """
     do something after the load function is run
@@ -298,19 +298,19 @@ class BasePlugin(object):
     self.api('events.register')('firstactive', self.afterfirstactive)
 
   # get the vaule of a setting
-  def api_settinggets(self, setting):
+  def _api_settinggets(self, setting):
     """  get the value of a setting
     @Ysetting@w = the setting value to get
 
     this function returns the value of the setting, None if not found"""
     try:
       return self.api('utils.verify')(self.settingvalues[setting],
-                                          self.settings[setting]['stype'])
+                                      self.settings[setting]['stype'])
     except KeyError:
       return None
 
   # add a plugin dependency
-  def api_dependencyadd(self, dependency):
+  def _api_dependencyadd(self, dependency):
     """  add a depencency
     @Ydependency@w    = the name of the plugin that will be a dependency
 
@@ -319,7 +319,7 @@ class BasePlugin(object):
       self.dependencies.append(dependency)
 
   # change the value of a setting
-  def api_settingchange(self, setting, value):
+  def _api_settingchange(self, setting, value):
     """  change a setting
     @Ysetting@w    = the name of the setting to change
     @Yvalue@w      = the value to set it as
@@ -350,7 +350,7 @@ class BasePlugin(object):
 
     return stats
 
-  def cmd_stats(self, args=None):
+  def _cmd_stats(self, args=None):
     # pylint: disable=unused-argument
     """
     @G%(name)s@w - @B%(cmdname)s@w
@@ -384,7 +384,7 @@ class BasePlugin(object):
     """
     self.settingvalues.sync()
 
-  def cmd_set(self, args):
+  def _cmd_set(self, args):
     """
     @G%(name)s@w - @B%(cmdname)s@w
     List or set vars
@@ -425,7 +425,7 @@ class BasePlugin(object):
         msg = ['plugin setting %s does not exist' % var]
     return False, msg
 
-  def cmd_save(self, args):
+  def _cmd_save(self, args):
     # pylint: disable=unused-argument
     """
     @G%(name)s@w - @B%(cmdname)s@w
@@ -435,7 +435,7 @@ class BasePlugin(object):
     self.savestate()
     return True, ['Plugin settings saved']
 
-  def cmd_help(self, args):
+  def _cmd_help(self, args):
     """
     test command
     """
@@ -466,7 +466,7 @@ class BasePlugin(object):
     return a list of strings that list all settings
     """
     tmsg = []
-    if len(self.settingvalues) == 0:
+    if not self.settingvalues:
       tmsg.append('There are no settings defined')
     else:
       tform = '%-15s : %-15s - %s'
@@ -483,7 +483,7 @@ class BasePlugin(object):
     return tmsg
 
   # add a setting to the plugin
-  def api_settingadd(self, name, default, stype, shelp, **kwargs):
+  def _api_settingadd(self, name, default, stype, shelp, **kwargs):
     """  remove a command
     @Yname@w     = the name of the setting
     @Ydefault@w  = the default value of the setting
@@ -513,7 +513,7 @@ class BasePlugin(object):
         'readonly':readonly
     }
 
-  def cmd_reset(self, _=None):
+  def _cmd_reset(self, _=None):
     """
     @G%(name)s@w - @B%(cmdname)s@w
       reset the plugin
@@ -522,8 +522,8 @@ class BasePlugin(object):
     if self.canreset:
       self.reset()
       return True, ['Plugin reset']
-    else:
-      return True, ['This plugin cannot be reset']
+
+    return True, ['This plugin cannot be reset']
 
   def ischangedondisk(self):
     """
@@ -555,7 +555,7 @@ class BasePlugin(object):
     self.api('events.unregister')('firstactive', self.afterfirstactive)
 
   # add a function to the api
-  def api_add(self, name, func):
+  def _api_add(self, name, func):
     """
     add a command to the api
     """
