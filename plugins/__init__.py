@@ -91,14 +91,14 @@ class PluginMgr(BasePlugin):
                                  'plugins', 'loadedplugins.txt')
     self.loadedplugins = PersistentDict(self.savefile, 'c')
 
-    self.api.add(self.sname, 'isloaded', self.api_isloaded)
-    self.api.add(self.sname, 'getp', self.api_getp)
-    self.api.add(self.sname, 'module', self.api_getmodule)
-    self.api.add(self.sname, 'allplugininfo', self.api_allplugininfo)
-    self.api.add(self.sname, 'savestate', self.savestate)
+    self.api('api.add')('isloaded', self.__api_isloaded)
+    self.api('api.add')('getp', self.__api_getp)
+    self.api('api.add')('module', self.__api_getmodule)
+    self.api('api.add')('allplugininfo', self.__api_allplugininfo)
+    self.api('api.add')('savestate', self.savestate)
 
   # return the dictionary of all plugins
-  def api_allplugininfo(self):
+  def __api_allplugininfo(self):
     """
     return the plugininfo dictionary
     """
@@ -132,7 +132,7 @@ class PluginMgr(BasePlugin):
     return self.api('plugins.getp')(plugin)
 
   # get a plugin instance
-  def api_getmodule(self, pluginname):
+  def __api_getmodule(self, pluginname):
     """  returns the module of a plugin
     @Ypluginname@w  = the plugin to check for"""
     plugin = self.api('plugins.getp')(pluginname)
@@ -143,7 +143,7 @@ class PluginMgr(BasePlugin):
     return None
 
   # get a plugin instance
-  def api_getp(self, pluginname):
+  def __api_getp(self, pluginname):
     """  get a loaded plugin instance
     @Ypluginname@w  = the plugin to get"""
 
@@ -162,7 +162,7 @@ class PluginMgr(BasePlugin):
     return None
 
   # check if a plugin is loaded
-  def api_isloaded(self, pluginname):
+  def __api_isloaded(self, pluginname):
     """  check if a plugin is loaded
     @Ypluginname@w  = the plugin to check for"""
     plugin = self.api('plugins.getp')(pluginname)
@@ -705,6 +705,7 @@ class PluginMgr(BasePlugin):
     self.api('events.eraise')('%s_plugin_loaded' % plugin.sname, {})
     self.api('events.eraise')('plugin_loaded', {'plugin':plugin.sname})
 
+  # add a plugin
   def add_plugin(self, module, modpath, basepath, fullimploc, load=True):
     # pylint: disable=too-many-arguments
     """
