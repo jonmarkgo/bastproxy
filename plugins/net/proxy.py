@@ -53,6 +53,10 @@ class Plugin(BasePlugin):
     self.api('setting.add')('linelen', 79, int,
                             'the line length for data')
 
+    self.api('commands.add')('info',
+                                 self.cmd_info,
+                                 shelp='list proxy info')
+
     self.api('commands.add')('clients',
                                  self.cmd_clients,
                                  shelp='list clients that are connected')
@@ -100,6 +104,48 @@ class Plugin(BasePlugin):
       self.api('send.mud')('\n')
       self.api('send.mud')('\n')
 
+  def cmd_info(self, args):
+    """
+    show info about the proxy
+    """
+    template = "%-15s : %s"
+    proxy = self.api('managers.getm')('proxy')
+    tmsg = ['']
+    started = time.strftime(self.api.timestring, self.api.starttime)
+    uptime = self.api('utils.timedeltatostring')(
+                                      self.api.starttime,
+                                      time.localtime())
+
+    tmsg.append('@B-------------------  Proxy ------------------@w')
+    tmsg.append(template % ('Started', started))
+    tmsg.append(template % ('Uptime', uptime))
+    tmsg.append('')
+    tmsg.append('@B-------------------   Mud  ------------------@w')
+    if proxy:
+      if proxy.connectedtime:
+        tmsg.append(template % ('Connected',
+                                      time.strftime(self.api.timestring,
+                                      proxy.connectedtime)))
+        tmsg.append(template % ('Uptime', self.api('utils.timedeltatostring')(
+                                      proxy.connectedtime,
+                                      time.localtime())))
+        tmsg.append(template % ('Host', proxy.host))
+        tmsg.append(template % ('Port', proxy.port))
+      else:
+        tmsg.append(template % ('Mud', 'disconnected'))
+
+    tmsg.append('')
+    tmsg.append('@B-----------------   Clients  ----------------@w')
+    tmsg.append(template % ('Clients', len(proxy.clients)))
+    tmsg.append(template % ('View Clients', len(proxy.vclients)))
+    tmsg.append('-------------------------')
+    tret, nmsg = self.api('commands.run')('proxy', 'clients', '')
+    del(nmsg[0])
+    del(nmsg[0])
+    tmsg.extend(nmsg)
+    return True, tmsg
+
+
   def cmd_clients(self, args):
     # pylint: disable=unused-argument
     """
@@ -109,28 +155,22 @@ class Plugin(BasePlugin):
     clientformat = '%-6s %-17s %-7s %-17s %-s'
     tmsg = ['']
     if proxy:
-      tmsg.append('Host: %s' % proxy.host)
-      tmsg.append('Port: %s' % proxy.port)
-      if proxy.connectedtime:
-        tmsg.append('PROXY: connected for %s' % \
-            self.api('utils.timedeltatostring')(proxy.connectedtime,
-                                                    time.mktime(time.localtime())))
-      else:
-        tmsg.append('PROXY: disconnected')
 
       tmsg.append('')
       tmsg.append(clientformat % ('Type', 'Host', 'Port',
                                   'Client', 'Connected'))
       tmsg.append('@B' + 60 * '-')
       for i in proxy.clients:
-        ttime = self.api('utils.timedeltatostring')(i.connectedtime,
-                                                        time.mktime(time.localtime()))
+        ttime = self.api('utils.timedeltatostring')(
+                                      i.connectedtime,
+                                      time.localtime())
 
         tmsg.append(clientformat % ('Active', i.host[:17], i.port,
                                     i.ttype[:17], ttime))
       for i in proxy.vclients:
-        ttime = self.api('utils.timedeltatostring')(i.connectedtime,
-                                                        time.mktime(time.localtime()))
+        ttime = self.api('utils.timedeltatostring')(
+                                      i.connectedtime,
+                                      time.localtime())
         tmsg.append(clientformat % ('View', i.host[:17], i.port,
                                     i.ttype[:17], ttime))
 
