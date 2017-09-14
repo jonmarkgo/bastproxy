@@ -785,6 +785,35 @@ class PluginMgr(BasePlugin):
     else:
       return False
 
+  # get stats for this plugin
+  def getstats(self):
+    """
+    return stats for events
+    """
+    stats = {}
+    stats['Base Sizes'] = {}
+
+    stats['Base Sizes']['showorder'] = ['Class', 'Api', 'loadedpluginsd',
+                                        'plugininfo']
+    stats['Base Sizes']['loadedpluginsd'] = '%s bytes' % \
+                                      sys.getsizeof(self.loadedpluginsd)
+    stats['Base Sizes']['plugininfo'] = '%s bytes' % \
+                                      sys.getsizeof(self.allplugininfo)
+
+    stats['Base Sizes']['Class'] = '%s bytes' % sys.getsizeof(self)
+    stats['Base Sizes']['Api'] = '%s bytes' % sys.getsizeof(self.api)
+
+    stats['Plugins'] = {}
+    stats['Plugins']['showorder'] = ['Total', 'Loaded', 'Bad']
+    stats['Plugins']['Total'] = len(self.allplugininfo)
+    stats['Plugins']['Loaded'] = len(self.loadedpluginsd)
+
+    badplugins = self.updateallplugininfo()
+
+    stats['Plugins']['Bad'] = len(badplugins)
+
+    return stats
+
   # save all plugins
   def savestate(self):
     """
