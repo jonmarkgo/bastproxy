@@ -884,8 +884,6 @@ class PluginMgr(BasePlugin):
                                  parser=parser)
 
     self.api('commands.default')('list', self.sname)
-    self.api('events.register')('savestate', self.savestate,
-                                    plugin=self.sname)
 
     self.api('timers.add')('save', self.savestate, 60, nodupe=True, log=False)
 
