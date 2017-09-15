@@ -147,17 +147,21 @@ class Plugin(BasePlugin):
     return True
 
   def checkroom(self):
-    if self.api('GMCP.getv')('room.info.num') == None and not self.sentroom:
-      self.sentroom = True
-      self.api('GMCP.sendpacket')("request room")
+    if self.api('GMCP.getv')('room.info.num') == None:
+      if not self.sentroom:
+        self.sentroom = True
+        self.api('GMCP.sendpacket')("request room")
+
       return False
 
     return True
 
   def checkquest(self):
-    if self.api('GMCP.getv')('quest.action') == None and not self.sentquest:
-      self.sentquest = True
-      self.api('GMCP.sendpacket')("request quest")
+    if self.api('GMCP.getv')('comm.quest.action') == None:
+      if not self.sentquest:
+        self.sentquest = True
+        self.api('GMCP.sendpacket')("request quest")
+
       return False
 
     return True
