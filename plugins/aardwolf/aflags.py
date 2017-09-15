@@ -144,15 +144,6 @@ class Plugin(AardwolfBasePlugin):
     """
     self.cmdqueue.addtoqueue('aflags')
 
-  def disconnect(self, args=None):
-    """
-    called when the mud disconnects
-    """
-    AardwolfBasePlugin.disconnect(self, args)
-    #self.itemcache = {}
-
-    self.cmdqueue.resetqueue()
-
   def cmd_refresh(self, args):
     """
     refresh aflags
