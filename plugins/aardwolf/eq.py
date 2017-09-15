@@ -975,15 +975,6 @@ class Plugin(AardwolfBasePlugin):
 
     return results
 
-  def disconnect(self, args=None):
-    """
-    called when the mud disconnects
-    """
-    AardwolfBasePlugin.disconnect(self, args)
-    #self.itemcache = {}
-
-    self.cmdqueue.resetqueue()
-
   def cmd_refresh(self, args):
     #pylint: disable=unused-argument
     """
