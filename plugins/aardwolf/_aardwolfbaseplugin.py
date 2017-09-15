@@ -23,8 +23,3 @@ class AardwolfBasePlugin(BasePlugin):
     self.api('dependency.add')('aardwolf.aardu')
     self.api('dependency.add')('aardwolf.agmcp')
 
-  def load(self):
-    """
-    load the plugins
-    """
-    BasePlugin.load(self)
