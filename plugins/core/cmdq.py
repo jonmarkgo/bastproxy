@@ -113,7 +113,7 @@ class CmdQueue(object):
       if not self.currentcmd:
         self.sendnext()
 
-  def resetqueue(self):
+  def resetqueue(self, args=None):
     """
     reset the queue
     """
