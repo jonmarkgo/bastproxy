@@ -149,12 +149,6 @@ class Plugin(BasePlugin):
                                  self.cmd_detail,
                                  parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='get overall timer stats')
-    self.api('commands.add')('stats',
-                                 self.cmd_stats,
-                                 parser=parser)
-
     self.api('events.register')('plugin_unloaded', self.pluginunloaded)
 
   def pluginunloaded(self, args):
