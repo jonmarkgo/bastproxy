@@ -33,6 +33,8 @@ class CmdQueue(object):
 
     self._dump_shallow_attrs = ['plugin']
 
+    self.plugin.api('events.register')('muddisconnect', self.resetqueue)
+
   def addcmdtype(self, cmdtype, cmd, regex, **kwargs):
     """
     add a command type
