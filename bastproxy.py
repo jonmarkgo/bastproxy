@@ -31,20 +31,20 @@ optional arguments:
 ```
 
 ### Connecting
- * Connect a client to the listen_port above on the host the proxy is running,
+  * Connect a client to the listen_port above on the host the proxy is running,
       and then login with the password
-  * Default Port: 9999
-   * to set a different port after logging in ```#bp.proxy.set listenport portnum```
-  * Default Password: "defaultpass"
-   * to set a different password after loggin in ```#bp.proxy.proxypw "new password"```
-  * Setting up the mud to connect to
-   * to set the mud server ```#bp.proxy.set mudhost some.server```
-   * to set the mud port ```#bp.proxy.set mudport portnum```
-  * Setting up autologin
-   * to set the user ```#bp.proxy.set username user```
-   * to set the password ```#bp.proxy.mudpw password```
-  * Connecting to the mud
-   * ```#bp.proxy.connect```
+   * Default Port: 9999
+     * to set a different port after logging in ```#bp.proxy.set listenport portnum```
+   * Default Password: "defaultpass"
+     * to set a different password after loggin in ```#bp.proxy.proxypw "new password"```
+   * Setting up the mud to connect to
+     * to set the mud server ```#bp.proxy.set mudhost some.server```
+     * to set the mud port ```#bp.proxy.set mudport portnum```
+   * Setting up autologin
+     * to set the user ```#bp.proxy.set username user```
+     * to set the password ```#bp.proxy.mudpw password```
+   * Connecting to the mud
+     * ```#bp.proxy.connect```
 
 ### Help
   * Use the following commands to get help
