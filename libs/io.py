@@ -179,9 +179,13 @@ def api_tomud(data):
                        {'data':data,
                         'dtype':'fromclient'})
 
-API.add('send', 'msg', api_msg)
-API.add('send', 'error', api_error)
-API.add('send', 'traceback', api_traceback)
-API.add('send', 'client', api_client)
-API.add('send', 'mud', api_tomud)
-API.add('send', 'execute', api_execute)
+def add_send():
+  """
+  add send functions to the API
+  """
+  API.add('send', 'msg', api_msg)
+  API.add('send', 'error', api_error)
+  API.add('send', 'traceback', api_traceback)
+  API.add('send', 'client', api_client)
+  API.add('send', 'mud', api_tomud)
+  API.add('send', 'execute', api_execute)
