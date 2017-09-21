@@ -142,7 +142,6 @@
   <li><a href="#cmddetail">detail</a></li>
   <li><a href="#cmdlist">list</a></li>
   <li><a href="#cmdlog">log</a></li>
-  <li><a href="#cmdstats">stats</a></li>
 </ul></li>
   <li><a href="#" data-toggle="collapse" data-target="#cmdgroupBaseMenu">
            Base <i class="glyphicon glyphicon-chevron-right"></i>
@@ -153,6 +152,7 @@
   <li><a href="#cmdreset">reset</a></li>
   <li><a href="#cmdsave">save</a></li>
   <li><a href="#cmdset">set</a></li>
+  <li><a href="#cmdstats">stats</a></li>
 </ul></li>
 </ul></li>
   <li><a href="#" data-toggle="collapse" data-target="#apiMenu">
@@ -210,16 +210,6 @@ toggle log flag for a timer
 
 positional arguments:
   timername   the timer name
-
-optional arguments:
-  -h, --help  show help (default: False)
-
-</code></pre>
-<h4 id="cmdstats" class="bph4">stats</h4>
-<pre><code>
-usage: <span style="color:#5c5cff">#bp.timers.stats</span><span style="color:#e5e5e5"> [-h]</span>
-
-get overall timer stats
 
 optional arguments:
   -h, --help  show help (default: False)
@@ -303,6 +293,16 @@ it will list the settings for the plugin
 positional arguments:
   name        the setting name (default: list)
   value       the new value of the setting
+
+optional arguments:
+  -h, --help  show help (default: False)
+
+</code></pre>
+<h4 id="cmdstats" class="bph4">stats</h4>
+<pre><code>
+usage: <span style="color:#5c5cff">#bp.timers.stats</span><span style="color:#e5e5e5"> [-h]</span>
+
+show plugin stats
 
 optional arguments:
   -h, --help  show help (default: False)
