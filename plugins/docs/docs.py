@@ -405,7 +405,7 @@ class Plugin(BasePlugin):
 
       body.extend(settings)
 
-    papis = self.api('apichildren')(pmod.sname)
+    papis = self.api('api.getchildren')(pmod.sname)
 
     if len(papis) > 0:
       apis = ['<h2 id="api" class="bph2">API</h2>']
