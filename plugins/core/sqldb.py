@@ -382,9 +382,11 @@ class Sqldb(object):
     args['createsql'] = sql
 
     self.tables[tablename] = args
-    col, colbykeys = self.getcolumnsfromsql(tablename)
+    col, colbykeys, defcolvals = self.getcolumnsfromsql(tablename)
     self.tables[tablename]['columns'] = col
     self.tables[tablename]['columnsbykeys'] = colbykeys
+    self.tables[tablename]['defcolvals'] = defcolvals
+    print(defcolvals)
 
   def remove(self, table, rownumber):
     """
@@ -404,6 +406,7 @@ class Sqldb(object):
     """
     columns = []
     columnsbykeys = {}
+    columndefaults = {}
     if self.tables[tablename]:
       tlist = self.tables[tablename]['createsql'].split('\n')
       for i in tlist:
@@ -411,10 +414,30 @@ class Sqldb(object):
         if i and i[0:2] != '--':
           if 'CREATE' not in i and ')' not in i:
             ilist = i.split(' ')
-            columns.append(ilist[0])
-            columnsbykeys[ilist[0]] = True
+            col = ilist[0]
+            columns.append(col)
+            columnsbykeys[col] = True
+            if 'default' in ilist or 'Default' in ilist:
+              columndefaults[col] = ilist[-1].strip(',')
+            else:
+              columndefaults[col] = None
 
-    return columns, columnsbykeys
+
+    return columns, columnsbykeys, columndefaults
+
+  def checkdictforcolumns(self, tablename, tdict):
+    """
+    check that a dictionary has the correct columns
+    """
+    columns = self.tables[tablename]['columns']
+    columndefaults = self.tables[tablename]['defcolvals']
+    print('coldefs', columndefaults)
+    print('tdict', tdict)
+    for col in columns:
+      if col not in tdict:
+        tdict[col] = columndefaults[col]
+
+    return tdict
 
   def converttoinsert(self, tablename, keynull=False, replace=False):
     """
