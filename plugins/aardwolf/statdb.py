@@ -245,6 +245,8 @@ def dbcreate(sqldb, plugin, **kwargs):
         self.addtostat('triviapoints', questinfo['tp'])
         self.addtostat('totaltrivia', questinfo['tp'])
 
+      questinfo = self.checkdictforcolumns('quests', questinfo)
+
       stmt = self.converttoinsert('quests', keynull=True)
       rowid, result = self.api('%s.modify' % self.plugin.sname)(stmt, questinfo)
       self.api('send.msg')('added quest: %s' % rowid)
@@ -428,6 +430,8 @@ def dbcreate(sqldb, plugin, **kwargs):
         self.addtostat('triviapoints', cpinfo['tp'])
         self.addtostat('totaltrivia', cpinfo['tp'])
 
+      cpinfo = self.checkdictforcolumns('campaigns', cpinfo)
+
       stmt = self.converttoinsert('campaigns', keynull=True)
       rowid, result = self.api('%s.modify' % self.plugin.sname)(stmt, cpinfo)
       self.api('send.msg')('added cp: %s' % rowid)
@@ -448,6 +452,8 @@ def dbcreate(sqldb, plugin, **kwargs):
       self.addtostat('totaltrivia', gqinfo['tp'])
       if gqinfo['won'] == 1:
         self.addtostat('gquestswon', 1)
+
+      gqinfo = self.checkdictforcolumns('gquests', gqinfo)
 
       stmt = self.converttoinsert('gquests', keynull=True)
       rowid, result = self.api('%s.modify' % self.plugin.sname)(stmt, gqinfo)
@@ -480,6 +486,9 @@ def dbcreate(sqldb, plugin, **kwargs):
           levelinfo['level'] = self.getstat('totallevels')
 
       levelinfo['finishtime'] = -1
+
+      levelinfo = self.checkdictforcolumns('levels', levelinfo)
+
       stmt = self.converttoinsert('levels', keynull=True)
       rowid, result = self.api('%s.modify' % self.plugin.sname)(stmt,
                                                                 levelinfo)
@@ -500,8 +509,9 @@ def dbcreate(sqldb, plugin, **kwargs):
       """
       self.addtostat('totaltrivia', killinfo['tp'])
       self.addtostat('monsterskilled', 1)
-      if not killinfo['name']:
-        killinfo['name'] = 'Unknown'
+
+      killinfo = self.checkdictforcolumns('mobkills', killinfo)
+
       stmt = self.converttoinsert('mobkills', keynull=True)
       rowid, result = self.api('%s.modify' % self.plugin.sname)(stmt, killinfo)
       self.api('send.msg')('inserted mobkill: %s' % rowid)
@@ -1063,7 +1073,7 @@ class Plugin(AardwolfBasePlugin):
     msg.append("%-6s %2s %2s %2s %2s %3s" \
                   " %2s %2s %2s %2s %4s %3s %8s" % (
                   questinfo['quest_id'], questinfo['qp'],
-                  questinfo['mccp'], questinfo['tier'], questinfo['lucky'],
+                  questinfo['mccp'], questinfo['tierqp'], questinfo['lucky'],
                   dbl, questinfo['totqp'], questinfo['tp'],
                   questinfo['trains'], questinfo['pracs'], questinfo['gold'],
                   leveld['level'],  ttime))
