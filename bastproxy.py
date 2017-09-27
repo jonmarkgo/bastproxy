@@ -194,13 +194,18 @@ def start(listen_port):
     while True:
 
       asyncore.loop(timeout=.25, count=1)
-     # check our timer event
+
+      if API.shutdown:
+        break
+
+      # check our timer event
       API('events.eraise')('global_timer', {})
 
   except KeyboardInterrupt:
     pass
 
-  API('send.msg')("Shutting down...", 'shutdown')
+  API('send.msg')("Shutting down...")
+
 
 def main():
   """

@@ -186,4 +186,4 @@ class Proxy(Telnet):
     API.shutdown = True
     self.api('events.eraise')('shutdown', {})
     for client in self.clients:
-      client.sock.close()
+      client.handle_close()
