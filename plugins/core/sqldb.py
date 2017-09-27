@@ -386,7 +386,6 @@ class Sqldb(object):
     self.tables[tablename]['columns'] = col
     self.tables[tablename]['columnsbykeys'] = colbykeys
     self.tables[tablename]['defcolvals'] = defcolvals
-    print(defcolvals)
 
   def remove(self, table, rownumber):
     """
@@ -431,8 +430,6 @@ class Sqldb(object):
     """
     columns = self.tables[tablename]['columns']
     columndefaults = self.tables[tablename]['defcolvals']
-    print('coldefs', columndefaults)
-    print('tdict', tdict)
     for col in columns:
       if col not in tdict:
         tdict[col] = columndefaults[col]
