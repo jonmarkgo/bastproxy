@@ -637,12 +637,12 @@ class PluginMgr(BasePlugin):
     return True
 
   # reload a module
-  def _reloadmodule(self, modname, force=False):
+  def _reloadmodule(self, modpath, force=False):
     """
     reload a module
     """
-    if modname in self.loadedpluginsd:
-      plugin = self.api.get('plugins.getp')(modname)
+    if modpath in self.loadedpluginsd:
+      plugin = self.api.get('plugins.getp')(modpath)
       fullimploc = plugin.fullimploc
       basepath = plugin.basepath
       modpath = plugin.modpath
@@ -677,7 +677,7 @@ class PluginMgr(BasePlugin):
           self.api('send.msg')('reloading dependent %s of %s' % \
                       (plugin.sname, reloadedplugin))
           plugin.savestate()
-          self._reloadmodule(plugin.sname, True)
+          self._reloadmodule(plugin.modpath, True)
 
   # load a plugin
   def _loadplugin(self, plugin):
