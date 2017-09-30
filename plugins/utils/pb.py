@@ -10,7 +10,6 @@ import argparse
 
 from plugins._baseplugin import BasePlugin
 
-
 #these 5 are required
 NAME = 'Pushbullet'
 SNAME = 'pb'
@@ -20,8 +19,6 @@ VERSION = 1
 
 # This keeps the plugin from being autoloaded if set to False
 AUTOLOAD = False
-
-PUSHBULLET = None
 
 class Plugin(BasePlugin):
   """
@@ -88,9 +85,12 @@ class Plugin(BasePlugin):
     ssc = self.api('ssc.baseclass')()
     self.apikey = ssc('apikey', self, desc='Pushbullet API key')
 
-    if not PUSHBULLET:
-      global PUSHBULLET
-      from pushbullet import Pushbullet as PUSHBULLET
+    global Pushbullet
+    Pushbullet = None
+    try:
+      from pushbullet import Pushbullet
+    except ImportError:
+      self.api('send.error')('Please install pushbullet.py with "pip(2) install pushbullet.py"')
 
 
   # send a note through pushbullet
@@ -105,9 +105,14 @@ class Plugin(BasePlugin):
     apikey = self.api('%s.apikey' % self.sname)()
 
     if not apikey:
+      self.api('send.error')('pushbullet apikey not set')
       return False
 
-    pbc = PUSHBULLET(apikey)
+    if not Pushbullet:
+      self.api('send.error')('Please install pushbullet.py with "pip(2) install pushbullet.py"')
+      return False
+
+    pbc = Pushbullet(apikey)
 
     rval = {}
     found = False
@@ -147,9 +152,14 @@ class Plugin(BasePlugin):
     apikey = self.api('%s.apikey' % self.sname)()
 
     if not apikey:
+      self.api('send.error')('pushbullet apikey not set')
       return False
 
-    pbc = PUSHBULLET(apikey)
+    if not Pushbullet:
+      self.api('send.error')('Please install pushbullet.py with "pip(2) install pushbullet.py"')
+      return False
+
+    pbc = Pushbullet(apikey)
 
     rval = {}
     nchannel = channel or self.api('setting.gets')('channel')
@@ -184,9 +194,14 @@ class Plugin(BasePlugin):
     apikey = self.api('%s.apikey' % self.sname)()
 
     if not apikey:
+      self.api('send.error')('pushbullet apikey not set')
       return False
 
-    pbc = PUSHBULLET(apikey)
+    if not Pushbullet:
+      self.api('send.error')('Please install pushbullet.py with "pip(2) install pushbullet.py"')
+      return False
+
+    pbc = Pushbullet(apikey)
 
     for i in pbc.channels:
       tmsg.append(str(i.channel_tag))
