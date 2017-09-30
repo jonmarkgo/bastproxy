@@ -33,9 +33,6 @@ class Plugin(BasePlugin):
     """
     BasePlugin.__init__(self, *args, **kwargs)
 
-    global markdown2
-    import markdown2
-
   def load(self):
     """
     load the plugins
@@ -46,6 +43,13 @@ class Plugin(BasePlugin):
                  description='create documentation')
     self.api('commands.add')('build', self.cmd_build,
                                  parser=parser, group='Documentation')
+
+    global markdown2
+    markdown2 = None
+    try:
+      import markdown2
+    except ImportError:
+        self.api('send.error')('Please install markdown2 with "pip(2) install markdown2"')
 
   def buildtoc(self, toc):
     """
@@ -477,6 +481,9 @@ class Plugin(BasePlugin):
     """
     import linecache
     linecache.clearcache()
+
+    if not markdown2:
+      return True, ['Please install markdown2 with "pip(2) install markdown2"']
 
     temppath = os.path.join(self.pluginlocation, 'templates',
                                           'template-dark.html')
