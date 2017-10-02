@@ -5,8 +5,8 @@
       <title>Bastproxy</title>
       <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
       <link rel="icon" type="image/x-icon" href="/bastproxy/favicon/basticon.png" />
-      <link href="http://netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet">
-      <link href="/bastproxy/css/bastproxy-dark.css" rel="stylesheet">
+      <link href="https://netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet">
+      <link href="/bastproxy/css/themes/dark.css" rel="stylesheet" title="main">
       <link href="/bastproxy/css/codehilite-native.css" rel="stylesheet">
   </head>
   <body>
@@ -37,11 +37,14 @@
 <li><a href="/bastproxy/plugins/aardwolf/aarch.html">aarch</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/aardu.html">aardu</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/afk.html">afk</a></li>
-<li><a href="/bastproxy/plugins/aardwolf/agmcp.html">agmcp</a></li>
+<li><a href="/bastproxy/plugins/aardwolf/aflags.html">aflags</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/connect.html">connect</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/cp.html">cp</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/ct.html">ct</a></li>
+<li><a href="/bastproxy/plugins/aardwolf/daily.html">daily</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/eq.html">eq</a></li>
+<li><a href="/bastproxy/plugins/aardwolf/eqdb.html">eqdb</a></li>
+<li><a href="/bastproxy/plugins/aardwolf/eqsets.html">eqsets</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/gq.html">gq</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/iceage.html">iceage</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/idle.html">idle</a></li>
@@ -49,7 +52,7 @@
 <li><a href="/bastproxy/plugins/aardwolf/itemkeep.html">itemkeep</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/itemu.html">itemu</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/level.html">level</a></li>
-<li><a href="/bastproxy/plugins/aardwolf/malerts.html">malerts</a></li>
+<li><a href="/bastproxy/plugins/aardwolf/mapper.html">mapper</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/mobk.html">mobk</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/move.html">move</a></li>
 <li><a href="/bastproxy/plugins/aardwolf/pbalerts.html">pbalerts</a></li>
@@ -123,6 +126,12 @@
 <li><a href="/bastproxy/plugins/utils/pb.html">pb</a></li>
 </ul>
 </li>
+              </ul>
+            </li>
+            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">Themes<b class="caret"></b></a>
+              <ul class="dropdown-menu">
+                <li><a href="#" class="change-style-menu-item" rel="/bastproxy/css/themes/light.css"><i class="icon-fixed-width icon-pencil"></i> Light</a></li>
+<li><a href="#" class="change-style-menu-item" rel="/bastproxy/css/themes/dark.css"><i class="icon-fixed-width icon-pencil"></i> Dark</a></li>
               </ul>
             </li>
           </ul>
@@ -261,13 +270,17 @@ optional arguments:
 </code></pre>
 <h4 id="cmdinspect" class="bph4">inspect</h4>
 <pre><code>
-usage: <span style="color:#5c5cff">#bp.mail.inspect</span><span style="color:#e5e5e5"> [-m METHOD] [-h]</span>
+usage: <span style="color:#5c5cff">#bp.mail.inspect</span><span style="color:#e5e5e5"> [-m METHOD] [-o OBJECT] [-s] [-h]</span>
 
 inspect a plugin
 
 optional arguments:
   -m METHOD, --method METHOD
                         get code for a method
+  -o OBJECT, --object OBJECT
+                        show an object of the plugin, can be method or
+                        variable
+  -s, --simple          show a simple output (default: False)
   -h, --help            show help (default: False)
 
 </code></pre>
@@ -367,8 +380,8 @@ original defined in plugins/utils/mail.py
   </div><!--/.container-->
 </div><!--/.page-container-->
 
-        <script type='text/javascript' src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-        <script type='text/javascript' src="http://netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
+        <script type='text/javascript' src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+        <script type='text/javascript' src="https://netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
 
         <!-- JavaScript jQuery code from Bootply.com editor -->
 
@@ -423,6 +436,41 @@ jQuery('a').each( function() {
         }
     });
 });
+
+<!-- Theme changing function -->
+function supports_html5_storage() {
+  try {
+    return 'localStorage' in window && window['localStorage'] !== null;
+  } catch (e) {
+    return false;
+  }
+}
+var supports_storage = supports_html5_storage();
+function set_theme(theme) {
+  $('link[title="main"]').attr('href', theme);
+  if (supports_storage) {
+    localStorage.theme = theme;
+  }
+}
+
+/* When a theme-change item is selected, update theme */
+jQuery(function($) {
+    $('body').on('click', '.change-style-menu-item', function() {
+      var theme_name = $(this).attr('rel');
+      set_theme(theme_name);
+    });
+});
+
+/* On load, set theme from local storage */
+if (supports_storage) {
+  var theme = localStorage.theme;
+  if (theme) {
+    set_theme(theme);
+  }
+} else {
+  /* Don't annoy user with options that don't persist */
+  $('#theme-dropdown').hide();
+}
         </script>
   </body>
 </html>

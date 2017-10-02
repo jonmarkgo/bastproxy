@@ -6,7 +6,7 @@
       <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
       <link rel="icon" type="image/x-icon" href="/bastproxy/favicon/basticon.png" />
       <link href="https://netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet">
-      <link href="/bastproxy/css/bastproxy-dark.css" rel="stylesheet">
+      <link href="/bastproxy/css/themes/dark.css" rel="stylesheet" title="main">
       <link href="/bastproxy/css/codehilite-native.css" rel="stylesheet">
   </head>
   <body>
@@ -101,6 +101,15 @@
 </ul>
 </li>
 <li class="dropdown-submenu">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Example</a>
+                  <ul class="dropdown-menu">
+<li><a href="/bastproxy/plugins/example/a102ex.html">a102ex</a></li>
+<li><a href="/bastproxy/plugins/example/gmcpex.html">gmcpex</a></li>
+<li><a href="/bastproxy/plugins/example/timerex.html">timerex</a></li>
+<li><a href="/bastproxy/plugins/example/triggerex.html">triggerex</a></li>
+</ul>
+</li>
+<li class="dropdown-submenu">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">Net</a>
                   <ul class="dropdown-menu">
 <li><a href="/bastproxy/plugins/net/GMCP.html">GMCP</a></li>
@@ -113,9 +122,16 @@
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">Utils</a>
                   <ul class="dropdown-menu">
 <li><a href="/bastproxy/plugins/utils/apihelp.html">apihelp</a></li>
+<li><a href="/bastproxy/plugins/utils/mail.html">mail</a></li>
 <li><a href="/bastproxy/plugins/utils/pb.html">pb</a></li>
 </ul>
 </li>
+              </ul>
+            </li>
+            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">Themes<b class="caret"></b></a>
+              <ul class="dropdown-menu">
+                <li><a href="#" class="change-style-menu-item" rel="/bastproxy/css/themes/light.css"><i class="icon-fixed-width icon-pencil"></i> Light</a></li>
+<li><a href="#" class="change-style-menu-item" rel="/bastproxy/css/themes/dark.css"><i class="icon-fixed-width icon-pencil"></i> Dark</a></li>
               </ul>
             </li>
           </ul>
@@ -311,6 +327,41 @@ jQuery('a').each( function() {
         }
     });
 });
+
+<!-- Theme changing function -->
+function supports_html5_storage() {
+  try {
+    return 'localStorage' in window && window['localStorage'] !== null;
+  } catch (e) {
+    return false;
+  }
+}
+var supports_storage = supports_html5_storage();
+function set_theme(theme) {
+  $('link[title="main"]').attr('href', theme);
+  if (supports_storage) {
+    localStorage.theme = theme;
+  }
+}
+
+/* When a theme-change item is selected, update theme */
+jQuery(function($) {
+    $('body').on('click', '.change-style-menu-item', function() {
+      var theme_name = $(this).attr('rel');
+      set_theme(theme_name);
+    });
+});
+
+/* On load, set theme from local storage */
+if (supports_storage) {
+  var theme = localStorage.theme;
+  if (theme) {
+    set_theme(theme);
+  }
+} else {
+  /* Don't annoy user with options that don't persist */
+  $('#theme-dropdown').hide();
+}
         </script>
   </body>
 </html>
