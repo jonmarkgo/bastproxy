@@ -9,6 +9,16 @@ import os
 import copy
 import distutils.dir_util as dir_util
 
+try:
+  import markdown2
+except ImportError:
+  markdown2 = None
+
+try:
+  import lxml
+except ImportError:
+  lxml = None
+
 from cgi import escape
 
 from plugins._baseplugin import BasePlugin
@@ -31,6 +41,8 @@ class Plugin(BasePlugin):
     """
     initialize the instance
     """
+    self.themelist = ""
+
     BasePlugin.__init__(self, *args, **kwargs)
 
   def load(self):
@@ -44,12 +56,55 @@ class Plugin(BasePlugin):
     self.api('commands.add')('build', self.cmd_build,
                                  parser=parser, group='Documentation')
 
+
+  def import_markdown2(self):
+    """
+    import the markdown2 module
+    """
     global markdown2
-    markdown2 = None
-    try:
-      import markdown2
-    except ImportError:
+    if not markdown2:
+      try:
+        import markdown2
+      except ImportError:
         self.api('send.error')('Please install markdown2 with "pip(2) install markdown2"')
+        return False
+
+    return True
+
+  def import_lxml(self):
+    """
+    import the lxml module
+    """
+    global lxml
+    if not lxml:
+      try:
+        import lxml
+      except ImportError:
+        self.api('send.error')('Please install lxml with "pip(2) install lxml"')
+        return False
+
+    return True
+
+  def build_themelist(self):
+    """
+    build a list of themes to pick
+    """
+    themepath = os.path.join(self.pluginlocation, 'css',
+                                          'themes')
+
+    template = '<li><a href="#" class="change-style-menu-item" rel="%(rel)s"><i class="icon-fixed-width icon-pencil"></i> %(theme)s</a></li>'
+
+    themelist = os.listdir(themepath)
+
+    tstr = []
+
+    for i in themelist:
+      name = os.path.splitext(i)[0].capitalize()
+      path = os.path.join("/bastproxy", "css", "themes", i)
+
+      tstr.append(template % {'rel':path, 'theme':name})
+
+    self.themelist = "\n".join(tstr)
 
   def buildtoc(self, toc):
     """
@@ -140,7 +195,7 @@ class Plugin(BasePlugin):
       pmod = self.api('plugins.getp')(plugininfo[i]['modpath'])
 
       try:
-        testdoc = sys.modules[pmod.fullimploc].__doc__
+        sys.modules[pmod.fullimploc].__doc__
       except AttributeError:
         self.api('send.msg')('Plugin %s is not loaded' % \
                                                 plugininfo[i]['modpath'])
@@ -191,7 +246,8 @@ class Plugin(BasePlugin):
                     self.gettoc('<body>\n' + '\n'.join(body) + '\n</body>'))
 
     html = template % {'BODY':'\n'.join(body), 'TOC':ttoc, 'TITLE':title,
-                       'PLUGINMENU':pluginmenu, 'PNAME':'Bastproxy'}
+                       'PLUGINMENU':pluginmenu, 'PNAME':'Bastproxy', 'CSS':'dark.css',
+                       'THEMEMENU':self.themelist}
 
     tfile = open(os.path.join(self.api.BASEPATH, 'docsout', 'index.html'), 'w')
 
@@ -433,7 +489,8 @@ class Plugin(BasePlugin):
     ttoc = self.buildtoc(testt)
 
     html = template % {'BODY':'\n'.join(body), 'TOC':ttoc, 'TITLE':title,
-                       'PLUGINMENU':pluginmenu, 'PNAME':wpluginname}
+                       'PLUGINMENU':pluginmenu, 'PNAME':wpluginname, 'CSS':'dark.css',
+                       'THEMEMENU':self.themelist}
 
     outdir = os.path.join(self.api.BASEPATH, 'docsout', 'plugins', pdir)
 
@@ -483,10 +540,17 @@ class Plugin(BasePlugin):
     linecache.clearcache()
 
     if not markdown2:
-      return True, ['Please install markdown2 with "pip(2) install markdown2"']
+      if not self.import_markdown2():
+        return False
+
+    if not lxml:
+      if not self.import_lxml():
+        return False
+
+    self.build_themelist()
 
     temppath = os.path.join(self.pluginlocation, 'templates',
-                                          'template-dark.html')
+                                          'template.html')
     plugininfo = self.api('plugins.allplugininfo')()
 
     with open(temppath, 'r') as content_file:

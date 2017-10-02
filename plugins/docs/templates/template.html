@@ -5,8 +5,8 @@
       <title>%(TITLE)s</title>
       <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
       <link rel="icon" type="image/x-icon" href="/bastproxy/favicon/basticon.png" />
-      <link href="http://netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet">
-      <link href="/bastproxy/css/bastproxy-dark.css" rel="stylesheet">
+      <link href="https://netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet">
+      <link href="/bastproxy/css/themes/%(CSS)s" rel="stylesheet" title="main">
       <link href="/bastproxy/css/codehilite-native.css" rel="stylesheet">
   </head>
   <body>
@@ -33,6 +33,11 @@
                 %(PLUGINMENU)s
               </ul>
             </li>
+            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">Themes<b class="caret"></b></a>
+              <ul class="dropdown-menu">
+                %(THEMEMENU)s
+              </ul>
+            </li>
           </ul>
         </div>
        </div>
@@ -56,8 +61,8 @@
   </div><!--/.container-->
 </div><!--/.page-container-->
 
-        <script type='text/javascript' src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-        <script type='text/javascript' src="http://netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
+        <script type='text/javascript' src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+        <script type='text/javascript' src="https://netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
 
         <!-- JavaScript jQuery code from Bootply.com editor -->
 
@@ -112,6 +117,41 @@ jQuery('a').each( function() {
         }
     });
 });
+
+<!-- Theme changing function -->
+function supports_html5_storage() {
+  try {
+    return 'localStorage' in window && window['localStorage'] !== null;
+  } catch (e) {
+    return false;
+  }
+}
+var supports_storage = supports_html5_storage();
+function set_theme(theme) {
+  $('link[title="main"]').attr('href', theme);
+  if (supports_storage) {
+    localStorage.theme = theme;
+  }
+}
+
+/* When a theme-change item is selected, update theme */
+jQuery(function($) {
+    $('body').on('click', '.change-style-menu-item', function() {
+      var theme_name = $(this).attr('rel');
+      set_theme(theme_name);
+    });
+});
+
+/* On load, set theme from local storage */
+if (supports_storage) {
+  var theme = localStorage.theme;
+  if (theme) {
+    set_theme(theme);
+  }
+} else {
+  /* Don't annoy user with options that don't persist */
+  $('#theme-dropdown').hide();
+}
         </script>
   </body>
 </html>
