@@ -51,17 +51,19 @@ class PluginMgr(BasePlugin):
     initialize the instance
     """
     # Examples:
-    #   plugin.name  : Event Handler
-    #   plugin.sname : events
-    #   modpath      : /core/events.py
-    #   fullimploc   : plugins.utils.pb
+    #  name : 'Actions' - from plugin file variable NAME (long name)
+    #  sname : 'actions' - from plugin file variable SNAME (short name)
+    #  modpath : '/client/actions.py' - path relative to the plugins directory
+    #  basepath : '/home/src/games/bastproxy/bp/plugins' - the full path to the plugins directory
+    #  fullimploc : 'plugins.client.actions' - import location
+
 
     #name, sname, modpath, basepath, fullimploc
     BasePlugin.__init__(self,
                         'Plugin Manager', #name,
                         'plugins', #sname,
                         "/__init__.py", #modpath
-                        "basepath", # basepath
+                        "$basepath$", # basepath
                         "plugins.__init__", # fullimploc
                        )
 
