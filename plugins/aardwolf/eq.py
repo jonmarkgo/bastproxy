@@ -2,6 +2,7 @@
 """
 This plugin reads and parses invmon data from Aardwolf
 """
+# TODO: vault refresh if in bank room and vault hasn't been seen
 import argparse
 from plugins.aardwolf._aardwolfbaseplugin import AardwolfBasePlugin
 
@@ -42,7 +43,6 @@ class Item(object):
       if dbdata:
         self.upditem(dbdata)
 
-
   def upditem(self, attributes):
     """
     takes a dictionary and uses setitem to set items
@@ -59,6 +59,12 @@ class Item(object):
 
     return False
 
+  def __str__(self):
+    """
+    a string representation of the item
+    """
+    attrs = vars(self)
+    return '%s' % attrs
 
 class EqContainer(object):
   """
@@ -732,9 +738,13 @@ class Vault(EqContainer):
     """
     override the build method to show total # of items in vault
     """
-    msg = EqContainer.build(self, args)
+    if self.seenvault:
+      msg = EqContainer.build(self, args)
 
-    msg.append(self.getitemcountmsg())
+      msg.append(self.getitemcountmsg())
+    else:
+      msg = ['The vault has not been refreshed.',
+             'Please go to a bank and type "#bp.eq.refresh -c Vault"']
 
     return msg
 
