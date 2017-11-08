@@ -145,7 +145,7 @@ class Plugin(BasePlugin):
     if 'secondary' in dtypedict:
       for i in dtypedict['secondary']:
         if i and i != 'None' \
-            and i != 'default':
+            and i != 'default' and i != dtype:
           self.process_msg(args['msg'], i,
                            priority='secondary')
 
