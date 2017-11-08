@@ -299,7 +299,7 @@ class Plugin(BasePlugin):
       self.api('send.msg')('setting %s to log to %s' % \
                       (datatype, self.sendtofile[datatype]['file']),
                                self.sname)
-      self.sendtofile.sync()
+    self.sendtofile.sync()
 
   # toggle a datatype to log to a file
   def cmd_file(self, args):
