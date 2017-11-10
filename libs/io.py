@@ -10,32 +10,52 @@ from libs.api import API as BASEAPI
 API = BASEAPI()
 
 # send a message
-def api_msg(tmsg, primary='default', secondary=None):
+def api_msg(tmsg, primary=None, secondary=None):
   """  send a message through the log plugin
     @Ymsg@w        = This message to send
-    @Yprimary@w    = the primary datatype of the message (default: 'default')
-    @Ysecondary@w  = the secondary datatype of the message
-                        (default: 'None')
+    @Yprimary@w    = the primary data tag of the message (default: None)
+    @Ysecondary@w  = the secondary data tag of the message
+                        (default: None)
+
+  If a plugin called this function, it will be automatically added to the tags
 
   this function returns no values"""
-  if primary == 'default':
-    try:
-      primary = API('utils.funccallerplugin')() or primary
-    except (AttributeError, RuntimeError):
-      pass
+  tags = []
+  try:
+    plugin = API('utils.funccallerplugin')()
+  except (AttributeError, RuntimeError):
+    plugin = None
 
   if not isinstance(secondary, list):
-    tmpl = []
-    if secondary:
-      tmpl.append(secondary)
-    secondary = tmpl
+    tags.append(secondary)
+  else:
+    tags.extend(secondary)
+
+  ttags = set(tags) # take out duplicates
+  tags = list(ttags)
+
+  if primary:
+    if primary in tags:
+      tags.remove(primary)
+    tags.insert(0, primary)
+
+  if plugin:
+    if not primary:
+      if plugin in tags:
+        tags.remove(plugin)
+      tags.insert(0, plugin)
+    else:
+      if plugin not in tags:
+        tags.append(plugin)
+
+  if not tags:
+    print('Did not get any tags for %s' % tmsg)
 
   try:
-    API('log.msg')({'msg':tmsg},
-                   {'primary':primary, 'secondary':secondary})
+    API('log.msg')(tmsg, tags=tags)
   except (AttributeError, RuntimeError): #%s - %-10s :
     print '%s - %-10s : %s' % (time.strftime(API.timestring,
-                                             time.localtime()), primary, tmsg)
+                                             time.localtime()), primary or plugin, tmsg)
 
 # write and format a traceback
 def api_traceback(message=""):
@@ -55,13 +75,14 @@ def api_traceback(message=""):
   API('send.error')(message)
 
 # write and format an error
-def api_error(text):
+def api_error(text, secondary=None):
   """  handle an error
     @Ytext@w  = The error to handle
 
   this function returns no values"""
   text = str(text)
   test = []
+
   for i in text.split('\n'):
     if API('api.has')('colors.convertcolors'):
       test.append(API('colors.convertcolors')('@x136%s@w' % i))
@@ -69,12 +90,7 @@ def api_error(text):
       test.append(i)
   tmsg = '\n'.join(test)
 
-  try:
-    API('log.msg')({'msg':tmsg, 'primary':'error'})
-  except (AttributeError, TypeError):
-    print '%s - No Log Plugin - %s : %s' % (time.strftime(API.timestring,
-                                                          time.localtime()),
-                                            'error', tmsg)
+  API('send.msg')(tmsg, primary='error', secondary=secondary)
 
   try:
     API('errors.add')(time.strftime(API.timestring,
