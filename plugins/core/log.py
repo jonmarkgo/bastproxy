@@ -93,61 +93,40 @@ class Plugin(BasePlugin):
       self.sendtoclient[datatype] = False
       self.sendtoconsole[datatype] = False
 
-  def process_msg(self, msg, dtype, priority='primary'):
-    """
-    process a message
-    """
-    tstring = '%s - %-10s : ' % (
-        time.strftime('%a %b %d %Y %H:%M:%S', time.localtime()),
-        dtype)
-    if self.api('api.has')('colors.convertcolors') and \
-        dtype in self.colors:
-      tstring = self.api('colors.convertcolors')(self.colors[dtype] + tstring)
-    tmsg = [tstring]
-    tmsg.append(msg)
-
-    timestampmsg = ''.join(tmsg)
-    nontimestamp = msg
-
-    if dtype in self.sendtoclient and self.sendtoclient[dtype]:
-      self.api('send.client')(timestampmsg)
-
-    if dtype in self.sendtoconsole and self.sendtoconsole[dtype]:
-      print(timestampmsg, file=sys.stderr)
-
-    if priority == 'primary':
-      if dtype in self.sendtofile and self.sendtofile[dtype]['file']:
-        if self.api('api.has')('colors.stripansi'):
-          self.logtofile(self.api('colors.stripansi')(nontimestamp), dtype)
-        else:
-          self.logtofile(nontimestamp, dtype)
-
-      if 'default' in self.sendtofile:
-        self.logtofile(timestampmsg, 'default')
-
   # process a message, use send.msg instead for the api
-  def api_msg(self, args, dtypedict=None):
+  def api_msg(self, msg, tags=None):
     """  send a message
     @Ymsg@w        = This message to send
     @Ydatatype@w   = the type to toggle
 
     this function returns no values"""
+    senttoconsole = False
+    senttoclient = False
 
-    if not dtypedict:
-      dtypedict = {'primary':'default'}
+    ttime = time.strftime(self.api.timestring, time.localtime())
 
-    dtype = dtypedict['primary']
-    if 'primary' in args:
-      dtype = args['primary']
+    self.logtofile(msg, 'default')
 
-    self.process_msg(args['msg'], dtype)
+    for dtag in tags:
+      if dtag and dtag != 'None' \
+            and dtag != 'default':
 
-    if 'secondary' in dtypedict:
-      for i in dtypedict['secondary']:
-        if i and i != 'None' \
-            and i != 'default' and i != dtype:
-          self.process_msg(args['msg'], i,
-                           priority='secondary')
+        tstring = '%s - %-10s : ' % (ttime, dtag)
+        timestampmsg = tstring + msg
+
+        self.logtofile(msg, dtag)
+
+        if self.api('api.has')('colors.convertcolors') and \
+            dtag in self.colors:
+          tstring = self.api('colors.convertcolors')(self.colors[dtag] + timestampmsg)
+
+        if dtag in self.sendtoclient and self.sendtoclient[dtag] and not senttoclient:
+          self.api('send.client')(timestampmsg)
+          senttoclient = True
+
+        if dtag in self.sendtoconsole and self.sendtoconsole[dtag] and not senttoconsole:
+          print(timestampmsg, file=sys.stderr)
+          senttoconsole = True
 
   # archive a log fle
   def archivelog(self, dtype):
@@ -168,37 +147,44 @@ class Plugin(BasePlugin):
     del self.openlogs[self.currentlogs[dtype]]
 
   # log something to a file
-  def logtofile(self, msg, dtype):
+  def logtofile(self, msg, dtype, stripcolor=True):
     """
     send a message to a log file
     """
     #print('logging', dtype)
-    tfile = os.path.join(self.logdir, dtype,
-                         time.strftime(self.sendtofile[dtype]['file'],
-                                       time.localtime()))
-    if not os.path.exists(os.path.join(self.logdir, dtype)):
-      os.makedirs(os.path.join(self.logdir, dtype, 'archive'))
-    if (dtype not in self.currentlogs) or \
-       (dtype in self.currentlogs and not self.currentlogs[dtype]):
-      self.currentlogs[dtype] = tfile
-    elif tfile != self.currentlogs[dtype]:
-      self.archivelog(dtype)
-      self.currentlogs[dtype] = tfile
-    if self.currentlogs[dtype] not in self.openlogs:
-      self.openlogs[self.currentlogs[dtype]] = \
-                      open(self.currentlogs[dtype], 'a')
-    #print('logging to %s' % tfile)
-    if self.sendtofile[dtype]['timestamp']:
-      tstring = '%s : ' % \
-            (time.strftime(self.api.timestring, time.localtime()))
-      msg = tstring + msg
+    if stripcolor and self.api('api.has')('colors.stripansi'):
+      msg = self.api('colors.stripansi')(msg)
 
-    if self.api('api.has')('colors.stripansi'):
-      self.openlogs[self.currentlogs[dtype]].write(
-          self.api('colors.stripansi')(msg) + '\n')
-    else:
-      self.openlogs[self.currentlogs[dtype]].write(msg + '\n')
-    self.openlogs[self.currentlogs[dtype]].flush()
+    if dtype in self.sendtofile and self.sendtofile[dtype]['file']:
+      tfile = os.path.join(self.logdir, dtype,
+                           time.strftime(self.sendtofile[dtype]['file'],
+                                         time.localtime()))
+      if not os.path.exists(os.path.join(self.logdir, dtype)):
+        os.makedirs(os.path.join(self.logdir, dtype, 'archive'))
+      if (dtype not in self.currentlogs) or \
+        (dtype in self.currentlogs and not self.currentlogs[dtype]):
+        self.currentlogs[dtype] = tfile
+      elif tfile != self.currentlogs[dtype]:
+        self.archivelog(dtype)
+        self.currentlogs[dtype] = tfile
+      if self.currentlogs[dtype] not in self.openlogs:
+        self.openlogs[self.currentlogs[dtype]] = \
+                        open(self.currentlogs[dtype], 'a')
+
+      if self.sendtofile[dtype]['timestamp']:
+        tstring = '%s : ' % \
+              (time.strftime(self.api.timestring, time.localtime()))
+        msg = tstring + msg
+
+      if self.api('api.has')('colors.stripansi'):
+        self.openlogs[self.currentlogs[dtype]].write(
+            self.api('colors.stripansi')(msg) + '\n')
+      else:
+        self.openlogs[self.currentlogs[dtype]].write(msg + '\n')
+      self.openlogs[self.currentlogs[dtype]].flush()
+      return True
+
+    return False
 
   # toggle logging a datatype to the clients
   def api_toggletoclient(self, datatype, flag=True):
@@ -375,7 +361,7 @@ class Plugin(BasePlugin):
         data = args['noansi']
       elif args['eventname'] == 'to_mud_event':
         data = 'tomud: ' + args['data'].strip()
-      self.logtofile(data, 'frommud')
+      self.logtofile(data, 'frommud', stripcolor=False)
     return args
 
   def load(self):
