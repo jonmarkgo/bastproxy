@@ -39,3 +39,5 @@ nosetests.xml
 data
 *-config.ini
 *.kdev4
+plugins/test
+.vscode
