@@ -54,7 +54,8 @@ class PluginMgr(BasePlugin):
     #  name : 'Actions' - from plugin file variable NAME (long name)
     #  sname : 'actions' - from plugin file variable SNAME (short name)
     #  modpath : '/client/actions.py' - path relative to the plugins directory
-    #  basepath : '/home/src/games/bastproxy/bp/plugins' - the full path to the plugins directory
+    #  basepath : '/home/src/games/bastproxy/bp/plugins' - the full path to the
+    #                                                       plugins directory
     #  fullimploc : 'plugins.client.actions' - import location
 
 
@@ -555,10 +556,10 @@ class PluginMgr(BasePlugin):
       if fullimploc in sys.modules:
         return sys.modules[fullimploc].SNAME, 'already'
 
-      self.api('send.msg')('importing %s' % fullimploc, self.sname)
+      self.api('send.msg')('importing %s' % fullimploc, primary='plugins')
       _module = __import__(fullimploc)
       _module = sys.modules[fullimploc]
-      self.api('send.msg')('imported %s' % fullimploc, self.sname)
+      self.api('send.msg')('imported %s' % fullimploc, primary='plugins')
       load = True
 
       if 'AUTOLOAD' in _module.__dict__ and not force:
@@ -583,8 +584,7 @@ class PluginMgr(BasePlugin):
 
         else:
           self.api('send.msg')('Module %s has no Plugin class' % \
-                                              _module.NAME,
-                               self.sname)
+                                              _module.NAME)
 
         _module.__dict__["proxy_import"] = 1
 
@@ -594,8 +594,7 @@ class PluginMgr(BasePlugin):
           del sys.modules[fullimploc]
         self.api('send.msg')(
             'Not loading %s (%s) because autoload is False' % \
-                                    (_module.NAME, fullimploc),
-            self.sname)
+                                    (_module.NAME, fullimploc), primary='plugins')
       return True, 'not autoloaded'
     except Exception: # pylint: disable=broad-except
       if fullimploc in sys.modules:
@@ -677,7 +676,7 @@ class PluginMgr(BasePlugin):
       if plugin.sname != reloadedplugin:
         if reloadedplugin in plugin.dependencies:
           self.api('send.msg')('reloading dependent %s of %s' % \
-                      (plugin.sname, reloadedplugin))
+                      (plugin.sname, reloadedplugin), plugin.sname)
           plugin.savestate()
           self._reloadmodule(plugin.modpath, True)
 
@@ -687,19 +686,16 @@ class PluginMgr(BasePlugin):
     check dependencies and run the load function
     """
     self.api('send.msg')('loading dependencies for %s' % \
-                                  plugin.fullimploc,
-                         self.sname)
+                                  plugin.fullimploc, plugin.sname)
     self._loaddependencies(plugin.sname, plugin.dependencies)
     self.api('send.client')("load: loading %s with priority %s" % \
 			    (plugin.fullimploc, plugin.priority))
     self.api('send.msg')('loading %s (%s: %s)' % \
-              (plugin.fullimploc, plugin.sname, plugin.name),
-                         self.sname)
+              (plugin.fullimploc, plugin.sname, plugin.name), plugin.sname)
     plugin.load()
     self.api('send.client')("load: loaded %s" % plugin.fullimploc)
     self.api('send.msg')('loaded %s (%s: %s)' % \
-              (plugin.fullimploc, plugin.sname, plugin.name),
-                         self.sname)
+              (plugin.fullimploc, plugin.sname, plugin.name), plugin.sname)
 
     self.api('events.eraise')('%s_plugin_loaded' % plugin.sname, {})
     self.api('events.eraise')('plugin_loaded', {'plugin':plugin.sname})
@@ -723,8 +719,7 @@ class PluginMgr(BasePlugin):
     pluginn = self.api('plugins.getp')(plugin.name)
     plugins = self.api('plugins.getp')(plugin.sname)
     if plugins or pluginn:
-      self.api('send.msg')('Plugin %s already exists' % plugin.name,
-                           self.sname)
+      self.api('send.msg')('Plugin %s already exists' % plugin.name, plugin.sname)
       return False
 
     if load:
@@ -762,8 +757,7 @@ class PluginMgr(BasePlugin):
         plugin.unload()
         self.api('events.eraise')('%s_plugin_unload' % plugin.sname, {})
         self.api('events.eraise')('plugin_unloaded', {'name':plugin.sname})
-        self.api('send.msg')('Plugin %s unloaded' % plugin.sname,
-                             self.sname, plugin.sname)
+        self.api('send.msg')('Plugin %s unloaded' % plugin.sname, plugin.sname)
       except Exception: # pylint: disable=broad-except
         self.api('send.traceback')(
             "unload: had problems running the unload method for %s." \
