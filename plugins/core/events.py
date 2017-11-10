@@ -264,22 +264,15 @@ class Plugin(BasePlugin):
                 self.api('send.msg')(
                     'event %s : calling function %s (%s) with args %s' % \
                         (eventname, i.__name__, plugin or 'Unknown', nargs),
-                    secondary=[plugin, calledfrom])
+                    secondary=[plugin, calledfrom, 'timing'])
                 time1 = time.time()
-                self.api('send.msg')(
-                  'event %s : calling function %s (%s) with args %s' % \
-                  (eventname, i.__name__, plugin or 'Unknown', nargs), 'timing')
               tnargs = i(nargs)
               if eventname != 'global_timer':
                 time2 = time.time()
                 self.api('send.msg')(
-                  'event %s : calling function %s (%s) with args %s - %0.3f ms' % \
-                (eventname, i.__name__, plugin or 'Unknown', nargs,
-                  (time2-time1)*1000.0), 'timing')
-                self.api('send.msg')(
-                    'event %s : function %s (%s) returned %s' % \
-                      (eventname, i.__name__, plugin or 'Unknown', tnargs),
-                    secondary=[plugin, calledfrom])
+                    'event %s : function %s (%s) returned %s - %0.3f' % \
+                      (eventname, i.__name__, plugin or 'Unknown', tnargs, (time2-time1)*1000.0),
+                    secondary=[plugin, calledfrom, 'timing'])
               if tnargs:
                 nargs = tnargs
             except Exception:  # pylint: disable=broad-except
