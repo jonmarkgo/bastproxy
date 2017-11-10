@@ -80,7 +80,7 @@ class Plugin(BasePlugin):
 
     self.api('events.register')('client_connected', self.client_connected)
     self.api('events.register')('mudconnect', self.sendusernameandpw)
-    self.api('events.register')('var_net_listenport', self.listenportchange)
+    self.api('events.register')('var_%s_listenport' % self.sname, self.listenportchange)
 
     ssc = self.api('ssc.baseclass')()
     self.proxypw = ssc('proxypw', self, desc='Proxy Password',
