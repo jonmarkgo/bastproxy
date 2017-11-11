@@ -174,7 +174,7 @@ class Plugin(BasePlugin):
           self.api('send.msg')('replacing "%s" with "%s"' % \
                                           (data.strip(), datan.strip()))
           if datan[0:3] == '#bp':
-            self.api('send.execute')(datan, history=False, fromclient=False)
+            self.api('send.execute')(datan, showinhistory=False, fromclient=False)
             args['fromdata'] = ''
             args['history'] = False
           else:

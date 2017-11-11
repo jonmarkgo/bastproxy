@@ -60,7 +60,7 @@ class SSC(object):
                         nargs='?')
     self.api('commands.add')(self.ssname,
                              self.cmd_setssc,
-                             history=False,
+                             showinhistory=False,
                              parser=parser)
 
 

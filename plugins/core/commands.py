@@ -117,7 +117,7 @@ class Plugin(BasePlugin):
                                  self.cmd_list,
                                  shelp='list commands',
                                  parser=parser,
-                                 history=False)
+                                 showinhistory=False)
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='list the command history')
@@ -129,7 +129,7 @@ class Plugin(BasePlugin):
                                  self.cmd_history,
                                  shelp='list or run a command in history',
                                  parser=parser,
-                                 history=False)
+                                 showinhistory=False)
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='run a command in history')
@@ -144,7 +144,7 @@ class Plugin(BasePlugin):
                                  parser=parser,
                                  preamble=False,
                                  format=False,
-                                 history=False)
+                                 showinhistory=False)
 
     self.api('events.register')('from_client_event', self.chkcmd, prio=5)
     self.api('events.register')('plugin_unloaded', self.pluginunloaded)
@@ -282,9 +282,9 @@ class Plugin(BasePlugin):
     """
     add to the command history
     """
-    if 'history' in data and not data['history']:
+    if 'showinhistory' in data and not data['showinhistory']:
       return
-    if cmd and not cmd['history']:
+    if cmd and not cmd['showinhistory']:
       return
 
     tdat = data['fromdata']
@@ -490,8 +490,8 @@ class Plugin(BasePlugin):
       args['preamble'] = True
     if 'format' not in args:
       args['format'] = True
-    if 'history' not in args:
-      args['history'] = True
+    if 'showinhistory' not in args:
+      args['showinhistory'] = True
     self.cmds[sname][cmdname] = args
 
   # remove a command

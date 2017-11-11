@@ -93,7 +93,7 @@ class BasePlugin(object):
                              self._cmd_set,
                              parser=parser,
                              group='Base',
-                             history=False)
+                             showinhistory=False)
 
     if self.canreset:
       parser = argparse.ArgumentParser(add_help=False,

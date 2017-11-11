@@ -74,7 +74,7 @@ class Plugin(BasePlugin):
                         nargs='?')
     self.api('commands.add')('send',
                              self.cmd_send,
-                             history=False,
+                             showinhistory=False,
                              parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
@@ -85,7 +85,7 @@ class Plugin(BasePlugin):
                         nargs='?')
     self.api('commands.add')('cache',
                              self.cmd_cache,
-                             history=False,
+                             showinhistory=False,
                              parser=parser)
 
   def cmd_cache(self, args):

@@ -125,7 +125,7 @@ def api_client(text, raw=False, preamble=True):
     API('send.traceback')("couldn't send msg to client: %s" % '\n'.join(text))
 
 # execute a command through the interpreter
-def api_execute(command, fromclient=False, history=True):
+def api_execute(command, fromclient=False, showinhistory=True):
   """  execute a command through the interpreter
   It will first check to see if it is an internal command, and then
   send to the mud if not.
@@ -140,7 +140,7 @@ def api_execute(command, fromclient=False, history=True):
                     primary='inputparse')
     API('events.eraise')('to_mud_event', {'data':command,
                                           'dtype':'fromclient',
-                                          'history':history})
+                                          'showinhistory':showinhistory})
     return
 
   command = command.strip()
@@ -152,7 +152,7 @@ def api_execute(command, fromclient=False, history=True):
                                    {'fromdata':tcommand,
                                     'fromclient':fromclient,
                                     'internal':not fromclient,
-                                    'history':history})
+                                    'showinhistory':showinhistory})
 
     if 'fromdata' in newdata:
       tcommand = newdata['fromdata']
@@ -164,7 +164,7 @@ def api_execute(command, fromclient=False, history=True):
         API('send.msg')('broke %s into %s' % (tcommand, datalist),
                         primary='inputparse')
         for cmd in datalist:
-          api_execute(cmd, history=history)
+          api_execute(cmd, showinhistory=showinhistory)
       else:
         tcommand = tcommand.replace('||', '|')
         if tcommand[-1] != '\n':
@@ -174,7 +174,7 @@ def api_execute(command, fromclient=False, history=True):
         API('events.eraise')('to_mud_event',
                              {'data':tcommand,
                               'dtype':'fromclient',
-                              'history':history})
+                              'showinhistory':showinhistory})
 
 # send data directly to the mud
 def api_tomud(data):
