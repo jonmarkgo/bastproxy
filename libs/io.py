@@ -82,7 +82,7 @@ def api_error(text, secondary=None):
 
   for i in text.split('\n'):
     if API('api.has')('colors.convertcolors'):
-      test.append(API('colors.convertcolors')('@x136%s@w' % i))
+      test.append('@x136%s@w' % i)
     else:
       test.append(i)
   tmsg = '\n'.join(test)
@@ -122,8 +122,7 @@ def api_client(text, raw=False, preamble=True):
     API('events.eraise')('to_client_event', {'original':'\n'.join(text),
                                              'raw':raw, 'dtype':'fromproxy'})
   except (NameError, TypeError, AttributeError):
-    API('send.msg')("couldn't send msg to client: %s" % '\n'.join(text),
-                    primary='error')
+    API('send.traceback')("couldn't send msg to client: %s" % '\n'.join(text))
 
 # execute a command through the interpreter
 def api_execute(command, fromclient=False, history=True):

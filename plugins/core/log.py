@@ -118,7 +118,7 @@ class Plugin(BasePlugin):
 
         if self.api('api.has')('colors.convertcolors') and \
             dtag in self.colors:
-          tstring = self.api('colors.convertcolors')(self.colors[dtag] + timestampmsg)
+          timestampmsg = self.api('colors.convertcolors')(self.colors[dtag] + timestampmsg)
 
         if dtag in self.sendtoclient and self.sendtoclient[dtag] and not senttoclient:
           self.api('send.client')(timestampmsg)
