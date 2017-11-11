@@ -51,6 +51,25 @@ class Plugin(BasePlugin):
                                  self.cmd_clear,
                                  parser=parser)
 
+    self.api('events.register')('proxy_ready', self.proxy_ready)
+
+  # show all errors that happened during startup
+  def proxy_ready(self, args=None):
+    """
+    show all errors that happened during startup
+    """
+    errors = self.api('errors.gete')()
+
+    msg = ['The following errors happened during startup:']
+    if errors:
+      for i in errors:
+        msg.append('')
+        msg.append('Time: %s' % i['timestamp'])
+        msg.append('Error: %s' % i['msg'])
+
+      self.api('send.error')('\n'.join(msg))
+
+
   # add an error to the list
   def api_adderror(self, timestamp, error):
     """add an error

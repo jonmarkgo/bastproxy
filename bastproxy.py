@@ -137,6 +137,7 @@ class Listener(asyncore.dispatcher):
     self.proxy = None
     self.clients = []
     API('send.msg')("Listener bound on: %s" % listen_port, 'startup')
+    API('events.eraise')('proxy_ready')
 
   def handle_error(self):
     """
