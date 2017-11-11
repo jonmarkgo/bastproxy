@@ -8,6 +8,11 @@ This plugin sends messages through the pushbullet api
 """
 import argparse
 
+try:
+  import pushbullet
+except ImportError:
+  pushbullet = None
+
 from plugins._baseplugin import BasePlugin
 
 #these 5 are required
@@ -85,13 +90,21 @@ class Plugin(BasePlugin):
     ssc = self.api('ssc.baseclass')()
     self.apikey = ssc('apikey', self, desc='Pushbullet API key')
 
-    global Pushbullet
-    Pushbullet = None
-    try:
-      from pushbullet import Pushbullet
-    except ImportError:
-      self.api('send.error')('Please install pushbullet.py with "pip(2) install pushbullet.py"')
+    self.import_pushbullet()
 
+  def import_pushbullet(self):
+    """
+    import pushbullet module
+    """
+    global pushbullet
+    if not pushbullet:
+      try:
+        import pushbullet
+      except ImportError:
+        self.api('send.error')('Please install pushbullet.py with "pip(2) install pushbullet.py"')
+        return False
+
+    return True
 
   # send a note through pushbullet
   def api_note(self, title, body, channel=None):
@@ -108,11 +121,11 @@ class Plugin(BasePlugin):
       self.api('send.error')('pushbullet apikey not set')
       return False
 
-    if not Pushbullet:
-      self.api('send.error')('Please install pushbullet.py with "pip(2) install pushbullet.py"')
-      return False
+    if not pushbullet:
+      if not self.import_pushbullet():
+        return False
 
-    pbc = Pushbullet(apikey)
+    pbc = pushbullet.Pushbullet(apikey)
 
     rval = {}
     found = False
@@ -155,11 +168,11 @@ class Plugin(BasePlugin):
       self.api('send.error')('pushbullet apikey not set')
       return False
 
-    if not Pushbullet:
-      self.api('send.error')('Please install pushbullet.py with "pip(2) install pushbullet.py"')
-      return False
+    if not pushbullet:
+      if not self.import_pushbullet():
+        return False
 
-    pbc = Pushbullet(apikey)
+    pbc = pushbullet.Pushbullet(apikey)
 
     rval = {}
     nchannel = channel or self.api('setting.gets')('channel')
@@ -197,11 +210,11 @@ class Plugin(BasePlugin):
       self.api('send.error')('pushbullet apikey not set')
       return False
 
-    if not Pushbullet:
-      self.api('send.error')('Please install pushbullet.py with "pip(2) install pushbullet.py"')
-      return False
+    if not pushbullet:
+      if not self.import_pushbullet():
+        return False
 
-    pbc = Pushbullet(apikey)
+    pbc = pushbullet.Pushbullet(apikey)
 
     for i in pbc.channels:
       tmsg.append(str(i.channel_tag))
