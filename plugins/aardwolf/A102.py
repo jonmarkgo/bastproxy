@@ -86,7 +86,7 @@ class Plugin(BasePlugin):
     self.api('events.register')('A102_from_server', self.a102fromserver)
     self.api('events.register')('A102_from_client', self.a102fromclient)
     self.api('events.register')('A102:server-enabled', self.a102request)
-    self.api('events.register')('muddisconnect', self.disconnect)
+    self.api('events.register')('muddisconnect', self.a102disconnect)
 
     self.api('options.addserveroption')(self.sname, SERVER)
     self.api('options.addclientoption')(self.sname, CLIENT)
@@ -103,7 +103,7 @@ class Plugin(BasePlugin):
           (IAC, SB, A102, message.replace(IAC, IAC+IAC), IAC, SE),
           'raw':True, 'dtype':A102})
 
-  def disconnect(self, _=None):
+  def a102disconnect(self, _=None):
     """
     this function is registered with the muddisconnect hook
     """
