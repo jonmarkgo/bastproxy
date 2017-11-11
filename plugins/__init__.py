@@ -719,7 +719,7 @@ class PluginMgr(BasePlugin):
     pluginn = self.api('plugins.getp')(plugin.name)
     plugins = self.api('plugins.getp')(plugin.sname)
     if plugins or pluginn:
-      self.api('send.msg')('Plugin %s already exists' % plugin.name, plugin.sname)
+      self.api('send.msg')('Plugin %s already exists' % plugin.name, secondary=plugin.sname)
       return False
 
     if load:
@@ -757,7 +757,7 @@ class PluginMgr(BasePlugin):
         plugin.unload()
         self.api('events.eraise')('%s_plugin_unload' % plugin.sname, {})
         self.api('events.eraise')('plugin_unloaded', {'name':plugin.sname})
-        self.api('send.msg')('Plugin %s unloaded' % plugin.sname, plugin.sname)
+        self.api('send.msg')('Plugin %s unloaded' % plugin.sname, secondary=plugin.sname)
       except Exception: # pylint: disable=broad-except
         self.api('send.traceback')(
             "unload: had problems running the unload method for %s." \
