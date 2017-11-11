@@ -61,7 +61,7 @@ class Plugin(BasePlugin):
     self.api('events.register')('GMCP_raw', self.gmcpfromserver)
     self.api('events.register')('GMCP_from_client', self.gmcpfromclient)
     self.api('events.register')('GMCP:server-enabled', self.gmcprequest)
-    self.api('events.register')('muddisconnect', self.disconnect)
+    self.api('events.register')('muddisconnect', self.gmcpdisconnect)
 
     self.api('options.addserveroption')(self.sname, SERVER)
     self.api('options.addclientoption')(self.sname, CLIENT)
@@ -132,7 +132,7 @@ class Plugin(BasePlugin):
               (IAC, SB, GMCP, message.replace(IAC, IAC+IAC), IAC, SE),
          'raw':True, 'dtype':GMCP})
 
-  def disconnect(self, _=None):
+  def gmcpdisconnect(self, _=None):
     """
     disconnect
     """
