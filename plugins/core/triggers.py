@@ -108,7 +108,7 @@ class Plugin(BasePlugin):
     if regex in self.regexlookup:
       self.api('send.msg')(
           'trigger %s tried to add a regex that already existed for %s' % \
-              (triggername, self.regexlookup[regex]))
+              (triggername, self.regexlookup[regex]), secondary=plugin)
       return False
     args = kwargs.copy()
     args['regex'] = regex
@@ -174,8 +174,10 @@ class Plugin(BasePlugin):
                                secondary=plugin)
       return True
     else:
+    if not plugin:
+      plugin = self.api('utils.funccallerplugin')()
       self.api('send.msg')('deletetrigger: trigger %s does not exist' % \
-                        triggername)
+                        triggername, secondary=plugin)
       return False
 
   # get a trigger
@@ -244,7 +246,7 @@ class Plugin(BasePlugin):
     called whenever the from_mud_event is raised
     """
     time1 = time.time()
-    self.api('send.msg')('checktrigger: %s started' % (args), 'timing')
+    self.api('send.msg')('checktrigger: %s started' % (args), secondary='timing')
     data = args['noansi']
     colordata = args['convertansi']
 
@@ -286,7 +288,7 @@ class Plugin(BasePlugin):
     self.raisetrigger('all', {'line':data, 'triggername':'all'}, args)
     time2 = time.time()
     self.api('send.msg')('%s: %0.3f ms' % \
-              ('checktrigger', (time2-time1)*1000.0), 'timing')
+              ('checktrigger', (time2-time1)*1000.0), secondary='timing')
     return args
 
   def raisetrigger(self, triggername, args, origargs):
@@ -294,7 +296,7 @@ class Plugin(BasePlugin):
     raise a trigger event
     """
     time1 = time.time()
-    self.api('send.msg')('raisetrigger: %s started %s' % (triggername, args), 'timing')
+    self.api('send.msg')('raisetrigger: %s started %s' % (triggername, args), secondary='timing')
     try:
       eventname = self.triggers[triggername]['eventname']
     except KeyError:
@@ -314,7 +316,7 @@ class Plugin(BasePlugin):
       origargs['omit'] = True
     time2 = time.time()
     self.api('send.msg')('%s: %0.3f ms' % \
-              (triggername, (time2-time1)*1000.0), 'timing')
+              (triggername, (time2-time1)*1000.0), secondary='timing')
     return
 
   def cmd_list(self, args):

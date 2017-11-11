@@ -227,7 +227,8 @@ class Plugin(BasePlugin):
     if eventname != 'global_timer':
       self.api('send.msg')('raiseevent %s' % eventname, secondary=calledfrom)
       time1 = time.time()
-      self.api('send.msg')('api_eraise: %s started' % (eventname), 'timing')
+      self.api('send.msg')('api_eraise: %s started' % (eventname),
+                            secondary=['timing', calledfrom])
     nargs = args.copy()
     nargs['eventname'] = eventname
     if eventname in self.events:
@@ -237,7 +238,8 @@ class Plugin(BasePlugin):
                            secondary=calledfrom)
       if eventname != 'global_timer':
         time3 = time.time()
-        self.api('send.msg')('api_eraise - keys: %s started' % (eventname), 'timing')
+        self.api('send.msg')('api_eraise - keys: %s started' % (eventname),
+                             secondary=['timing', calledfrom])
       keys = self.events[eventname].keys()
       if eventname != 'global_timer':
         time4 = time.time()
@@ -247,12 +249,14 @@ class Plugin(BasePlugin):
       if keys:
         if eventname != 'global_timer':
           time3 = time.time()
-          self.api('send.msg')('api_eraise - keys sort: %s started' % (eventname), 'timing')
+          self.api('send.msg')('api_eraise - keys sort: %s started' % (eventname),
+                               secondary=['timing', calledfrom])
         keys.sort()
         if eventname != 'global_timer':
           time4 = time.time()
           self.api('send.msg')('%s: %s - %0.3f ms' % \
-                  ('api_eraise - keys sort', eventname, (time4-time3)*1000.0), 'timing')
+                  ('api_eraise - keys sort', eventname, (time4-time3)*1000.0),
+                   secondary=['timing', calledfrom])
         for k in keys:
           for i in self.events[eventname][k][:]:
             try:
@@ -285,7 +289,7 @@ class Plugin(BasePlugin):
     if eventname != 'global_timer':
       time2 = time.time()
       self.api('send.msg')('%s: %s - %0.3f ms' % \
-              ('api_eraise', eventname, (time2-time1)*1000.0), 'timing')
+              ('api_eraise', eventname, (time2-time1)*1000.0), secondary=['timing', calledfrom])
     return nargs
 
   # get the details of an event

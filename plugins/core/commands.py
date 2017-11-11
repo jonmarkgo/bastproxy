@@ -425,10 +425,12 @@ class Plugin(BasePlugin):
 
     args = kwargs.copy()
 
+    calledfrom = self.api('utils.funccallerplugin')()
+
     lname = None
     if not func:
-      self.api('send.msg')('cmd %s has no function, not adding' % \
-                                                (cmdname))
+      self.api('send.error')('add cmd for cmd %s was passed a null function from plugin %s, not adding' % \
+                                                (cmdname, calledfrom), secondary=calledfrom)
       return
     try:
       sname = func.im_self.sname
@@ -436,8 +438,8 @@ class Plugin(BasePlugin):
       if 'sname' in args:
         sname = args['sname']
       else:
-        self.api('send.msg')('Function is not part of a plugin class: %s' \
-                                                      % cmdname)
+        self.api('send.error')('Function is not part of a plugin class: cmd %s from plugin %s' \
+                                                      % (cmdname, calledfrom), secondary=calledfrom)
         return
 
     if 'parser' in args:
@@ -493,22 +495,22 @@ class Plugin(BasePlugin):
     self.cmds[sname][cmdname] = args
 
   # remove a command
-  def api_removecmd(self, sname, cmdname):
+  def api_removecmd(self, plugin, cmdname):
     """  remove a command
     @Ysname@w    = the top level of the command
     @Ycmdname@w  = the name of the command
 
     this function returns no values"""
-    if sname in self.cmds and cmdname in self.cmds[sname]:
-      del self.cmds[sname][cmdname]
+    if plugin in self.cmds and cmdname in self.cmds[plugin]:
+      del self.cmds[plugin][cmdname]
     else:
       self.api('send.msg')('remove cmd: cmd %s.%s does not exist' % \
-                                                (sname, cmdname),
-                               secondary=sname)
+                                                (plugin, cmdname),
+                               secondary=plugin)
 
     self.api('send.msg')('removed cmd %s.%s' % \
-                                                (sname, cmdname),
-                             secondary=sname)
+                                                (plugin, cmdname),
+                             secondary=plugin)
 
   # set the default command for a plugin
   def api_setdefault(self, cmd, plugin=None):
@@ -522,7 +524,7 @@ class Plugin(BasePlugin):
       plugin = self.api('utils.funccallerplugin')()
 
     if not plugin:
-      print 'could not add a default cmd', cmd
+      self.api('send.error')('could not add a default cmd: %s' % cmd)
       return False
 
     if plugin in self.cmds and cmd in self.cmds[plugin]:
@@ -542,7 +544,7 @@ class Plugin(BasePlugin):
     if plugin in self.cmds:
       del self.cmds[plugin]
     else:
-      self.api('send.msg')('removeplugin: plugin %s does not exist' % \
+      self.api('send.error')('removeplugin: plugin %s does not exist' % \
                                                         plugin)
 
   def format_cmdlist(self, category, cmdlist):
