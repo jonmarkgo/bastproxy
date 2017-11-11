@@ -222,7 +222,8 @@ class Plugin(BasePlugin):
     this function returns no values"""
     if not args:
       args = {}
-    calledfrom = self.api('utils.funccallerplugin')()
+
+    calledfrom = self.api('api.callerplugin')()
 
     if eventname != 'global_timer':
       self.api('send.msg')('raiseevent %s' % eventname, secondary=calledfrom)

@@ -425,7 +425,7 @@ class Plugin(BasePlugin):
 
     args = kwargs.copy()
 
-    calledfrom = self.api('utils.funccallerplugin')()
+    calledfrom = self.api('api.callerplugin')()
 
     lname = None
     if not func:
@@ -521,7 +521,7 @@ class Plugin(BasePlugin):
     this function returns True if the command exists, False if it doesn't"""
 
     if not plugin:
-      plugin = self.api('utils.funccallerplugin')()
+      plugin = self.api('api.callerplugin')()
 
     if not plugin:
       self.api('send.error')('could not add a default cmd: %s' % cmd)

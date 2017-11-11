@@ -21,10 +21,7 @@ def api_msg(tmsg, primary=None, secondary=None):
 
   this function returns no values"""
   tags = []
-  try:
-    plugin = API('utils.funccallerplugin')()
-  except (AttributeError, RuntimeError):
-    plugin = None
+  plugin = API('api.callerplugin')()
 
   if not isinstance(secondary, list):
     tags.append(secondary)

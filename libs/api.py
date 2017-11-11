@@ -77,6 +77,29 @@ class API(object):
     self.overload('api', 'has', self.api_has)
     self.overload('api', 'detail', self.api_detail)
     self.overload('api', 'list', self.api_list)
+    self.overload('api', 'callerplugin', self.api_callerplugin)
+
+  def api_callerplugin(self):
+    """
+    check to see if the caller is a plugin, if so return the plugin object
+
+    this is so plugins can figure out who gave them data and keep up with it.
+    """
+    from plugins._baseplugin import BasePlugin
+    stack = inspect.stack()
+
+    for ifr in stack[2:]:
+      parentframe = ifr[0]
+
+      if 'self' in parentframe.f_locals:
+        # I don't know any way to detect call from the object method
+        # TODO: there seems to be no way to detect static method call - it will
+        #      be just a function call
+        tcs = parentframe.f_locals['self']
+        if tcs != self and isinstance(tcs, BasePlugin):
+          return tcs.sname
+
+    return None
 
   # add a function to the api
   def add(self, toplevel, name, function):

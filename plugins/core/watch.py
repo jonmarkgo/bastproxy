@@ -131,7 +131,7 @@ class Plugin(BasePlugin):
 
     this function returns no values"""
     if not plugin:
-      plugin = self.api('utils.funccallerplugin')()
+      plugin = self.api('api.callerplugin')()
 
     if not plugin:
       print 'could not add a watch for watchname', watchname
