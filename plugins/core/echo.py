@@ -54,28 +54,43 @@ class Plugin(BasePlugin):
     """
     self.api('events.unregister')('execute_finished', self.echochange)
 
+  def formatcommandstack(self, stack):
+    """
+    format the command stack
+    """
+    msg = ['--- Command Stack ---']
+    if stack['fromclient']:
+      msg.append('%-15s: from client' % 'Originated')
+    if stack['internal']:
+      msg.append('%-15s: Internal' % 'Originated')
+    if 'fromplugin' in stack and stack['fromplugin']:
+      msg.append('%-15s: %s' % ('Plugin', stack['fromplugin']))
+    for i in stack['changes']:
+      if i['flag'] == 'original':
+        msg.append('%-15s: %s' % ('Original', i['cmd'].strip()))
+      elif i['flag'] == 'modify':
+        msg.append('  %-13s: plugin %s changed cmd to %s' % \
+                          ('Modify', i['plugin'], i['newcmd']))
+      elif i['flag'] == 'sent':
+        msg.append('  %-13s: sent "%s" to mud with raw: %s and datatype: %s' % \
+                          ('Sent', i['data'].strip(), i['raw'], i['datatype']))
+      elif i['flag'] == 'command':
+        msg.append('  %-13s: ran command: "%s" with success: %s' % \
+                          ('Command', i['cmdran'], i['success']))
+      elif i['flag'] == 'splitchar' or i['flag'] == 'splitcr':
+        msg.append('  %-13s: split command: "%s" into: %s' % \
+                          (i['flag'].capitalize(), i['cmd'], i['into']))
+      else:
+        msg.append('  %-13s: plugin - %s' % \
+                          (i['flag'].capitalize(), i['plugin']))
+
+
+    msg.append('---------------------')
+
+    return '\n'.join(msg)
+
   def echocommand(self, args):
     """
     echo the command
     """
-    msg = ['------']
-    if args['fromclient']:
-      msg.append('%-15s: from client' % 'Originated')
-    if args['internal']:
-      msg.append('%-15s: Internal' % 'Originated')
-    if 'fromplugin' in args and args['fromplugin']:
-      msg.append('%-15s: %s' % ('Plugin', args['fromplugin']))
-    for i in args['changes']:
-      if i['flag'] == 'original':
-        msg.append('%-15s: %s' % ('Original', i['cmd'].strip()))
-      elif i['flag'] == 'modify':
-        msg.append('%-15s: plugin %s changed cmd to %s' % \
-                          ('Modify', i['plugin'], i['newcmd']))
-      elif i['flag'] == 'sent':
-        msg.append('%-15s: sent "%s" to mud with raw: %s and datatype: %s' % \
-                          ('Sent', i['data'].strip(), i['raw'], i['datatype']))
-      elif i['flag'] == 'command':
-        msg.append('%-15s: ran command: "%s" with success: %s' % \
-                          ('Command', i['cmdran'], i['success']))
-    msg.append('-----')
-    self.api('send.client')('\n'.join(msg))
+    self.api('send.client')(self.formatcommandstack(args))
