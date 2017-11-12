@@ -335,8 +335,8 @@ class Plugin(BasePlugin):
         except ValueError:
           pass
         cmd = self.cmds[self.sname]['list']
-        success = 'Yes'
-        commandran = '%s.%s' % (self.sname, 'list')
+        success = 'Help'
+        commandran = '#bp.%s.%s %s %s' % (self.sname, 'list', sname, scmd)
         self.runcmd(cmd, [sname, scmd], fullargs, data)
 
       elif sname:
@@ -364,20 +364,20 @@ class Plugin(BasePlugin):
           else:
             if 'default' in self.cmds[sname]:
               cmd = self.cmds[sname]['default']
-              commandran = '%s.%s' % (sname, 'default')
+              commandran = '#bp.%s.%s %s' % (sname, cmd['commandname'], ' '.join(targs))
               try:
                 self.runcmd(cmd, targs, fullargs, data)
-                success = 'Yes'
+                success = 'Default'
               except Exception:  # pylint: disable=broad-except
                 success = 'Error'
                 self.api('send.traceback')(
                     'Error when calling command %s.%s' % (sname, scmd))
             else:
               cmd = self.cmds[self.sname]['list']
-              commandran = '%s.%s' % (self.sname, 'list')
+              commandran = '#bp.%s.%s %s %s' % (self.sname, 'list', sname, scmd)
               try:
                 self.runcmd(cmd, [sname, scmd], '', data)
-                success = 'Yes'
+                success = 'List'
               except Exception:  # pylint: disable=broad-except
                 success = 'Error'
                 self.api('send.traceback')(
@@ -388,10 +388,10 @@ class Plugin(BasePlugin):
         except ValueError:
           pass
         cmd = self.cmds[self.sname]['list']
-        commandran = '%s.%s' % (self.sname, 'list')
+        commandran = '#bp.%s.%s %s %s' % (self.sname, 'list', sname, scmd)
         try:
           self.runcmd(cmd, [sname, scmd], '', data)
-          success = 'Yes'
+          success = 'List2'
         except Exception:  # pylint: disable=broad-except
           success = 'Error'
           self.api('send.traceback')(
