@@ -84,11 +84,15 @@ class API(object):
     check to see if the caller is a plugin, if so return the plugin object
 
     this is so plugins can figure out who gave them data and keep up with it.
+
+    it will return the first plugin found when going through the stack
+       it checks for a BasePlugin instance of self
+       if it doesn't find that, it checks for an attribute of plugin
     """
     from plugins._baseplugin import BasePlugin
     stack = inspect.stack()
 
-    for ifr in stack[2:]:
+    for ifr in stack[1:]:
       parentframe = ifr[0]
 
       if 'self' in parentframe.f_locals:
@@ -98,6 +102,8 @@ class API(object):
         tcs = parentframe.f_locals['self']
         if tcs != self and isinstance(tcs, BasePlugin):
           return tcs.sname
+        if hasattr(tcs, 'plugin'):
+          return tcs.plugin.sname
 
     return None
 
