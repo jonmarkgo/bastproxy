@@ -79,7 +79,7 @@ class API(object):
     self.overload('api', 'list', self.api_list)
     self.overload('api', 'callerplugin', self.api_callerplugin)
 
-  def api_callerplugin(self):
+  def api_callerplugin(self, skipplugin=None):
     """
     check to see if the caller is a plugin, if so return the plugin object
 
@@ -100,9 +100,9 @@ class API(object):
         # TODO: there seems to be no way to detect static method call - it will
         #      be just a function call
         tcs = parentframe.f_locals['self']
-        if tcs != self and isinstance(tcs, BasePlugin):
+        if tcs != self and isinstance(tcs, BasePlugin) and tcs.sname != skipplugin:
           return tcs.sname
-        if hasattr(tcs, 'plugin'):
+        if hasattr(tcs, 'plugin') and tcs.plugin.sname != skipplugin:
           return tcs.plugin.sname
 
     return None
