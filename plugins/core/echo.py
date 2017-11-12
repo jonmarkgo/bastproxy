@@ -69,8 +69,8 @@ class Plugin(BasePlugin):
       if i['flag'] == 'original':
         msg.append('%-15s: %s' % ('Original', i['cmd'].strip()))
       elif i['flag'] == 'modify':
-        msg.append('  %-13s: plugin %s changed cmd to %s' % \
-                          ('Modify', i['plugin'], i['newcmd']))
+        msg.append('  %-13s: plugin %s changed cmd "%s" to "%s"' % \
+                          ('Modify', i['plugin'], i['cmd'], i['newcmd']))
       elif i['flag'] == 'sent':
         msg.append('  %-13s: sent "%s" to mud with raw: %s and datatype: %s' % \
                           ('Sent', i['data'].strip(), i['raw'], i['datatype']))
@@ -78,7 +78,7 @@ class Plugin(BasePlugin):
         msg.append('  %-13s: ran command: "%s" with success: %s' % \
                           ('Command', i['cmdran'], i['success']))
       elif i['flag'] == 'splitchar' or i['flag'] == 'splitcr':
-        msg.append('  %-13s: split command: "%s" into: %s' % \
+        msg.append('  %-13s: split command: "%s" into: "%s"' % \
                           (i['flag'].capitalize(), i['cmd'], i['into']))
       else:
         msg.append('  %-13s: plugin - %s' % \
