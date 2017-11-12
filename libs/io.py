@@ -167,8 +167,8 @@ def api_execute(command, fromclient=False, showinhistory=True, old=None):
 
   commands = command.split('\r\n')
   if len(commands) > 1:
-    cmddata['changes'].append({'cmd':command, 'flag':'split',
-                               'into':commands, 'plugin':'io'})
+    cmddata['changes'].append({'cmd':command, 'flag':'splitcr',
+                               'into':','.join(commands), 'plugin':'io'})
 
   for tcommand in commands:
     newdata = API('events.eraise')('io_execute_event',
@@ -187,8 +187,10 @@ def api_execute(command, fromclient=False, showinhistory=True, old=None):
       if len(datalist) > 1:
         API('send.msg')('broke %s into %s' % (tcommand, datalist),
                         primary='inputparse')
+        cmddata['changes'].append({'cmd':tcommand, 'flag':'splitchar',
+                                  'into':','.join(datalist), 'plugin':'io'})
         for cmd in datalist:
-          api_execute(cmd, showinhistory=showinhistory)
+          api_execute(cmd, showinhistory=showinhistory, old=cmddata)
       else:
         tcommand = tcommand.replace('||', '|')
         if tcommand[-1] != '\n':
