@@ -176,13 +176,15 @@ class Plugin(AardwolfBasePlugin):
     """
     disable afk mode
     """
-    self.api('setting.change')('isafk', False)
-    lasttitle = self.api('setting.gets')('lasttitle')
-    self.api('send.execute')('title %s' % lasttitle)
-    try:
-      self.api('events.unregister')('GMCP:comm.channel', self.checkfortell)
-    except KeyError:
-      pass
+    proxy = self.api('managers.getm')('proxy')
+    if proxy.connected:
+      self.api('setting.change')('isafk', False)
+      lasttitle = self.api('setting.gets')('lasttitle')
+      self.api('send.execute')('title %s' % lasttitle)
+      try:
+        self.api('events.unregister')('GMCP:comm.channel', self.checkfortell)
+      except KeyError:
+        pass
 
     queue = self.api('setting.gets')('queue')
 
