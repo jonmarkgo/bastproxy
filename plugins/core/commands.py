@@ -146,7 +146,7 @@ class Plugin(BasePlugin):
                                  format=False,
                                  showinhistory=False)
 
-    self.api('events.register')('from_client_event', self.chkcmd, prio=5)
+    self.api('events.register')('io_execute_event', self.chkcmd, prio=5)
     self.api('events.register')('plugin_unloaded', self.pluginunloaded)
     self.api('events.eraise')('plugin_cmdman_loaded', {})
 

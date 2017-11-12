@@ -171,7 +171,7 @@ def api_execute(command, fromclient=False, showinhistory=True, old=None):
                                'into':commands, 'plugin':'io'})
 
   for tcommand in commands:
-    newdata = API('events.eraise')('from_client_event',
+    newdata = API('events.eraise')('io_execute_event',
                                    {'fromdata':tcommand,
                                     'fromclient':fromclient,
                                     'internal':not fromclient,

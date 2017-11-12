@@ -81,7 +81,7 @@ class Plugin(BasePlugin):
 
     self.api('commands.default')('list')
 
-    self.api('events.register')('from_client_event',
+    self.api('events.register')('io_execute_event',
                                     self.checkline,
                                     prio=99)
 

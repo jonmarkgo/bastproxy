@@ -134,7 +134,7 @@ class Plugin(BasePlugin):
                                  parser=parser)
 
     self.api('commands.default')('list')
-    self.api('events.register')('from_client_event', self.checkalias,
+    self.api('events.register')('io_execute_event', self.checkalias,
                                     prio=2)
     self.api('events.register')('plugin_%s_savestate' % self.sname, self._savestate)
 

@@ -44,7 +44,7 @@ class Plugin(BasePlugin):
     #self.api('commands.add')('detail', self.cmd_detail,
                                  #shelp='details of an event')
 
-    self.api('events.register')('from_client_event', self.checkcmd)
+    self.api('events.register')('io_execute_event', self.checkcmd)
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='list watches')
