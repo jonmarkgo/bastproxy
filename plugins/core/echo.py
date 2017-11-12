@@ -75,7 +75,7 @@ class Plugin(BasePlugin):
         msg.append('%-15s: sent "%s" to mud with raw: %s and datatype: %s' % \
                           ('Sent', i['data'].strip(), i['raw'], i['datatype']))
       elif i['flag'] == 'command':
-        msg.append('%-15s: ran command: %s with success: %s' % \
+        msg.append('%-15s: ran command: "%s" with success: %s' % \
                           ('Command', i['cmdran'], i['success']))
     msg.append('-----')
     self.api('send.client')('\n'.join(msg))
