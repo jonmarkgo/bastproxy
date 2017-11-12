@@ -25,6 +25,14 @@ class BasePlugin(object):
       Interacting with anything in the api except api.add, api.overload
           or dependency.add
     """
+    # Examples:
+    #  name : 'Actions' - from plugin file variable NAME (long name)
+    #  sname : 'actions' - from plugin file variable SNAME (short name)
+    #  modpath : '/client/actions.py' - path relative to the plugins directory
+    #  basepath : '/home/src/games/bastproxy/bp/plugins' - the full path to the
+    #                                                         plugins directory
+    #  fullimploc : 'plugins.client.actions' - import location
+
     self.author = ''
     self.purpose = ''
     self.version = 0
@@ -178,9 +186,10 @@ class BasePlugin(object):
     self._loadcommands()
 
     self.api('events.register')('%s_plugin_loaded' % self.sname,
-                                self._afterload)
+                                self.__afterload)
 
-    self.api('events.register')('muddisconnect', self.disconnect)
+    self.api('events.register')('muddisconnect', self.__disconnect)
+    self.api('events.register')('plugin_%s_savestate' % self.sname, self.__savestate)
 
     self.resetflag = False
 
@@ -273,7 +282,7 @@ class BasePlugin(object):
 
     return True, tmsg
 
-  def _afterload(self, args):
+  def __afterload(self, args):
     # pylint: disable=unused-argument
     """
     do something after the load function is run
@@ -289,13 +298,20 @@ class BasePlugin(object):
     else:
       self.api('events.register')('firstactive', self.afterfirstactive)
 
-  def disconnect(self, args=None):
+  def __disconnect(self, args=None):
     # pylint: disable=unused-argument
     """
     re-register to firstactive on disconnect
     """
     self.api('send.msg')('baseplugin, disconnect')
     self.api('events.register')('firstactive', self.afterfirstactive)
+
+  def afterfirstactive(self, _=None):
+    """
+    if we are connected do
+    """
+    self.api('send.msg')('baseplugin, firstactive')
+    self.api('events.unregister')('firstactive', self.afterfirstactive)
 
   # get the vaule of a setting
   def _api_settinggets(self, setting):
@@ -378,11 +394,17 @@ class BasePlugin(object):
     #save the state
     self.savestate()
 
-  def savestate(self):
+  def __savestate(self, args=None):
     """
-    save the state
+    save the settings state
     """
     self.settingvalues.sync()
+
+  def savestate(self, args=None):
+    """
+    save all settings for the plugin
+    """
+    self.api('events.eraise')('plugin_%s_savestate' % self.sname)
 
   def _cmd_set(self, args):
     """
@@ -396,7 +418,7 @@ class BasePlugin(object):
     """
     msg = []
     if args['name'] == 'list':
-      return True, self.listvars()
+      return True, self._listvars()
     elif args['name'] and args['value']:
       var = args['name']
       val = args['value']
@@ -420,7 +442,7 @@ class BasePlugin(object):
             msg = ['Cannot convert %s to %s' % \
                               (val, self.settings[var]['stype'])]
             return True, msg
-        return True, self.listvars()
+        return True, self._listvars()
       else:
         msg = ['plugin setting %s does not exist' % var]
     return False, msg
@@ -461,7 +483,7 @@ class BasePlugin(object):
         msg.extend(self.api('api.list')(self.sname))
     return True, msg
 
-  def listvars(self):
+  def _listvars(self):
     """
     return a list of strings that list all settings
     """
@@ -546,13 +568,6 @@ class BasePlugin(object):
         self.settingvalues[i] = self.settings[i]['default']
       self.settingvalues.sync()
       self.resetflag = False
-
-  def afterfirstactive(self, _=None):
-    """
-    if we are connected do
-    """
-    self.api('send.msg')('baseplugin, firstactive')
-    self.api('events.unregister')('firstactive', self.afterfirstactive)
 
   # add a function to the api
   def _api_add(self, name, func):
