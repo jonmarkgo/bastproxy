@@ -653,8 +653,7 @@ class Plugin(BasePlugin):
       tmsg.append('Categories:')
       tkeys = self.cmds.keys()
       tkeys.sort()
-      for i in tkeys:
-        tmsg.append('  %s' % i)
+      tmsg.append(self.api('utils.listtocolumns')(tkeys, cols=3, columnwise=False, gap=6))
     return True, tmsg
 
   def cmd_runhistory(self, args):
