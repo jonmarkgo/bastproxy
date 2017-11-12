@@ -559,7 +559,7 @@ class Plugin(BasePlugin):
     this function returns True if the command exists, False if it doesn't"""
 
     if not plugin:
-      plugin = self.api('api.callerplugin')()
+      plugin = self.api('api.callerplugin')(skipplugin=self.sname)
 
     if not plugin:
       self.api('send.error')('could not add a default cmd: %s' % cmd)
@@ -571,6 +571,8 @@ class Plugin(BasePlugin):
       self.cmds[plugin]['default'] = self.cmds[plugin][cmd]
       return True
 
+    self.api('send.error')('could not set default command %s for plugin %s' % \
+                              (cmd, plugin), secondary=plugin)
     return False
 
   # remove all commands for a plugin
