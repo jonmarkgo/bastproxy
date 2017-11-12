@@ -339,15 +339,15 @@ class Plugin(BasePlugin):
         commandran = '#bp.%s.%s %s %s' % (self.sname, 'list', sname, scmd)
         self.runcmd(cmd, [sname, scmd], fullargs, data)
 
-      elif sname:
-        if sname not in self.cmds:
+      elif sname: # got at least "#bp.<command>"
+        if sname not in self.cmds: # no command toplevel with <command>
           success = 'Bad Command'
           self.api('send.client')("@R%s.%s@W is not a command." % \
                                                   (sname, scmd))
-        else:
-          if scmd:
+        else: # got a command in the toplevel
+          if scmd: # got "#bp.<command>.<subcommand>""
             cmd = None
-            if scmd in self.cmds[sname]:
+            if scmd in self.cmds[sname]: # <subcommand> was found
               cmd = self.cmds[sname][scmd]
             if cmd:
               try:
@@ -361,8 +361,8 @@ class Plugin(BasePlugin):
               success = 'Bad Command'
               self.api('send.client')("@R%s.%s@W is not a command" % \
                                                     (sname, scmd))
-          else:
-            if 'default' in self.cmds[sname]:
+          else: # got just "#bp.<command>"
+            if 'default' in self.cmds[sname]: # check to see if there is a default
               cmd = self.cmds[sname]['default']
               commandran = '#bp.%s.%s %s' % (sname, cmd['commandname'], ' '.join(targs))
               try:
@@ -372,7 +372,7 @@ class Plugin(BasePlugin):
                 success = 'Error'
                 self.api('send.traceback')(
                     'Error when calling command %s.%s' % (sname, scmd))
-            else:
+            else: # no default, so do "#bp.commands.list sname scmd"
               cmd = self.cmds[self.sname]['list']
               commandran = '#bp.%s.%s %s %s' % (self.sname, 'list', sname, scmd)
               try:
@@ -382,7 +382,7 @@ class Plugin(BasePlugin):
                 success = 'Error'
                 self.api('send.traceback')(
                     'Error when calling command %s.%s' % (sname, scmd))
-      else:
+      else: # this only happens with "#bp" and "#bp."
         try:
           del targs[targs.index('help')]
         except ValueError:
@@ -404,7 +404,7 @@ class Plugin(BasePlugin):
                                            'success':success,
                                            'plugin':self.sname})
       return {'fromdata':''}
-    else:
+    else: # no command, so add it to history and check antispam
       self.addtohistory(data)
       if tdat.strip() == self.api('setting.gets')('lastcmd'):
         self.api('setting.change')('cmdcount',
