@@ -121,6 +121,7 @@ class Plugin(AardwolfBasePlugin):
     self.api('events.register')('su_enabled', self.enabledchange)
     self.api('events.register')('skills_affected_update', self.nextspell)
     self.api('events.register')('aard_skill_gain', self.skillgain)
+    self.api('events.register')('plugin_%s_savestate' % self.sname, self._savestate)
 
     if self.api('skills.isuptodate')():
       self._charstatus()
@@ -314,11 +315,10 @@ class Plugin(AardwolfBasePlugin):
             self.api('skills.sendcmd')(i)
             return
 
-  def savestate(self):
+  def _savestate(self, args=None):
     """
     save states
     """
-    AardwolfBasePlugin.savestate(self)
     self.spellups.sync()
 
   def _addselfspell(self, spellnum, place=-1, override=False):

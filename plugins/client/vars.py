@@ -85,6 +85,9 @@ class Plugin(BasePlugin):
                                     self.checkline,
                                     prio=99)
 
+    self.api('events.register')('plugin_%s_savestate' % self.sname, self._savestate)
+
+
   # get a variable
   def api_getv(self, varname):
     """  get the variable with a specified name
@@ -218,9 +221,8 @@ class Plugin(BasePlugin):
     BasePlugin.reset(self)
     self.clearvariables()
 
-  def savestate(self):
+  def _savestate(self, args=None):
     """
     save states
     """
-    BasePlugin.savestate(self)
     self._variables.sync()

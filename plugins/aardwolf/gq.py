@@ -141,6 +141,8 @@ class Plugin(AardwolfBasePlugin):
 
     self.api('events.register')('watch_gq_check', self._gqcheckcmd)
 
+    self.api('events.register')('plugin_%s_savestate' % self.sname, self._savestate)
+
   def _gqnew(self):
     """
     reset the gq info
@@ -408,9 +410,8 @@ class Plugin(AardwolfBasePlugin):
     else:
       self._raisegq('aard_gq_notavailable')
 
-  def savestate(self):
+  def _savestate(self, args=None):
     """
     save states
     """
-    AardwolfBasePlugin.savestate(self)
     self.gqinfo.sync()

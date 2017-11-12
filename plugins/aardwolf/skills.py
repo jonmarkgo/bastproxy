@@ -183,6 +183,9 @@ class Plugin(AardwolfBasePlugin):
     self.cmdqueue.addcmdtype('slist', 'slist', "^slist\s*(.*)$",
                        beforef=self.slistbefore, afterf=self.slistafter)
 
+    self.api('events.register')('plugin_%s_savestate' % self.sname, self._savestate)
+
+
     self.checkskills()
 
   def slistbefore(self):
@@ -591,10 +594,9 @@ class Plugin(AardwolfBasePlugin):
     sus = [x for x in self.skills.values() if x['spellup']]
     return sus
 
-  def savestate(self):
+  def _savestate(self, args=None):
     """
     save states
     """
-    AardwolfBasePlugin.savestate(self)
     self.skills.sync()
     self.recoveries.sync()

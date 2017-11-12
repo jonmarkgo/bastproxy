@@ -135,6 +135,8 @@ class Plugin(AardwolfBasePlugin):
     self.api('events.register')('trigger_lvlremortcomp', self._remortcomp)
     self.api('events.register')('trigger_lvltier', self._tier)
 
+    self.api('events.register')('plugin_%s_savestate' % self.sname, self._savestate)
+
   def _gmcpstatus(self, _=None):
     """
     check gmcp status when tiering
@@ -311,10 +313,9 @@ class Plugin(AardwolfBasePlugin):
         self.api('setting.change')('remortcomp', False)
         self.api('events.eraise')('aard_level_remort', {})
 
-  def savestate(self):
+  def _savestate(self, args=None):
     """
     save states
     """
-    AardwolfBasePlugin.savestate(self)
     self.levelinfo.sync()
 

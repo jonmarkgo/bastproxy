@@ -150,6 +150,9 @@ class Plugin(BasePlugin):
     self.api('events.register')('plugin_unloaded', self.pluginunloaded)
     self.api('events.eraise')('plugin_cmdman_loaded', {})
 
+    self.api('events.register')('plugin_%s_savestate' % self.sname, self._savestate)
+
+
   def pluginunloaded(self, args):
     """
     a plugin was unloaded
@@ -685,9 +688,8 @@ class Plugin(BasePlugin):
 
     return True, tmsg
 
-  def savestate(self):
+  def _savestate(self, args=None):
     """
     save states
     """
-    BasePlugin.savestate(self)
     self.cmdhistorydict.sync()

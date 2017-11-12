@@ -80,6 +80,8 @@ class Plugin(BasePlugin):
     self.api('commands.default')('list')
     self.api('events.register')('from_mud_event', self.findsub)
 
+    self.api('events.register')('plugin_%s_savestate' % self.sname, self._savestate)
+
   def findsub(self, args):
     """
     this function finds subs in mud data
@@ -187,10 +189,9 @@ class Plugin(BasePlugin):
     BasePlugin.reset(self)
     self.clearsubs()
 
-  def savestate(self):
+  def _savestate(self, args=None):
     """
     save states
     """
-    BasePlugin.savestate(self)
     self._substitutes.sync()
 

@@ -136,6 +136,7 @@ class Plugin(BasePlugin):
     self.api('commands.default')('list')
     self.api('events.register')('from_client_event', self.checkalias,
                                     prio=2)
+    self.api('events.register')('plugin_%s_savestate' % self.sname, self._savestate)
 
   def checkalias(self, args):
     """
@@ -408,9 +409,8 @@ class Plugin(BasePlugin):
     BasePlugin.reset(self)
     self.clearaliases()
 
-  def savestate(self):
+  def _savestate(self, args=None):
     """
     save states
     """
-    BasePlugin.savestate(self)
     self._aliases.sync()

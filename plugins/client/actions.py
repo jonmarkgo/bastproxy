@@ -166,6 +166,7 @@ class Plugin(BasePlugin):
     for action in self.actions.values():
       self.register_action(action)
 
+    self.api('events.register')('plugin_%s_savestate' % self.sname, self._savestate)
 #    self.api('events.register')('plugin_stats', self.getpluginstats)
 
   def register_action(self, action):
@@ -463,9 +464,8 @@ class Plugin(BasePlugin):
     BasePlugin.reset(self)
     self.clearactions()
 
-  def savestate(self):
+  def _savestate(self, args=None):
     """
     save states
     """
-    BasePlugin.savestate(self)
     self.actions.sync()

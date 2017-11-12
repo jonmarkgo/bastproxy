@@ -403,6 +403,9 @@ class BasePlugin(object):
   def savestate(self, args=None):
     """
     save all settings for the plugin
+    do not overload!
+
+    attach to the plugin_<pluginname>_savestate event
     """
     self.api('events.eraise')('plugin_%s_savestate' % self.sname)
 

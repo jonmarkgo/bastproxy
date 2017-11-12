@@ -129,6 +129,8 @@ class Plugin(AardwolfBasePlugin):
     self.api('events.register')('trigger_cpreward', self._cpreward)
     self.api('events.register')('trigger_cpcompdone', self._cpcompdone)
 
+    self.api('events.register')('plugin_%s_savestate' % self.sname, self._savestate)
+
   def cmd_show(self, args):
     """
     show the cp mobs
@@ -373,9 +375,8 @@ class Plugin(AardwolfBasePlugin):
       self.api('send.msg')("BP CP: could not find mob: %s" % args['name'])
       self.cmdqueue.addtoqueue('cpcheck', '')
 
-  def savestate(self):
+  def _savestate(self, args=None):
     """
     save states
     """
-    AardwolfBasePlugin.savestate(self)
     self.cpinfo.sync()

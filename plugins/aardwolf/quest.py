@@ -35,6 +35,9 @@ class Plugin(AardwolfBasePlugin):
 
     self.api('events.register')('GMCP:comm.quest', self.quest)
 
+    self.api('events.register')('plugin_%s_savestate' % self.sname, self._savestate)
+
+
   def resetquest(self):
     """
     reset the quest info
@@ -87,11 +90,8 @@ class Plugin(AardwolfBasePlugin):
       self.api('events.eraise')('aard_quest_reset', {})
     self.queststuff.sync()
 
-  def savestate(self):
+  def _savestate(self, args=None):
     """
     save states
     """
-    AardwolfBasePlugin.savestate(self)
     self.queststuff.sync()
-
-

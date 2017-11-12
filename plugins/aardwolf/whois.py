@@ -76,6 +76,7 @@ class Plugin(AardwolfBasePlugin):
     self.api('events.register')('trigger_whois3', self._whoisstats)
     self.api('events.register')('trigger_whoispowerup', self._whoisstats)
     self.api('events.register')('trigger_whoisend', self._whoisend)
+    self.api('events.register')('plugin_%s_savestate' % self.sname, self._savestate)
 
   def _whois(self, args=None):
     """
@@ -157,10 +158,9 @@ class Plugin(AardwolfBasePlugin):
     self.api('events.eraise')('aard_whois', copy.deepcopy(self.whois))
     self.api('send.msg')('whois: %s' % self.whois)
 
-  def savestate(self):
+  def _savestate(self, args=None):
     """
     save states
     """
-    AardwolfBasePlugin.savestate(self)
     self.whois.sync()
 
