@@ -413,14 +413,17 @@ class Plugin(BasePlugin):
                               self.api('setting.gets')('spamcount'):
           data['fromdata'] = self.api('setting.gets')('antispamcommand') \
                                       + '|' + tdat
+          if 'cmddata' in data:
+            data['cmddata']['changes'].append({'cmd':tdat,
+                                               'flag':'antispam',
+                                               'plugin':self.sname})
           self.api('send.msg')('adding look for 20 commands')
           self.api('setting.change')('cmdcount', 0)
+          return data
         if tdat in self.nomultiplecmds:
           if 'cmddata' in data:
             data['cmddata']['changes'].append({'cmd':tdat,
                                                'flag':'nomultiple',
-                                               'cmdran':commandran,
-                                               'success':'Removed',
                                                'plugin':self.sname})
 
           data['fromdata'] = ''
