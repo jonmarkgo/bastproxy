@@ -303,6 +303,8 @@ class Plugin(BasePlugin):
     check a line from a client for a command
     """
     tdat = data['fromdata']
+    success = 'Unknown'
+    commandran = tdat
 
     if tdat == '':
       return
@@ -330,10 +332,13 @@ class Plugin(BasePlugin):
         except ValueError:
           pass
         cmd = self.cmds[self.sname]['list']
+        success = 'Yes'
+        commandran = '%s.%s' % (self.sname, 'list')
         self.runcmd(cmd, [sname, scmd], fullargs, data)
 
       elif sname:
         if sname not in self.cmds:
+          success = 'Bad Command'
           self.api('send.client')("@R%s.%s@W is not a command." % \
                                                   (sname, scmd))
         else:
@@ -344,43 +349,57 @@ class Plugin(BasePlugin):
             if cmd:
               try:
                 self.runcmd(cmd, targs, fullargs, data)
+                success = 'Yes'
               except Exception:  # pylint: disable=broad-except
+                success = 'Error'
                 self.api('send.traceback')(
                     'Error when calling command %s.%s' % (sname, scmd))
-                return {'fromdata':''}
             else:
+              success = 'Bad Command'
               self.api('send.client')("@R%s.%s@W is not a command" % \
                                                     (sname, scmd))
           else:
             if 'default' in self.cmds[sname]:
               cmd = self.cmds[sname]['default']
+              commandran = '%s.%s' % (sname, 'default')
               try:
                 self.runcmd(cmd, targs, fullargs, data)
+                success = 'Yes'
               except Exception:  # pylint: disable=broad-except
+                success = 'Error'
                 self.api('send.traceback')(
                     'Error when calling command %s.%s' % (sname, scmd))
-                return {'fromdata':''}
             else:
               cmd = self.cmds[self.sname]['list']
+              commandran = '%s.%s' % (self.sname, 'list')
               try:
                 self.runcmd(cmd, [sname, scmd], '', data)
+                success = 'Yes'
               except Exception:  # pylint: disable=broad-except
+                success = 'Error'
                 self.api('send.traceback')(
                     'Error when calling command %s.%s' % (sname, scmd))
-                return {'fromdata':''}
       else:
         try:
           del targs[targs.index('help')]
         except ValueError:
           pass
         cmd = self.cmds[self.sname]['list']
+        commandran = '%s.%s' % (self.sname, 'list')
         try:
           self.runcmd(cmd, [sname, scmd], '', data)
+          success = 'Yes'
         except Exception:  # pylint: disable=broad-except
+          success = 'Error'
           self.api('send.traceback')(
               'Error when calling command %s.%s' % (sname, scmd))
-          return {'fromdata':''}
 
+      if 'cmddata' in data:
+        data['cmddata']['changes'].append({'cmd':tdat,
+                                           'flag':'command',
+                                           'cmdran':commandran,
+                                           'success':success,
+                                           'plugin':self.sname})
       return {'fromdata':''}
     else:
       self.addtohistory(data)
@@ -394,11 +413,27 @@ class Plugin(BasePlugin):
           self.api('send.msg')('adding look for 20 commands')
           self.api('setting.change')('cmdcount', 0)
         if tdat in self.nomultiplecmds:
+          if 'cmddata' in data:
+            data['cmddata']['changes'].append({'cmd':tdat,
+                                               'flag':'nomultiple',
+                                               'cmdran':commandran,
+                                               'success':'Removed',
+                                               'plugin':self.sname})
+
           data['fromdata'] = ''
+          return data
       else:
         self.api('setting.change')('cmdcount', 0)
         self.api('send.msg')('resetting command to %s' % tdat.strip())
         self.api('setting.change')('lastcmd', tdat.strip())
+
+      if data['fromdata'] != tdat:
+        if 'cmddata' in data:
+          data['cmddata']['changes'].append({'cmd':tdat,
+                                             'flag':'command',
+                                             'cmdran':data['fromdata'],
+                                             'success':'Unknown',
+                                             'plugin':self.sname})
 
       return data
 

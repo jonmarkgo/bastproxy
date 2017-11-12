@@ -212,6 +212,11 @@ class Plugin(BasePlugin):
         self.api('send.msg')('raising %s' % targs['cmdname'])
         tdata = self.api('events.eraise')('watch_' + i, targs)
         if 'changed' in tdata:
+          if 'cmddata' in data:
+            data['cmddata']['changes'].append({'cmd':tdat,
+                                               'flag':'modify',
+                                               'newcmd':tdata['changed'],
+                                               'plugin':self.sname})
           data['nfromdata'] = tdata['changed']
 
     if 'nfromdata' in data:

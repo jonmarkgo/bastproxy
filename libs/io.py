@@ -124,35 +124,59 @@ def api_client(text, raw=False, preamble=True):
   except (NameError, TypeError, AttributeError):
     API('send.traceback')("couldn't send msg to client: %s" % '\n'.join(text))
 
-# execute a command through the interpreter
-def api_execute(command, fromclient=False, showinhistory=True):
+# execute a command through the interpreter, most data goes through this
+def api_execute(command, fromclient=False, showinhistory=True, old=None):
   """  execute a command through the interpreter
   It will first check to see if it is an internal command, and then
   send to the mud if not.
     @Ycommand@w      = the command to send through the interpreter
 
   this function returns no values"""
-  API('send.msg')('got command %s from client' % repr(command),
+  API('send.msg')('execute: got command %s' % repr(command),
                   primary='inputparse')
 
+  cmddata = {}
+  if not old:
+    cmddata = {}
+    cmddata['fromclient'] = False
+    cmddata['internal'] = True
+    cmddata['changes'] = [{'cmd':command, 'flag':'original'}]
+    cmddata['showinhistory'] = showinhistory
+    cmddata['fromplugin'] = API('api.callerplugin')()
+
+    if fromclient:
+      cmddata['fromclient'] = True
+      cmddata['internal'] = False
+
+    API('events.eraise')('execute_started', cmddata)
+
+  else:
+    cmddata = old
+
+
   if command == '\r\n':
-    API('send.msg')('sending %s to the mud' % repr(command),
+    API('send.msg')('sending %s (cr) to the mud' % repr(command),
                     primary='inputparse')
     API('events.eraise')('to_mud_event', {'data':command,
                                           'dtype':'fromclient',
-                                          'showinhistory':showinhistory})
+                                          'showinhistory':showinhistory,
+                                          'cmddata':cmddata})
     return
 
   command = command.strip()
 
   commands = command.split('\r\n')
+  if len(commands) > 1:
+    cmddata['changes'].append({'cmd':command, 'flag':'split',
+                               'into':commands, 'plugin':'io'})
 
   for tcommand in commands:
     newdata = API('events.eraise')('from_client_event',
                                    {'fromdata':tcommand,
                                     'fromclient':fromclient,
                                     'internal':not fromclient,
-                                    'showinhistory':showinhistory})
+                                    'showinhistory':showinhistory,
+                                    'cmddata':cmddata})
 
     if 'fromdata' in newdata:
       tcommand = newdata['fromdata']
@@ -174,7 +198,11 @@ def api_execute(command, fromclient=False, showinhistory=True):
         API('events.eraise')('to_mud_event',
                              {'data':tcommand,
                               'dtype':'fromclient',
-                              'showinhistory':showinhistory})
+                              'showinhistory':showinhistory,
+                              'cmddata':cmddata})
+
+  if not old:
+    API('events.eraise')('execute_finished', cmddata)
 
 # send data directly to the mud
 def api_tomud(data):

@@ -164,6 +164,11 @@ class Plugin(BasePlugin):
           cre = re.compile('^%s' % mem)
           datan = cre.sub(self._aliases[mem]['alias'], data)
         if datan != data:
+          if 'cmddata' in args:
+            args['cmddata']['changes'].append({'cmd':data,
+                                               'flag':'modify',
+                                               'newcmd':datan,
+                                               'plugin':self.sname})
           if not 'hits' in self._aliases[mem]:
             self._aliases[mem]['hits'] = 0
           if not mem in self.sessionhits:
@@ -174,7 +179,7 @@ class Plugin(BasePlugin):
           self.api('send.msg')('replacing "%s" with "%s"' % \
                                           (data.strip(), datan.strip()))
           if datan[0:3] == '#bp':
-            self.api('send.execute')(datan, showinhistory=False, fromclient=False)
+            self.api('send.execute')(datan, showinhistory=False, fromclient=False, old=args['cmddata'])
             args['fromdata'] = ''
             args['history'] = False
           else:
