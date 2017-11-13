@@ -90,7 +90,6 @@ from libs.api import API as BASEAPI
 
 # import io so we can add the "send" functions to the api
 from libs import io
-io.add_send()
 
 sys.stderr = sys.stdout
 

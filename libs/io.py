@@ -5,229 +5,245 @@ import time
 import sys
 import traceback
 import re
-from libs.api import API as BASEAPI
+from libs.api import API
 
-API = BASEAPI()
+class ProxyIO(object):
+  """
+  class for IO in the proxy
+    it adds to the API
+     'send.msg'       : send data through the messaging system for
+                          logging purposes
+     'send.error'     : send an error
+     'send.traceback' : send a traceback
+     'send.client'    : send data to the clients
+     'send.mud'       : send data to the mud
+     'send.execute'   : send data through the parser
+  """
+  def __init__(self):
+    """
+    initialize the class
+    """
+    self.currenttrace = None
+    self.api = API()
+    self.api.add('send', 'msg', self._api_msg)
+    self.api.add('send', 'error', self._api_error)
+    self.api.add('send', 'traceback', self._api_traceback)
+    self.api.add('send', 'client', self._api_client)
+    self.api.add('send', 'mud', self._api_tomud)
+    self.api.add('send', 'execute', self._api_execute)
 
-# send a message
-def api_msg(tmsg, primary=None, secondary=None):
-  """  send a message through the log plugin
-    @Ymsg@w        = This message to send
-    @Yprimary@w    = the primary data tag of the message (default: None)
-    @Ysecondary@w  = the secondary data tag of the message
-                        (default: None)
+  # send a message
+  def _api_msg(self, tmsg, primary=None, secondary=None):
+    """  send a message through the log plugin
+      @Ymsg@w        = This message to send
+      @Yprimary@w    = the primary data tag of the message (default: None)
+      @Ysecondary@w  = the secondary data tag of the message
+                          (default: None)
 
-  If a plugin called this function, it will be automatically added to the tags
+    If a plugin called this function, it will be automatically added to the tags
 
-  this function returns no values"""
-  tags = []
-  plugin = API('api.callerplugin')()
+    this function returns no values"""
+    tags = []
+    plugin = self.api('api.callerplugin')()
 
-  if not isinstance(secondary, list):
-    tags.append(secondary)
-  else:
-    tags.extend(secondary)
-
-  ttags = set(tags) # take out duplicates
-  tags = list(ttags)
-
-  if primary:
-    if primary in tags:
-      tags.remove(primary)
-    tags.insert(0, primary)
-
-  if plugin:
-    if not primary:
-      if plugin in tags:
-        tags.remove(plugin)
-      tags.insert(0, plugin)
+    if not isinstance(secondary, list):
+      tags.append(secondary)
     else:
-      if plugin not in tags:
-        tags.append(plugin)
+      tags.extend(secondary)
 
-  if not tags:
-    print('Did not get any tags for %s' % tmsg)
+    ttags = set(tags) # take out duplicates
+    tags = list(ttags)
 
-  try:
-    API('log.msg')(tmsg, tags=tags)
-  except (AttributeError, RuntimeError): #%s - %-10s :
-    print '%s - %-10s : %s' % (time.strftime(API.timestring,
-                                             time.localtime()), primary or plugin, tmsg)
+    if primary:
+      if primary in tags:
+        tags.remove(primary)
+      tags.insert(0, primary)
 
-# write and format a traceback
-def api_traceback(message=""):
-  """  handle a traceback
-    @Ymessage@w  = the message to put into the traceback
+    if plugin:
+      if not primary:
+        if plugin in tags:
+          tags.remove(plugin)
+        tags.insert(0, plugin)
+      else:
+        if plugin not in tags:
+          tags.append(plugin)
 
-  this function returns no values"""
-  exc = "".join(traceback.format_exception(sys.exc_info()[0],
-                                           sys.exc_info()[1],
-                                           sys.exc_info()[2]))
+    if not tags:
+      print('Did not get any tags for %s' % tmsg)
 
-  if message:
-    message = message + "\n" + exc
-  else:
-    message = exc
+    try:
+      self.api('log.msg')(tmsg, tags=tags)
+    except (AttributeError, RuntimeError): #%s - %-10s :
+      print '%s - %-10s : %s' % (time.strftime(self.api.timestring,
+                                               time.localtime()), primary or plugin, tmsg)
 
-  API('send.error')(message)
+  # write and format a traceback
+  def _api_traceback(self, message=""):
+    """  handle a traceback
+      @Ymessage@w  = the message to put into the traceback
 
-# write and format an error
-def api_error(text, secondary=None):
-  """  handle an error
-    @Ytext@w  = The error to handle
+    this function returns no values"""
+    exc = "".join(traceback.format_exception(sys.exc_info()[0],
+                                             sys.exc_info()[1],
+                                             sys.exc_info()[2]))
 
-  this function returns no values"""
-  text = str(text)
-  test = []
-
-  for i in text.split('\n'):
-    if API('api.has')('colors.convertcolors'):
-      test.append('@x136%s@w' % i)
+    if message:
+      message = message + "\n" + exc
     else:
-      test.append(i)
-  tmsg = '\n'.join(test)
+      message = exc
 
-  API('send.msg')(tmsg, primary='error', secondary=secondary)
+    self.api('send.error')(message)
 
-  try:
-    API('errors.add')(time.strftime(API.timestring,
-                                    time.localtime()),
-                      tmsg)
-  except (AttributeError, TypeError):
-    pass
+  # write and format an error
+  def _api_error(self, text, secondary=None):
+    """  handle an error
+      @Ytext@w  = The error to handle
 
-# send text to the clients
-def api_client(text, raw=False, preamble=True):
-  """  handle a traceback
-    @Ytext@w      = The text to send to the clients
-    @Yraw@w       = if True, don't convert colors
-    @Ypreamble@w  = if True, send the preamble
-
-  this function returns no values"""
-  if isinstance(text, basestring):
-    text = text.split('\n')
-
-  if not raw:
+    this function returns no values"""
+    text = str(text)
     test = []
-    for i in text:
-      if preamble:
-        i = '@C#BP@w: ' + i
-      if API('api.has')('colors.convertcolors'):
-        test.append(API('colors.convertcolors')(i))
+
+    for i in text.split('\n'):
+      if self.api('api.has')('colors.convertcolors'):
+        test.append('@x136%s@w' % i)
       else:
         test.append(i)
-    text = test
+    tmsg = '\n'.join(test)
 
-  try:
-    API('events.eraise')('to_client_event', {'original':'\n'.join(text),
-                                             'raw':raw, 'dtype':'fromproxy'})
-  except (NameError, TypeError, AttributeError):
-    API('send.traceback')("couldn't send msg to client: %s" % '\n'.join(text))
+    self.api('send.msg')(tmsg, primary='error', secondary=secondary)
 
-# execute a command through the interpreter, most data goes through this
-def api_execute(command, fromclient=False, showinhistory=True, old=None):
-  """  execute a command through the interpreter
-  It will first check to see if it is an internal command, and then
-  send to the mud if not.
-    @Ycommand@w      = the command to send through the interpreter
+    try:
+      self.api('errors.add')(time.strftime(self.api.timestring,
+                                           time.localtime()),
+                             tmsg)
+    except (AttributeError, TypeError):
+      pass
 
-  this function returns no values"""
-  API('send.msg')('execute: got command %s' % repr(command),
-                  primary='inputparse')
+  # send text to the clients
+  def _api_client(self, text, raw=False, preamble=True):
+    """  handle a traceback
+      @Ytext@w      = The text to send to the clients
+      @Yraw@w       = if True, don't convert colors
+      @Ypreamble@w  = if True, send the preamble
 
-  trace = {}
-  if not old:
+    this function returns no values"""
+    if isinstance(text, basestring):
+      text = text.split('\n')
+
+    if not raw:
+      test = []
+      for i in text:
+        if preamble:
+          i = '@C#BP@w: ' + i
+        if self.api('api.has')('colors.convertcolors'):
+          test.append(self.api('colors.convertcolors')(i))
+        else:
+          test.append(i)
+      text = test
+
+    try:
+      self.api('events.eraise')('to_client_event', {'original':'\n'.join(text),
+                                                    'raw':raw, 'dtype':'fromproxy'})
+    except (NameError, TypeError, AttributeError):
+      self.api('send.traceback')("couldn't send msg to client: %s" % '\n'.join(text))
+
+  # execute a command through the interpreter, most data goes through this
+  def _api_execute(self, command, fromclient=False, showinhistory=True,
+                   currenttrace=None):
+    """  execute a command through the interpreter
+    It will first check to see if it is an internal command, and then
+    send to the mud if not.
+      @Ycommand@w      = the command to send through the interpreter
+
+    this function returns no values"""
+    self.api('send.msg')('execute: got command %s' % repr(command),
+                         primary='inputparse')
+
     trace = {}
-    trace['fromclient'] = False
-    trace['internal'] = True
-    trace['changes'] = [{'cmd':command, 'flag':'original'}]
-    trace['showinhistory'] = showinhistory
-    trace['fromplugin'] = API('api.callerplugin')()
+    if not currenttrace:
+      trace = {}
+      trace['fromclient'] = False
+      trace['internal'] = True
+      trace['changes'] = [{'cmd':command, 'flag':'original'}]
+      trace['showinhistory'] = showinhistory
+      trace['addedtohistory'] = False
+      trace['fromplugin'] = self.api('api.callerplugin')()
 
-    if fromclient:
-      trace['fromclient'] = True
-      trace['internal'] = False
+      if fromclient:
+        trace['fromclient'] = True
+        trace['internal'] = False
 
-    API('events.eraise')('io_execute_trace_started', trace)
+      self.api('events.eraise')('io_execute_trace_started', trace)
 
-  else:
-    trace = old
+    else:
+      trace = currenttrace
 
 
-  if command == '\r\n':
-    API('send.msg')('sending %s (cr) to the mud' % repr(command),
-                    primary='inputparse')
-    API('events.eraise')('to_mud_event', {'data':command,
-                                          'dtype':'fromclient',
-                                          'showinhistory':showinhistory,
-                                          'trace':trace})
-    return
+    if command == '\r\n':
+      self.api('send.msg')('sending %s (cr) to the mud' % repr(command),
+                           primary='inputparse')
+      self.api('events.eraise')('to_mud_event', {'data':command,
+                                                 'dtype':'fromclient',
+                                                 'showinhistory':showinhistory,
+                                                 'trace':trace})
+      return
 
-  command = command.strip()
+    command = command.strip()
 
-  commands = command.split('\r\n')
-  if len(commands) > 1:
-    trace['changes'].append({'cmd':command, 'flag':'splitcr',
+    commands = command.split('\r\n')
+    if len(commands) > 1:
+      trace['changes'].append({'cmd':command, 'flag':'splitcr',
                                'into':','.join(commands), 'plugin':'io'})
 
-  for tcommand in commands:
-    newdata = API('events.eraise')('io_execute_event',
-                                   {'fromdata':tcommand,
-                                    'fromclient':fromclient,
-                                    'internal':not fromclient,
-                                    'showinhistory':showinhistory,
-                                    'trace':trace})
+    for tcommand in commands:
+      newdata = self.api('events.eraise')('io_execute_event',
+                                          {'fromdata':tcommand,
+                                           'fromclient':fromclient,
+                                           'internal':not fromclient,
+                                           'showinhistory':showinhistory,
+                                           'trace':trace})
 
-    if 'fromdata' in newdata:
-      tcommand = newdata['fromdata']
-      tcommand = tcommand.strip()
+      if 'fromdata' in newdata:
+        tcommand = newdata['fromdata']
+        tcommand = tcommand.strip()
 
-    if tcommand:
-      datalist = re.split(API.splitre, tcommand)
-      if len(datalist) > 1:
-        API('send.msg')('broke %s into %s' % (tcommand, datalist),
-                        primary='inputparse')
-        trace['changes'].append({'cmd':tcommand, 'flag':'splitchar',
-                                  'into':','.join(datalist), 'plugin':'io'})
-        for cmd in datalist:
-          api_execute(cmd, showinhistory=showinhistory, old=trace)
-      else:
-        tcommand = tcommand.replace('||', '|')
-        if tcommand[-1] != '\n':
-          tcommand = tcommand + '\n'
-        API('send.msg')('sending %s to the mud' % tcommand.strip(),
-                        primary='inputparse')
-        API('events.eraise')('to_mud_event',
-                             {'data':tcommand,
-                              'dtype':'fromclient',
-                              'showinhistory':showinhistory,
-                              'trace':trace})
+      if tcommand:
+        datalist = re.split(self.api.splitre, tcommand)
+        if len(datalist) > 1:
+          self.api('send.msg')('broke %s into %s' % (tcommand, datalist),
+                               primary='inputparse')
+          trace['changes'].append({'cmd':tcommand, 'flag':'splitchar',
+                                   'into':','.join(datalist), 'plugin':'io'})
+          for cmd in datalist:
+            self.api('send.execute')(cmd, showinhistory=showinhistory, currenttrace=trace)
+        else:
+          tcommand = tcommand.replace('||', '|')
+          if tcommand[-1] != '\n':
+            tcommand = tcommand + '\n'
+          self.api('send.msg')('sending %s to the mud' % tcommand.strip(),
+                               primary='inputparse')
+          self.api('events.eraise')('to_mud_event',
+                                    {'data':tcommand,
+                                     'dtype':'fromclient',
+                                     'showinhistory':showinhistory,
+                                     'trace':trace})
 
-  if not old:
-    API('events.eraise')('io_execute_trace_finished', trace)
+    if not currenttrace:
+      self.api('events.eraise')('io_execute_trace_finished', trace)
 
-# send data directly to the mud
-def api_tomud(data):
-  """ send data directly to the mud
+  # send data directly to the mud
+  def _api_tomud(self, data):
+    """ send data directly to the mud
 
-  This does not go through the interpreter
-    @Ydata@w     = the data to send
+    This does not go through the interpreter
+      @Ydata@w     = the data to send
 
-  this function returns no values
-  """
-  if data[-1] != '\n':
-    data = data + '\n'
-  API('events.eraise')('to_mud_event',
-                       {'data':data,
-                        'dtype':'fromclient'})
+    this function returns no values
+    """
+    if data[-1] != '\n':
+      data = data + '\n'
+    self.api('events.eraise')('to_mud_event',
+                              {'data':data,
+                               'dtype':'fromclient'})
 
-def add_send():
-  """
-  add send functions to the API
-  """
-  API.add('send', 'msg', api_msg)
-  API.add('send', 'error', api_error)
-  API.add('send', 'traceback', api_traceback)
-  API.add('send', 'client', api_client)
-  API.add('send', 'mud', api_tomud)
-  API.add('send', 'execute', api_execute)
+IO = ProxyIO()
