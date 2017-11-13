@@ -10,7 +10,7 @@ from libs.api import API
 class ProxyIO(object):
   """
   class for IO in the proxy
-    it adds to the API
+    APIs for this class
      'send.msg'       : send data through the messaging system for
                           logging purposes
      'send.error'     : send an error
@@ -25,12 +25,13 @@ class ProxyIO(object):
     """
     self.currenttrace = None
     self.api = API()
-    self.api.add('send', 'msg', self._api_msg)
-    self.api.add('send', 'error', self._api_error)
-    self.api.add('send', 'traceback', self._api_traceback)
-    self.api.add('send', 'client', self._api_client)
-    self.api.add('send', 'mud', self._api_tomud)
-    self.api.add('send', 'execute', self._api_execute)
+    self.api('api.add')('send', 'msg', self._api_msg)
+    self.api('api.add')('send', 'error', self._api_error)
+    self.api('api.add')('send', 'traceback', self._api_traceback)
+    self.api('api.add')('send', 'client', self._api_client)
+    self.api('api.add')('send', 'mud', self._api_tomud)
+    self.api('api.add')('send', 'execute', self._api_execute)
+    self.api('managers.add')('io', self)
 
   # send a message
   def _api_msg(self, tmsg, primary=None, secondary=None):
