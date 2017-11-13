@@ -58,30 +58,33 @@ class Plugin(BasePlugin):
     """
     format the command stack
     """
-    msg = ['--- Command Stack ---']
+    msg = ['--- Command Trace ---']
     if stack['fromclient']:
-      msg.append('%-15s: from client' % 'Originated')
+      msg.append('%-17s : from client' % 'Originated')
     if stack['internal']:
-      msg.append('%-15s: Internal' % 'Originated')
+      msg.append('%-17s : Internal' % 'Originated')
     if 'fromplugin' in stack and stack['fromplugin']:
-      msg.append('%-15s: %s' % ('Plugin', stack['fromplugin']))
+      msg.append('%-17s : %s' % ('Plugin', stack['fromplugin']))
+    msg.append('%-17s : %s' % ('Show in History', stack['showinhistory']))
+    msg.append('%-17s : %s' % ('Added to History', stack['addedtohistory']))
+
     for i in stack['changes']:
       if i['flag'] == 'original':
-        msg.append('%-15s: %s' % ('Original', i['cmd'].strip()))
+        msg.append('%-17s : %s' % ('Original', i['cmd'].strip()))
       elif i['flag'] == 'modify':
-        msg.append('  %-13s: plugin %s changed cmd "%s" to "%s"' % \
+        msg.append('  %-15s :   plugin %s changed cmd "%s" to "%s"' % \
                           ('Modify', i['plugin'], i['cmd'], i['newcmd']))
       elif i['flag'] == 'sent':
-        msg.append('  %-13s: sent "%s" to mud with raw: %s and datatype: %s' % \
+        msg.append('  %-15s :   sent "%s" to mud with raw: %s and datatype: %s' % \
                           ('Sent', i['data'].strip(), i['raw'], i['datatype']))
       elif i['flag'] == 'command':
-        msg.append('  %-13s: ran command: "%s" with success: %s' % \
+        msg.append('  %-15s :   ran command: "%s" with success: %s' % \
                           ('Command', i['cmdran'], i['success']))
       elif i['flag'] == 'splitchar' or i['flag'] == 'splitcr':
-        msg.append('  %-13s: split command: "%s" into: "%s"' % \
+        msg.append('  %-15s :   split command: "%s" into: "%s"' % \
                           (i['flag'].capitalize(), i['cmd'], i['into']))
       else:
-        msg.append('  %-13s: plugin - %s' % \
+        msg.append('  %-15s :   plugin - %s' % \
                           (i['flag'].capitalize(), i['plugin']))
 
 
