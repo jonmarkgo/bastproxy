@@ -153,7 +153,6 @@ class Listener(asyncore.dispatcher):
 
       # do proxy stuff here
       self.proxy = Proxy()
-      API('managers.add')('proxy', self.proxy)
 
     client_connection, source_addr = self.accept()
 
@@ -204,7 +203,7 @@ def start(listen_port):
   except KeyboardInterrupt:
     pass
 
-  API('send.msg')("Shutting down...")
+  API('send.msg')("Shutting down...", primary='net')
 
 
 def main():
@@ -247,8 +246,12 @@ def main():
     try:
       start(listen_port)
     except KeyboardInterrupt:
-      proxy = API('managers.getm')('proxy')
+      pass
+
+    proxy = API('managers.getm')('proxy')
+    if proxy:
       proxy.shutdown()
+
   else:
     os.close(0)
     os.close(1)
@@ -265,6 +268,7 @@ def main():
         pass
       sys.exit(0)
 
+  API('send.msg')("Shutdown finished", primary='net')
 
 if __name__ == "__main__":
   main()

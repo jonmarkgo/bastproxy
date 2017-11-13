@@ -28,6 +28,8 @@ class Proxy(Telnet):
     self.api('events.register')('to_mud_event', self.addtooutbuffer,
                                 prio=99)
     self.api('options.prepareserver')(self)
+    print('adding proxy manager')
+    self.api('managers.add')('proxy', self)
 
   def handle_read(self):
     """
@@ -196,6 +198,9 @@ class Proxy(Telnet):
     shutdown the proxy
     """
     API.shutdown = True
+    self.api('send.msg')('Proxy: shutdown started', primary='net')
     self.api('events.eraise')('shutdown', {})
     for client in self.clients:
       client.handle_close()
+    self.api('send.msg')('Proxy: shutdown finished', primary='net')
+
