@@ -135,23 +135,23 @@ def api_execute(command, fromclient=False, showinhistory=True, old=None):
   API('send.msg')('execute: got command %s' % repr(command),
                   primary='inputparse')
 
-  cmddata = {}
+  trace = {}
   if not old:
-    cmddata = {}
-    cmddata['fromclient'] = False
-    cmddata['internal'] = True
-    cmddata['changes'] = [{'cmd':command, 'flag':'original'}]
-    cmddata['showinhistory'] = showinhistory
-    cmddata['fromplugin'] = API('api.callerplugin')()
+    trace = {}
+    trace['fromclient'] = False
+    trace['internal'] = True
+    trace['changes'] = [{'cmd':command, 'flag':'original'}]
+    trace['showinhistory'] = showinhistory
+    trace['fromplugin'] = API('api.callerplugin')()
 
     if fromclient:
-      cmddata['fromclient'] = True
-      cmddata['internal'] = False
+      trace['fromclient'] = True
+      trace['internal'] = False
 
-    API('events.eraise')('execute_started', cmddata)
+    API('events.eraise')('io_execute_trace_started', trace)
 
   else:
-    cmddata = old
+    trace = old
 
 
   if command == '\r\n':
@@ -160,14 +160,14 @@ def api_execute(command, fromclient=False, showinhistory=True, old=None):
     API('events.eraise')('to_mud_event', {'data':command,
                                           'dtype':'fromclient',
                                           'showinhistory':showinhistory,
-                                          'cmddata':cmddata})
+                                          'trace':trace})
     return
 
   command = command.strip()
 
   commands = command.split('\r\n')
   if len(commands) > 1:
-    cmddata['changes'].append({'cmd':command, 'flag':'splitcr',
+    trace['changes'].append({'cmd':command, 'flag':'splitcr',
                                'into':','.join(commands), 'plugin':'io'})
 
   for tcommand in commands:
@@ -176,7 +176,7 @@ def api_execute(command, fromclient=False, showinhistory=True, old=None):
                                     'fromclient':fromclient,
                                     'internal':not fromclient,
                                     'showinhistory':showinhistory,
-                                    'cmddata':cmddata})
+                                    'trace':trace})
 
     if 'fromdata' in newdata:
       tcommand = newdata['fromdata']
@@ -187,10 +187,10 @@ def api_execute(command, fromclient=False, showinhistory=True, old=None):
       if len(datalist) > 1:
         API('send.msg')('broke %s into %s' % (tcommand, datalist),
                         primary='inputparse')
-        cmddata['changes'].append({'cmd':tcommand, 'flag':'splitchar',
+        trace['changes'].append({'cmd':tcommand, 'flag':'splitchar',
                                   'into':','.join(datalist), 'plugin':'io'})
         for cmd in datalist:
-          api_execute(cmd, showinhistory=showinhistory, old=cmddata)
+          api_execute(cmd, showinhistory=showinhistory, old=trace)
       else:
         tcommand = tcommand.replace('||', '|')
         if tcommand[-1] != '\n':
@@ -201,10 +201,10 @@ def api_execute(command, fromclient=False, showinhistory=True, old=None):
                              {'data':tcommand,
                               'dtype':'fromclient',
                               'showinhistory':showinhistory,
-                              'cmddata':cmddata})
+                              'trace':trace})
 
   if not old:
-    API('events.eraise')('execute_finished', cmddata)
+    API('events.eraise')('io_execute_trace_finished', trace)
 
 # send data directly to the mud
 def api_tomud(data):

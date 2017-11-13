@@ -397,8 +397,8 @@ class Plugin(BasePlugin):
           self.api('send.traceback')(
               'Error when calling command %s.%s' % (sname, scmd))
 
-      if 'cmddata' in data:
-        data['cmddata']['changes'].append({'cmd':tdat,
+      if 'trace' in data:
+        data['trace']['changes'].append({'cmd':tdat,
                                            'flag':'command',
                                            'cmdran':commandran,
                                            'success':success,
@@ -413,16 +413,16 @@ class Plugin(BasePlugin):
                               self.api('setting.gets')('spamcount'):
           data['fromdata'] = self.api('setting.gets')('antispamcommand') \
                                       + '|' + tdat
-          if 'cmddata' in data:
-            data['cmddata']['changes'].append({'cmd':tdat,
+          if 'trace' in data:
+            data['trace']['changes'].append({'cmd':tdat,
                                                'flag':'antispam',
                                                'plugin':self.sname})
           self.api('send.msg')('adding look for 20 commands')
           self.api('setting.change')('cmdcount', 0)
           return data
         if tdat in self.nomultiplecmds:
-          if 'cmddata' in data:
-            data['cmddata']['changes'].append({'cmd':tdat,
+          if 'trace' in data:
+            data['trace']['changes'].append({'cmd':tdat,
                                                'flag':'nomultiple',
                                                'plugin':self.sname})
 
@@ -434,8 +434,8 @@ class Plugin(BasePlugin):
         self.api('setting.change')('lastcmd', tdat.strip())
 
       if data['fromdata'] != tdat:
-        if 'cmddata' in data:
-          data['cmddata']['changes'].append({'cmd':tdat,
+        if 'trace' in data:
+          data['trace']['changes'].append({'cmd':tdat,
                                              'flag':'command',
                                              'cmdran':data['fromdata'],
                                              'success':'Unknown',

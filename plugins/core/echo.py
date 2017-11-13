@@ -46,13 +46,13 @@ class Plugin(BasePlugin):
     """
     enable echo
     """
-    self.api('events.register')('execute_finished', self.echocommand, prio=10)
+    self.api('events.register')('io_execute_trace_finished', self.echocommand, prio=10)
 
   def disableecho(self):
     """
     disable echo
     """
-    self.api('events.unregister')('execute_finished', self.echochange)
+    self.api('events.unregister')('io_execute_trace_finished', self.echochange)
 
   def formatcommandstack(self, stack):
     """

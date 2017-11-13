@@ -134,8 +134,8 @@ class Plugin(BasePlugin):
     datan = self.api('vars.replace')(data)
 
     if datan != data:
-      if 'cmddata' in args:
-        args['cmddata']['changes'].append({'cmd':data,
+      if 'trace' in args:
+        args['trace']['changes'].append({'cmd':data,
                                            'flag':'modify',
                                            'newcmd':datan,
                                            'plugin':self.sname})

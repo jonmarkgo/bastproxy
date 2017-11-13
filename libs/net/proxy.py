@@ -167,28 +167,28 @@ class Proxy(Telnet):
     data = ''
     dtype = 'fromclient'
     data = args
-    cmddata = None
+    trace = None
     if isinstance(args, dict):
       data = args['data']
       dtype = args['dtype']
       if 'raw' in args:
         raw = args['raw']
-      if 'cmddata' in args:
-        cmddata = args['cmddata']
+      if 'trace' in args:
+        trace = args['trace']
 
     if len(dtype) == 1 and ord(dtype) in self.options:
-      if cmddata:
-        cmddata['changes'].append({'data':repr(data),
-                                   'flag':'sent',
-                                   'datatype':dtype,
-                                   'raw':raw})
+      if trace:
+        trace['changes'].append({'data':repr(data),
+                                 'flag':'sent',
+                                 'datatype':dtype,
+                                 'raw':raw})
       Telnet.addtooutbuffer(self, data, raw)
     elif dtype == 'fromclient':
-      if cmddata:
-        cmddata['changes'].append({'data':data,
-                                   'flag':'sent',
-                                   'datatype':dtype,
-                                   'raw':raw})
+      if trace:
+        trace['changes'].append({'data':data,
+                                 'flag':'sent',
+                                 'datatype':dtype,
+                                 'raw':raw})
       Telnet.addtooutbuffer(self, data, raw)
 
   def shutdown(self):
