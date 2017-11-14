@@ -28,7 +28,6 @@ class Proxy(Telnet):
     self.api('events.register')('to_mud_event', self.addtooutbuffer,
                                 prio=99)
     self.api('options.prepareserver')(self)
-    print('adding proxy manager')
     self.api('managers.add')('proxy', self)
 
   def handle_read(self):
