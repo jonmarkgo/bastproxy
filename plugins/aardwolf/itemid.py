@@ -62,7 +62,7 @@ class Plugin(AardwolfBasePlugin):
       enabled=False, omit=True)
 
     self.api('triggers.add')('invdetailsline',
-      "^\{(?!/*invdetails)(?P<header>.*)\}(?P<data>.*)$", group='invdetails',
+      "^\{invdetails(?P<header>.*)\}(?P<data>.*)$", group='invdetails',
       enabled=False, omit=True)
 
     self.api('triggers.add')('invdetailsend',
