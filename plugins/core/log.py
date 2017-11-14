@@ -52,7 +52,6 @@ class Plugin(BasePlugin):
     self.sendtofile = PersistentDict(
         os.path.join(self.savedir, 'sendtofile.txt'),
         'c')
-    self.openlogs = {}
     self.currentlogs = {}
     self.colors = {}
 
@@ -133,8 +132,9 @@ class Plugin(BasePlugin):
     """
     archive the previous log
     """
-    tfile = os.path.split(self.currentlogs[dtype])[-1]
-    self.openlogs[self.currentlogs[dtype]].close()
+    tfile = os.path.split(self.currentlogs[dtype]['filename'])[-1]
+    self.currentlogs[dtype]['fhandle'].close()
+    self.currentlogs[dtype]['fhandle'] = None
 
     backupfile = os.path.join(self.logdir, dtype,
                               tfile)
@@ -142,9 +142,8 @@ class Plugin(BasePlugin):
                                  tfile + '.zip')
     with zipfile.ZipFile(backupzipfile, 'w', zipfile.ZIP_DEFLATED,
                          allowZip64=True) as myzip:
-      myzip.write(backupfile, arcname=self.currentlogs[dtype])
+      myzip.write(backupfile, arcname=self.currentlogs[dtype]['filename'])
     os.remove(backupfile)
-    del self.openlogs[self.currentlogs[dtype]]
 
   # log something to a file
   def logtofile(self, msg, dtype, stripcolor=True):
@@ -163,13 +162,16 @@ class Plugin(BasePlugin):
         os.makedirs(os.path.join(self.logdir, dtype, 'archive'))
       if (dtype not in self.currentlogs) or \
         (dtype in self.currentlogs and not self.currentlogs[dtype]):
-        self.currentlogs[dtype] = tfile
-      elif tfile != self.currentlogs[dtype]:
+        self.currentlogs[dtype] = {}
+        self.currentlogs[dtype]['filename'] = tfile
+        self.currentlogs[dtype]['fhandle'] = None
+      elif tfile != self.currentlogs[dtype]['filename']:
         self.archivelog(dtype)
-        self.currentlogs[dtype] = tfile
-      if self.currentlogs[dtype] not in self.openlogs:
-        self.openlogs[self.currentlogs[dtype]] = \
-                        open(self.currentlogs[dtype], 'a')
+        self.currentlogs[dtype]['filename'] = tfile
+
+      if not self.currentlogs[dtype]['fhandle']:
+        self.currentlogs[dtype]['fhandle'] = \
+                        open(self.currentlogs[dtype]['filename'], 'a')
 
       if self.sendtofile[dtype]['timestamp']:
         tstring = '%s : ' % \
@@ -177,11 +179,11 @@ class Plugin(BasePlugin):
         msg = tstring + msg
 
       if self.api('api.has')('colors.stripansi'):
-        self.openlogs[self.currentlogs[dtype]].write(
+        self.currentlogs[dtype]['fhandle'].write(
             self.api('colors.stripansi')(msg) + '\n')
       else:
-        self.openlogs[self.currentlogs[dtype]].write(msg + '\n')
-      self.openlogs[self.currentlogs[dtype]].flush()
+        self.currentlogs[dtype]['fhandle'].write(msg + '\n')
+      self.currentlogs[dtype]['fhandle'].flush()
       return True
 
     return False
@@ -276,6 +278,9 @@ class Plugin(BasePlugin):
 
     this function returns no values"""
     if datatype in self.sendtofile:
+      if self.currentlogs[datatype]['fhandle']:
+        self.currentlogs[datatype]['fhandle'].close()
+        self.currentlogs[datatype]['fhandle'] = None
       del self.sendtofile[datatype]
     else:
       tfile = '%a-%b-%d-%Y.log'
@@ -299,6 +304,8 @@ class Plugin(BasePlugin):
       timestamp = args['notimestamp']
 
       if dtype in self.sendtofile:
+        self.currentlogs[dtype]['fhandle'].close()
+        self.currentlogs[dtype]['fhandle'] = None
         del self.sendtofile[dtype]
         tmsg.append('removing %s from logging' % dtype)
       else:
