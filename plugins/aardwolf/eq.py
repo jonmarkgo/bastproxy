@@ -84,8 +84,8 @@ class EqContainer(object):
     self.cid = cid
     self.cmd = cmd or "invdata %s" % self.cid
     self.cmdregex = cmdregex or "^invdata %s$" % self.cid
-    self.startregex = startregex or "{invdata %s}" % self.cid
-    self.endregex = endregex or "{/invdata}"
+    self.startregex = startregex or "\{invdata %s\}" % self.cid
+    self.endregex = endregex or "\{/invdata\}"
     self.plugin = plugin
     self.api = self.plugin.api
     self.cmdqueue = self.plugin.cmdqueue
@@ -385,7 +385,7 @@ class Inventory(EqContainer):
     init the class
     """
     EqContainer.__init__(self, plugin, 'Inventory', cmd='invdata',
-                         cmdregex='^invdata$', startregex="{invdata}")
+                         cmdregex='^invdata$', startregex="\{invdata\}")
 
   def build(self, args):
     """
@@ -416,8 +416,8 @@ class Worn(EqContainer):
     init the class
     """
     EqContainer.__init__(self, plugin, 'Worn', cmd='eqdata',
-                         cmdregex='^eqdata$', startregex="{eqdata}",
-                         endregex="{/eqdata}")
+                         cmdregex='^eqdata$', startregex="\{eqdata\}",
+                         endregex="\{/eqdata\}")
 
     self.lastworn = {}
 
@@ -636,8 +636,8 @@ class Keyring(EqContainer):
     init the class
     """
     EqContainer.__init__(self, plugin, 'Keyring', cmd='keyring data',
-                         cmdregex='^keyring data$', startregex="{keyring}",
-                         endregex="{/keyring}")
+                         cmdregex='^keyring data$', startregex="\{keyring\}",
+                         endregex="\{/keyring\}")
 
   def get(self, serial):
     """
@@ -667,8 +667,8 @@ class Vault(EqContainer):
     init the class
     """
     EqContainer.__init__(self, plugin, 'Vault', cmd='vault data',
-                         cmdregex='^vault data$', startregex="{vault}",
-                         endregex="{/vault}")
+                         cmdregex='^vault data$', startregex="\{vault\}",
+                         endregex="\{/vault\}")
     self.itemcount = 0
     self.itemtotal = 0
     self.itemmax = 0
