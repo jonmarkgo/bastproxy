@@ -79,7 +79,7 @@ class Plugin(BasePlugin):
                                  self.cmd_list,
                                  parser=parser)
 
-    self.api('events.register')('plugin_unloaded', self.pluginunloaded)
+    self.api('events.register')('plugin_unloaded', self.pluginunloaded, prio=10)
 
   def pluginunloaded(self, args):
     """
