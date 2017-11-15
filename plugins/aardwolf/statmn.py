@@ -380,7 +380,7 @@ class Plugin(AardwolfBasePlugin):
       queststats.update(tst[0])
 
     stmt = """SELECT COUNT(*) as total,
-                     SUM(qp) as qp,
+                     SUM(qp + bonusqp) as qp,
                      SUM(gold) as gold,
                      SUM(tp) as tp
                      FROM campaigns
