@@ -75,7 +75,7 @@ class Plugin(AardwolfBasePlugin):
     if newtime > 0:
       self.api('timers.remove')('statrep')
       self.api('timers.add')('statrep', self.timershow,
-                newtime,
+                self.api('setting.gets')('show'),
                 nodupe=True)
     else:
       self.api('timers.remove')('statrep')
