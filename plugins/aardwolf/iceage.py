@@ -27,11 +27,13 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.load(self)
 
-    self.api('triggers.add')('iceage',
-      "\[\[ WARNING: An Ice Age Approaches - 1 minute - See 'help ice age' \]\]")
+    self.api('triggers.add')(
+        'iceage',
+        r"^.* An Ice Age Approaches - (\d*) minutes?.*$")
 
-    self.api('triggers.add')('reboot',
-      "\[\[ Aardwolf will Reboot \(Not Ice-Age\) in 1 minutes. You will be briefly disconnected when we reboot. \]\]")
+    self.api('triggers.add')(
+        'reboot',
+        r"^.* Aardwolf will [rR]eboot (.* )?in (\d*) minutes?.*$")
 
     self.api('events.register')('trigger_iceage', self.iceage)
 
