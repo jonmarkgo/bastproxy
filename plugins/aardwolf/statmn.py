@@ -67,10 +67,6 @@ class Plugin(AardwolfBasePlugin):
     self.api('commands.add')('rep', self.cmd_rep,
               parser=parser, format=False, preamble=False)
 
-    self.api('timers.add')('statrep', self.timershow,
-                               self.api('setting.gets')('show'),
-                               nodupe=True)
-
   def showchange(self, args):
     """
     do something when show changes
