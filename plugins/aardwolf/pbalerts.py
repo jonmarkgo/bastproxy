@@ -61,11 +61,6 @@ class Plugin(AardwolfBasePlugin):
       self.api('setting.add')(tevent, True, bool,
                                 self.evmap[tevent]['help'])
 
-      tbool = self.api('setting.gets')(tevent)
-      if tbool:
-        self.api('events.register')(self.evmap[tevent]['event'],
-                                        self.evmap[tevent]['function'])
-
       self.api('events.register')('var_pbalerts_%s' % tevent, self.varchange)
 
   def varchange(self, args):
