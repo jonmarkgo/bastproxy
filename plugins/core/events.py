@@ -178,7 +178,7 @@ class Plugin(BasePlugin):
       plugin = func.im_self.sname
     except AttributeError:
       plugin = ''
-    if not self.events[eventname]:
+    if eventname not in self.events or not self.events[eventname]:
       return
     keys = self.events[eventname].keys()
     if keys:
