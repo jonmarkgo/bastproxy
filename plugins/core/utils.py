@@ -17,8 +17,10 @@ PRIORITY = 12
 
 AUTOLOAD = True
 
-TIMELENGTH_REGEXP = re.compile(r"^(?P<days>\d+d)?:?(?P<hours>\d+h)" \
-                              r"?:?(?P<minutes>\d+m)?:?(?P<seconds>\d+s?)?$")
+TIMELENGTH_REGEXP = re.compile(r"^(?P<days>((\d*\.\d+)|\d+)+d)?" \
+                               r":?(?P<hours>((\d*\.\d+)|\d+)+h)?" \
+                               r":?(?P<minutes>((\d*\.\d+)|\d+)+m)?" \
+                               r":?(?P<seconds>\d+s)?$")
 
 
 class Plugin(BasePlugin):
@@ -352,19 +354,19 @@ class Plugin(BasePlugin):
     if not days:
       days = 0
     elif days.endswith("d"):
-      days = int(days[:-1])
+      days = float(days[:-1])
 
     hours = timem["hours"]
     if not hours:
       hours = 0
     elif hours.endswith("h"):
-      hours = int(hours[:-1])
+      hours = float(hours[:-1])
 
     minutes = timem["minutes"]
     if not minutes:
       minutes = 0
     elif minutes.endswith("m"):
-      minutes = int(minutes[:-1])
+      minutes = float(minutes[:-1])
 
     seconds = timem["seconds"]
     if not seconds:
