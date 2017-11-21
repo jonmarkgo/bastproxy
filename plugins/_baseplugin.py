@@ -287,6 +287,9 @@ class BasePlugin(object):
     """
     do something after the load function is run
     """
+    # go through each variable and raise var_%s_changed
+    self.settingvalues.raiseall()
+
     proxy = self.api('managers.getm')('proxy')
 
     if proxy and proxy.connected:

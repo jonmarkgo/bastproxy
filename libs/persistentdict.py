@@ -210,6 +210,18 @@ class PersistentDictEvent(PersistentDict):
                                         'newvalue':val,
                                         'oldvalue':oldvalue})
 
+  def raiseall(self):
+    """
+    go through and raise a var_<plugin>_<variable> for each variable
+    """
+    for i in self:
+      eventname = 'var_%s_%s' % (self.plugin.sname, i)
+      if not self.plugin.resetflag and i != '_version':
+        self.plugin.api('events.eraise')(eventname,
+                                         {'var':i,
+                                          'newvalue':self[i],
+                                          'oldvalue':self[i]})
+
   def sync(self):
     """
     always put plugin version in here
