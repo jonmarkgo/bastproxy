@@ -37,7 +37,7 @@ class Plugin(BasePlugin):
     BasePlugin.load(self)
 
     self.api('triggers.add')('connect_return',
-    "\[ Press Return to continue \]")
+                             r"\[ Press Return to continue \]")
 
     self.api('events.register')('muddisconnect', self._disconnect)
     self.api('events.register')('GMCP:char', self._check)
@@ -111,7 +111,7 @@ class Plugin(BasePlugin):
         self.api('events.unregister')('GMCP:room.info', self._check)
         self.api('events.unregister')('GMCP:comm.quest', self._check)
         self.api('events.unregister')('trigger_connect_return',
-                                  self._connect_return)
+                                      self._connect_return)
         self.api('send.mud')('look')
         self.api('send.mud')('map')
         self.connected = True
@@ -123,6 +123,9 @@ class Plugin(BasePlugin):
         self.api('events.eraise')('firstactive', {})
 
   def checkall(self):
+    """
+    check for char, room, and quest
+    """
     if self.checkchar() and self.checkroom() and self.checkquest():
       return True
 
@@ -130,13 +133,13 @@ class Plugin(BasePlugin):
 
   def checkchar(self):
     """
-    check for char
+    check for all of char in GMCP
     """
-    if self.api('GMCP.getv')('char.base.redos') == None \
-       or self.api('GMCP.getv')('char.vitals.hp') == None \
-       or self.api('GMCP.getv')('char.stats.str') == None \
-       or self.api('GMCP.getv')('char.maxstats.maxhp') == None \
-       or self.api('GMCP.getv')('char.worth.gold') == None:
+    if self.api('GMCP.getv')('char.base.redos') is None \
+       or self.api('GMCP.getv')('char.vitals.hp') is None \
+       or self.api('GMCP.getv')('char.stats.str') is None \
+       or self.api('GMCP.getv')('char.maxstats.maxhp') is None \
+       or self.api('GMCP.getv')('char.worth.gold') is None:
 
       if not self.sentchar:
         self.api('GMCP.sendpacket')("request char")
@@ -147,7 +150,10 @@ class Plugin(BasePlugin):
     return True
 
   def checkroom(self):
-    if self.api('GMCP.getv')('room.info.num') == None:
+    """
+    check for room in GMCP
+    """
+    if self.api('GMCP.getv')('room.info.num') is None:
       if not self.sentroom:
         self.sentroom = True
         self.api('GMCP.sendpacket')("request room")
@@ -157,7 +163,10 @@ class Plugin(BasePlugin):
     return True
 
   def checkquest(self):
-    if self.api('GMCP.getv')('comm.quest.action') == None:
+    """
+    check for quest in GMCP
+    """
+    if self.api('GMCP.getv')('comm.quest.action') is None:
       if not self.sentquest:
         self.sentquest = True
         self.api('GMCP.sendpacket')("request quest")
@@ -166,7 +175,7 @@ class Plugin(BasePlugin):
 
     return True
 
-  def _check(self, args=None):
+  def _check(self, _=None):
     """
     check to see if we have seen quest gmcp data
     """
