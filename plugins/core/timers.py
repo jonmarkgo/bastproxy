@@ -31,7 +31,7 @@ class TimerEvent(Event):
 
     """
     Event.__init__(self, name, plugin, func)
-    self.seconds = seconds
+    self.seconds = int(seconds)
 
     self.onetime = False
     if 'onetime' in kwargs:
