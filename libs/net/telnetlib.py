@@ -210,10 +210,10 @@ class Telnet(asyncore.dispatcher):
       self.option_handlers[ord(subc)].handleopt(SE, self.sbdataq[1:])
     elif command == WILL:
       self.msg('Sending IAC WONT %s' % ord(option), level=2)
-      self.send(IAC + WONT + option)
+      self.send("".join([IAC, WONT, option]))
     elif command == DO:
       self.msg('Sending IAC DONT %s' % ord(option), level=2)
-      self.send(IAC + DONT + option)
+      self.send("".join([IAC, DONT, option]))
     elif command == DONT or command == WONT:
       pass
     else:
@@ -317,7 +317,7 @@ class Telnet(asyncore.dispatcher):
 
     outbuffer = self.convert_outdata(outbuffer)
 
-    self.outbuffer = self.outbuffer + outbuffer
+    self.outbuffer = "".join([self.outbuffer, outbuffer])
 
   def convert_outdata(self, outbuffer):
     """
@@ -466,8 +466,8 @@ class Telnet(asyncore.dispatcher):
       self.iacseq = '' # Reset on EOF
       self.sbse = 0
 
-    self.cookedq = self.cookedq + buf[0]
-    self.sbdataq = self.sbdataq + buf[1]
+    self.cookedq = "".join([self.cookedq, buf[0]])
+    self.sbdataq = "".join([self.sbdataq, buf[1]])
 
   def rawq_getchar(self):
     """
@@ -504,5 +504,5 @@ class Telnet(asyncore.dispatcher):
     buf = self.readdatafromsocket()
     #print 'fill_rawq', self.ttype, self.host, self.port, 'received', buf
     self.eof = (not buf)
-    self.rawq = self.rawq + buf
+    self.rawq = "".join([self.rawq, buf])
     self.msg('rawq', self.rawq)
