@@ -85,7 +85,6 @@ import os
 import sys
 import socket
 import time
-#import signal
 from libs.api import API as BASEAPI
 
 # import io so we can add the "send" functions to the api
@@ -185,9 +184,6 @@ def start(listen_port):
   we do a single asyncore.loop then we check timers
   """
   API('managers.add')('listener', Listener(listen_port))
-
-  #if getattr(signal, 'SIGCHLD', None) is not None:
-   # signal.signal(signal.SIGCHLD, signal.SIG_IGN)
 
   try:
     while True:
