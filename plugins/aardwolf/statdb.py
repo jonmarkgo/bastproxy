@@ -63,12 +63,13 @@ def dbcreate(sqldb, plugin, **kwargs):
       """
       sqldb.__init__(self, plugin, **kwargs)
 
-      self.version = 16
+      self.version = 17
 
       self.versionfuncs[13] = self.addrarexp_v13
       self.versionfuncs[14] = self.addnoexp_v14
       self.versionfuncs[15] = self.addextendedgq_v15
       self.versionfuncs[16] = self.addhardcoreopk_v16
+      self.versionfuncs[17] = self.addlevelbattlelearntrains_v17
 
       self.addtable('stats', """CREATE TABLE stats(
             stat_id INTEGER NOT NULL PRIMARY KEY autoincrement,
@@ -147,7 +148,8 @@ def dbcreate(sqldb, plugin, **kwargs):
             pracs INT default 0,
             trains INT default 0,
             bonustrains INT default 0,
-            blessingtrains INT default 0
+            blessingtrains INT default 0,
+            battlelearntrains INT default 0
           )""", keyfield='level_id')
 
       self.addtable('campaigns', """CREATE TABLE campaigns(
@@ -718,6 +720,58 @@ def dbcreate(sqldb, plugin, **kwargs):
       cur.executemany(stmt2, olditems)
       cur.close()
 
+    def addlevelbattlelearntrains_v17(self):
+      """
+      add battle learning trains to the level table
+      """
+      if not self.checktableexists('levels'):
+        return
+
+      olditems = self.select('SELECT * FROM levels ORDER BY level_id ASC')
+
+      cur = self.dbconn.cursor()
+      cur.execute('DROP TABLE IF EXISTS levels;')
+      cur.close()
+      self.close()
+
+      self.open()
+      cur = self.dbconn.cursor()
+
+      cur.execute("""CREATE TABLE levels(
+            level_id INTEGER NOT NULL PRIMARY KEY autoincrement,
+            type TEXT default "level",
+            level INT default -1,
+            str INT default 0,
+            int INT default 0,
+            wis INT default 0,
+            dex INT default 0,
+            con INT default 0,
+            luc INT default 0,
+            starttime INT default -1,
+            finishtime INT default -1,
+            hp INT default 0,
+            mp INT default 0,
+            mv INT default 0,
+            pracs INT default 0,
+            trains INT default 0,
+            bonustrains INT default 0,
+            blessingtrains INT default 0,
+            battlelearntrains INT default 0
+          )""")
+
+      cur.close()
+
+      for item in olditems:
+        item['battlelearntrains'] = 0
+
+      cur = self.dbconn.cursor()
+      stmt2 = """INSERT INTO levels VALUES (:level_id, :type, :level,
+                    :str, :int, :wis, :dex, :con, :luc,
+                    :starttime, :finishtime, :hp, :mp, :mv, :pracs,
+                    :trains, :bonustrains, :blessingtrains, :battlelearntrains)"""
+      cur.executemany(stmt2, olditems)
+      cur.close()
+
   return Statdb(plugin, **kwargs)
 
 
@@ -1240,19 +1294,17 @@ class Plugin(AardwolfBasePlugin):
     if levelinfo:
       levelinfo = levelinfo[0]
 
-    msg.append("@G%-6s %-3s %2s %2s %-2s %-2s %-2s" \
-                  " %-2s %-1s %-1s %-1s %-1s %-1s %-1s   %s" % ("ID", "Lvl",
-                  "TR", "BT", "PR", "HP", "MN", "MV", "S",
-                  "I", "W", "C",  "D", "L", "Time"))
-    msg.append(div)
-
     bonus = 0
     if int(levelinfo['bonustrains']) > 0:
       bonus = bonus + int(levelinfo['bonustrains'])
     if int(levelinfo['blessingtrains']) > 0:
       bonus = bonus + int(levelinfo['blessingtrains'])
+    if int(levelinfo['battlelearntrains']> 0):
+      bonus = bonus + int(levelinfo['battlelearntrains'])
 
     leveld = self.api('aardu.convertlevel')(levelinfo['level'])
+    levels = 're%st%sr%sl%s' % (leveld['redos'], leveld['tier'],
+                                     leveld['remort'], leveld['level'])
 
     if levelinfo['finishtime'] != '-1' and levelinfo['starttime'] != '-1':
       ttime = self.api('utils.formattime')(levelinfo['finishtime'] - \
@@ -1260,13 +1312,29 @@ class Plugin(AardwolfBasePlugin):
     else:
       ttime = ''
 
-    msg.append("%-6s %-3s %2s %2s %-2s %-2s %-2s" \
-                " %-2s %-1s %-1s %-1s %-1s %-1s %-1s   %s" % (
-                levelinfo['level_id'], leveld['level'], levelinfo['trains'],
-                bonus, levelinfo['pracs'], levelinfo['hp'], levelinfo['mp'],
-                levelinfo['mv'], levelinfo['str'], levelinfo['int'],
+    if levelinfo['type'] == 'level':
+      ltype = 'lev'
+    else:
+      ltype = 'pup'
+
+    msg.append("@G%-6s %-5s %-7s %-s" % ("ID", "Type", "TotLvl", "Actual"))
+    msg.append("%-6s %-5s %-7s %-s" % (levelinfo['level_id'], ltype, levelinfo['level'],
+                                       levels))
+
+    msg.append("@G%-6s %2s %2s %-2s %-2s " % ("", "HP", "MN", "MV", "PR"))
+    msg.append("%-6s %2s %2s %-2s %-2s" % ("", levelinfo['hp'], levelinfo['mp'],
+                                                     levelinfo['mv'], levelinfo['pracs']))
+
+    msg.append("@G%-6s %-2s %-2s %-2s %-2s" % ("", "TR", "BO", "BL", "BT"))
+    msg.append("%-6s %-2s %-2s %-2s %-2s" % ("", levelinfo['trains'],
+                                             levelinfo['bonustrains'],
+                                             levelinfo['blessingtrains'],
+                                             levelinfo['battlelearntrains']))
+
+    msg.append("@G%-6s %-1s %-1s %-1s %-1s %-1s %-1s" % ("", "S", "I", "W", "C",  "D", "L"))
+    msg.append("%-6s %-1s %-1s %-1s %-1s %-1s %-1s" % ("", levelinfo['str'], levelinfo['int'],
                 levelinfo['wis'], levelinfo['con'], levelinfo['dex'],
-                levelinfo['luc'], ttime))
+                levelinfo['luc']))
 
     stmt = "SELECT count(*) as count, AVG(totalxp) as average FROM " \
           "mobkills where time > %d and time < %d and xp > 0" % \
@@ -1275,13 +1343,14 @@ class Plugin(AardwolfBasePlugin):
     count = tst[0]['count']
     ave = tst[0]['average']
 
-    print count
-    print ave
-
     if count > 0 and ave > 0:
       msg.append(div)
       length = levelinfo['finishtime'] - levelinfo['starttime']
-      tmsg = '@G%s@w mobs killed' % count
+      if ttime:
+        tmsg = "It took %s with " % ttime
+      else:
+        tmsg = ""
+      tmsg = tmsg + '@G%s@w mobs killed' % count
       tmsg = tmsg + ' (@G%02.02f@w xp/mob)' % (ave)
       perlevel = self.api('GMCP.getv')('char.base.perlevel')
       if length and perlevel:
@@ -1289,8 +1358,7 @@ class Plugin(AardwolfBasePlugin):
         tmsg = tmsg + ' @G%02d@w xp/min' % (expmin)
 
       msg.append(tmsg)
-
-    msg.append(div)
+      msg.append(div)
 
     return True, msg
 
@@ -1333,7 +1401,8 @@ class Plugin(AardwolfBasePlugin):
              SELECT AVG(trains) as avetrains,
                     AVG(bonustrains) as avebonustrains,
                     AVG(blessingtrains) as aveblessingtrains,
-                    SUM(trains + bonustrains + blessingtrains) as totaltrains,
+                    AVG(battlelearntrains) as avebattlelearntrains,
+                    SUM(trains + bonustrains + blessingtrains + battlelearntrains) as totaltrains,
                     SUM(pracs) as totalpracs,
                     COUNT(*) as indb
                     FROM levels where type = 'level' and trains > 0
@@ -1350,7 +1419,8 @@ class Plugin(AardwolfBasePlugin):
              SELECT AVG(trains) as avetrains,
                     AVG(bonustrains) as avebonustrains,
                     AVG(blessingtrains) as aveblessingtrains,
-                    SUM(trains + bonustrains + blessingtrains) as totaltrains,
+                    AVG(battlelearntrains) as avebattlelearntrains,
+                    SUM(trains + bonustrains + blessingtrains + battlelearntrains) as totaltrains,
                     COUNT(*) as indb
                     FROM levels where type = 'pup'
                     """)
@@ -1369,28 +1439,29 @@ class Plugin(AardwolfBasePlugin):
     msg.append(self._format_row("Total In DB",
                 levels['indb'], pups['indb']))
     msg.append(self._format_row("Total Trains",
-                levels['totaltrains'] or "", pups['totaltrains'] or ""))
+                levels['totaltrains'] or 0, pups['totaltrains'] or 0))
 
-    lavet = format_float(levels['avetrains'])
-    pavet = format_float(pups['avetrains'])
-    msg.append(self._format_row("Ave Trains",
-                lavet or "", pavet or ""))
+    trainitems = [
+      ['Ave Trains', 'avetrains'],
+      ['Ave Bon Trains', 'avebonustrains'],
+      ['Ave Bls Trains', 'aveblessingtrains'],
+      ['Ave BaL Trains', 'avebattlelearntrains'],
+    ]
 
-    lbavet = format_float(levels['avebonustrains'])
-    pbavet = format_float(pups['avebonustrains'])
-    msg.append(self._format_row("Ave Bon Trains",
-                lbavet or "", pbavet or ""))
-
-    ldavet = format_float(levels['aveblessingtrains'])
-    pdavet = format_float(pups['aveblessingtrains'])
-    msg.append(self._format_row("Ave Bls Trains",
-                ldavet or "", pdavet or ""))
-
-    latave = float(lavet) + float(lbavet) + float(ldavet)
-    patave = float(pavet) + float(pbavet) + float(pdavet)
+    levelave = float(0)
+    pupave = float(0)
+    for i in trainitems:
+      title = i[0]
+      lkey = i[1]
+      lave = format_float(levels[lkey])
+      pave = format_float(pups[lkey])
+      levelave = float(levelave) + float(lave)
+      pupave = float(pupave) + float(pave)
+      msg.append(self._format_row(title,
+                 lave or 0, pave or 0))
 
     msg.append(self._format_row("Ave Overall",
-                latave or "", patave or ""))
+                levelave or 0, pupave or 0))
     msg.append(self._format_row("Total Pracs",
                 levels['totalpracs'], ""))
 
@@ -1411,8 +1482,8 @@ class Plugin(AardwolfBasePlugin):
 
       if len(lastitems) > 0:
         msg.append('')
-        msg.append("@G%-6s %-3s %2s %2s %-2s %-2s %-2s" \
-                  " %-2s %-1s %-1s %-1s %-1s %-1s %-1s   %s" % ("ID", "Lvl",
+        msg.append("@G%-6s %-3s %2s %2s %2s %-2s %-2s %-2s" \
+                  " %-2s %-1s %-1s %-1s %-1s %-1s %-1s   %s" % ("ID", "Lvl", "T",
                   "TR", "BT", "PR", "HP", "MN", "MV", "S",
                   "I", "W", "C",  "D", "L", "Time"))
         msg.append(div)
@@ -1432,9 +1503,14 @@ class Plugin(AardwolfBasePlugin):
           else:
             ttime = ''
 
-          msg.append("%-6s %-3s %2s %2s %-2s %-2s %-2s" \
+          if item['type'] == 'level':
+            ltype = 'L'
+          else:
+            ltype = 'P'
+
+          msg.append("%-6s %-3s %2s %2s %2s %-2s %-2s %-2s" \
                      " %-2s %-1s %-1s %-1s %-1s %-1s %-1s   %s" % (
-                     item['level_id'], leveld['level'], item['trains'],
+                     item['level_id'], leveld['level'], ltype, item['trains'],
                      bonus, item['pracs'], item['hp'], item['mp'],
                      item['mv'], item['str'], item['int'], item['wis'],
                      item['con'], item['dex'], item['luc'], ttime))

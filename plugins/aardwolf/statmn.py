@@ -255,6 +255,9 @@ class Plugin(AardwolfBasePlugin):
         trains = trains + args['bonustrains']
         msg.append('%s+%s%dB' % (infocolor,
               statcolor, args['bonustrains']))
+      if args['battlelearntrains'] > 0:
+        msg.append('%s+%s%dL' % (infocolor,
+              statcolor, args['battlelearntrains']))
       if trains != args['trains']:
         msg.append('%s=%s%d' % (infocolor,
               statcolor, trains))

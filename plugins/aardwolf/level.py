@@ -73,6 +73,10 @@ class Plugin(AardwolfBasePlugin):
         "^You gain (?P<tr>\d*) trains.$",
         enabled=False, group='linfo',
         argtypes={'tr':int})
+    self.api('triggers.add')('lvlbattlelearntrains',
+        "^You gain (?P<tr>\d*) additional training sessions? from your enhanced battle learning.$",
+        enabled=False, group='linfo',
+        argtypes={'tr':int})
     self.api('triggers.add')('lvlbonustrains',
         "^Lucky! You gain an extra (?P<tr>\d*) training sessions?!$",
         enabled=False, group='linfo',
@@ -118,6 +122,8 @@ class Plugin(AardwolfBasePlugin):
                                     self._lvlbonustrains)
     self.api('events.register')('trigger_lvlbonusstat',
                                     self._lvlbonusstat)
+    self.api('events.register')('trigger_lvlbattlelearntrains',
+                                    self._lvlbattlelearntrains)
 
     self.api('events.register')('trigger_lvlshbadstar',
                                     self._superherobad)
@@ -227,6 +233,7 @@ class Plugin(AardwolfBasePlugin):
     self.levelinfo['trains'] = 0
     self.levelinfo['bonustrains'] = 0
     self.levelinfo['blessingtrains'] = 0
+    self.levelinfo['battlelearntrains'] = 0
     self.levelinfo['totallevels'] = 0
 
   def _lvl(self, args=None):
@@ -263,6 +270,12 @@ class Plugin(AardwolfBasePlugin):
     trigger for bonus trains
     """
     self.levelinfo['bonustrains'] = args['tr']
+
+  def _lvlbattlelearntrains(self, args):
+    """
+    trigger for bonus trains
+    """
+    self.levelinfo['battlelearntrains'] = args['tr']
 
   def _lvlbonusstat(self, args):
     """
