@@ -149,8 +149,7 @@ class ProxyIO(object):
       self.api('send.traceback')("couldn't send msg to client: %s" % '\n'.join(text))
 
   # execute a command through the interpreter, most data goes through this
-  def _api_execute(self, command, fromclient=False, showinhistory=True,
-                   currenttrace=None):
+  def _api_execute(self, command, fromclient=False, showinhistory=True):
     """  execute a command through the interpreter
     It will first check to see if it is an internal command, and then
     send to the mud if not.
@@ -160,25 +159,22 @@ class ProxyIO(object):
     self.api('send.msg')('execute: got command %s' % repr(command),
                          primary='inputparse')
 
-    trace = {}
-    if not currenttrace:
-      trace = {}
-      trace['fromclient'] = False
-      trace['internal'] = True
-      trace['changes'] = [{'cmd':command, 'flag':'original'}]
-      trace['showinhistory'] = showinhistory
-      trace['addedtohistory'] = False
-      trace['fromplugin'] = self.api('api.callerplugin')()
+    newtrace = False
+    if not self.currenttrace:
+      newtrace = True
+      self.currenttrace = {}
+      self.currenttrace['fromclient'] = False
+      self.currenttrace['internal'] = True
+      self.currenttrace['changes'] = [{'cmd':command, 'flag':'original'}]
+      self.currenttrace['showinhistory'] = showinhistory
+      self.currenttrace['addedtohistory'] = False
+      self.currenttrace['fromplugin'] = self.api('api.callerplugin')()
 
       if fromclient:
-        trace['fromclient'] = True
-        trace['internal'] = False
+        self.currenttrace['fromclient'] = True
+        self.currenttrace['internal'] = False
 
-      self.api('events.eraise')('io_execute_trace_started', trace)
-
-    else:
-      trace = currenttrace
-
+      self.api('events.eraise')('io_execute_trace_started', self.currenttrace)
 
     if command == '\r\n':
       self.api('send.msg')('sending %s (cr) to the mud' % repr(command),
@@ -186,15 +182,15 @@ class ProxyIO(object):
       self.api('events.eraise')('to_mud_event', {'data':command,
                                                  'dtype':'fromclient',
                                                  'showinhistory':showinhistory,
-                                                 'trace':trace})
+                                                 'trace':self.currenttrace})
       return
 
     command = command.strip()
 
     commands = command.split('\r\n')
     if len(commands) > 1:
-      trace['changes'].append({'cmd':command, 'flag':'splitcr',
-                               'into':','.join(commands), 'plugin':'io'})
+      self.currenttrace['changes'].append({'cmd':command, 'flag':'splitcr',
+                                           'into':','.join(commands), 'plugin':'io'})
 
     for tcommand in commands:
       newdata = self.api('events.eraise')('io_execute_event',
@@ -202,7 +198,7 @@ class ProxyIO(object):
                                            'fromclient':fromclient,
                                            'internal':not fromclient,
                                            'showinhistory':showinhistory,
-                                           'trace':trace})
+                                           'trace':self.currenttrace})
 
       if 'fromdata' in newdata:
         tcommand = newdata['fromdata']
@@ -213,10 +209,10 @@ class ProxyIO(object):
         if len(datalist) > 1:
           self.api('send.msg')('broke %s into %s' % (tcommand, datalist),
                                primary='inputparse')
-          trace['changes'].append({'cmd':tcommand, 'flag':'splitchar',
-                                   'into':','.join(datalist), 'plugin':'io'})
+          self.currenttrace['changes'].append({'cmd':tcommand, 'flag':'splitchar',
+                                               'into':','.join(datalist), 'plugin':'io'})
           for cmd in datalist:
-            self.api('send.execute')(cmd, showinhistory=showinhistory, currenttrace=trace)
+            self.api('send.execute')(cmd, showinhistory=showinhistory)
         else:
           tcommand = tcommand.replace('||', '|')
           if tcommand[-1] != '\n':
@@ -227,10 +223,11 @@ class ProxyIO(object):
                                     {'data':tcommand,
                                      'dtype':'fromclient',
                                      'showinhistory':showinhistory,
-                                     'trace':trace})
+                                     'trace':self.currenttrace})
 
-    if not currenttrace:
-      self.api('events.eraise')('io_execute_trace_finished', trace)
+    if newtrace:
+      self.api('events.eraise')('io_execute_trace_finished', self.currenttrace)
+      self.currenttrace = None
 
   # send data directly to the mud
   def _api_tomud(self, data):

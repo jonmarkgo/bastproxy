@@ -241,6 +241,14 @@ class Plugin(BasePlugin):
     run a command that has an ArgParser
     """
     retval = False
+    commandran = '%s.%s.%s %s' % (self.api('setting.gets')('cmdprefix'),
+                                  cmd['sname'], cmd['commandname'], fullargs)
+
+    if 'trace' in data:
+      data['trace']['changes'].append({'cmd':commandran,
+                                       'flag':'startcommand',
+                                       'plugin':self.sname})
+
 
     args, dummy = cmd['parser'].parse_known_args(targs)
 
@@ -280,6 +288,11 @@ class Plugin(BasePlugin):
                                 cmd['sname'],
                                 cmd['commandname'])),
                                       preamble=cmd['preamble'])
+
+    if 'trace' in data:
+      data['trace']['changes'].append({'cmd':commandran,
+                                       'flag':'endcommand',
+                                       'plugin':self.sname})
 
     return retval
 

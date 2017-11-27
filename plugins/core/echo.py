@@ -80,6 +80,12 @@ class Plugin(BasePlugin):
       elif i['flag'] == 'command':
         msg.append('  %-15s :   ran command: "%s" with success: %s' % \
                           ('Command', i['cmdran'], i['success']))
+      elif i['flag'] == 'startcommand':
+        msg.append('  %-15s :   started command: "%s"' % \
+                          ('Command', i['cmd']))
+      elif i['flag'] == 'endcommand':
+        msg.append('  %-15s :   finished command: "%s"' % \
+                          ('Command', i['cmd']))
       elif i['flag'] == 'splitchar' or i['flag'] == 'splitcr':
         msg.append('  %-15s :   split command: "%s" into: "%s"' % \
                           (i['flag'].capitalize(), i['cmd'], i['into']))
