@@ -183,47 +183,48 @@ class ProxyIO(object):
                                                  'dtype':'fromclient',
                                                  'showinhistory':showinhistory,
                                                  'trace':self.currenttrace})
-      return
+    else:
 
-    command = command.strip()
+      command = command.strip()
 
-    commands = command.split('\r\n')
-    if len(commands) > 1:
-      self.currenttrace['changes'].append({'cmd':command, 'flag':'splitcr',
-                                           'into':','.join(commands), 'plugin':'io'})
+      commands = command.split('\r\n')
+      if len(commands) > 1:
+        self.currenttrace['changes'].append({'cmd':command, 'flag':'splitcr',
+                                             'into':','.join(commands), 'plugin':'io'})
 
-    for tcommand in commands:
-      newdata = self.api('events.eraise')('io_execute_event',
-                                          {'fromdata':tcommand,
-                                           'fromclient':fromclient,
-                                           'internal':not fromclient,
-                                           'showinhistory':showinhistory,
-                                           'trace':self.currenttrace})
+      for tcommand in commands:
+        newdata = self.api('events.eraise')('io_execute_event',
+                                            {'fromdata':tcommand,
+                                             'fromclient':fromclient,
+                                             'internal':not fromclient,
+                                             'showinhistory':showinhistory,
+                                             'trace':self.currenttrace})
 
-      if 'fromdata' in newdata:
-        tcommand = newdata['fromdata']
-        tcommand = tcommand.strip()
+        if 'fromdata' in newdata:
+          tcommand = newdata['fromdata']
+          tcommand = tcommand.strip()
 
-      if tcommand:
-        datalist = re.split(self.api.splitre, tcommand)
-        if len(datalist) > 1:
-          self.api('send.msg')('broke %s into %s' % (tcommand, datalist),
-                               primary='inputparse')
-          self.currenttrace['changes'].append({'cmd':tcommand, 'flag':'splitchar',
-                                               'into':','.join(datalist), 'plugin':'io'})
-          for cmd in datalist:
-            self.api('send.execute')(cmd, showinhistory=showinhistory)
-        else:
-          tcommand = tcommand.replace('||', '|')
-          if tcommand[-1] != '\n':
-            tcommand = tcommand + '\n'
-          self.api('send.msg')('sending %s to the mud' % tcommand.strip(),
-                               primary='inputparse')
-          self.api('events.eraise')('to_mud_event',
-                                    {'data':tcommand,
-                                     'dtype':'fromclient',
-                                     'showinhistory':showinhistory,
-                                     'trace':self.currenttrace})
+        if tcommand:
+          datalist = re.split(self.api.splitre, tcommand)
+          if len(datalist) > 1:
+            self.api('send.msg')('broke %s into %s' % (tcommand, datalist),
+                                 primary='inputparse')
+            self.currenttrace['changes'].append({'cmd':tcommand, 'flag':'splitchar',
+                                                 'into':','.join(datalist),
+                                                 'plugin':'io'})
+            for cmd in datalist:
+              self.api('send.execute')(cmd, showinhistory=showinhistory)
+          else:
+            tcommand = tcommand.replace('||', '|')
+            if tcommand[-1] != '\n':
+              tcommand = tcommand + '\n'
+            self.api('send.msg')('sending %s to the mud' % tcommand.strip(),
+                                 primary='inputparse')
+            self.api('events.eraise')('to_mud_event',
+                                      {'data':tcommand,
+                                       'dtype':'fromclient',
+                                       'showinhistory':showinhistory,
+                                       'trace':self.currenttrace})
 
     if newtrace:
       self.api('events.eraise')('io_execute_trace_finished', self.currenttrace)
