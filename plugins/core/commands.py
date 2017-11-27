@@ -89,6 +89,8 @@ class Plugin(BasePlugin):
     self.api('log.adddtype')(self.sname)
     #self.api('log.console')(self.sname)
 
+    self.api('setting.add')('cmdprefix', '#bp', str,
+                            'the command preamble for the proxy')
     self.api('setting.add')('spamcount', 20, int,
                                 'the # of times a command can ' \
                                  'be run before an antispam command')
@@ -169,7 +171,7 @@ class Plugin(BasePlugin):
     linelen = self.api('plugins.getp')('proxy').api('setting.gets')('linelen')
 
     msg.insert(0, '')
-    msg.insert(1, '#bp.%s.%s' % (sname, cmd))
+    msg.insert(1, '%s.%s.%s' % (self.api('setting.gets')('cmdprefix'), sname, cmd))
     msg.insert(2, '@G' + '-' * linelen + '@w')
     msg.append('@G' + '-' * linelen + '@w')
     msg.append('')
@@ -312,7 +314,7 @@ class Plugin(BasePlugin):
     if tdat == '':
       return
 
-    if tdat[0:3].lower() == '#bp':
+    if tdat[0:3].lower() == self.api('setting.gets')('cmdprefix'):
       targs = shlex.split(tdat.strip())
       try:
         tmpind = tdat.index(' ')
@@ -336,7 +338,8 @@ class Plugin(BasePlugin):
           pass
         cmd = self.cmds[self.sname]['list']
         success = 'Help'
-        commandran = '#bp.%s.%s %s %s' % (self.sname, 'list', sname, scmd)
+        commandran = '%s.%s.%s %s %s' % (self.api('setting.gets')('cmdprefix'),
+                                         self.sname, 'list', sname, scmd)
         self.runcmd(cmd, [sname, scmd], fullargs, data)
 
       elif sname: # got at least "#bp.<command>"
@@ -364,7 +367,8 @@ class Plugin(BasePlugin):
           else: # got just "#bp.<command>"
             if 'default' in self.cmds[sname]: # check to see if there is a default
               cmd = self.cmds[sname]['default']
-              commandran = '#bp.%s.%s %s' % (sname, cmd['commandname'], ' '.join(targs))
+              commandran = '%s.%s.%s %s' % (self.api('setting.gets')('cmdprefix'), sname,
+                                            cmd['commandname'], ' '.join(targs))
               try:
                 self.runcmd(cmd, targs, fullargs, data)
                 success = 'Default'
@@ -374,7 +378,8 @@ class Plugin(BasePlugin):
                     'Error when calling command %s.%s' % (sname, scmd))
             else: # no default, so do "#bp.commands.list sname scmd"
               cmd = self.cmds[self.sname]['list']
-              commandran = '#bp.%s.%s %s %s' % (self.sname, 'list', sname, scmd)
+              commandran = '%s.%s.%s %s %s' % (self.api('setting.gets')('cmdprefix'), self.sname,
+                                               'list', sname, scmd)
               try:
                 self.runcmd(cmd, [sname, scmd], '', data)
                 success = 'List'
@@ -388,7 +393,8 @@ class Plugin(BasePlugin):
         except ValueError:
           pass
         cmd = self.cmds[self.sname]['list']
-        commandran = '#bp.%s.%s %s %s' % (self.sname, 'list', sname, scmd)
+        commandran = '%s.%s.%s %s %s' % (self.api('setting.gets')('cmdprefix'), self.sname,
+                                         'list', sname, scmd)
         try:
           self.runcmd(cmd, [sname, scmd], '', data)
           success = 'List2'
@@ -499,7 +505,7 @@ class Plugin(BasePlugin):
     tparser.add_argument("-h", "--help", help="show help",
                          action="store_true")
 
-    tparser.prog = '@B#bp.%s.%s@w' % (sname, cmdname)
+    tparser.prog = '@B%s.%s.%s@w' % (self.api('setting.gets')('cmdprefix'), sname, cmdname)
 
     if 'group' not in args:
       args['group'] = sname
