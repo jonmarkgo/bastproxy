@@ -50,7 +50,7 @@ class Plugin(AardwolfBasePlugin):
     self.queststuff['mobarea'] = ''
     self.queststuff['mobroom'] = ''
     self.queststuff['level'] = self.api('aardu.getactuallevel')(
-                            self.api('GMCP.getv')('char.status.level'))
+        self.api('GMCP.getv')('char.status.level'))
     self.queststuff['failed'] = 0
 
   def quest(self, args):
@@ -75,12 +75,12 @@ class Plugin(AardwolfBasePlugin):
       self.queststuff['finishtime'] = time.time()
       self.queststuff.update(questi)
       self.api('events.eraise')('aard_quest_comp',
-                                    copy.deepcopy(self.queststuff))
+                                copy.deepcopy(self.queststuff))
     elif questi['action'] == 'fail' or questi['action'] == 'timeout':
       self.queststuff['finishtime'] = time.time()
       self.queststuff['failed'] = 1
       self.api('events.eraise')('aard_quest_failed',
-                              copy.deepcopy(self.queststuff))
+                                copy.deepcopy(self.queststuff))
     elif questi['action'] == 'status':
       self.api('events.eraise')('aard_quest_status', questi)
     elif questi['action'] == 'reset':
