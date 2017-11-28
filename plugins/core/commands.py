@@ -10,6 +10,7 @@ import textwrap as _textwrap
 
 from plugins._baseplugin import BasePlugin
 from libs.persistentdict import PersistentDict
+from libs.argp import ArgumentError, ArgParser
 
 NAME = 'Commands'
 SNAME = 'commands'
@@ -105,8 +106,8 @@ class Plugin(BasePlugin):
     self.api('setting.add')('historysize', 50, int,
                             'the size of the history to keep')
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='list commands in a category')
+    parser = ArgParser(add_help=False,
+                       description='list commands in a category')
     parser.add_argument('category',
                         help='the category to see help for',
                         default='',
@@ -121,8 +122,8 @@ class Plugin(BasePlugin):
                              parser=parser,
                              showinhistory=False)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='list the command history')
+    parser = ArgParser(add_help=False,
+                       description='list the command history')
     parser.add_argument('-c',
                         "--clear",
                         help="clear the history",
@@ -133,8 +134,8 @@ class Plugin(BasePlugin):
                              parser=parser,
                              showinhistory=False)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='run a command in history')
+    parser = ArgParser(add_help=False,
+                       description='run a command in history')
     parser.add_argument('number',
                         help='the history # to run',
                         default=-1,
@@ -249,8 +250,22 @@ class Plugin(BasePlugin):
                                        'flag':'startcommand',
                                        'plugin':self.sname})
 
-
-    args, dummy = cmd['parser'].parse_known_args(targs)
+    try:
+      args, dummy = cmd['parser'].parse_known_args(targs)
+    except ArgumentError, exc:
+      tmsg = []
+      tmsg.append('Error: %s' % exc.errormsg)
+      tmsg.extend(cmd['parser'].format_help().split('\n'))
+      self.api('send.client')('\n'.join(
+          self.formatretmsg(tmsg,
+                            cmd['sname'],
+                            cmd['commandname'])))
+      if 'trace' in data:
+        data['trace']['changes'].append({'cmd':commandran,
+                                         'flag':'errorcommand',
+                                         'data':exc.errormsg,
+                                         'plugin':self.sname})
+      return retval
 
     args = vars(args)
     args['fullargs'] = fullargs
@@ -519,8 +534,8 @@ class Plugin(BasePlugin):
                                       (sname, cmdname))
       if 'shelp' not in args:
         args['shelp'] = 'there is no help for this command'
-      tparser = argparse.ArgumentParser(add_help=False,
-                                        description=args['shelp'])
+      tparser = ArgParser(add_help=False,
+                          description=args['shelp'])
       args['parser'] = tparser
 
     tparser.add_argument("-h", "--help", help="show help",
