@@ -96,6 +96,7 @@ API = BASEAPI()
 BASEAPI.starttime = time.localtime()
 BASEAPI.loading = True
 
+
 def setuppaths():
   """
   setup paths
@@ -115,6 +116,7 @@ def setuppaths():
     os.makedirs(os.path.join(API.BASEPATH, 'data', 'logs'))
   except OSError:
     pass
+
 
 class Listener(asyncore.dispatcher):
   """
@@ -168,14 +170,15 @@ class Listener(asyncore.dispatcher):
         API('send.msg')("Accepted connection from %s : %s" %
                         (source_addr[0], source_addr[1]), 'net')
 
-        #client keeps up with itself
+        # client keeps up with itself
         from libs.net.client import Client
         Client(client_connection, source_addr[0], source_addr[1])
 
     # catch everything because we don't want to exit if we can't connect a
     # client
-    except Exception: # pylint: disable=broad-except
+    except Exception:   # pylint: disable=broad-except
       API('send.traceback')('Error handling client')
+
 
 def start(listen_port):
   """
