@@ -54,18 +54,18 @@ class Plugin(AardwolfBasePlugin):
     self.api('setting.add')('statcolor', '@W', 'color', 'the stat color')
     self.api('setting.add')('infocolor', '@x33', 'color', 'the info color')
     self.api('setting.add')('show', '5m', 'timelength',
-                    'show the report every x time')
+                            'show the report every x time')
     self.api('setting.add')('reportminutes', '60m', 'timelength',
-                      'the # of minutes for the report to show')
+                            'the # of minutes for the report to show')
     self.api('setting.add')('exppermin', 20, int,
-                'the threshhold for showing exp per minute')
+                            'the threshhold for showing exp per minute')
 
     parser = argparse.ArgumentParser(add_help=False,
-                 description='show report')
+                                     description='show report')
     parser.add_argument('minutes', help='the number of minutes in the report',
                         default='60m', nargs='?')
     self.api('commands.add')('rep', self.cmd_rep,
-              parser=parser, format=False, preamble=False)
+                             parser=parser, format=False, preamble=False)
 
   def showchange(self, args):
     """
@@ -75,8 +75,8 @@ class Plugin(AardwolfBasePlugin):
     if newtime > 0:
       self.api('timers.remove')('statrep')
       self.api('timers.add')('statrep', self.timershow,
-                self.api('setting.gets')('show'),
-                nodupe=True)
+                             newtime,
+                             nodupe=True)
     else:
       self.api('timers.remove')('statrep')
       self.api('send.client')('Turning off the statmon report')
@@ -99,43 +99,43 @@ class Plugin(AardwolfBasePlugin):
     msg.append('%s%s' % (statcolor, args['qp']))
     if args['lucky'] > 0:
       msg.append('%s+%s%s' % (infocolor,
-            statcolor, args['lucky']))
+                              statcolor, args['lucky']))
     if args['mccp'] > 0:
       msg.append('%s+%s%s' % (infocolor,
-            statcolor, args['mccp']))
+                              statcolor, args['mccp']))
     if args['tierqp'] > 0:
       msg.append('%s+%s%s' % (infocolor,
-            statcolor, args['tierqp']))
+                              statcolor, args['tierqp']))
     if args['opk'] > 0:
       msg.append('%s+%s%s' % (infocolor,
-            statcolor, args['opk']))
+                              statcolor, args['opk']))
     if args['hardcore'] > 0:
       msg.append('%s+%s%s' % (infocolor,
-            statcolor, args['hardcore']))
+                              statcolor, args['hardcore']))
     if args['daily'] == 1:
       msg.append('%s+%s%s' % (infocolor,
-            statcolor, 'E'))
+                              statcolor, 'E'))
     if args['double'] == 1:
       msg.append('%s+%s%s' % (infocolor,
-            statcolor, 'D'))
+                              statcolor, 'D'))
     msg.append(' %s= ' % infocolor)
     msg.append('%s%s%sqp' % (statcolor,
-            args['totqp'], infocolor))
+                             args['totqp'], infocolor))
     if args['tp'] > 0:
       msg.append(' %s%s%sTP' % (statcolor,
-            args['tp'], infocolor))
+                                args['tp'], infocolor))
     if args['trains'] > 0:
       msg.append(' %s%s%str' % (statcolor,
-            args['trains'], infocolor))
+                                args['trains'], infocolor))
     if args['pracs'] > 0:
       msg.append(' %s%s%spr' % (statcolor,
-            args['pracs'], infocolor))
-    msg.append('. It took %s%s%s.' % (
-         statcolor,
+                                args['pracs'], infocolor))
+    msg.append('. It took %s%s%s.' % \
+        (statcolor,
          self.api('utils.timedeltatostring')(args['starttime'],
-                                                 args['finishtime'],
-         fmin=True, colorn=statcolor,
-         colors=infocolor),
+                                             args['finishtime'],
+                                             fmin=True, colorn=statcolor,
+                                             colors=infocolor),
          infocolor))
 
     if self.api('plugins.isloaded')('statdb'):
@@ -165,29 +165,30 @@ class Plugin(AardwolfBasePlugin):
                   infocolor)
     if args['bonusqp'] > 0:
       totalqp = args['bonusqp'] + args['qp']
-      msg.append('%s%s%s+%s%sB%s=%s%sqp' % (statcolor,
-                  args['qp'], infocolor,
-                  statcolor, args['bonusqp'],
-                  infocolor, statcolor,
-                  totalqp))
+      msg.append('%s%s%s+%s%sB%s=%s%sqp' % \
+        (statcolor,
+         args['qp'], infocolor,
+         statcolor, args['bonusqp'],
+         infocolor, statcolor,
+         totalqp))
     else:
       msg.append('%s%s%sqp' % (statcolor, args['qp'],
-                  infocolor))
+                               infocolor))
     if args['tp'] > 0:
       msg.append(' %s%s%sTP' % (statcolor,
-            args['tp'], infocolor))
+                                args['tp'], infocolor))
     if args['trains'] > 0:
       msg.append(' %s%s%str' % (statcolor,
-            args['trains'], infocolor))
+                                args['trains'], infocolor))
     if args['pracs'] > 0:
       msg.append(' %s%s%spr' % (statcolor,
-            args['pracs'], infocolor))
-    msg.append('. %sIt took %s.' % (
-         infocolor,
+                                args['pracs'], infocolor))
+    msg.append('. %sIt took %s.' % \
+        (infocolor,
          self.api('utils.timedeltatostring')(args['starttime'],
-                                                 args['finishtime'],
-         fmin=True, colorn=statcolor,
-         colors=infocolor)))
+                                             args['finishtime'],
+                                             fmin=True, colorn=statcolor,
+                                             colors=infocolor)))
 
     self.addmessage(''.join(msg))
 
@@ -200,27 +201,27 @@ class Plugin(AardwolfBasePlugin):
     statcolor = self.api('setting.gets')('statcolor')
     msg = []
     msg.append('%sStatMonitor: GQ finished for ' % \
-                  infocolor)
+                           infocolor)
     msg.append('%s%s%s' % (statcolor, args['qp'],
-                  infocolor))
+                           infocolor))
     msg.append('+%s%s%sqp' % (statcolor, args['qpmobs'],
-                  infocolor))
+                              infocolor))
     if args['tp'] > 0:
       msg.append(' %s%s%sTP' % (statcolor,
-            args['tp'], infocolor))
+                                args['tp'], infocolor))
     if args['trains'] > 0:
       msg.append(' %s%s%str' % (statcolor,
-            args['trains'], infocolor))
+                                args['trains'], infocolor))
     if args['pracs'] > 0:
       msg.append(' %s%s%spr' % (statcolor,
-            args['pracs'], infocolor))
+                                args['pracs'], infocolor))
     msg.append('.')
-    msg.append(' %sIt took %s.' % (
-         infocolor,
+    msg.append(' %sIt took %s.' % \
+        (infocolor,
          self.api('utils.timedeltatostring')(args['starttime'],
-                                                 args['finishtime'],
-         fmin=True, colorn=statcolor,
-         colors=infocolor)))
+                                             args['finishtime'],
+                                             fmin=True, colorn=statcolor,
+                                             colors=infocolor)))
 
     self.addmessage(''.join(msg))
 
@@ -234,37 +235,37 @@ class Plugin(AardwolfBasePlugin):
     exppermin = self.api('setting.gets')('exppermin')
     msg = []
     msg.append('%sStatMonitor: Gained a %s:' % (infocolor,
-                args['type']))
+                                                args['type']))
     if args['type'] == 'level':
       msg.append(' %s%s%shp' % (statcolor,
-            args['hp'], infocolor))
+                                args['hp'], infocolor))
     if args['type'] == 'level':
       msg.append(' %s%s%smn' % (statcolor,
-            args['mp'], infocolor))
+                                args['mp'], infocolor))
     if args['type'] == 'level':
       msg.append(' %s%s%smv' % (statcolor,
-            args['mv'], infocolor))
+                                args['mv'], infocolor))
     if 'trains' in args:
       trains = args['trains']
       msg.append(' %s%d' % (statcolor, args['trains']))
       if args['blessingtrains'] > 0:
         trains = trains + args['blessingtrains']
         msg.append('%s+%s%dE' % (infocolor,
-              statcolor, args['blessingtrains']))
+                                 statcolor, args['blessingtrains']))
       if args['bonustrains'] > 0:
         trains = trains + args['bonustrains']
         msg.append('%s+%s%dB' % (infocolor,
-              statcolor, args['bonustrains']))
+                                 statcolor, args['bonustrains']))
       if args['battlelearntrains'] > 0:
         msg.append('%s+%s%dL' % (infocolor,
-              statcolor, args['battlelearntrains']))
+                                 statcolor, args['battlelearntrains']))
       if trains != args['trains']:
         msg.append('%s=%s%d' % (infocolor,
-              statcolor, trains))
+                                statcolor, trains))
       msg.append(' %strains ' % infocolor)
     if args['type'] == 'level':
       msg.append('%s%d %spracs ' % (statcolor,
-              args['pracs'], infocolor))
+                                    args['pracs'], infocolor))
     stats = False
     for i in ['str', 'dex', 'con', 'luc', 'int', 'wis']:
       if args[i] > 0:
@@ -273,15 +274,16 @@ class Plugin(AardwolfBasePlugin):
           msg.append('%s%s' % (statcolor, i))
         else:
           msg.append('%s+%s%s' % (infocolor,
-            statcolor, i))
+                                  statcolor, i))
     if stats:
       msg.append(' %sbonus ' % infocolor)
 
     if args['starttime'] > 0 and args['finishtime'] > 0:
       msg.append(self.api('utils.timedeltatostring')(args['starttime'],
-              args['finishtime'], fmin=True,
-              colorn=statcolor,
-              colors=infocolor))
+                                                     args['finishtime'],
+                                                     fmin=True,
+                                                     colorn=statcolor,
+                                                     colors=infocolor))
 
     if self.api('plugins.isloaded')('statdb'):
       stmt = "SELECT count(*) as count, AVG(totalxp) as average FROM " \
@@ -293,14 +295,14 @@ class Plugin(AardwolfBasePlugin):
       if count > 0 and ave > 0:
         length = args['finishtime'] - args['starttime']
         msg.append(' %s%s %smobs killed' % (statcolor,
-          count, infocolor))
+                                            count, infocolor))
         msg.append(' (%s%02.02f%sxp/mob' % (statcolor,
-          ave, infocolor))
+                                            ave, infocolor))
         if length:
           expmin = self.api('GMCP.getv')('char.base.perlevel')/(length/60)
           if int(expmin) > exppermin:
             msg.append(' %s%02d%sxp/min' % (statcolor,
-              expmin, infocolor))
+                                            expmin, infocolor))
         msg.append(')')
 
     self.addmessage(''.join(msg))
@@ -364,10 +366,10 @@ class Plugin(AardwolfBasePlugin):
     starttime = finishtime - minutes
 
     timestr = '%s' % self.api('utils.timedeltatostring')(starttime,
-              finishtime,
-              colorn=statcolor,
-              colors=infocolor,
-              nosec=True)
+                                                         finishtime,
+                                                         colorn=statcolor,
+                                                         colors=infocolor,
+                                                         nosec=True)
 
     stmt = """SELECT COUNT(*) as total,
                      SUM(totqp) as qp,
@@ -419,18 +421,19 @@ class Plugin(AardwolfBasePlugin):
     hourtotals['gold'] = mobstats['gold'] + gqstats['gold'] + \
                         cpstats['gold'] + queststats['gold']
 
-    namestr = "Stats for {timestr}".format(
-                  infocolor=infocolor,
-                  statcolor=statcolor,
-                  timestr=timestr)
+    namestr = "Stats for {timestr}".format(timestr=timestr)
 
     msg.append(infocolor + \
                   self.api('utils.center')(namestr, '-', linelen))
     fstring = "{infocolor}{type:<10} | {total:>6} " \
               "{xp:>6} {qp:>5} {tp:>5} {gold:>10}"
     msg.append(fstring.format(type='Type',
-        total='Total', xp='XP', qp='QP', tp='TP', gold='Gold',
-        infocolor=infocolor))
+                              total='Total',
+                              xp='XP',
+                              qp='QP',
+                              tp='TP',
+                              gold='Gold',
+                              infocolor=infocolor))
     msg.append(infocolor + '-' * linelen)
 
     fstring = "{statcolor}{type:<10} {infocolor}| {statcolor}" \
@@ -462,4 +465,3 @@ class Plugin(AardwolfBasePlugin):
     msg = self.statreport(minutes)
 
     return True, msg
-
