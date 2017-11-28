@@ -301,9 +301,9 @@ class Plugin(BasePlugin):
     add to the command history
     """
     if 'showinhistory' in data and not data['showinhistory']:
-      return
+      return False
     if cmd and not cmd['showinhistory']:
-      return
+      return False
 
     tdat = data['fromdata']
     if data['fromclient']:
@@ -424,7 +424,7 @@ class Plugin(BasePlugin):
                                            'plugin':self.sname})
       return {'fromdata':''}
     else: # no command, so add it to history and check antispam
-      self.addtohistory(data)
+      addedtohistory = self.addtohistory(data)
       if tdat.strip() == self.api('setting.gets')('lastcmd'):
         self.api('setting.change')('cmdcount',
                                        self.api('setting.gets')('cmdcount') + 1)
@@ -433,6 +433,7 @@ class Plugin(BasePlugin):
           data['fromdata'] = self.api('setting.gets')('antispamcommand') \
                                       + '|' + tdat
           if 'trace' in data:
+            data['addedtohistory'] = addedtohistory
             data['trace']['changes'].append({'cmd':tdat,
                                                'flag':'antispam',
                                                'plugin':self.sname})
