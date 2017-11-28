@@ -90,7 +90,11 @@ class API(object):
        if it doesn't find that, it checks for an attribute of plugin
     """
     from plugins._baseplugin import BasePlugin
-    stack = inspect.stack()
+
+    try:
+      stack = inspect.stack()
+    except IndexError:
+      return None
 
     for ifr in stack[1:]:
       parentframe = ifr[0]
