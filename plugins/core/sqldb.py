@@ -735,7 +735,7 @@ class Sqldb(object):
 
     try:
       with zipfile.ZipFile(backupzipfile, 'w', zipfile.ZIP_DEFLATED) as myzip:
-        myzip.write(backupfile)
+        myzip.write(backupfile, arcname=os.path.basename(backupfile))
       os.remove(backupfile)
       success = True
       self.api('send.msg')('%s was backed up to %s' % (self.dbfile,
