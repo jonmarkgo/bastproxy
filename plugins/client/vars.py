@@ -56,8 +56,8 @@ class Plugin(BasePlugin):
                         default='',
                         nargs='?')
     self.api('commands.add')('add',
-                                 self.cmd_add,
-                                 parser=parser)
+                             self.cmd_add,
+                             parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='remove a variable')
@@ -66,8 +66,8 @@ class Plugin(BasePlugin):
                         default='',
                         nargs='?')
     self.api('commands.add')('remove',
-                                 self.cmd_remove,
-                                 parser=parser)
+                             self.cmd_remove,
+                             parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='list variables')
@@ -76,14 +76,14 @@ class Plugin(BasePlugin):
                         default='',
                         nargs='?')
     self.api('commands.add')('list',
-                                 self.cmd_list,
-                                 parser=parser)
+                             self.cmd_list,
+                             parser=parser)
 
     self.api('commands.default')('list')
 
     self.api('events.register')('io_execute_event',
-                                    self.checkline,
-                                    prio=99)
+                                self.checkline,
+                                prio=99)
 
     self.api('events.register')('plugin_%s_savestate' % self.sname, self._savestate)
 
@@ -136,9 +136,9 @@ class Plugin(BasePlugin):
     if datan != data:
       if 'trace' in args:
         args['trace']['changes'].append({'cmd':data,
-                                           'flag':'modify',
-                                           'newcmd':datan,
-                                           'plugin':self.sname})
+                                         'flag':'modify',
+                                         'newcmd':datan,
+                                         'plugin':self.sname})
 
       self.api('send.msg')('replacing "%s" with "%s"' % (data.strip(),
                                                          datan.strip()))
