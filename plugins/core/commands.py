@@ -313,6 +313,9 @@ class Plugin(BasePlugin):
       if len(self.cmdhistory) >= self.api('setting.gets')('historysize'):
         self.cmdhistory.pop(0)
       self.cmdhistorydict.sync()
+      return True
+
+    return False
 
   def chkcmd(self, data):
     # pylint: disable=too-many-nested-blocks,too-many-return-statements,too-many-branches
