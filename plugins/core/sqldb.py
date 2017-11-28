@@ -297,7 +297,7 @@ class Sqldb(object):
 
   def cmd_close(self, _):
     """
-    backup the database
+    close the database
     """
     msg = []
     self.close()
@@ -307,7 +307,7 @@ class Sqldb(object):
 
   def cmd_remove(self, args):
     """
-    backup the database
+    remove a table from the database
     """
     msg = []
     if not args['table'] or args['table'] not in self.tables:
