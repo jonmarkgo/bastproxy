@@ -382,6 +382,7 @@ class Plugin(BasePlugin):
     #print('log api after adding', self.api.api)
     self.api('events.register')('from_mud_event', self.logmud)
     self.api('events.register')('to_mud_event', self.logmud)
+    self.api('events.register')('plugin_%s_savestate' % self.sname, self._savestate)
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description="""\
@@ -447,3 +448,10 @@ class Plugin(BasePlugin):
 
     #print('log loaded')
 
+  def _savestate(self, args=None):
+    """
+    save items not covered by baseplugin class
+    """
+    self.sendtoclient.sync()
+    self.sendtofile.sync()
+    self.sendtoconsole.sync()
