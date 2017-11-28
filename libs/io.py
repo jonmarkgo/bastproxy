@@ -168,6 +168,7 @@ class ProxyIO(object):
       self.currenttrace['changes'] = [{'cmd':command, 'flag':'original'}]
       self.currenttrace['showinhistory'] = showinhistory
       self.currenttrace['addedtohistory'] = False
+      self.currenttrace['originalcommand'] = command.strip()
       self.currenttrace['fromplugin'] = self.api('api.callerplugin')()
 
       if fromclient:
