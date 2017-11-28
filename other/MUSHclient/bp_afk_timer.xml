@@ -23,7 +23,7 @@ After the specified interval (default 5 minutes) elapse, sends "afk" to the MUD.
 <!--  Timers  -->
 
 <timers>
-  <timer name="afk_timer" second="0" minute="5" send_to="12" enabled="y">
+  <timer name="afk_timer" second="0" minute="15" send_to="12" enabled="y">
   <send>
     Send('#bp.afk.toggle')
     EnableTimer ("afk_timer", 0)
