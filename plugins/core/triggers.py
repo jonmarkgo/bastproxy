@@ -4,7 +4,11 @@ This plugin handles internal triggers for the proxy
 import sys
 import argparse
 import time
-import regex as re
+try:
+  import regex as re
+except ImportError:
+  print("Please install the regex library: pip install regex")
+  sys.exit(1)
 from plugins._baseplugin import BasePlugin
 
 #these 5 are required
@@ -54,7 +58,11 @@ class Plugin(BasePlugin):
     BasePlugin.load(self)
 
     self.api('setting.add')('useorig', 'True', bool,
-                        'use the original chktrigger function to check triggers')
+                            'use the original chktrigger function to check triggers')
+    self.api('setting.add')('enabled', 'True', bool,
+                            'enable triggers')
+    self.api('events.register')('var_%s_echo' % self.sname, self.enablechange)
+    self.api('events.register')('var_%s_useorig' % self.sname, self.functionchange)
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='get details of a trigger')
@@ -76,10 +84,34 @@ class Plugin(BasePlugin):
                              self.cmd_list,
                              parser=parser)
 
-    self.api('events.register')('from_mud_event',
-                                self.checktrigger, prio=1)
-
     self.api('events.register')('plugin_unloaded', self.pluginunloaded)
+
+  def enablechange(self, args):
+    """
+    setup the plugin on setting change
+    """
+    change = args['newvalue']
+    if change:
+      self.api('events.register')('from_mud_event',
+                                  self.checktrigger, prio=1)
+    else:
+      self.api('events.unregister')('from_mud_event',
+                                    self.checktrigger)
+
+  def functionchange(self, args):
+    """
+    register the correct check trigger function
+    """
+    print("on function change")
+    useorig = args['newvalue']
+
+    if useorig:
+      self.api('events.register')('from_mud_event',
+                                  self.checktrigger_old, prio=1)
+    else:
+      self.api('events.register')('from_mud_event',
+                                  self.checktrigger_big, prio=1)
+
 
   def pluginunloaded(self, args):
     """
@@ -399,27 +431,17 @@ class Plugin(BasePlugin):
         triggers = sorted(self.uniquelookup,
                           key=lambda item: self.uniquelookup[item]['priority'])
         enabledt = [trig for trig in triggers if self.uniquelookup[trig]['enabled']]
-        if data == "{spellheaders noprompt}":
-          self.api('send.msg')('enabled triggers %s' % enabledt)
         for trig in enabledt:
-          if data == "{spellheaders noprompt}":
-            self.api('send.msg')('checking trig %s' % trig)
           if trig in self.uniquelookup:
-            if data == "{spellheaders noprompt}":
-              self.api('send.msg')('found in uniquelookup')
             match = None
             if colormatch:
               groups = colormatch.groupdict()
-              if data == "{spellheaders noprompt}":
-                self.api('send.msg')('in colormatch with %s' % groups)
               if trig in groups and groups[trig]:
                 self.api('send.msg')('color matched line %s to trigger %s' % (colordata,
                                                                               trig))
                 match = self.uniquelookup[trig]['compiled'].match(colordata)
             elif noncolormatch:
               groups = noncolormatch.groupdict()
-              if data == "{spellheaders noprompt}":
-                self.api('send.msg')('in noncolormatch with %s' % groups)
               if trig in groups and groups[trig]:
                 self.api('send.msg')('matched line %s to trigger %s' % (data, trig))
                 match = self.uniquelookup[trig]['compiled'].match(data)
