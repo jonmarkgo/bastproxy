@@ -92,18 +92,18 @@ class Plugin(BasePlugin):
     self.api('setting.add')('cmdprefix', '#bp', str,
                             'the command preamble for the proxy')
     self.api('setting.add')('spamcount', 20, int,
-                                'the # of times a command can ' \
-                                 'be run before an antispam command')
+                            'the # of times a command can ' \
+                             'be run before an antispam command')
     self.api('setting.add')('antispamcommand', 'look', str,
-                                'the antispam command to send')
+                            'the antispam command to send')
     self.api('setting.add')('cmdcount', 0, int,
-                                'the # of times the current command has been run',
-                                readonly=True)
+                            'the # of times the current command has been run',
+                            readonly=True)
     self.api('setting.add')('lastcmd', '', str,
-                                'the last command that was sent to the mud',
-                                readonly=True)
+                            'the last command that was sent to the mud',
+                            readonly=True)
     self.api('setting.add')('historysize', 50, int,
-                                'the size of the history to keep')
+                            'the size of the history to keep')
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='list commands in a category')
@@ -116,10 +116,10 @@ class Plugin(BasePlugin):
                         default='',
                         nargs='?')
     self.api('commands.add')('list',
-                                 self.cmd_list,
-                                 shelp='list commands',
-                                 parser=parser,
-                                 showinhistory=False)
+                             self.cmd_list,
+                             shelp='list commands',
+                             parser=parser,
+                             showinhistory=False)
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='list the command history')
@@ -128,10 +128,10 @@ class Plugin(BasePlugin):
                         help="clear the history",
                         action='store_true')
     self.api('commands.add')('history',
-                                 self.cmd_history,
-                                 shelp='list or run a command in history',
-                                 parser=parser,
-                                 showinhistory=False)
+                             self.cmd_history,
+                             shelp='list or run a command in history',
+                             parser=parser,
+                             showinhistory=False)
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='run a command in history')
@@ -141,12 +141,12 @@ class Plugin(BasePlugin):
                         nargs='?',
                         type=int)
     self.api('commands.add')('!',
-                                 self.cmd_runhistory,
-                                 shelp='run a command in history',
-                                 parser=parser,
-                                 preamble=False,
-                                 format=False,
-                                 showinhistory=False)
+                             self.cmd_runhistory,
+                             shelp='run a command in history',
+                             parser=parser,
+                             preamble=False,
+                             format=False,
+                             showinhistory=False)
 
     self.api('events.register')('io_execute_event', self.chkcmd, prio=5)
     self.api('events.register')('plugin_unloaded', self.pluginunloaded)
@@ -204,8 +204,8 @@ class Plugin(BasePlugin):
     """
     if plugin in self.cmds and cmd in self.cmds[plugin]:
       return self.cmds[plugin][cmd]['parser'].format_help()
-    else:
-      return ''
+
+    return ''
 
   # return a formatted list of commands for a plugin
   def api_listcmds(self, plugin, cformat=True):
@@ -217,8 +217,8 @@ class Plugin(BasePlugin):
     else:
       if plugin in self.cmds:
         return self.cmds[plugin]
-      else:
-        return {}
+
+      return {}
 
   # run a command and return the output
   def api_run(self, plugin, cmdname, argstring):
@@ -233,8 +233,8 @@ class Plugin(BasePlugin):
 
       if args['help']:
         return cmd['parser'].format_help().split('\n')
-      else:
-        return cmd['func'](args)
+
+      return cmd['func'](args)
 
   def runcmd(self, cmd, targs, fullargs, data):
     """
@@ -287,7 +287,7 @@ class Plugin(BasePlugin):
               self.formatretmsg(msg,
                                 cmd['sname'],
                                 cmd['commandname'])),
-                                      preamble=cmd['preamble'])
+                                  preamble=cmd['preamble'])
 
     if 'trace' in data:
       data['trace']['changes'].append({'cmd':commandran,
@@ -394,7 +394,8 @@ class Plugin(BasePlugin):
                     'Error when calling command %s.%s' % (sname, scmd))
             else: # no default, so do "#bp.commands.list sname scmd"
               cmd = self.cmds[self.sname]['list']
-              commandran = '%s.%s.%s %s %s' % (self.api('setting.gets')('cmdprefix'), self.sname,
+              commandran = '%s.%s.%s %s %s' % (self.api('setting.gets')('cmdprefix'),
+                                               self.sname,
                                                'list', sname, scmd)
               try:
                 self.runcmd(cmd, [sname, scmd], '', data)
@@ -409,7 +410,8 @@ class Plugin(BasePlugin):
         except ValueError:
           pass
         cmd = self.cmds[self.sname]['list']
-        commandran = '%s.%s.%s %s %s' % (self.api('setting.gets')('cmdprefix'), self.sname,
+        commandran = '%s.%s.%s %s %s' % (self.api('setting.gets')('cmdprefix'),
+                                         self.sname,
                                          'list', sname, scmd)
         try:
           self.runcmd(cmd, [sname, scmd], '', data)
@@ -421,16 +423,16 @@ class Plugin(BasePlugin):
 
       if 'trace' in data:
         data['trace']['changes'].append({'cmd':tdat,
-                                           'flag':'command',
-                                           'cmdran':commandran,
-                                           'success':success,
-                                           'plugin':self.sname})
+                                         'flag':'command',
+                                         'cmdran':commandran,
+                                         'success':success,
+                                         'plugin':self.sname})
       return {'fromdata':''}
     else: # no command, so add it to history and check antispam
       addedtohistory = self.addtohistory(data)
       if tdat.strip() == self.api('setting.gets')('lastcmd'):
         self.api('setting.change')('cmdcount',
-                                       self.api('setting.gets')('cmdcount') + 1)
+                                   self.api('setting.gets')('cmdcount') + 1)
         if self.api('setting.gets')('cmdcount') == \
                               self.api('setting.gets')('spamcount'):
           data['fromdata'] = self.api('setting.gets')('antispamcommand') \
@@ -438,16 +440,16 @@ class Plugin(BasePlugin):
           if 'trace' in data:
             data['addedtohistory'] = addedtohistory
             data['trace']['changes'].append({'cmd':tdat,
-                                               'flag':'antispam',
-                                               'plugin':self.sname})
+                                             'flag':'antispam',
+                                             'plugin':self.sname})
           self.api('send.msg')('adding look for 20 commands')
           self.api('setting.change')('cmdcount', 0)
           return data
         if tdat in self.nomultiplecmds:
           if 'trace' in data:
             data['trace']['changes'].append({'cmd':tdat,
-                                               'flag':'nomultiple',
-                                               'plugin':self.sname})
+                                             'flag':'nomultiple',
+                                             'plugin':self.sname})
 
           data['fromdata'] = ''
           return data
@@ -459,10 +461,10 @@ class Plugin(BasePlugin):
       if data['fromdata'] != tdat:
         if 'trace' in data:
           data['trace']['changes'].append({'cmd':tdat,
-                                             'flag':'command',
-                                             'cmdran':data['fromdata'],
-                                             'success':'Unknown',
-                                             'plugin':self.sname})
+                                           'flag':'command',
+                                           'cmdran':data['fromdata'],
+                                           'success':'Unknown',
+                                           'plugin':self.sname})
 
       return data
 
@@ -493,8 +495,9 @@ class Plugin(BasePlugin):
 
     lname = None
     if not func:
-      self.api('send.error')('add cmd for cmd %s was passed a null function from plugin %s, not adding' % \
-                                                (cmdname, calledfrom), secondary=calledfrom)
+      self.api('send.error')(
+          'add cmd for cmd %s was passed a null function from plugin %s, not adding' % \
+                (cmdname, calledfrom), secondary=calledfrom)
       return
     try:
       sname = func.im_self.sname
@@ -502,8 +505,9 @@ class Plugin(BasePlugin):
       if 'sname' in args:
         sname = args['sname']
       else:
-        self.api('send.error')('Function is not part of a plugin class: cmd %s from plugin %s' \
-                                                      % (cmdname, calledfrom), secondary=calledfrom)
+        self.api('send.error')(
+            'Function is not part of a plugin class: cmd %s from plugin %s' % \
+                  (cmdname, calledfrom), secondary=calledfrom)
         return
 
     if 'parser' in args:
@@ -522,7 +526,8 @@ class Plugin(BasePlugin):
     tparser.add_argument("-h", "--help", help="show help",
                          action="store_true")
 
-    tparser.prog = '@B%s.%s.%s@w' % (self.api('setting.gets')('cmdprefix'), sname, cmdname)
+    tparser.prog = '@B%s.%s.%s@w' % (self.api('setting.gets')('cmdprefix'),
+                                     sname, cmdname)
 
     if 'group' not in args:
       args['group'] = sname
@@ -537,12 +542,12 @@ class Plugin(BasePlugin):
     if 'lname' not in args:
       self.api('send.msg')('cmd %s.%s has no long name, not adding' % \
                                             (sname, cmdname),
-                               secondary=sname)
+                           secondary=sname)
       return
 
     self.api('send.msg')('added cmd %s.%s' % \
                                             (sname, cmdname),
-                             secondary=sname)
+                         secondary=sname)
 
     if sname not in self.cmds:
       self.cmds[sname] = {}
@@ -570,11 +575,11 @@ class Plugin(BasePlugin):
     else:
       self.api('send.msg')('remove cmd: cmd %s.%s does not exist' % \
                                                 (plugin, cmdname),
-                               secondary=plugin)
+                           secondary=plugin)
 
     self.api('send.msg')('removed cmd %s.%s' % \
                                                 (plugin, cmdname),
-                             secondary=plugin)
+                         secondary=plugin)
 
   # set the default command for a plugin
   def api_setdefault(self, cmd, plugin=None):
