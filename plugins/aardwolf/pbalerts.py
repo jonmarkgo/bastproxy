@@ -5,7 +5,8 @@ It sends alerts for the following:
 
  * quests available
  * gq available
- * ice age
+ * ice age & reboot
+ * daily blessing
 """
 import time
 
@@ -38,8 +39,8 @@ class Plugin(AardwolfBasePlugin):
                             'function':self._quest,
                             'help':'flag for sending alerts for quests'}
     self.evmap['gqs'] = {'event':'aard_gq_declared',
-                            'function':self._gqdeclared,
-                            'help':'flag for sending alerts for gqs'}
+                         'function':self._gqdeclared,
+                         'help':'flag for sending alerts for gqs'}
     self.evmap['iceage'] = {'event':'aard_iceage',
                             'function':self._iceage,
                             'help':'flag for sending alerts for an ice age'}
@@ -47,8 +48,8 @@ class Plugin(AardwolfBasePlugin):
                             'function':self._reboot,
                             'help':'flag for sending alerts for a reboot'}
     self.evmap['daily'] = {'event':'aard_daily_available',
-                            'function':self._daily,
-                            'help':'flag for sending alerts for daily blessing'}
+                           'function':self._daily,
+                           'help':'flag for sending alerts for daily blessing'}
 
 
   def load(self):
@@ -57,9 +58,9 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.load(self)
 
-    for tevent in self.evmap.keys():
+    for tevent in self.evmap:
       self.api('setting.add')(tevent, True, bool,
-                                self.evmap[tevent]['help'])
+                              self.evmap[tevent]['help'])
 
       self.api('events.register')('var_pbalerts_%s' % tevent, self.varchange)
 
@@ -72,10 +73,10 @@ class Plugin(AardwolfBasePlugin):
 
     if tbool:
       self.api('events.register')(self.evmap[tevent]['event'],
-                                      self.evmap[tevent]['function'])
+                                  self.evmap[tevent]['function'])
     else:
       self.api('events.unregister')(self.evmap[tevent]['event'],
-                                      self.evmap[tevent]['function'])
+                                    self.evmap[tevent]['function'])
 
   def _gqdeclared(self, args):
     """
@@ -83,9 +84,9 @@ class Plugin(AardwolfBasePlugin):
     """
     proxy = self.api('managers.getm')('proxy')
     times = time.asctime(time.localtime())
-    msg = '%s:%s - A GQuest has been declared for levels %s to %s. (%s)' % (
-              proxy.host, proxy.port,
-              args['lowlev'], args['highlev'], times)
+    msg = '%s:%s - A GQuest has been declared for levels %s to %s. (%s)' % \
+            (proxy.host, proxy.port,
+             args['lowlev'], args['highlev'], times)
     self.api('pb.note')('New GQuest', msg)
 
   def _quest(self, _=None):
@@ -94,8 +95,8 @@ class Plugin(AardwolfBasePlugin):
     """
     proxy = self.api('managers.getm')('proxy')
     times = time.asctime(time.localtime())
-    msg = '%s:%s - Time to quest! (%s)' % (
-              proxy.host, proxy.port, times)
+    msg = '%s:%s - Time to quest! (%s)' % \
+            (proxy.host, proxy.port, times)
     self.api('pb.note')('Quest Time', msg)
 
   def _iceage(self, _=None):
@@ -104,8 +105,8 @@ class Plugin(AardwolfBasePlugin):
     """
     proxy = self.api('managers.getm')('proxy')
     times = time.asctime(time.localtime())
-    msg = '%s:%s - An ice age approaches! (%s)' % (
-              proxy.host, proxy.port, times)
+    msg = '%s:%s - An ice age approaches! (%s)' % \
+            (proxy.host, proxy.port, times)
     self.api('pb.note')('Ice Age', msg)
 
   def _reboot(self, _=None):
@@ -114,8 +115,8 @@ class Plugin(AardwolfBasePlugin):
     """
     proxy = self.api('managers.getm')('proxy')
     times = time.asctime(time.localtime())
-    msg = '%s:%s - Aardwolf is rebooting (%s)' % (
-              proxy.host, proxy.port, times)
+    msg = '%s:%s - Aardwolf is rebooting (%s)' % \
+            (proxy.host, proxy.port, times)
     self.api('pb.note')('Reboot', msg)
 
   def _daily(self, _=None):
@@ -125,6 +126,6 @@ class Plugin(AardwolfBasePlugin):
     self.api('send.msg')('got daily blessing event')
     proxy = self.api('managers.getm')('proxy')
     times = time.asctime(time.localtime())
-    msg = '%s:%s - Daily blessing is available (%s)' % (
-              proxy.host, proxy.port, times)
+    msg = '%s:%s - Daily blessing is available (%s)' % \
+            (proxy.host, proxy.port, times)
     self.api('pb.note')('Daily Blessing', msg)
