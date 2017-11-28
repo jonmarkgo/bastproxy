@@ -459,6 +459,8 @@ class Plugin(AardwolfBasePlugin):
         self.spellups['self'][i]['enabled'] = True
 
       msg.append('All spellups enabled')
+      self.nextspell()
+      return True, msg
 
     else:
       for spellnum in args['spell']:
@@ -489,6 +491,7 @@ class Plugin(AardwolfBasePlugin):
         self.spellups['self'][i]['enabled'] = False
 
       msg.append('All spellups disabled')
+      return True, msg
 
     else:
       for spellnum in args['spell']:
