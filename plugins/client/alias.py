@@ -51,8 +51,8 @@ class Plugin(BasePlugin):
     BasePlugin.load(self)
 
     self.api('setting.add')('nextnum', 0, int,
-                                'the number of the next alias added',
-                                readonly=True)
+                            'the number of the next alias added',
+                            readonly=True)
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='add an alias')
@@ -76,8 +76,8 @@ class Plugin(BasePlugin):
                         help="the alias group",
                         default="")
     self.api('commands.add')('add',
-                                 self.cmd_add,
-                                 parser=parser)
+                             self.cmd_add,
+                             parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='remove an alias')
@@ -86,8 +86,8 @@ class Plugin(BasePlugin):
                         default='',
                         nargs='?')
     self.api('commands.add')('remove',
-                                 self.cmd_remove,
-                                 parser=parser)
+                             self.cmd_remove,
+                             parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='list aliases')
@@ -96,8 +96,8 @@ class Plugin(BasePlugin):
                         default='',
                         nargs='?')
     self.api('commands.add')('list',
-                                 self.cmd_list,
-                                 parser=parser)
+                             self.cmd_list,
+                             parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='toggle enabled flag')
@@ -106,8 +106,8 @@ class Plugin(BasePlugin):
                         default='',
                         nargs='?')
     self.api('commands.add')('toggle',
-                                 self.cmd_toggle,
-                                 parser=parser)
+                             self.cmd_toggle,
+                             parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='toggle all aliases in a group')
@@ -120,8 +120,8 @@ class Plugin(BasePlugin):
                         help="disable the group",
                         action="store_true")
     self.api('commands.add')('groupt',
-                                 self.cmd_grouptoggle,
-                                 parser=parser)
+                             self.cmd_grouptoggle,
+                             parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='get detail for an alias')
@@ -130,12 +130,12 @@ class Plugin(BasePlugin):
                         default='',
                         nargs='?')
     self.api('commands.add')('detail',
-                                 self.cmd_detail,
-                                 parser=parser)
+                             self.cmd_detail,
+                             parser=parser)
 
     self.api('commands.default')('list')
     self.api('events.register')('io_execute_event', self.checkalias,
-                                    prio=2)
+                                prio=2)
     self.api('events.register')('plugin_%s_savestate' % self.sname, self._savestate)
 
   def checkalias(self, args):
@@ -167,9 +167,9 @@ class Plugin(BasePlugin):
         if datan != data:
           if 'trace' in args:
             args['trace']['changes'].append({'cmd':data,
-                                               'flag':'modify',
-                                               'newcmd':datan,
-                                               'plugin':self.sname})
+                                             'flag':'modify',
+                                             'newcmd':datan,
+                                             'plugin':self.sname})
           if not 'hits' in self._aliases[mem]:
             self._aliases[mem]['hits'] = 0
           if not mem in self.sessionhits:
