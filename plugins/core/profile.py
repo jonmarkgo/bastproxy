@@ -122,7 +122,8 @@ class Plugin(BasePlugin):
     """
     format the command stack
     """
-    msg = ['--- Command Trace ---']
+    msg = ['------------------- Command Trace -------------------']
+    msg.append('%-17s : %s' % ('Original', stack['originalcommand']))
     if stack['fromclient']:
       msg.append('%-17s : from client' % 'Originated')
     if stack['internal']:
@@ -132,32 +133,18 @@ class Plugin(BasePlugin):
     msg.append('%-17s : %s' % ('Show in History', stack['showinhistory']))
     msg.append('%-17s : %s' % ('Added to History', stack['addedtohistory']))
 
+    msg.append('-------------- Stack --------------')
     for i in stack['changes']:
-      if i['flag'] == 'original':
-        msg.append('%-17s : %s' % ('Original', i['cmd'].strip()))
-      elif i['flag'] == 'modify':
-        msg.append('  %-15s :   plugin %s changed cmd "%s" to "%s"' % \
-                          ('Modify', i['plugin'], i['cmd'], i['newcmd']))
-      elif i['flag'] == 'sent':
-        msg.append('  %-15s :   sent "%s" to mud with raw: %s and datatype: %s' % \
-                          ('Sent', i['data'].strip(), i['raw'], i['datatype']))
-      elif i['flag'] == 'command':
-        msg.append('  %-15s :   ran command: "%s" with success: %s' % \
-                          ('Command', i['cmdran'], i['success']))
-      elif i['flag'] == 'startcommand':
-        msg.append('  %-15s :   started command: "%s"' % \
-                          ('Command', i['cmd']))
-      elif i['flag'] == 'endcommand':
-        msg.append('  %-15s :   finished command: "%s"' % \
-                          ('Command', i['cmd']))
-      elif i['flag'] == 'splitchar' or i['flag'] == 'splitcr':
-        msg.append('  %-15s :   split command: "%s" into: "%s"' % \
-                          (i['flag'].capitalize(), i['cmd'], i['into']))
-      else:
-        msg.append('  %-15s :   plugin - %s' % \
-                          (i['flag'].capitalize(), i['plugin']))
+      if 'plugin' in i and i['plugin']:
+        apicall = '%s.formatcmdtraceitem' % i['plugin']
+        if self.api('api.has')(apicall):
+          msg.append(self.api(apicall)(i))
+          continue
 
-    msg.append('---------------------')
+      msg.append("  %-15s :   %s - %s" % (i['plugin'].capitalize(), i['flag'],
+                                          i['data']))
+
+    msg.append('-----------------------------------------------------')
 
     return '\n'.join(msg)
 

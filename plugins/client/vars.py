@@ -87,7 +87,6 @@ class Plugin(BasePlugin):
 
     self.api('events.register')('plugin_%s_savestate' % self.sname, self._savestate)
 
-
   # get a variable
   def api_getv(self, varname):
     """  get the variable with a specified name
@@ -135,9 +134,8 @@ class Plugin(BasePlugin):
 
     if datan != data:
       if 'trace' in args:
-        args['trace']['changes'].append({'cmd':data,
-                                         'flag':'modify',
-                                         'newcmd':datan,
+        args['trace']['changes'].append({'flag':'Modify',
+                                         'data':'changed "%s" to "%s"' % (data, datan),
                                          'plugin':self.sname})
 
       self.api('send.msg')('replacing "%s" with "%s"' % (data.strip(),

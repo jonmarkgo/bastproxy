@@ -166,9 +166,9 @@ class Plugin(BasePlugin):
           datan = cre.sub(self._aliases[mem]['alias'], data)
         if datan != data:
           if 'trace' in args:
-            args['trace']['changes'].append({'cmd':data,
-                                             'flag':'modify',
-                                             'newcmd':datan,
+            args['trace']['changes'].append({'flag':'Modify',
+                                             'data':'changed "%s" to "%s"' % \
+                                                (data, datan),
                                              'plugin':self.sname})
           if not 'hits' in self._aliases[mem]:
             self._aliases[mem]['hits'] = 0

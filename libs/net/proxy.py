@@ -179,17 +179,17 @@ class Proxy(Telnet):
 
     if len(dtype) == 1 and ord(dtype) in self.options:
       if trace:
-        trace['changes'].append({'data':repr(data),
-                                 'flag':'sent',
-                                 'datatype':dtype,
-                                 'raw':raw})
+        trace['changes'].append({'flag':'Sent',
+                                 'data':'"%s" to mud with raw: %s and datatype: %s' %
+                                        (repr(data.strip()), raw, dtype),
+                                 'plugin':'proxy'})
       Telnet.addtooutbuffer(self, data, raw)
     elif dtype == 'fromclient':
       if trace:
-        trace['changes'].append({'data':data,
-                                 'flag':'sent',
-                                 'datatype':dtype,
-                                 'raw':raw})
+        trace['changes'].append({'flag':'Sent',
+                                 'data':'"%s" to mud with raw: %s and datatype: %s' %
+                                        (data.strip(), raw, dtype),
+                                 'plugin':'proxy'})
       Telnet.addtooutbuffer(self, data, raw)
 
   def shutdown(self):

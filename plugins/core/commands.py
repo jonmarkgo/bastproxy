@@ -81,7 +81,6 @@ class Plugin(BasePlugin):
     self.api('api.add')('run', self.api_run)
     self.api('api.add')('cmdhelp', self.api_cmdhelp)
 
-
   def load(self):
     """
     load external stuff
@@ -154,7 +153,6 @@ class Plugin(BasePlugin):
     self.api('events.eraise')('plugin_cmdman_loaded', {})
 
     self.api('events.register')('plugin_%s_savestate' % self.sname, self._savestate)
-
 
   def pluginunloaded(self, args):
     """
@@ -246,8 +244,8 @@ class Plugin(BasePlugin):
                                   cmd['sname'], cmd['commandname'], fullargs)
 
     if 'trace' in data:
-      data['trace']['changes'].append({'cmd':commandran,
-                                       'flag':'startcommand',
+      data['trace']['changes'].append({'flag':'Start',
+                                       'data':"'%s'" % commandran,
                                        'plugin':self.sname})
 
     try:
@@ -261,9 +259,8 @@ class Plugin(BasePlugin):
                             cmd['sname'],
                             cmd['commandname'])))
       if 'trace' in data:
-        data['trace']['changes'].append({'cmd':commandran,
-                                         'flag':'errorcommand',
-                                         'data':exc.errormsg,
+        data['trace']['changes'].append({'flag': 'Error',
+                                         'data':'%s - error parsing args: %s' % (commandran, exc.errormsg),
                                          'plugin':self.sname})
       return retval
 
@@ -305,8 +302,8 @@ class Plugin(BasePlugin):
                                   preamble=cmd['preamble'])
 
     if 'trace' in data:
-      data['trace']['changes'].append({'cmd':commandran,
-                                       'flag':'endcommand',
+      data['trace']['changes'].append({'flag':'Finish',
+                                       'data':"'%s'" % commandran,
                                        'plugin':self.sname})
 
     return retval
@@ -338,18 +335,21 @@ class Plugin(BasePlugin):
     """
     check a line from a client for a command
     """
-    tdat = data['fromdata']
-    success = 'Unknown'
-    commandran = tdat
+    commanddata = {}
+    commanddata['orig'] = data['fromdata']
+    commanddata['commandran'] = data['fromdata']
+    commanddata['flag'] = 'Unknown'
+    commanddata['cmd'] = None
+    commanddata['data'] = data
 
-    if tdat == '':
+    if commanddata['orig'] == '':
       return
 
-    if tdat[0:3].lower() == self.api('setting.gets')('cmdprefix'):
-      targs = shlex.split(tdat.strip())
+    if commanddata['orig'][0:3].lower() == self.api('setting.gets')('cmdprefix'):
+      targs = shlex.split(commanddata['orig'].strip())
       try:
-        tmpind = tdat.index(' ')
-        fullargs = tdat[tmpind+1:]
+        tmpind = commanddata['orig'].index(' ')
+        fullargs = commanddata['orig'][tmpind+1:]
       except ValueError:
         fullargs = ''
       cmd = targs.pop(0)
@@ -362,123 +362,136 @@ class Plugin(BasePlugin):
       if len(cmdsplit) >= 3:
         scmd = cmdsplit[2].strip()
 
-      if 'help' in targs:
+      commanddata['sname'] = sname
+      commanddata['scmd'] = scmd
+
+      if 'help' in targs: # saw a help in targs
         try:
           del targs[targs.index('help')]
         except ValueError:
           pass
-        cmd = self.cmds[self.sname]['list']
-        success = 'Help'
-        commandran = '%s.%s.%s %s %s' % (self.api('setting.gets')('cmdprefix'),
-                                         self.sname, 'list', sname, scmd)
-        self.runcmd(cmd, [sname, scmd], fullargs, data)
+        commanddata['cmd'] = self.cmds[self.sname]['list']
+        commanddata['flag'] = 'Help'
+        commanddata['commandran'] = '%s.%s.%s %s %s' % \
+                (self.api('setting.gets')('cmdprefix'),
+                 self.sname, 'list', sname, scmd)
+        commanddata['targs'] = [sname, scmd]
+        commanddata['fullargs'] = fullargs
 
       elif sname: # got at least "#bp.<command>"
         if sname not in self.cmds: # no command toplevel with <command>
-          success = 'Bad Command'
-          self.api('send.client')("@R%s.%s@W is not a command." % \
-                                                  (sname, scmd))
+          commanddata['flag'] = 'Bad Command'
+          commanddata['cmddata'] = 'not a valid toplevel %s' % sname
         else: # got a command in the toplevel
           if scmd: # got "#bp.<command>.<subcommand>""
             cmd = None
             if scmd in self.cmds[sname]: # <subcommand> was found
               cmd = self.cmds[sname][scmd]
             if cmd:
-              try:
-                self.runcmd(cmd, targs, fullargs, data)
-                success = 'Yes'
-              except Exception:  # pylint: disable=broad-except
-                success = 'Error'
-                self.api('send.traceback')(
-                    'Error when calling command %s.%s' % (sname, scmd))
+              commanddata['cmd'] = cmd
+              commanddata['commandran'] = '%s.%s.%s %s' % \
+                    (self.api('setting.gets')('cmdprefix'), sname,
+                     cmd['commandname'], ' '.join(targs))
+              commanddata['flag'] = 'Run'
+              commanddata['targs'] = targs
+              commanddata['fullargs'] = fullargs
             else:
-              success = 'Bad Command'
-              self.api('send.client')("@R%s.%s@W is not a command" % \
-                                                    (sname, scmd))
+              commanddata['flag'] = 'Bad Command'
+              commanddata['cmddata'] = 'not a valid command for %s' % sname
           else: # got just "#bp.<command>"
             if 'default' in self.cmds[sname]: # check to see if there is a default
-              cmd = self.cmds[sname]['default']
-              commandran = '%s.%s.%s %s' % (self.api('setting.gets')('cmdprefix'), sname,
-                                            cmd['commandname'], ' '.join(targs))
-              try:
-                self.runcmd(cmd, targs, fullargs, data)
-                success = 'Default'
-              except Exception:  # pylint: disable=broad-except
-                success = 'Error'
-                self.api('send.traceback')(
-                    'Error when calling command %s.%s' % (sname, scmd))
+              commanddata['cmd'] = self.cmds[sname]['default']
+              commanddata['commandran'] = '%s.%s.%s %s' % \
+                    (self.api('setting.gets')('cmdprefix'), sname,
+                     self.cmds[sname]['default']['commandname'], ' '.join(targs))
+              commanddata['flag'] = 'Default'
+              commanddata['targs'] = targs
+              commanddata['fullargs'] = fullargs
             else: # no default, so do "#bp.commands.list sname scmd"
-              cmd = self.cmds[self.sname]['list']
-              commandran = '%s.%s.%s %s %s' % (self.api('setting.gets')('cmdprefix'),
-                                               self.sname,
-                                               'list', sname, scmd)
-              try:
-                self.runcmd(cmd, [sname, scmd], '', data)
-                success = 'List'
-              except Exception:  # pylint: disable=broad-except
-                success = 'Error'
-                self.api('send.traceback')(
-                    'Error when calling command %s.%s' % (sname, scmd))
+              commanddata['cmd'] = self.cmds[self.sname]['list']
+              commanddata['commandran'] = '%s.%s.%s %s %s' % \
+                    (self.api('setting.gets')('cmdprefix'),
+                     self.sname,
+                     'list', sname, scmd)
+              commanddata['flag'] = 'List'
+              commanddata['targs'] = [sname, scmd]
+              commanddata['fullargs'] = ''
       else: # this only happens with "#bp" and "#bp."
         try:
           del targs[targs.index('help')]
         except ValueError:
           pass
-        cmd = self.cmds[self.sname]['list']
-        commandran = '%s.%s.%s %s %s' % (self.api('setting.gets')('cmdprefix'),
-                                         self.sname,
-                                         'list', sname, scmd)
+        commanddata['cmd'] = self.cmds[self.sname]['list']
+        commanddata['commandran'] = '%s.%s.%s %s %s' % \
+              (self.api('setting.gets')('cmdprefix'),
+               self.sname,
+               'list', sname, scmd)
+        commanddata['flag'] = 'List2'
+        commanddata['targs'] = [sname, scmd]
+        commanddata['fullargs'] = ''
+
+      # run the command here
+      if commanddata['flag'] == 'Bad Command':
+        self.api('send.client')("@R%s.%s@W is not a command" % \
+              (commanddata['sname'], commanddata['scmd']))
+      else:
         try:
-          self.runcmd(cmd, [sname, scmd], '', data)
-          success = 'List2'
+          commanddata['success'] = self.runcmd(commanddata['cmd'],
+                                               commanddata['targs'],
+                                               commanddata['fullargs'],
+                                               commanddata['data'])
         except Exception:  # pylint: disable=broad-except
-          success = 'Error'
+          commanddata['success'] = 'Error'
           self.api('send.traceback')(
-              'Error when calling command %s.%s' % (sname, scmd))
+              'Error when calling command %s.%s' % (commanddata['sname'],
+                                                    commanddata['scmd']))
+        commanddata['cmddata'] = "'%s' - %s" % (commanddata['commandran'],
+                                                'Outcome: %s' % commanddata['success'])
 
       if 'trace' in data:
-        data['trace']['changes'].append({'cmd':tdat,
-                                         'flag':'command',
-                                         'cmdran':commandran,
-                                         'success':success,
+        data['trace']['changes'].append({'flag': commanddata['flag'],
+                                         'data':commanddata['cmddata'],
                                          'plugin':self.sname})
       return {'fromdata':''}
     else: # no command, so add it to history and check antispam
       addedtohistory = self.addtohistory(data)
-      if tdat.strip() == self.api('setting.gets')('lastcmd'):
+      if commanddata['orig'].strip() == self.api('setting.gets')('lastcmd'):
         self.api('setting.change')('cmdcount',
                                    self.api('setting.gets')('cmdcount') + 1)
         if self.api('setting.gets')('cmdcount') == \
                               self.api('setting.gets')('spamcount'):
           data['fromdata'] = self.api('setting.gets')('antispamcommand') \
-                                      + '|' + tdat
+                                      + '|' + commanddata['orig']
           if 'trace' in data:
             data['addedtohistory'] = addedtohistory
-            data['trace']['changes'].append({'cmd':tdat,
-                                             'flag':'antispam',
-                                             'plugin':self.sname})
+            data['trace']['changes'].append(
+                {'flag':'Antispam',
+                 'data':'cmd was sent %s times, sending %s for antispam' % \
+                     (self.api('setting.gets')('spamcount'),
+                      self.api('setting.gets')('antispamcommand')),
+                 'plugin':self.sname})
           self.api('send.msg')('adding look for 20 commands')
           self.api('setting.change')('cmdcount', 0)
           return data
-        if tdat in self.nomultiplecmds:
+        if commanddata['orig'] in self.nomultiplecmds:
           if 'trace' in data:
-            data['trace']['changes'].append({'cmd':tdat,
-                                             'flag':'nomultiple',
-                                             'plugin':self.sname})
+            data['trace']['changes'].append(
+                {'flag':'Nomultiple',
+                 'data':
+                  'This command has been flagged not to be sent multiple times in a row',
+                 'plugin':self.sname})
 
           data['fromdata'] = ''
           return data
       else:
         self.api('setting.change')('cmdcount', 0)
-        self.api('send.msg')('resetting command to %s' % tdat.strip())
-        self.api('setting.change')('lastcmd', tdat.strip())
+        self.api('send.msg')('resetting command to %s' % commanddata['orig'].strip())
+        self.api('setting.change')('lastcmd', commanddata['orig'].strip())
 
-      if data['fromdata'] != tdat:
+      if data['fromdata'] != commanddata['orig']:
         if 'trace' in data:
-          data['trace']['changes'].append({'cmd':tdat,
-                                           'flag':'command',
-                                           'cmdran':data['fromdata'],
-                                           'success':'Unknown',
+          data['trace']['changes'].append({'flag':'Unknown',
+                                           'data':"'%s' - Don't know why we got here" % data['fromdata'],
                                            'plugin':self.sname})
 
       return data

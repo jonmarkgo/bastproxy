@@ -165,7 +165,7 @@ class ProxyIO(object):
       self.currenttrace = {}
       self.currenttrace['fromclient'] = False
       self.currenttrace['internal'] = True
-      self.currenttrace['changes'] = [{'cmd':command, 'flag':'original'}]
+      self.currenttrace['changes'] = []
       self.currenttrace['showinhistory'] = showinhistory
       self.currenttrace['addedtohistory'] = False
       self.currenttrace['originalcommand'] = command.strip()
@@ -190,8 +190,10 @@ class ProxyIO(object):
 
       commands = command.split('\r\n')
       if len(commands) > 1:
-        self.currenttrace['changes'].append({'cmd':command, 'flag':'splitcr',
-                                             'into':','.join(commands), 'plugin':'io'})
+        self.currenttrace['changes'].append({'flag':'Splitcr',
+                                             'data':'split command: "%s" into: "%s"' % \
+                                              (command, ", ".join(command)),
+                                             'plugin':'io'})
 
       for tcommand in commands:
         newdata = self.api('events.eraise')('io_execute_event',
@@ -210,9 +212,11 @@ class ProxyIO(object):
           if len(datalist) > 1:
             self.api('send.msg')('broke %s into %s' % (tcommand, datalist),
                                  primary='inputparse')
-            self.currenttrace['changes'].append({'cmd':tcommand, 'flag':'splitchar',
-                                                 'into':','.join(datalist),
-                                                 'plugin':'io'})
+            self.currenttrace['changes'].append(
+                {'flag':'Splitchar',
+                 'data':'split command: "%s" into: "%s"' % \
+                   (tcommand, ", ".join(datalist)),
+                 'plugin':'io'})
             for cmd in datalist:
               self.api('send.execute')(cmd, showinhistory=showinhistory)
           else:
