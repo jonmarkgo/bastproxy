@@ -305,8 +305,9 @@ class Plugin(BasePlugin):
       timestamp = args['notimestamp']
 
       if dtype in self.sendtofile:
-        self.currentlogs[dtype]['fhandle'].close()
-        self.currentlogs[dtype]['fhandle'] = None
+        if dtype in self.currentlogs:
+          self.currentlogs[dtype]['fhandle'].close()
+          self.currentlogs[dtype]['fhandle'] = None
         del self.sendtofile[dtype]
         tmsg.append('removing %s from logging' % dtype)
       else:
