@@ -49,8 +49,8 @@ class Plugin(BasePlugin):
                         help="how many times to execute the command",
                         default=1)
     self.api('commands.add')('cmd',
-                                 self.cmd_loop,
-                                 parser=parser)
+                             self.cmd_loop,
+                             parser=parser)
 
     self.api('commands.default')('cmd')
 
@@ -62,6 +62,7 @@ class Plugin(BasePlugin):
     count = int(args['count'])
     if count < 1 or count > 50:
       return True, ['Count has to be between 1 and 50']
+
     if args['cmd']:
       templ = Template(args['cmd'])
       for i in xrange(1, count + 1):
@@ -69,7 +70,6 @@ class Plugin(BasePlugin):
         self.api('send.msg')('sending cmd: %s' % datan)
         self.api('send.execute')(datan)
       return True, ['"%s" was sent %s times' % (args['cmd'], count)]
-    else:
-      tmsg.append("@RPlease include all arguments@w")
-      return False, tmsg
 
+    tmsg.append("@RPlease include all arguments@w")
+    return False, tmsg

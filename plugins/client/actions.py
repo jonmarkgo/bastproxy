@@ -8,13 +8,11 @@ seen from the mud
   [Python Regular Expression HOWTO](https://docs.python.org/2/howto/regex.html)
   * The action can use trigger groups
 """
-import re
 import argparse
 import os
 from string import Template
 
 from plugins._baseplugin import BasePlugin
-from libs.timing import timeit
 from libs.persistentdict import PersistentDict
 
 #these 5 are required
@@ -54,8 +52,8 @@ class Plugin(BasePlugin):
     BasePlugin.load(self)
 
     self.api('setting.add')('nextnum', 0, int,
-                                'the number of the next action added',
-                                readonly=True)
+                            'the number of the next action added',
+                            readonly=True)
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='add a action')
@@ -89,8 +87,8 @@ class Plugin(BasePlugin):
                         help="overwrite an action if it already exists",
                         action="store_true")
     self.api('commands.add')('add',
-                                 self.cmd_add,
-                                 parser=parser)
+                             self.cmd_add,
+                             parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='list actions')
@@ -99,8 +97,8 @@ class Plugin(BasePlugin):
                         default='',
                         nargs='?')
     self.api('commands.add')('list',
-                                 self.cmd_list,
-                                 parser=parser)
+                             self.cmd_list,
+                             parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='remove an action')
@@ -109,8 +107,8 @@ class Plugin(BasePlugin):
                         default='',
                         nargs='?')
     self.api('commands.add')('remove',
-                                 self.cmd_remove,
-                                 parser=parser)
+                             self.cmd_remove,
+                             parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='toggle enabled flag')
@@ -129,8 +127,8 @@ class Plugin(BasePlugin):
                         dest='togact', const='enable',
                         help='enable the action')
     self.api('commands.add')('toggle',
-                                 self.cmd_toggle,
-                                 parser=parser)
+                             self.cmd_toggle,
+                             parser=parser)
 
 
     parser = argparse.ArgumentParser(add_help=False,
@@ -140,8 +138,8 @@ class Plugin(BasePlugin):
                         default='',
                         nargs='?')
     self.api('commands.add')('detail',
-                                 self.cmd_detail,
-                                 parser=parser)
+                             self.cmd_detail,
+                             parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='toggle all actions in a group')
@@ -160,14 +158,13 @@ class Plugin(BasePlugin):
                         dest='togact', const='enable',
                         help='enable the action')
     self.api('commands.add')('groupt',
-                                 self.cmd_grouptoggle,
-                                 parser=parser)
+                             self.cmd_grouptoggle,
+                             parser=parser)
 
     for action in self.actions.values():
       self.register_action(action)
 
     self.api('events.register')('plugin_%s_savestate' % self.sname, self._savestate)
-#    self.api('events.register')('plugin_stats', self.getpluginstats)
 
   def register_action(self, action):
     """
@@ -176,16 +173,16 @@ class Plugin(BasePlugin):
     if 'triggername' not in action:
       action['triggername'] = "action_%s" % action['num']
     self.api('triggers.add')(action['triggername'],
-                    action['regex'])
+                             action['regex'])
     self.api('events.register')('trigger_%s' % action['triggername'],
-                                    self.action_matched)
+                                self.action_matched)
 
   def unregister_action(self, action):
     """
     unregister an action
     """
     self.api('events.unregister')('trigger_%s' % action['triggername'],
-                                     self.action_matched)
+                                  self.action_matched)
     self.api('triggers.remove')(action['triggername'])
 
   def action_matched(self, args):
@@ -201,7 +198,7 @@ class Plugin(BasePlugin):
       self.sessionhits[akey] = self.sessionhits[akey] + 1
       action['hits'] = action['hits'] + 1
       self.api('send.msg')('matched line: %s to action %s' % (args['line'],
-                                                                  akey))
+                                                              akey))
       templ = Template(action['action'])
       newaction = templ.safe_substitute(args)
       sendtype = 'send.' + action['send']
@@ -338,7 +335,7 @@ class Plugin(BasePlugin):
     if args['group']:
       for i in self.actions:
         if self.actions[i]['group'] == args['group']:
-          action = self.toggleaction(self.actions[i]['num'], flag=state)
+          self.toggleaction(self.actions[i]['num'], flag=state)
           togglea.append('%s' % self.actions[i]['num'])
 
       if togglea:
@@ -408,7 +405,7 @@ class Plugin(BasePlugin):
                       item['group'],
                       regex,
                       action))
-    if len(tmsg) == 0:
+    if not tmsg:
       tmsg = ['None']
     else:
       tmsg.insert(0, "%4s %2s  %-10s %-32s : %s@w" % ('#', 'E', 'Group',
@@ -464,7 +461,7 @@ class Plugin(BasePlugin):
     BasePlugin.reset(self)
     self.clearactions()
 
-  def _savestate(self, args=None):
+  def _savestate(self, _=None):
     """
     save states
     """

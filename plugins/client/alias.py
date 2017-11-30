@@ -386,7 +386,7 @@ class Plugin(BasePlugin):
                       self._aliases[item]['group'],
                       item,
                       lalias))
-    if len(tmsg) == 0:
+    if not tmsg:
       tmsg = ['None']
     else:
       tmsg.insert(0, "%4s %2s  %-10s %-20s : %s@w" % ('#', 'E', 'Group',
@@ -409,7 +409,7 @@ class Plugin(BasePlugin):
     BasePlugin.reset(self)
     self.clearaliases()
 
-  def _savestate(self, args=None):
+  def _savestate(self, _=None):
     """
     save states
     """

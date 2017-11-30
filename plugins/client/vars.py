@@ -155,9 +155,9 @@ class Plugin(BasePlugin):
                                               (args['name'], args['value']))
       self.addvariable(args['name'], args['value'])
       return True, tmsg
-    else:
-      tmsg.append("@RPlease include all arguments@w")
-      return False, tmsg
+
+    tmsg.append("@RPlease include all arguments@w")
+    return False, tmsg
 
   def cmd_remove(self, args):
     """
@@ -168,8 +168,8 @@ class Plugin(BasePlugin):
       tmsg.append("@GRemoving variable@w : '%s'" % (args['name']))
       self.removevariable(args['name'])
       return True, tmsg
-    else:
-      return False, ['@RPlease specifiy a variable to remove@w']
+
+    return False, ['@RPlease specifiy a variable to remove@w']
 
   def cmd_list(self, args):
     """
@@ -201,7 +201,7 @@ class Plugin(BasePlugin):
     for item in self._variables:
       if not match or match in item:
         tmsg.append("%-20s : %s@w" % (item, self._variables[item]))
-    if len(tmsg) == 0:
+    if not tmsg:
       tmsg = ['None']
     return tmsg
 
@@ -219,7 +219,7 @@ class Plugin(BasePlugin):
     BasePlugin.reset(self)
     self.clearvariables()
 
-  def _savestate(self, args=None):
+  def _savestate(self, _=None):
     """
     save states
     """
