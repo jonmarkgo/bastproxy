@@ -49,4 +49,3 @@ class Plugin(BasePlugin):
     show we got an a102:101 event
     """
     self.api('send.client')('@RGot A102:101: %s' % args)
-

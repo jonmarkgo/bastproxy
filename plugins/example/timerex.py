@@ -28,13 +28,13 @@ class Plugin(BasePlugin):
     BasePlugin.load(self)
 
     self.api('timers.add')('test_timer', self.test,
-                               600, onetime=False)
+                           600, onetime=False)
     self.api('timers.add')('test_touser_timer', self.test_to_user,
-                               10, onetime=True)
+                           10, onetime=True)
     self.api('timers.add')('test_timewsec', self.test_timewsec,
-                               60, time='2010')
+                           60, time='2010')
     self.api('timers.add')('test_time', self.test_time,
-                               60*60*24, time='1200')
+                           60*60*24, time='1200')
 
   def test(self):
     """

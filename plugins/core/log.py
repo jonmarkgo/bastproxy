@@ -117,7 +117,8 @@ class Plugin(BasePlugin):
 
         if self.api('api.has')('colors.convertcolors') and \
             dtag in self.colors:
-          timestampmsg = self.api('colors.convertcolors')(self.colors[dtag] + timestampmsg)
+          timestampmsg = self.api('colors.convertcolors')(
+              self.colors[dtag] + timestampmsg)
 
         if dtag in self.sendtoclient and self.sendtoclient[dtag] and not senttoclient:
           self.api('send.client')(timestampmsg)
@@ -209,7 +210,7 @@ class Plugin(BasePlugin):
     toggle datatypes shown to client
     """
     tmsg = []
-    if len(args['datatype']) > 0:
+    if args['datatype']:
       for i in args['datatype']:
         if i in self.sendtoclient and i != 'frommud':
           self.sendtoclient[i] = not self.sendtoclient[i]
@@ -222,12 +223,12 @@ class Plugin(BasePlugin):
           tmsg.append('Type %s does not exist' % i)
       self.sendtoclient.sync()
       return True, tmsg
-    else:
-      tmsg.append('Current types going to client')
-      for i in self.sendtoclient:
-        if self.sendtoclient[i]:
-          tmsg.append(i)
-      return True, tmsg
+
+    tmsg.append('Current types going to client')
+    for i in self.sendtoclient:
+      if self.sendtoclient[i]:
+        tmsg.append(i)
+    return True, tmsg
 
   # toggle logging a datatype to the console
   def api_toggletoconsole(self, datatype, flag=True):
@@ -250,7 +251,7 @@ class Plugin(BasePlugin):
     log datatypes to the console
     """
     tmsg = []
-    if len(args['datatype']) > 0:
+    if args['datatype']:
       for i in args['datatype']:
         if i in self.sendtoconsole and i != 'frommud':
           self.sendtoconsole[i] = not self.sendtoconsole[i]
@@ -263,12 +264,12 @@ class Plugin(BasePlugin):
           tmsg.append('Type %s does not exist' % i)
       self.sendtoconsole.sync()
       return True, tmsg
-    else:
-      tmsg.append('Current types going to console')
-      for i in self.sendtoconsole:
-        if self.sendtoconsole[i]:
-          tmsg.append(i)
-      return True, tmsg
+
+    tmsg.append('Current types going to console')
+    for i in self.sendtoconsole:
+      if self.sendtoconsole[i]:
+        tmsg.append(i)
+    return True, tmsg
 
   # toggle logging a datatype to a file
   def api_toggletofile(self, datatype, timestamp=True):
@@ -289,7 +290,7 @@ class Plugin(BasePlugin):
                                    'timestamp':timestamp}
       self.api('send.msg')('setting %s to log to %s' % \
                       (datatype, self.sendtofile[datatype]['file']),
-                               self.sname)
+                           self.sname)
     self.sendtofile.sync()
 
   # toggle a datatype to log to a file
@@ -332,16 +333,16 @@ class Plugin(BasePlugin):
     archive a datatype
     """
     tmsg = []
-    if len(args) > 0:
+    if args:
       for i in args:
         if i in self.dtypes:
           self.archivelog(i)
         else:
           tmsg.append('%s does not exist' % i)
       return True, tmsg
-    else:
-      tmsg = ['Please specifiy a datatype to archive']
-      return False, tmsg
+
+    tmsg = ['Please specifiy a datatype to archive']
+    return False, tmsg
 
   # show all types
   def cmd_types(self, args):
@@ -394,9 +395,9 @@ class Plugin(BasePlugin):
                         default=[],
                         nargs='*')
     self.api('commands.add')('client',
-                                 self.cmd_client,
-                                 lname='Logger',
-                                 parser=parser)
+                             self.cmd_client,
+                             lname='Logger',
+                             parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description="""\
@@ -417,9 +418,9 @@ class Plugin(BasePlugin):
                         help="do not log to file with a timestamp",
                         action="store_false")
     self.api('commands.add')('file',
-                                 self.cmd_file,
-                                 lname='Logger',
-                                 parser=parser)
+                             self.cmd_file,
+                             lname='Logger',
+                             parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description="""\
@@ -431,9 +432,9 @@ class Plugin(BasePlugin):
                         default=[],
                         nargs='*')
     self.api('commands.add')('console',
-                                 self.cmd_console,
-                                 lname='Logger',
-                                 parser=parser)
+                             self.cmd_console,
+                             lname='Logger',
+                             parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description="list all datatypes")
@@ -442,13 +443,13 @@ class Plugin(BasePlugin):
                         default='',
                         nargs='?')
     self.api('commands.add')('types',
-                                 self.cmd_types,
-                                 lname='Logger',
-                                 parser=parser)
+                             self.cmd_types,
+                             lname='Logger',
+                             parser=parser)
 
     #print('log loaded')
 
-  def _savestate(self, args=None):
+  def _savestate(self, _=None):
     """
     save items not covered by baseplugin class
     """

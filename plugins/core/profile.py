@@ -38,15 +38,17 @@ class Plugin(BasePlugin):
     self.api('setting.add')('stacklen', 20, int,
                             '# of command traces kept')
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='show info about command or function profiles')
+    parser = argparse.ArgumentParser(
+        add_help=False,
+        description='show info about command or function profiles')
     parser.add_argument('-i', '--item',
                         help='the item to show',
                         default='',
                         nargs='?')
-    parser.add_argument('-t', "--ptype",
-                        help="the type of profile to list, c for commands, f for functions",
-                        default='')
+    parser.add_argument(
+        '-t', "--ptype",
+        help="the type of profile to list, c for commands, f for functions",
+        default='')
     self.api('commands.add')('show', self.cmd_show,
                              parser=parser)
 
@@ -60,7 +62,7 @@ class Plugin(BasePlugin):
     self.api('events.register')('io_execute_trace_finished', self.savecommand, prio=10)
     self.api('events.register')('var_%s_functions' % self.sname, self.onfunctionschange)
 
-  def onfunctionschange(self, args=None):
+  def onfunctionschange(self, _=None):
     """
     toggle the function profiling
     """
@@ -104,7 +106,7 @@ class Plugin(BasePlugin):
       else:
         pass
 
-  def cmd_rstack(self, args=None):
+  def cmd_rstack(self, _=None):
     """
     reset the command trace
     """

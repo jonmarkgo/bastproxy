@@ -373,4 +373,4 @@ class CLIENT(BaseTelnetOption):
       self.telnetobj.options[ord(GMCP)] = True
     elif command == SE:
       self.api('events.eraise')('GMCP_from_client',
-                                    {'data': sbdata, 'client':self.telnetobj})
+                                {'data': sbdata, 'client':self.telnetobj})

@@ -52,9 +52,9 @@ class Plugin(BasePlugin):
     BasePlugin.load(self)
 
     parser = argparse.ArgumentParser(add_help=False,
-                 description='create documentation')
+                                     description='create documentation')
     self.api('commands.add')('build', self.cmd_build,
-                                 parser=parser, group='Documentation')
+                             parser=parser, group='Documentation')
 
 
   def import_markdown2(self):
@@ -90,9 +90,10 @@ class Plugin(BasePlugin):
     build a list of themes to pick
     """
     themepath = os.path.join(self.pluginlocation, 'css',
-                                          'themes')
+                             'themes')
 
-    template = '<li><a href="#" class="change-style-menu-item" rel="%(rel)s"><i class="icon-fixed-width icon-pencil"></i> %(theme)s</a></li>'
+    template = '<li><a href="#" class="change-style-menu-item" rel="%(rel)s">' \
+                  '<i class="icon-fixed-width icon-pencil"></i> %(theme)s</a></li>'
 
     themelist = os.listdir(themepath)
 
@@ -114,17 +115,16 @@ class Plugin(BasePlugin):
     tocl.append('<ul class="nav sidebar-fixed">')
     firstlev = toc[0][0]
     tocn = {}
-    lastlev = firstlev
     topparent = tocn
-    secparent = None
+    secparent = {}
     for i in xrange(0, len(toc)):
       level = toc[i][0]
-      id = toc[i][1]
+      tid = toc[i][1]
       text = toc[i][2]
       if level == firstlev:
         itemn = len(tocn) + 1
         tocn[itemn] = {}
-        tocn[itemn]['id'] = id
+        tocn[itemn]['id'] = tid
         tocn[itemn]['text'] = text
         tocn[itemn]['parent'] = None
         tocn[itemn]['children'] = {}
@@ -132,7 +132,7 @@ class Plugin(BasePlugin):
       elif level == firstlev + 1:
         childn = len(topparent['children']) + 1
         topparent['children'][childn] = {}
-        topparent['children'][childn]['id'] = id
+        topparent['children'][childn]['id'] = tid
         topparent['children'][childn]['text'] = text
         topparent['children'][childn]['parent'] = topparent
         topparent['children'][childn]['children'] = {}
@@ -140,7 +140,7 @@ class Plugin(BasePlugin):
       elif level == firstlev + 2:
         childn = len(secparent['children']) + 1
         secparent['children'][childn] = {}
-        secparent['children'][childn]['id'] = id
+        secparent['children'][childn]['id'] = tid
         secparent['children'][childn]['text'] = text
         secparent['children'][childn]['parent'] = secparent
         secparent['children'][childn]['children'] = {}
@@ -150,16 +150,19 @@ class Plugin(BasePlugin):
     return '\n'.join(tocl)
 
   def tocitem(self, nitem):
+    """
+    create a table of contents item
+    """
     tocl = []
     for i in sorted(nitem.keys()):
       item = nitem[i]
       data_target = item['id'] + 'Menu'
-      if len(item['children']) > 0:
+      if item['children']:
         tocl.append(
-    """  <li><a href="#" data-toggle="collapse" data-target="#%(data_target)s">
-           %(text)s <i class="glyphicon glyphicon-chevron-right"></i>
-           <ul class="list-unstyled collapse" id="%(data_target)s">""" % \
-           {'data_target':data_target, 'text':item['text']})
+            """  <li><a href="#" data-toggle="collapse" data-target="#%(data_target)s">
+              %(text)s <i class="glyphicon glyphicon-chevron-right"></i>
+              <ul class="list-unstyled collapse" id="%(data_target)s">""" % \
+                {'data_target':data_target, 'text':item['text']})
         tocl.extend(self.tocitem(item['children']))
         tocl.append('</ul></li>')
       else:
@@ -174,13 +177,10 @@ class Plugin(BasePlugin):
     """
     ppack = 'plugins.%s' % plugin.package
 
-    if not ('NODOCS' in sys.modules[ppack].__dict__):
+    if 'NODOCS' not in sys.modules[ppack].__dict__:
       return False
     elif 'NODOCS' in sys.modules[ppack].__dict__:
-      if sys.modules[ppack].__dict__['NODOCS']:
-        return True
-      else:
-        return False
+      return bool(sys.modules[ppack].__dict__['NODOCS'])
 
     return False
 
@@ -205,7 +205,7 @@ class Plugin(BasePlugin):
       name = os.path.splitext(os.path.basename(i))[0]
 
       if not self.checknodocs(pmod):
-        if not (moddir in ptree):
+        if moddir not in ptree:
           ptree[moddir] = {}
 
         ptree[moddir][name] = {'location':i}
@@ -216,15 +216,15 @@ class Plugin(BasePlugin):
                   <ul class="dropdown-menu">""" % (i.capitalize()))
       for j in sorted(ptree[i].keys()):
         item = plugininfo[ptree[i][j]['location']]
-        pmenu.append('<li><a href="%(link)s">%(name)s</a></li>' % {
-                  'name':item['sname'],
-                  'link':'/bastproxy/plugins/%s/%s.html' % (i, item['sname'])})
+        pmenu.append('<li><a href="%(link)s">%(name)s</a></li>' % \
+                       {'name':item['sname'],
+                        'link':'/bastproxy/plugins/%s/%s.html' % (i, item['sname'])})
       pmenu.append('</ul>')
       pmenu.append('</li>')
 
     return '\n'.join(pmenu)
 
-  def build_index(self, title, pluginmenu, plugininfo, template):
+  def build_index(self, title, pluginmenu, _, template):
     """
     build the index page
     """
@@ -243,7 +243,7 @@ class Plugin(BasePlugin):
     body = self.addtableclasses(nbody)
 
     ttoc = self.buildtoc(
-                    self.gettoc('<body>\n' + '\n'.join(body) + '\n</body>'))
+        self.gettoc('<body>\n' + '\n'.join(body) + '\n</body>'))
 
     html = template % {'BODY':'\n'.join(body), 'TOC':ttoc, 'TITLE':title,
                        'PLUGINMENU':pluginmenu, 'PNAME':'Bastproxy', 'CSS':'dark.css',
@@ -263,7 +263,7 @@ class Plugin(BasePlugin):
     """
     from lxml import etree
 
-    if type(html) == type([]):
+    if isinstance(html, list):
       html = '\n'.join(html)
 
     doc = etree.fromstring('<body>\n' + html + '\n</body>\n')
@@ -347,7 +347,7 @@ class Plugin(BasePlugin):
 
     html = htmlout.split('\n')
 
-    if '<html>' == html[0]:
+    if html[0] == '<html>':
       html.pop(0)
     while html[-1] == '':
       html.pop()
@@ -370,7 +370,7 @@ class Plugin(BasePlugin):
 
     if pmod and self.checknodocs(pmod):
       self.api('send.msg')(
-                        'skipping %s' % plugin['fullimploc'])
+          'skipping %s' % plugin['fullimploc'])
       return
 
     self.api('send.msg')('building %s' % plugin['fullimploc'])
@@ -386,8 +386,8 @@ class Plugin(BasePlugin):
     wpluginname = '.'.join(wplugin[1:])
 
     aboutb = markdown2.markdown(testdoc,
-                                  extras=['header-ids', 'fenced-code-blocks',
-                                          'wiki-tables'])
+                                extras=['header-ids', 'fenced-code-blocks',
+                                        'wiki-tables'])
 
     aboutb = self.api('colors.colortohtml')(aboutb)
 
@@ -409,7 +409,7 @@ class Plugin(BasePlugin):
     groups = {}
     for i in sorted(cmds.keys()):
       if i != 'default':
-        if not (cmds[i]['group'] in groups):
+        if cmds[i]['group'] not in groups:
           groups[cmds[i]['group']] = []
 
         groups[cmds[i]['group']].append(i)
@@ -419,13 +419,13 @@ class Plugin(BasePlugin):
     for group in sorted(groups.keys()):
       if group != 'Base':
         cmds.append('<div class="indenth3">')
-        cmds.append('<h3 id="cmdgroup%(NAME)s" class="bph3">%(NAME)s</h3>' % {
-                    'NAME':group})
+        cmds.append('<h3 id="cmdgroup%(NAME)s" class="bph3">%(NAME)s</h3>' % \
+                      {'NAME':group})
         cmds.append('</div>')
         cmds.append('<div class="indenth4">')
         for i in groups[group]:
-          cmds.append('<h4 id="cmd%(NAME)s" class="bph4">%(NAME)s</h4>' % {
-                    'NAME':i})
+          cmds.append('<h4 id="cmd%(NAME)s" class="bph4">%(NAME)s</h4>' % \
+                        {'NAME':i})
           cmds.append('<pre><code>')
           chelp = self.api('commands.cmdhelp')(pmod.sname, i)
           chelp = self.api('colors.colortohtml')(escape(chelp))
@@ -434,31 +434,31 @@ class Plugin(BasePlugin):
         cmds.append('</div>')
 
     cmds.append('<div class="indenth3">')
-    cmds.append('<h3 id="cmdgroup%(NAME)s" class="bph3">%(NAME)s</h3>' % {
-                'NAME':'Base'})
+    cmds.append('<h3 id="cmdgroup%(NAME)s" class="bph3">%(NAME)s</h3>' % \
+                  {'NAME':'Base'})
     cmds.append('</div>')
     cmds.append('<div class="indenth4">')
     for i in groups['Base']:
-        cmds.append('<h4 id="cmd%(NAME)s" class="bph4">%(NAME)s</h4>' % {
-                  'NAME':i})
-        cmds.append('<pre><code>')
-        chelp = self.api('commands.cmdhelp')(pmod.sname, i)
-        chelp = self.api('colors.colortohtml')(escape(chelp))
-        cmds.extend(chelp.split('\n'))
-        cmds.append('</code></pre>')
+      cmds.append('<h4 id="cmd%(NAME)s" class="bph4">%(NAME)s</h4>' % \
+                    {'NAME':i})
+      cmds.append('<pre><code>')
+      chelp = self.api('commands.cmdhelp')(pmod.sname, i)
+      chelp = self.api('colors.colortohtml')(escape(chelp))
+      cmds.extend(chelp.split('\n'))
+      cmds.append('</code></pre>')
     cmds.append('</div>')
 
     body.extend(cmds)
 
-    if len(pmod.settings) > 0:
+    if pmod.settings:
       settings = ['<h2 id="settings" class="bph2">Settings</h2>']
       settings.append('<div class="indenth4">')
       for i in pmod.settings:
-        settings.append('<h3 id="set%(NAME)s" class="bph4">%(NAME)s</h3>' % {
-                          'NAME':i})
+        settings.append('<h3 id="set%(NAME)s" class="bph4">%(NAME)s</h3>' % \
+                          {'NAME':i})
         settings.append('<pre><code>')
         settings.append('%s' % self.api('colors.colortohtml')(
-          escape(pmod.settings[i]['help'])))
+            escape(pmod.settings[i]['help'])))
         settings.append('</code></pre>')
 
       settings.append('</div>')
@@ -467,13 +467,13 @@ class Plugin(BasePlugin):
 
     papis = self.api('api.getchildren')(pmod.sname)
 
-    if len(papis) > 0:
+    if papis:
       apis = ['<h2 id="api" class="bph2">API</h2>']
       apis.append('<div class="indenth4">')
 
       for i in papis:
-        apis.append('<h3 id="set%(NAME)s" class="bph4">%(NAME)s</h3>' % {
-                          'NAME':i})
+        apis.append('<h3 id="set%(NAME)s" class="bph4">%(NAME)s</h3>' % \
+                      {'NAME':i})
         apis.append('<pre><code>')
         tapi = '\n'.join(self.api('api.detail')('%s.%s' % (pmod.sname, i)))
         tapi = self.api('colors.colortohtml')(escape(tapi))
@@ -501,7 +501,7 @@ class Plugin(BasePlugin):
 
     tfile = open(os.path.join(self.api.BASEPATH,
                               outdir, '%s.html'% pmod.sname),
-                              'w')
+                 'w')
 
     tfile.write(html)
 
@@ -529,7 +529,7 @@ class Plugin(BasePlugin):
 
     dir_util.copy_tree(favsrc, favdst)
 
-  def cmd_build(self, args):
+  def cmd_build(self, _):
     """
     @G%(name)s@w - @B%(cmdname)s@w
     detail a function in the api
@@ -550,7 +550,7 @@ class Plugin(BasePlugin):
     self.build_themelist()
 
     temppath = os.path.join(self.pluginlocation, 'templates',
-                                          'template.html')
+                            'template.html')
     plugininfo = self.api('plugins.allplugininfo')()
 
     with open(temppath, 'r') as content_file:
@@ -571,4 +571,3 @@ class Plugin(BasePlugin):
     self.copy_favicon()
 
     return True, ['Docs built', 'Directory: %s' % outpath]
-

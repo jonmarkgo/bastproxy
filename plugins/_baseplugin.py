@@ -397,13 +397,13 @@ class BasePlugin(object):
     #save the state
     self.savestate()
 
-  def __savestate(self, args=None):
+  def __savestate(self, _=None):
     """
     save the settings state
     """
     self.settingvalues.sync()
 
-  def savestate(self, args=None):
+  def savestate(self, _=None):
     """
     save all settings for the plugin
     do not overload!

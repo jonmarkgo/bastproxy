@@ -256,7 +256,7 @@ class Plugin(BasePlugin):
           self.triggers[triggername]['eventname'])
       plugin = self.triggers[triggername]['plugin']
       if event:
-        if len(event['pluginlist']) > 0 and not force:
+        if event['pluginlist'] and not force:
           self.api('send.msg')(
               'deletetrigger: trigger %s has functions registered' % triggername,
               secondary=plugin)
@@ -290,8 +290,8 @@ class Plugin(BasePlugin):
     """
     if triggername in self.triggers:
       return self.triggers[triggername]
-    else:
-      return None
+
+    return None
 
   # remove all triggers related to a plugin
   def api_removeplugin(self, plugin):
@@ -352,8 +352,8 @@ class Plugin(BasePlugin):
     """
     if self.api('setting.gets')('useorig'):
       return self.checktrigger_old(args)
-    else:
-      return self.checktrigger_big(args)
+
+    return self.checktrigger_big(args)
 
   def checktrigger_old(self, args):
     """
@@ -552,7 +552,7 @@ class Plugin(BasePlugin):
       @CUsage@w: detail
     """
     tmsg = []
-    if len(args['trigger']) > 0:
+    if args['trigger']:
       for trigger in args['trigger']:
         if trigger in self.triggers:
           eventname = self.triggers[trigger]['eventname']

@@ -54,29 +54,29 @@ class Plugin(BasePlugin):
                             'the line length for data')
 
     self.api('commands.add')('info',
-                                 self.cmd_info,
-                                 shelp='list proxy info')
+                             self.cmd_info,
+                             shelp='list proxy info')
 
     self.api('commands.add')('clients',
-                                 self.cmd_clients,
-                                 shelp='list clients that are connected')
+                             self.cmd_clients,
+                             shelp='list clients that are connected')
 
     self.api('commands.add')('disconnect',
-                                 self.cmd_disconnect,
-                                 shelp='disconnect from the mud')
+                             self.cmd_disconnect,
+                             shelp='disconnect from the mud')
 
     self.api('commands.add')('connect',
-                                 self.cmd_connect,
-                                 shelp='connect to the mud')
+                             self.cmd_connect,
+                             shelp='connect to the mud')
 
     self.api('commands.add')('restart',
-                                 self.cmd_restart,
-                                 shelp='restart the proxy',
-                                 format=False)
+                             self.cmd_restart,
+                             shelp='restart the proxy',
+                             format=False)
 
     self.api('commands.add')('shutdown',
-                                 self.cmd_shutdown,
-                                 shelp='shutdown the proxy')
+                             self.cmd_shutdown,
+                             shelp='shutdown the proxy')
 
     self.api('events.register')('client_connected', self.client_connected)
     self.api('events.register')('mudconnect', self.sendusernameandpw)
@@ -104,7 +104,7 @@ class Plugin(BasePlugin):
       self.api('send.mud')('\n')
       self.api('send.mud')('\n')
 
-  def cmd_info(self, args):
+  def cmd_info(self, _):
     """
     show info about the proxy
     """
@@ -113,8 +113,8 @@ class Plugin(BasePlugin):
     tmsg = ['']
     started = time.strftime(self.api.timestring, self.api.starttime)
     uptime = self.api('utils.timedeltatostring')(
-                                      self.api.starttime,
-                                      time.localtime())
+        self.api.starttime,
+        time.localtime())
 
     tmsg.append('@B-------------------  Proxy ------------------@w')
     tmsg.append(template % ('Started', started))
@@ -124,11 +124,11 @@ class Plugin(BasePlugin):
     if proxy:
       if proxy.connectedtime:
         tmsg.append(template % ('Connected',
-                                      time.strftime(self.api.timestring,
-                                      proxy.connectedtime)))
+                                time.strftime(self.api.timestring,
+                                              proxy.connectedtime)))
         tmsg.append(template % ('Uptime', self.api('utils.timedeltatostring')(
-                                      proxy.connectedtime,
-                                      time.localtime())))
+            proxy.connectedtime,
+            time.localtime())))
         tmsg.append(template % ('Host', proxy.host))
         tmsg.append(template % ('Port', proxy.port))
       else:
@@ -139,9 +139,9 @@ class Plugin(BasePlugin):
     tmsg.append(template % ('Clients', len(proxy.clients)))
     tmsg.append(template % ('View Clients', len(proxy.vclients)))
     tmsg.append('-------------------------')
-    tret, nmsg = self.api('commands.run')('proxy', 'clients', '')
-    del(nmsg[0])
-    del(nmsg[0])
+    _, nmsg = self.api('commands.run')('proxy', 'clients', '')
+    del nmsg[0]
+    del nmsg[0]
     tmsg.extend(nmsg)
     return True, tmsg
 
@@ -162,15 +162,15 @@ class Plugin(BasePlugin):
       tmsg.append('@B' + 60 * '-')
       for i in proxy.clients:
         ttime = self.api('utils.timedeltatostring')(
-                                      i.connectedtime,
-                                      time.localtime())
+            i.connectedtime,
+            time.localtime())
 
         tmsg.append(clientformat % ('Active', i.host[:17], i.port,
                                     i.ttype[:17], ttime))
       for i in proxy.vclients:
         ttime = self.api('utils.timedeltatostring')(
-                                      i.connectedtime,
-                                      time.localtime())
+            i.connectedtime,
+            time.localtime())
         tmsg.append(clientformat % ('View', i.host[:17], i.port,
                                     i.ttype[:17], ttime))
 
@@ -194,11 +194,11 @@ class Plugin(BasePlugin):
     proxy = self.api('managers.getm')('proxy')
     if proxy.connected:
       return True, ['The proxy is currently connected']
-    else:
-      proxy.connectmud(self.api('setting.gets')('mudhost'),
-                       self.api('setting.gets')('mudport'))
 
-      return True, ['Connecting to the mud']
+    proxy.connectmud(self.api('setting.gets')('mudhost'),
+                     self.api('setting.gets')('mudport'))
+
+    return True, ['Connecting to the mud']
 
   def cmd_shutdown(self, args):
     # pylint: disable=unused-argument
@@ -297,4 +297,3 @@ class Plugin(BasePlugin):
     """
     if not self.api.loading:
       self.api('proxy.restart')()
-

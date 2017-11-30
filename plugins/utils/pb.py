@@ -101,7 +101,8 @@ class Plugin(BasePlugin):
       try:
         import pushbullet
       except ImportError:
-        self.api('send.error')('Please install pushbullet.py with "pip(2) install pushbullet.py"')
+        self.api('send.error')(
+            'Please install pushbullet.py with "pip(2) install pushbullet.py"')
         return False
 
     return True
@@ -149,9 +150,9 @@ class Plugin(BasePlugin):
     if 'error' in rval:
       self.api('send.error')('Pushbullet send failed with %s' % rval)
       return False
-    else:
-      self.api('send.msg')('pb returned %s' % rval)
-      return True
+
+    self.api('send.msg')('pb returned %s' % rval)
+    return True
 
   # send a url through pushbullet
   def api_link(self, title, url, channel=None):
@@ -195,11 +196,11 @@ class Plugin(BasePlugin):
     if 'error' in rval:
       self.api('send.error')('Pushbullet send failed with %s' % rval)
       return False
-    else:
-      self.api('send.msg')('pb returned %s' % rval)
-      return True
 
-  def cmd_channels(self, args):
+    self.api('send.msg')('pb returned %s' % rval)
+    return True
+
+  def cmd_channels(self, _):
     """
     list the channels
     """
@@ -235,8 +236,8 @@ class Plugin(BasePlugin):
     channel = args['channel']
     if self.api('pb.note')(title, body, channel):
       return True, ['Pushbullet note sent']
-    else:
-      return True, ['Attempt failed, please see error message']
+
+    return True, ['Attempt failed, please see error message']
 
   def cmd_link(self, args):
     """
@@ -252,5 +253,5 @@ class Plugin(BasePlugin):
     channel = args['channel']
     if self.api('pb.link')(title, body, channel):
       return True, ['Pushbullet link sent']
-    else:
-      return True, ['Attempt failed, please see error message']
+
+    return True, ['Attempt failed, please see error message']

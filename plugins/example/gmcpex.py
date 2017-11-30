@@ -47,8 +47,8 @@ class Plugin(BasePlugin):
                         default='',
                         nargs='?')
     self.api('commands.add')('get',
-                                 self.cmd_get,
-                                 parser=parser)
+                             self.cmd_get,
+                             parser=parser)
 
   def cmd_get(self, args):
     """
@@ -104,5 +104,3 @@ class Plugin(BasePlugin):
     show the gmcp char.status event
     """
     self.api('send.client')('@CEvent@w - @GGMCP:char.status@w')
-
-
