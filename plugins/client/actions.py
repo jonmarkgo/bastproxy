@@ -8,11 +8,10 @@ seen from the mud
   [Python Regular Expression HOWTO](https://docs.python.org/2/howto/regex.html)
   * The action can use trigger groups
 """
-import argparse
 import os
 from string import Template
-
 from plugins._baseplugin import BasePlugin
+import libs.argp as argp
 from libs.persistentdict import PersistentDict
 
 #these 5 are required
@@ -55,8 +54,8 @@ class Plugin(BasePlugin):
                             'the number of the next action added',
                             readonly=True)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='add a action')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='add a action')
     parser.add_argument('regex',
                         help='the regex to match',
                         default='',
@@ -90,8 +89,8 @@ class Plugin(BasePlugin):
                              self.cmd_add,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='list actions')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='list actions')
     parser.add_argument('match',
                         help='list only actions that have this argument in them',
                         default='',
@@ -100,8 +99,8 @@ class Plugin(BasePlugin):
                              self.cmd_list,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='remove an action')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='remove an action')
     parser.add_argument('action',
                         help='the action to remove',
                         default='',
@@ -110,8 +109,8 @@ class Plugin(BasePlugin):
                              self.cmd_remove,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='toggle enabled flag')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='toggle enabled flag')
     parser.add_argument('action',
                         help='the action to toggle',
                         default='',
@@ -131,8 +130,8 @@ class Plugin(BasePlugin):
                              parser=parser)
 
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='get detail for an action')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='get detail for an action')
     parser.add_argument('action',
                         help='the action to get details for',
                         default='',
@@ -141,8 +140,8 @@ class Plugin(BasePlugin):
                              self.cmd_detail,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='toggle all actions in a group')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='toggle all actions in a group')
     parser.add_argument('group',
                         help='the group to toggle',
                         default='',

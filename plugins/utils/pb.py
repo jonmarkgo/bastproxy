@@ -6,13 +6,12 @@ This plugin sends messages through the pushbullet api
  * Enter your api key with the apikey command
 
 """
-import argparse
-
 try:
   import pushbullet
 except ImportError:
   pushbullet = None
 
+import libs.argp as argp
 from plugins._baseplugin import BasePlugin
 
 #these 5 are required
@@ -50,8 +49,8 @@ class Plugin(BasePlugin):
     self.api('setting.add')('channel', '', str,
                             'the channel to send to')
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='send a note')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='send a note')
     parser.add_argument('title',
                         help='the title of the note',
                         default='Pushbullet note from bastproxy',
@@ -66,8 +65,8 @@ class Plugin(BasePlugin):
     self.api('commands.add')('note', self.cmd_note,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='send a link')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='send a link')
     parser.add_argument('title',
                         help='the title of the link',
                         default='Pushbullet link from bastproxy',
@@ -82,8 +81,8 @@ class Plugin(BasePlugin):
     self.api('commands.add')('link', self.cmd_link,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='show channels associated with pb')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='show channels associated with pb')
     self.api('commands.add')('channels', self.cmd_channels,
                              parser=parser)
 

@@ -4,7 +4,7 @@ This plugin holds a afk plugin
 import time
 import re
 import copy
-import argparse
+import libs.argp as argp
 from plugins.aardwolf._aardwolfbaseplugin import AardwolfBasePlugin
 
 NAME = 'AFK plugin'
@@ -49,18 +49,18 @@ class Plugin(AardwolfBasePlugin):
     self.api('setting.add')('isafk', False, bool, 'AFK flag',
                             readonly=True)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='show the communication queue')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='show the communication queue')
     self.api('commands.add')('show', self.cmd_show,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='clear the communication queue')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='clear the communication queue')
     self.api('commands.add')('clear', self.cmd_clear,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='toggle afk')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='toggle afk')
     self.api('commands.add')('toggle', self.cmd_toggle,
                              parser=parser)
 

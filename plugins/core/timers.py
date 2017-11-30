@@ -3,9 +3,9 @@ this plugin has a timer interface for internal timers
 """
 import time
 import datetime
-import argparse
 import sys
 from plugins._baseplugin import BasePlugin
+import libs.argp as argp
 from libs.event import Event
 
 #these 5 are required
@@ -119,8 +119,8 @@ class Plugin(BasePlugin):
                                 prio=1)
     self.api('send.msg')('lasttime:  %s' % self.lasttime)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='list timers')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='list timers')
     parser.add_argument('match',
                         help='list only events that have this argument in their name',
                         default='',
@@ -129,8 +129,8 @@ class Plugin(BasePlugin):
                              self.cmd_list,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='toggle log flag for a timer')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='toggle log flag for a timer')
     parser.add_argument('timername',
                         help='the timer name',
                         default='',
@@ -139,8 +139,8 @@ class Plugin(BasePlugin):
                              self.cmd_log,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='get details for timers')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='get details for timers')
     parser.add_argument('timers',
                         help='a list of timers to get details',
                         default=[],

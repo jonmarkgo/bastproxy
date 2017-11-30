@@ -2,8 +2,8 @@
 This plugin does spellups for Aardwolf
 """
 import os
-import argparse
 from plugins.aardwolf._aardwolfbaseplugin import AardwolfBasePlugin
+import libs.argp as argp
 from libs.timing import timeit
 from libs.persistentdict import PersistentDict
 
@@ -62,8 +62,8 @@ class Plugin(AardwolfBasePlugin):
                             'the current room',
                             readonly=True)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='add a spellup to the self list')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='add a spellup to the self list')
     parser.add_argument(
         'spell',
         help='the spells to add, use \'all\' to add all practiced spellups',
@@ -75,8 +75,8 @@ class Plugin(AardwolfBasePlugin):
     self.api('commands.add')('add', self.cmd_sadd,
                              parser=parser, group='Spellups on Self')
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='list spellups for self')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='list spellups for self')
     parser.add_argument(
         'match',
         help='list only spellups that have this argument in them',
@@ -84,8 +84,8 @@ class Plugin(AardwolfBasePlugin):
     self.api('commands.add')('list', self.cmd_slist,
                              parser=parser, group='Spellups on Self')
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='remove a spellup from the self list')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='remove a spellup from the self list')
     parser.add_argument(
         'spell',
         help='the spells to remove, use \'all\' to remove all spellups',
@@ -93,8 +93,8 @@ class Plugin(AardwolfBasePlugin):
     self.api('commands.add')('rem', self.cmd_srem,
                              parser=parser, group='Spellups on Self')
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='enable spellups on self')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='enable spellups on self')
     parser.add_argument(
         'spell',
         help='the spells to enable, use \'all\' to enable all spellups',
@@ -102,8 +102,8 @@ class Plugin(AardwolfBasePlugin):
     self.api('commands.add')('en', self.cmd_en,
                              parser=parser, group='Spellups on Self')
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='disable spells on self')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='disable spells on self')
     parser.add_argument(
         'spell',
         help='the spells to disable, use \'all\' to disable all spellups',

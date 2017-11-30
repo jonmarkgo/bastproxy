@@ -2,7 +2,7 @@
 This plugin adds events for Aardwolf Ice Ages.
 """
 import time
-import argparse
+import libs.argp as argp
 from plugins.aardwolf._aardwolfbaseplugin import AardwolfBasePlugin
 
 NAME = 'Aardwolf Daily blessing'
@@ -54,8 +54,8 @@ class Plugin(AardwolfBasePlugin):
         'tookdaily',
         "^You bow your head to Ayla and receive your daily blessing.$")
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='show next daily')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='show next daily')
     self.api('commands.add')('next', self.cmd_next,
                              parser=parser)
 

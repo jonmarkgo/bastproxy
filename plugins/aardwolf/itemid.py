@@ -1,9 +1,9 @@
 """
 This plugin reads and parses id and invdetails from Aardwolf
 """
-import argparse
 import re
 import textwrap
+import libs.argp as argp
 from plugins.aardwolf._aardwolfbaseplugin import AardwolfBasePlugin
 
 NAME = 'Item Identification'
@@ -51,8 +51,8 @@ class Plugin(AardwolfBasePlugin):
     self.api('setting.add')('idcmd', True, str,
                             'identify')
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='id an item')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='id an item')
     parser.add_argument('serial', help='the item to id', default='', nargs='?')
     self.api('commands.add')('id', self.cmd_id,
                              parser=parser, format=False, preamble=False)

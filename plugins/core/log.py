@@ -6,8 +6,8 @@ import sys
 import time
 import os
 import zipfile
-import argparse
 
+import libs.argp as argp
 from libs.persistentdict import PersistentDict
 from plugins._baseplugin import BasePlugin
 
@@ -385,8 +385,8 @@ class Plugin(BasePlugin):
     self.api('events.register')('to_mud_event', self.logmud)
     self.api('events.register')('plugin_%s_savestate' % self.sname, self._savestate)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description="""\
+    parser = argp.ArgumentParser(add_help=False,
+                                 description="""\
       toggle datatypes to clients
 
       if no arguments, data types that are currenty sent to clients will be listed""")
@@ -399,8 +399,8 @@ class Plugin(BasePlugin):
                              lname='Logger',
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description="""\
+    parser = argp.ArgumentParser(add_help=False,
+                                 description="""\
       toggle datatype to log to a file
 
       the file will be located in the data/logs/<dtype> directory
@@ -422,8 +422,8 @@ class Plugin(BasePlugin):
                              lname='Logger',
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description="""\
+    parser = argp.ArgumentParser(add_help=False,
+                                 description="""\
       toggle datatypes to the console
 
       if no arguments, data types that are currenty sent to the console will be listed""")
@@ -436,8 +436,8 @@ class Plugin(BasePlugin):
                              lname='Logger',
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description="list all datatypes")
+    parser = argp.ArgumentParser(add_help=False,
+                                 description="list all datatypes")
     parser.add_argument('match',
                         help='only list datatypes that have this argument in their name',
                         default='',

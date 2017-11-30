@@ -4,11 +4,11 @@ their base class.
 """
 import os
 import sys
-import argparse
 import textwrap
 import pprint
 import inspect
 import time
+import libs.argp as argp
 from libs.persistentdict import PersistentDictEvent
 from libs.api import API
 
@@ -81,9 +81,9 @@ class BasePlugin(object):
     """
     load the commands
     """
-    parser = argparse.ArgumentParser(
+    parser = argp.ArgumentParser(
         add_help=False,
-        formatter_class=argparse.RawDescriptionHelpFormatter,
+        formatter_class=argp.RawDescriptionHelpFormatter,
         description=textwrap.dedent("""
           change a setting in the plugin
 
@@ -104,29 +104,29 @@ class BasePlugin(object):
                              showinhistory=False)
 
     if self.canreset:
-      parser = argparse.ArgumentParser(add_help=False,
-                                       description='reset the plugin')
+      parser = argp.ArgumentParser(add_help=False,
+                                   description='reset the plugin')
       self.api('commands.add')('reset',
                                self._cmd_reset,
                                parser=parser,
                                group='Base')
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='save the plugin state')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='save the plugin state')
     self.api('commands.add')('save',
                              self._cmd_save,
                              parser=parser,
                              group='Base')
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='show plugin stats')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='show plugin stats')
     self.api('commands.add')('stats',
                              self._cmd_stats,
                              parser=parser,
                              group='Base')
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='inspect a plugin')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='inspect a plugin')
     parser.add_argument('-m',
                         "--method",
                         help="get code for a method",
@@ -144,8 +144,8 @@ class BasePlugin(object):
                              parser=parser,
                              group='Base')
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='show help info for this plugin')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='show help info for this plugin')
     parser.add_argument('-a',
                         "--api",
                         help="show functions this plugin has in the api",
@@ -159,8 +159,8 @@ class BasePlugin(object):
                              parser=parser,
                              group='Base')
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='list functions in the api')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='list functions in the api')
     parser.add_argument('api',
                         help='api to get details of',
                         default='',

@@ -80,12 +80,12 @@ optional arguments:
      * 2nd argument = 'this is the second argument'
 """
 import asyncore
-import argparse
 import os
 import sys
 import socket
 import time
 from libs.api import API as BASEAPI
+import libs.argp as argp
 
 # import io so we can add the "send" functions to the api
 from libs import io
@@ -211,7 +211,7 @@ def main():
   """
   setuppaths()
 
-  parser = argparse.ArgumentParser(description='A python mud proxy')
+  parser = argp.ArgumentParser(description='A python mud proxy')
   parser.add_argument('-p', "--port",
                       help="the port for the proxy to listen on",
                       default=9999)

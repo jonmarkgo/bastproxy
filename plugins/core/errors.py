@@ -1,7 +1,7 @@
 """
 This plugin shows and clears errors seen during plugin execution
 """
-import argparse
+import libs.argp as argp
 from plugins._baseplugin import BasePlugin
 
 NAME = 'Error Plugin'
@@ -35,8 +35,8 @@ class Plugin(BasePlugin):
     """
     BasePlugin.load(self)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='show errors')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='show errors')
     parser.add_argument('number',
                         help='list the last <number> errors',
                         default='-1',
@@ -45,8 +45,8 @@ class Plugin(BasePlugin):
                              self.cmd_show,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='clear errors')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='clear errors')
     self.api('commands.add')('clear',
                              self.cmd_clear,
                              parser=parser)

@@ -11,7 +11,7 @@ This plugin holds a stat database and collects the following:
 """
 import copy
 import time
-import argparse
+import libs.argp as argp
 from plugins.aardwolf._aardwolfbaseplugin import AardwolfBasePlugin
 
 NAME = 'StatDB'
@@ -811,13 +811,13 @@ class Plugin(AardwolfBasePlugin):
     self.api('setting.add')('backupinterval', '4h', 'timelength',
                             'the interval to backup the db, default every 4 hours')
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='list milestones')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='list milestones')
     self.api('commands.add')('list', self.cmd_list,
                              parser=parser, group='Milestones')
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='compare milestones')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='compare milestones')
     parser.add_argument('milestone1', help='the first milestone',
                         default='', nargs='?')
     parser.add_argument('milestone2', help='the second milestone',
@@ -825,8 +825,8 @@ class Plugin(AardwolfBasePlugin):
     self.api('commands.add')('comp', self.cmd_comp,
                              parser=parser, group='Milestones')
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='show quests stats')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='show quests stats')
     parser.add_argument('count', help='the number of quests to show',
                         default=0, nargs='?')
     parser.add_argument('-n', "--number",
@@ -835,8 +835,8 @@ class Plugin(AardwolfBasePlugin):
     self.api('commands.add')('quests', self.cmd_quests,
                              parser=parser, group='Stats')
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='show level stats')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='show level stats')
     parser.add_argument('count', help='the number of levels to show',
                         default=0, nargs='?')
     parser.add_argument('-n', "--number",
@@ -845,8 +845,8 @@ class Plugin(AardwolfBasePlugin):
     self.api('commands.add')('levels', self.cmd_levels,
                              parser=parser, group='Stats')
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='show cp stats')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='show cp stats')
     parser.add_argument('count', help='the number of cps to show',
                         default=0, nargs='?')
     parser.add_argument('-n', "--number",
@@ -855,8 +855,8 @@ class Plugin(AardwolfBasePlugin):
     self.api('commands.add')('cps', self.cmd_cps,
                              parser=parser, group='Stats')
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='show gq stats')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='show gq stats')
     parser.add_argument('count', help='the number of gqs to show',
                         default=0, nargs='?')
     parser.add_argument('-n', "--number",
@@ -865,8 +865,8 @@ class Plugin(AardwolfBasePlugin):
     self.api('commands.add')('gqs', self.cmd_gqs,
                              parser=parser, group='Stats')
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='show mob stats')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='show mob stats')
     parser.add_argument('count', help='the number of mobkills to show',
                         default=0, nargs='?')
     self.api('commands.add')('mobs', self.cmd_mobs,

@@ -4,8 +4,8 @@ This plugin handles slist from Aardwolf
 import time
 import os
 import copy
-import argparse
 from plugins.aardwolf._aardwolfbaseplugin import AardwolfBasePlugin
+import libs.argp as argp
 from libs.persistentdict import PersistentDict
 
 NAME = 'Aardwolf Skills'
@@ -92,13 +92,13 @@ class Plugin(AardwolfBasePlugin):
 
     self.api('send.msg')('running load function of skills')
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='refresh skills and spells')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='refresh skills and spells')
     self.api('commands.add')('refresh', self.cmd_refresh,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='lookup skill or spell by name or sn')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='lookup skill or spell by name or sn')
     parser.add_argument('skill', help='the skill to lookup',
                         default='', nargs='?')
     self.api('commands.add')('lu', self.cmd_lu,

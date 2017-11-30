@@ -3,7 +3,6 @@ This module creates the documentation
 
 it requires the markdown2 and lxml libraries
 """
-import argparse
 import sys
 import os
 import copy
@@ -21,6 +20,7 @@ except ImportError:
 
 from cgi import escape
 
+import libs.argp as argp
 from plugins._baseplugin import BasePlugin
 
 #these 5 are required
@@ -51,8 +51,8 @@ class Plugin(BasePlugin):
     """
     BasePlugin.load(self)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='create documentation')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='create documentation')
     self.api('commands.add')('build', self.cmd_build,
                              parser=parser, group='Documentation')
 

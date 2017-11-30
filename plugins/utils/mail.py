@@ -3,10 +3,9 @@ This plugin sends mail
 """
 import smtplib
 import os
-import argparse
 import signal
 from datetime import datetime
-
+import libs.argp as argp
 from plugins._baseplugin import BasePlugin
 
 
@@ -41,16 +40,16 @@ class Plugin(BasePlugin):
 
     self.api('events.register')('client_connected', self.checkpassword)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='set the password for the mail account')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='set the password for the mail account')
     parser.add_argument('password',
                         help='the top level api to show (optional)',
                         default='', nargs='?')
     self.api('commands.add')('password', self.cmd_pw,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='send a test email')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='send a test email')
     parser.add_argument('subject',
                         help='the subject of the test email (optional)',
                         default='Test subject from bastproxy', nargs='?')
@@ -60,7 +59,7 @@ class Plugin(BasePlugin):
     self.api('commands.add')('test', self.cmd_test,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(
+    parser = argp.ArgumentParser(
         add_help=False,
         description='check to make sure all settings are applied')
     self.api('commands.add')('check', self.cmd_check,

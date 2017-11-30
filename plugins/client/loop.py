@@ -6,8 +6,8 @@ This plugin loops commands for a specified number of times
    will get all from 1.corpse, 2.corpse, 3.corpse, etc.
 
 """
-import argparse
 from string import Template
+import libs.argp as argp
 from plugins._baseplugin import BasePlugin
 
 #these 5 are required
@@ -38,8 +38,8 @@ class Plugin(BasePlugin):
     """
     BasePlugin.load(self)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='loop a command')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='loop a command')
     parser.add_argument('cmd',
                         help='the command to run',
                         default='',

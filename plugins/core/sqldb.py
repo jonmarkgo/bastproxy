@@ -42,9 +42,9 @@ import os
 import shutil
 import time
 import zipfile
-import argparse
 import copy
 
+import libs.argp as argp
 from plugins._baseplugin import BasePlugin
 
 NAME = 'SQL DB base class'
@@ -193,8 +193,8 @@ class Sqldb(object):
     """
     add commands to the plugin to use the database
     """
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='backup the database')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='backup the database')
     parser.add_argument('name',
                         help='the name to backup to',
                         default='',
@@ -204,21 +204,21 @@ class Sqldb(object):
                              parser=parser,
                              group='DB')
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='close the database')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='close the database')
     self.api('commands.add')('dbclose',
                              self.cmd_close,
                              parser=parser,
                              group='DB')
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='vacuum the database')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='vacuum the database')
     self.api('commands.add')('dbvac',
                              self.cmd_vac,
                              parser=parser,
                              group='DB')
 
-    parser = argparse.ArgumentParser(
+    parser = argp.ArgumentParser(
         add_help=False,
         description='run a sql statement against the database')
     parser.add_argument('stmt',
@@ -230,7 +230,7 @@ class Sqldb(object):
                              parser=parser,
                              group='DB')
 
-    parser = argparse.ArgumentParser(
+    parser = argp.ArgumentParser(
         add_help=False,
         description='run a sql update/insert against the database')
     parser.add_argument('stmt',
@@ -242,7 +242,7 @@ class Sqldb(object):
                              parser=parser,
                              group='DB')
 
-    parser = argparse.ArgumentParser(
+    parser = argp.ArgumentParser(
         add_help=False,
         description='remove a row from a table')
     parser.add_argument('table',

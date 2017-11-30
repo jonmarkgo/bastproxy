@@ -12,9 +12,9 @@ Two types of aliases:
 """
 import os
 import re
-import argparse
 
 from plugins._baseplugin import BasePlugin
+import libs.argp as argp
 from libs.persistentdict import PersistentDict
 
 #these 5 are required
@@ -54,8 +54,8 @@ class Plugin(BasePlugin):
                             'the number of the next alias added',
                             readonly=True)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='add an alias')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='add an alias')
     parser.add_argument('original',
                         help='the input to replace',
                         default='',
@@ -79,8 +79,8 @@ class Plugin(BasePlugin):
                              self.cmd_add,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='remove an alias')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='remove an alias')
     parser.add_argument('alias',
                         help='the alias to remove',
                         default='',
@@ -89,8 +89,8 @@ class Plugin(BasePlugin):
                              self.cmd_remove,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='list aliases')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='list aliases')
     parser.add_argument('match',
                         help='list only aliases that have this argument in them',
                         default='',
@@ -99,8 +99,8 @@ class Plugin(BasePlugin):
                              self.cmd_list,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='toggle enabled flag')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='toggle enabled flag')
     parser.add_argument('alias',
                         help='the alias to toggle',
                         default='',
@@ -109,8 +109,8 @@ class Plugin(BasePlugin):
                              self.cmd_toggle,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='toggle all aliases in a group')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='toggle all aliases in a group')
     parser.add_argument('group',
                         help='the group to toggle',
                         default='',
@@ -123,8 +123,8 @@ class Plugin(BasePlugin):
                              self.cmd_grouptoggle,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='get detail for an alias')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='get detail for an alias')
     parser.add_argument('alias',
                         help='the alias to get details for',
                         default='',

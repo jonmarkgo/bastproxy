@@ -4,7 +4,7 @@ This plugin searches inventory for aarcheology items
 It can tell how many are in inventory, how many are needed,
 which pamplets are in inventory and which are needed
 """
-import argparse
+import libs.argp as argp
 from plugins.aardwolf._aardwolfbaseplugin import AardwolfBasePlugin
 
 NAME = 'Aardwolf Aarch'
@@ -87,8 +87,8 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.load(self)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='show needed aarch items')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='show needed aarch items')
     parser.add_argument('filter', help='a word in an aarch piece to check for',
                         default='', nargs='?')
     self.api('commands.add')('need', self.cmd_need,

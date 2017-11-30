@@ -2,9 +2,9 @@
 This plugin is a simple substition plugin
 """
 import os
-import argparse
 
 from plugins._baseplugin import BasePlugin
+import libs.argp as argp
 from libs.persistentdict import PersistentDict
 
 #these 5 are required
@@ -37,8 +37,8 @@ class Plugin(BasePlugin):
     """
     BasePlugin.load(self)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='add a simple substitute')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='add a simple substitute')
     parser.add_argument('original',
                         help='the output to substitute',
                         default='',
@@ -51,8 +51,8 @@ class Plugin(BasePlugin):
                              self.cmd_add,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='remove a substitute')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='remove a substitute')
     parser.add_argument('substitute',
                         help='the substitute to remove',
                         default='',
@@ -61,8 +61,8 @@ class Plugin(BasePlugin):
                              self.cmd_remove,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='list substitutes')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='list substitutes')
     parser.add_argument('match',
                         help='list only substitutes that have this argument in them',
                         default='',
@@ -71,8 +71,8 @@ class Plugin(BasePlugin):
                              self.cmd_list,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='clear all substitutes')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='clear all substitutes')
     self.api('commands.add')('clear',
                              self.cmd_clear,
                              parser=parser)

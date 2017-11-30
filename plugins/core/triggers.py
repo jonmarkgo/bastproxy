@@ -2,13 +2,14 @@
 This plugin handles internal triggers for the proxy
 """
 import sys
-import argparse
 import time
 try:
   import regex as re
 except ImportError:
   print("Please install the regex library: pip install regex")
   sys.exit(1)
+
+import libs.argp as argp
 from plugins._baseplugin import BasePlugin
 
 #these 5 are required
@@ -64,8 +65,8 @@ class Plugin(BasePlugin):
     self.api('events.register')('var_%s_echo' % self.sname, self.enablechange)
     self.api('events.register')('var_%s_useorig' % self.sname, self.functionchange)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='get details of a trigger')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='get details of a trigger')
     parser.add_argument('trigger',
                         help='the trigger to detail',
                         default=[],
@@ -74,8 +75,8 @@ class Plugin(BasePlugin):
                              self.cmd_detail,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='list triggers')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='list triggers')
     parser.add_argument('match',
                         help='list only triggers that have this argument in them',
                         default='',

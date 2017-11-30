@@ -20,7 +20,7 @@ This plugin handles colors
 
 """
 import re
-import argparse
+import libs.argp as argp
 from plugins._baseplugin import BasePlugin
 
 NAME = 'Ansi Colors'
@@ -230,13 +230,13 @@ class Plugin(BasePlugin):
     """
     BasePlugin.load(self)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='show colors')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='show colors')
     self.api('commands.add')('show',
                              self.cmd_show,
                              parser=parser)
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='show color examples')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='show color examples')
     self.api('commands.add')('example',
                              self.cmd_example,
                              parser=parser)

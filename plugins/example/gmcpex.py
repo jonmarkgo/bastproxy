@@ -8,7 +8,7 @@ This plugin is an example plugin to show how to use gmcp
 
  see the [Aardwolf Wiki](http://www.aardwolf.com/wiki/index.php/Clients/GMCP)
 """
-import argparse
+import libs.argp as argp
 from plugins._baseplugin import BasePlugin
 
 NAME = 'GMCP Test'
@@ -39,7 +39,7 @@ class Plugin(BasePlugin):
     self.api('events.register')('GMCP:char', self.testchar)
     self.api('events.register')('GMCP:char.status', self.testcharstatus)
 
-    parser = argparse.ArgumentParser(
+    parser = argp.ArgumentParser(
         add_help=False,
         description='print what is in a module in the gmcp cache')
     parser.add_argument('module',

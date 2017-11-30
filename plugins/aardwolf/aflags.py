@@ -1,7 +1,7 @@
 """
 This plugin highlights cp/gq/quest mobs in scan
 """
-import argparse
+import libs.argp as argp
 from plugins.aardwolf._aardwolfbaseplugin import AardwolfBasePlugin
 
 NAME = 'Affect Flags'
@@ -39,20 +39,20 @@ class Plugin(AardwolfBasePlugin):
     self.cmdqueue.addcmdtype('aflags', 'aflags', "^aflags$",
                              beforef=self.aflagsbefore, afterf=self.aflagsafter)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='refresh affect flags')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='refresh affect flags')
     self.api('commands.add')('refresh', self.cmd_refresh,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='check to see if affected by a flag')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='check to see if affected by a flag')
     parser.add_argument('flag', help='the flag to check',
                         default='', nargs='?')
     self.api('commands.add')('check', self.cmd_check,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='list affect flags')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='list affect flags')
     self.api('commands.add')('list', self.cmd_list,
                              parser=parser)
 

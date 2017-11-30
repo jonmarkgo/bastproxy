@@ -2,7 +2,7 @@
 This plugin will handle watching for commands coming from the client
 """
 import re
-import argparse
+import libs.argp as argp
 from plugins._baseplugin import BasePlugin
 
 #these 5 are required
@@ -46,8 +46,8 @@ class Plugin(BasePlugin):
 
     self.api('events.register')('io_execute_event', self.checkcmd)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='list watches')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='list watches')
     parser.add_argument('match',
                         help='list only watches that have this argument in them',
                         default='',
@@ -56,8 +56,8 @@ class Plugin(BasePlugin):
                              self.cmd_list,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='get details of a watch')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='get details of a watch')
     parser.add_argument('watch',
                         help='the trigger to detail',
                         default=[],

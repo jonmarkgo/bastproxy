@@ -5,7 +5,7 @@ import time
 import os
 import copy
 import re
-import argparse
+import libs.argp as argp
 from libs.persistentdict import PersistentDict
 from plugins.aardwolf._aardwolfbaseplugin import AardwolfBasePlugin
 
@@ -47,13 +47,13 @@ class Plugin(AardwolfBasePlugin):
     self.cmdqueue.addcmdtype('cpcheck', 'campaign check', "^campaign check$",
                              beforef=self.cpcheckbefore, afterf=self.cpcheckafter)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='show cp info')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='show cp info')
     self.api('commands.add')('show', self.cmd_show,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='refresh cp info')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='refresh cp info')
     self.api('commands.add')('refresh', self.cmd_refresh,
                              parser=parser)
 

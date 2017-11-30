@@ -5,12 +5,11 @@ All commands are #bp.[plugin].[cmd]
 """
 import shlex
 import os
-import argparse
 import textwrap as _textwrap
 
 from plugins._baseplugin import BasePlugin
 from libs.persistentdict import PersistentDict
-from libs.argp import ArgumentError, ArgParser
+import libs.argp as argp
 
 NAME = 'Commands'
 SNAME = 'commands'
@@ -22,7 +21,7 @@ PRIORITY = 10
 # This keeps the plugin from being autoloaded if set to False
 AUTOLOAD = True
 
-class CustomFormatter(argparse.HelpFormatter):
+class CustomFormatter(argp.HelpFormatter):
   """
   custom formatter for argparser for commands
   """
@@ -44,8 +43,8 @@ class CustomFormatter(argparse.HelpFormatter):
     """
     thelp = action.help
     if '%(default)' not in action.help:
-      if action.default is not argparse.SUPPRESS:
-        defaulting_nargs = [argparse.OPTIONAL, argparse.ZERO_OR_MORE]
+      if action.default is not argp.SUPPRESS:
+        defaulting_nargs = [argp.OPTIONAL, argp.ZERO_OR_MORE]
         if action.option_strings or action.nargs in defaulting_nargs:
           if action.default != '':
             thelp += ' (default: %(default)s)'
@@ -105,8 +104,8 @@ class Plugin(BasePlugin):
     self.api('setting.add')('historysize', 50, int,
                             'the size of the history to keep')
 
-    parser = ArgParser(add_help=False,
-                       description='list commands in a category')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='list commands in a category')
     parser.add_argument('category',
                         help='the category to see help for',
                         default='',
@@ -121,8 +120,8 @@ class Plugin(BasePlugin):
                              parser=parser,
                              showinhistory=False)
 
-    parser = ArgParser(add_help=False,
-                       description='list the command history')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='list the command history')
     parser.add_argument('-c',
                         "--clear",
                         help="clear the history",
@@ -133,8 +132,8 @@ class Plugin(BasePlugin):
                              parser=parser,
                              showinhistory=False)
 
-    parser = ArgParser(add_help=False,
-                       description='run a command in history')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='run a command in history')
     parser.add_argument('number',
                         help='the history # to run',
                         default=-1,
@@ -250,7 +249,7 @@ class Plugin(BasePlugin):
 
     try:
       args, dummy = cmd['parser'].parse_known_args(targs)
-    except ArgumentError, exc:
+    except argp.ArgumentError, exc:
       tmsg = []
       tmsg.append('Error: %s' % exc.errormsg)
       tmsg.extend(cmd['parser'].format_help().split('\n'))
@@ -549,8 +548,8 @@ class Plugin(BasePlugin):
                                       (sname, cmdname))
       if 'shelp' not in args:
         args['shelp'] = 'there is no help for this command'
-      tparser = ArgParser(add_help=False,
-                          description=args['shelp'])
+      tparser = argp.ArgumentParser(add_help=False,
+                                    description=args['shelp'])
       args['parser'] = tparser
 
     tparser.add_argument("-h", "--help", help="show help",

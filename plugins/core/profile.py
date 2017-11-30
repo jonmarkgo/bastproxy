@@ -1,8 +1,8 @@
 """
 This plugin shows and clears errors seen during plugin execution
 """
-import argparse
 from plugins._baseplugin import BasePlugin
+import libs.argp as argp
 from libs.queue import SimpleQueue
 
 NAME = 'Profile Plugin'
@@ -38,7 +38,7 @@ class Plugin(BasePlugin):
     self.api('setting.add')('stacklen', 20, int,
                             '# of command traces kept')
 
-    parser = argparse.ArgumentParser(
+    parser = argp.ArgumentParser(
         add_help=False,
         description='show info about command or function profiles')
     parser.add_argument('-i', '--item',
@@ -52,8 +52,8 @@ class Plugin(BasePlugin):
     self.api('commands.add')('show', self.cmd_show,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='reset command stack')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='reset command stack')
     self.api('commands.add')('rstack', self.cmd_rstack,
                              parser=parser)
 

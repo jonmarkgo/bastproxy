@@ -5,7 +5,7 @@ This plugin is a mapper plugin
 """
 import copy
 import time
-import argparse
+import libs.argp as argp
 from plugins.aardwolf._aardwolfbaseplugin import AardwolfBasePlugin
 
 NAME = 'Aardwolf Mapper'
@@ -317,22 +317,22 @@ class Plugin(AardwolfBasePlugin):
     self.api('setting.add')('shownotes', True, bool,
                             'show notes when entering a room')
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='show mapper information for a room')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='show mapper information for a room')
     parser.add_argument('room', help='the room number',
                         default=None, nargs='?', type=int)
     self.api('commands.add')('showroom', self.cmd_showroom,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='purge a room')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='purge a room')
     parser.add_argument('room', help='the room number',
                         default=None, nargs='?', type=int)
     self.api('commands.add')('purgeroom', self.cmd_purgeroom,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='lookup a room')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='lookup a room')
     parser.add_argument('room', help='a string',
                         default=None, nargs='?')
     parser.add_argument('-e', "--exact", help="the argument is the exact name",
@@ -340,8 +340,8 @@ class Plugin(AardwolfBasePlugin):
     self.api('commands.add')('find', self.cmd_find,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='lookup a room in a specific area')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='lookup a room in a specific area')
     parser.add_argument('room', help='a string',
                         default=None, nargs='?')
     parser.add_argument('area', help='a string',
@@ -351,33 +351,33 @@ class Plugin(AardwolfBasePlugin):
     self.api('commands.add')('area', self.cmd_area,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(
+    parser = argp.ArgumentParser(
         add_help=False,
         description='goto the next room from the previous search result')
     self.api('commands.add')('next', self.cmd_next,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='resume going to a room')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='resume going to a room')
     self.api('commands.add')('resume', self.cmd_resume,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='goto a room')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='goto a room')
     parser.add_argument('room', help='the room number',
                         default=None, nargs='?', type=int)
     self.api('commands.add')('goto', self.cmd_goto,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='walk to room (no portals)')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='walk to room (no portals)')
     parser.add_argument('room', help='the room number',
                         default=None, nargs='?', type=int)
     self.api('commands.add')('walk', self.cmd_walk,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='get speedwalk for a path')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='get speedwalk for a path')
     parser.add_argument('start', help='the room number',
                         default=None, nargs='?', type=int)
     parser.add_argument('end', help='the room number',

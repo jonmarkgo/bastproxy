@@ -4,9 +4,9 @@ a plugin to handle global variables, if something goes through
   can be specified with $varname and will be substituted.
 """
 import os
-import argparse
 from string import Template
 from plugins._baseplugin import BasePlugin
+import libs.argp as argp
 from libs.persistentdict import PersistentDict
 
 #these 5 are required
@@ -45,8 +45,8 @@ class Plugin(BasePlugin):
     """
     BasePlugin.load(self)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='add a variable')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='add a variable')
     parser.add_argument('name',
                         help='the name of the variable',
                         default='',
@@ -59,8 +59,8 @@ class Plugin(BasePlugin):
                              self.cmd_add,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='remove a variable')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='remove a variable')
     parser.add_argument('name',
                         help='the variable to remove',
                         default='',
@@ -69,8 +69,8 @@ class Plugin(BasePlugin):
                              self.cmd_remove,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='list variables')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='list variables')
     parser.add_argument('match',
                         help='list only variables that have this argument in their name',
                         default='',

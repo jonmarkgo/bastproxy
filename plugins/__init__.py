@@ -8,9 +8,9 @@ import os
 import sys
 import inspect
 import operator
-import argparse
 import fnmatch
 
+import libs.argp as argp
 from libs.persistentdict import PersistentDict
 from libs.api import API
 from plugins._baseplugin import BasePlugin
@@ -825,8 +825,8 @@ class PluginMgr(BasePlugin):
 
     BasePlugin._loadcommands(self)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description="list plugins")
+    parser = argp.ArgumentParser(add_help=False,
+                                 description="list plugins")
     parser.add_argument('-n',
                         "--notloaded",
                         help="list plugins that are not loaded",
@@ -844,8 +844,8 @@ class PluginMgr(BasePlugin):
                              lname='Plugin Manager',
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description="load a plugin")
+    parser = argp.ArgumentParser(add_help=False,
+                                 description="load a plugin")
     parser.add_argument('plugin',
                         help='the plugin to load, don\'t include the .py',
                         default='',
@@ -855,8 +855,8 @@ class PluginMgr(BasePlugin):
                              lname='Plugin Manager',
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description="unload a plugin")
+    parser = argp.ArgumentParser(add_help=False,
+                                 description="unload a plugin")
     parser.add_argument('plugin',
                         help='the plugin to unload',
                         default='',
@@ -866,8 +866,8 @@ class PluginMgr(BasePlugin):
                              lname='Plugin Manager',
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description="reload a plugin")
+    parser = argp.ArgumentParser(add_help=False,
+                                 description="reload a plugin")
     parser.add_argument('plugin',
                         help='the plugin to reload',
                         default='',

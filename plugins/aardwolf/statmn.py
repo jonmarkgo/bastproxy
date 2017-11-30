@@ -15,7 +15,7 @@ This plugin shows stats for events on Aardwolf
 """
 import time
 import copy
-import argparse
+import libs.argp as argp
 from plugins.aardwolf._aardwolfbaseplugin import AardwolfBasePlugin
 
 NAME = 'StatMonitor'
@@ -60,8 +60,8 @@ class Plugin(AardwolfBasePlugin):
     self.api('setting.add')('exppermin', 20, int,
                             'the threshhold for showing exp per minute')
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='show report')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='show report')
     parser.add_argument('minutes', help='the number of minutes in the report',
                         default='60m', nargs='?')
     self.api('commands.add')('rep', self.cmd_rep,

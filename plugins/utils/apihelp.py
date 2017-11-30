@@ -1,8 +1,7 @@
 """
 This plugin will show api functions and details
 """
-import argparse
-
+import libs.argp as argp
 from plugins._baseplugin import BasePlugin
 
 #these 5 are required
@@ -32,15 +31,15 @@ class Plugin(BasePlugin):
     """
     BasePlugin.load(self)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='list functions in the api')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='list functions in the api')
     parser.add_argument('toplevel',
                         help='the top level api to show (optional)',
                         default='', nargs='?')
     self.api('commands.add')('list', self.cmd_list,
                              parser=parser)
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='detail a function in the api')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='detail a function in the api')
     parser.add_argument('api', help='the api to detail (optional)',
                         default='', nargs='?')
     self.api('commands.add')('detail', self.cmd_detail,

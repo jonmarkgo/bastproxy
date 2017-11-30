@@ -3,7 +3,7 @@
 This plugin reads and parses invmon data from Aardwolf
 """
 # TODO: vault refresh if in bank room and vault hasn't been seen
-import argparse
+import libs.argp as argp
 from plugins.aardwolf._aardwolfbaseplugin import AardwolfBasePlugin
 
 NAME = 'Aardwolf Eq cmds, parser'
@@ -798,8 +798,8 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.load(self)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='show equipment worn')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='show equipment worn')
     parser.add_argument('-n',
                         "--noflags",
                         help="don't show flags, default False",
@@ -816,8 +816,8 @@ class Plugin(AardwolfBasePlugin):
                              format=False,
                              preamble=False)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='show inventory of a container')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='show inventory of a container')
     parser.add_argument('container',
                         help='the container to see',
                         default='Inventory',
@@ -844,14 +844,14 @@ class Plugin(AardwolfBasePlugin):
                              format=False,
                              preamble=False)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='refresh eq')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='refresh eq')
     self.api('commands.add')('refresh',
                              self.cmd_refresh,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='get an item and put it in inventory')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='get an item and put it in inventory')
     parser.add_argument('item',
                         help='the item to get',
                         default='',
@@ -866,8 +866,8 @@ class Plugin(AardwolfBasePlugin):
                              format=False,
                              preamble=False)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='put an item into a container')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='put an item into a container')
     parser.add_argument('item',
                         help='the item to get',
                         default='',
@@ -882,8 +882,8 @@ class Plugin(AardwolfBasePlugin):
                              format=False,
                              preamble=False)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='show an item from the cache')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='show an item from the cache')
     parser.add_argument('item',
                         help='the item to show',
                         default='',

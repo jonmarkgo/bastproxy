@@ -1,8 +1,8 @@
 """
 This plugins handles TCP option 201, GMCP (aardwolf implementation)
 """
-import argparse
 import pprint
+import libs.argp as argp
 from libs.net._basetelnetoption import BaseTelnetOption
 from libs.net.telnetlib import WILL, DO, IAC, SE, SB
 from libs.persistentdict import convert
@@ -66,8 +66,8 @@ class Plugin(BasePlugin):
     self.api('options.addserveroption')(self.sname, SERVER)
     self.api('options.addclientoption')(self.sname, CLIENT)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='send something through GMCP')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='send something through GMCP')
     parser.add_argument('stuff',
                         help='the item to send through GCMP',
                         default='',
@@ -77,8 +77,8 @@ class Plugin(BasePlugin):
                              showinhistory=False,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='show an item in the cache')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='show an item in the cache')
     parser.add_argument('item',
                         help='the item to show',
                         default='',

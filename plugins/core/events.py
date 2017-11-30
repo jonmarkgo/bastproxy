@@ -12,8 +12,8 @@ This plugin handles events.
 ### Raising an event
  * ```self.api('events.eraise')(eventname, argtable)```
 """
-import argparse
 import time
+import libs.argp as argp
 from plugins._baseplugin import BasePlugin
 
 NAME = 'Event Handler'
@@ -57,8 +57,8 @@ class Plugin(BasePlugin):
     self.api('events.register')('log_plugin_loaded', self.logloaded)
     self.api('events.eraise')('event_plugin_loaded', {})
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='get details of an event')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='get details of an event')
     parser.add_argument('event',
                         help='the event name to get details for',
                         default=[],
@@ -67,8 +67,8 @@ class Plugin(BasePlugin):
                              self.cmd_detail,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='list events and the ' \
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='list events and the ' \
                                                   'plugins registered with them')
     parser.add_argument('match',
                         help='list only events that have this argument in their name',
