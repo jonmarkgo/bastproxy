@@ -259,9 +259,10 @@ class Plugin(BasePlugin):
                             cmd['sname'],
                             cmd['commandname'])))
       if 'trace' in data:
-        data['trace']['changes'].append({'flag': 'Error',
-                                         'data':'%s - error parsing args: %s' % (commandran, exc.errormsg),
-                                         'plugin':self.sname})
+        data['trace']['changes'].append(
+            {'flag': 'Error',
+             'data':'%s - error parsing args: %s' % (commandran, exc.errormsg),
+             'plugin':self.sname})
       return retval
 
     args = vars(args)
@@ -490,9 +491,10 @@ class Plugin(BasePlugin):
 
       if data['fromdata'] != commanddata['orig']:
         if 'trace' in data:
-          data['trace']['changes'].append({'flag':'Unknown',
-                                           'data':"'%s' - Don't know why we got here" % data['fromdata'],
-                                           'plugin':self.sname})
+          data['trace']['changes'].append(
+              {'flag':'Unknown',
+               'data':"'%s' - Don't know why we got here" % data['fromdata'],
+               'plugin':self.sname})
 
       return data
 
@@ -748,7 +750,7 @@ class Plugin(BasePlugin):
 
     return True, tmsg
 
-  def _savestate(self, args=None):
+  def _savestate(self, _=None):
     """
     save states
     """

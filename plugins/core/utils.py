@@ -69,17 +69,18 @@ class Plugin(BasePlugin):
     """
 
     sobj = [str(item) for item in obj]
-    if cols > len(sobj): cols = len(sobj)
+    if cols > len(sobj):
+      cols = len(sobj)
     max_len = max([len(item) for item in sobj])
-    if columnwise: cols = int(math.ceil(float(len(sobj)) / float(cols)))
+    if columnwise:
+      cols = int(math.ceil(float(len(sobj)) / float(cols)))
     plist = [sobj[i: i+cols] for i in range(0, len(sobj), cols)]
     if columnwise:
       if not len(plist[-1]) == cols:
         plist[-1].extend(['']*(len(sobj) - len(plist[-1])))
       plist = zip(*plist)
-    printer = '\n'.join([
-      ''.join([c.ljust(max_len + gap) for c in p])
-      for p in plist])
+    printer = '\n'.join(
+        [''.join([c.ljust(max_len + gap) for c in p]) for p in plist])
     return printer
 
   # return the difference of two times
@@ -90,9 +91,9 @@ class Plugin(BasePlugin):
     take two times and return a string of the difference
     in the form ##d:##h:##m:##s
     """
-    if type(stime) == time.struct_time:
+    if isinstance(stime, time.struct_time):
       stime = time.mktime(stime)
-    if type(etime) == time.struct_time:
+    if isinstance(etime, time.struct_time):
       etime = time.mktime(etime)
     delay = datetime.timedelta(seconds=abs(etime - stime))
     if delay.days > 0:
@@ -198,7 +199,7 @@ class Plugin(BasePlugin):
         msg.append(':')
       mins = True
       msg.append('%02dm' % (dtime['mins'] or 0))
-    if (dtime['secs'] > 0 or len(msg) == 0) and not nosec:
+    if (dtime['secs'] > 0 or not msg) and not nosec:
       if years or days or hours or mins:
         msg.append(':')
       msg.append('%02ds' % (dtime['secs'] or 0))
@@ -277,8 +278,8 @@ class Plugin(BasePlugin):
 
     if vtype in vtab:
       return vtab[vtype](val)
-    else:
-      return vtype(val)
+
+    return vtype(val)
 
   # center a string with color codes
   def api_center(self, tstr, fillerc, length):
@@ -326,10 +327,8 @@ class Plugin(BasePlugin):
 
     if tdict['front']:
       return tdict['front']
-    else:
-      return tdict['part']
 
-    return tdict
+    return tdict['part']
 
   # convert a time length to seconds
   def api_timelengthtosecs(self, timel):

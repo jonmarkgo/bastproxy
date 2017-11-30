@@ -93,8 +93,8 @@ class SSC(object):
       sscfile.write(args['value'])
       os.chmod(filen, stat.S_IRUSR | stat.S_IWUSR)
       return True, ['%s saved' % self.desc]
-    else:
-      return True, ['Please enter the %s' % self.desc]
+
+    return True, ['Please enter the %s' % self.desc]
 
 class Plugin(BasePlugin):
   """

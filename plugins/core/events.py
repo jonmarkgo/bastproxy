@@ -15,7 +15,6 @@ This plugin handles events.
 import argparse
 import time
 from plugins._baseplugin import BasePlugin
-from libs.timing import timeit
 
 NAME = 'Event Handler'
 SNAME = 'events'
@@ -65,8 +64,8 @@ class Plugin(BasePlugin):
                         default=[],
                         nargs='*')
     self.api('commands.add')('detail',
-                                 self.cmd_detail,
-                                 parser=parser)
+                             self.cmd_detail,
+                             parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='list events and the ' \
@@ -76,8 +75,8 @@ class Plugin(BasePlugin):
                         default='',
                         nargs='?')
     self.api('commands.add')('list',
-                                 self.cmd_list,
-                                 parser=parser)
+                             self.cmd_list,
+                             parser=parser)
 
     self.api('events.register')('plugin_unloaded', self.pluginunloaded, prio=10)
 
@@ -119,8 +118,7 @@ class Plugin(BasePlugin):
       return {'pluginlist':pluginlist, 'funcdict':funcdict,
               'numraised':self.eventstats[eventname]['numraised']}
 
-    else:
-      return {}
+    return {}
 
   # register a function with an event
   def api_register(self, eventname, func, **kwargs):
@@ -188,7 +186,7 @@ class Plugin(BasePlugin):
           self.api('send.msg')('removing function %s from event %s' % \
               (func, eventname), secondary=plugin)
           self.events[eventname][i].remove(func)
-          if len(self.events[eventname][i]) == 0:
+          if not self.events[eventname][i]:
             del self.events[eventname][i]
 
       if plugin and plugin in self.pluginlookup:
@@ -202,7 +200,7 @@ class Plugin(BasePlugin):
     @Yplugin@w   = The plugin to remove events for
     this function returns no values"""
     self.api('send.msg')('removing plugin %s' % plugin,
-                             secondary=plugin)
+                         secondary=plugin)
     if plugin and plugin in self.pluginlookup:
       tkeys = self.pluginlookup[plugin]['events'].keys()
       for func in tkeys:
@@ -331,7 +329,7 @@ class Plugin(BasePlugin):
         @Yeventname@w  = the eventname to get info for
     """
     tmsg = []
-    if len(args['event']) > 0:
+    if args['event']:
       for eventname in args['event']:
         tmsg.extend(self.api('events.detail')(eventname))
         tmsg.append('')
@@ -350,7 +348,7 @@ class Plugin(BasePlugin):
     match = args['match']
     for name in self.events:
       if not match or match in name:
-        if len(self.events[name]) > 0:
+        if self.events[name]:
           tmsg.append(name)
 
     return True, tmsg
@@ -368,8 +366,8 @@ class Plugin(BasePlugin):
     """
     return a one line stats summary
     """
-    return self.summarytemplate % ("Events", "Total: %d   Raised: %d" % (
-                                        len(self.events), self.numglobalraised))
+    return self.summarytemplate % ("Events", "Total: %d   Raised: %d" % \
+                                    (len(self.events), self.numglobalraised))
 
   def getstats(self):
     """

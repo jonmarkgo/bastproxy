@@ -158,12 +158,12 @@ def createspan(color, text):
     return '<span style="background-color:%(COLOR)s">%(TEXT)s</span>' % \
         {'COLOR':ncolor,
          'TEXT':text}
-  else:
-    return '<span style="color:%(COLOR)s">%(TEXT)s</span>' % \
-        {'COLOR':ncolor,
-         'TEXT':text}
 
-for colorc in CONVERTCOLORS.keys():
+  return '<span style="color:%(COLOR)s">%(TEXT)s</span>' % \
+      {'COLOR':ncolor,
+       'TEXT':text}
+
+for colorc in CONVERTCOLORS:
   CONVERTANSI[CONVERTCOLORS[colorc]] = colorc
 
 #xterm colors
@@ -233,13 +233,13 @@ class Plugin(BasePlugin):
     parser = argparse.ArgumentParser(add_help=False,
                                      description='show colors')
     self.api('commands.add')('show',
-                                 self.cmd_show,
-                                 parser=parser)
+                             self.cmd_show,
+                             parser=parser)
     parser = argparse.ArgumentParser(add_help=False,
                                      description='show color examples')
     self.api('commands.add')('example',
-                                 self.cmd_example,
-                                 parser=parser)
+                             self.cmd_example,
+                             parser=parser)
 
   # convert color codes to html
   def api_colorcodestohtml(self, sinput):

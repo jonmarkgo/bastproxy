@@ -116,7 +116,7 @@ class Plugin(BasePlugin):
     BasePlugin.load(self)
 
     self.api('events.register')('global_timer', self.checktimerevents,
-                                    prio=1)
+                                prio=1)
     self.api('send.msg')('lasttime:  %s' % self.lasttime)
 
     parser = argparse.ArgumentParser(add_help=False,
@@ -126,8 +126,8 @@ class Plugin(BasePlugin):
                         default='',
                         nargs='?')
     self.api('commands.add')('list',
-                                 self.cmd_list,
-                                 parser=parser)
+                             self.cmd_list,
+                             parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='toggle log flag for a timer')
@@ -136,8 +136,8 @@ class Plugin(BasePlugin):
                         default='',
                         nargs='?')
     self.api('commands.add')('log',
-                                 self.cmd_log,
-                                 parser=parser)
+                             self.cmd_log,
+                             parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='get details for timers')
@@ -146,8 +146,8 @@ class Plugin(BasePlugin):
                         default=[],
                         nargs='*')
     self.api('commands.add')('detail',
-                                 self.cmd_detail,
-                                 parser=parser)
+                             self.cmd_detail,
+                             parser=parser)
 
     self.api('events.register')('plugin_unloaded', self.pluginunloaded)
 
@@ -192,7 +192,7 @@ class Plugin(BasePlugin):
 
     stats['Timers'] = {}
     stats['Timers']['showorder'] = ['Total', 'Enabled', 'Disabled',
-                                      'Fired', 'Memory Usage']
+                                    'Fired', 'Memory Usage']
     stats['Timers']['Total'] = len(self.timerlookup)
     stats['Timers']['Enabled'] = enabled
     stats['Timers']['Disabled'] = disabled
@@ -233,7 +233,7 @@ class Plugin(BasePlugin):
       @CUsage@w: detail
     """
     tmsg = []
-    if len(args['timers']) > 0:
+    if args['timers']:
       for timer in args['timers']:
         if timer in self.timerlookup:
           timerc = self.timerlookup[timer]
@@ -283,22 +283,22 @@ class Plugin(BasePlugin):
       return
     if seconds <= 0:
       self.api('send.msg')('timer %s has seconds <= 0, not adding' % name,
-                               secondary=plugin)
+                           secondary=plugin)
       return
     if not func:
       self.api('send.msg')('timer %s has no function, not adding' % name,
-                               secondary=plugin)
+                           secondary=plugin)
       return
 
     if 'nodupe' in kwargs and kwargs['nodupe']:
       if name in self.timerlookup:
         self.api('send.msg')('trying to add duplicate timer: %s' % name,
-                                 secondary=plugin)
+                             secondary=plugin)
         return
 
     tevent = TimerEvent(name, func, seconds, plugin, **kwargs)
     self.api('send.msg')('adding %s from plugin %s' % (tevent, plugin),
-                             secondary=plugin.sname)  # pylint: disable=no-member
+                         secondary=plugin.sname)  # pylint: disable=no-member
     self._addtimer(tevent)
     return tevent
 
@@ -329,7 +329,7 @@ class Plugin(BasePlugin):
       tevent = self.timerlookup[name]
       if tevent:
         self.api('send.msg')('removing %s' % tevent,
-                                 secondary=tevent.plugin)
+                             secondary=tevent.plugin)
         ttime = tevent.nextcall
         if tevent in self.timerevents[ttime]:
           self.timerevents[ttime].remove(tevent)
@@ -368,7 +368,7 @@ class Plugin(BasePlugin):
     if ntime - self.lasttime > 1:
       self.api('send.msg')('timer had to check multiple seconds')
     for i in range(self.lasttime, ntime + 1):
-      if i in self.timerevents and len(self.timerevents[i]) > 0:
+      if i in self.timerevents and self.timerevents[i]:
         for timer in self.timerevents[i][:]:
           if timer.enabled:
             try:
@@ -377,7 +377,7 @@ class Plugin(BasePlugin):
               self.overallfire = self.overallfire + 1
               if timer.log:
                 self.api('send.msg')('Timer fired: %s' % timer,
-                                         secondary=timer.plugin.sname)
+                                     secondary=timer.plugin.sname)
             except Exception:  # pylint: disable=broad-except
               self.api('send.traceback')('A timer had an error')
           try:
@@ -388,14 +388,14 @@ class Plugin(BasePlugin):
             timer.nextcall = timer.nextcall + timer.seconds
             if timer.log:
               self.api('send.msg')('Re adding timer %s for %s' % \
-                (timer.name,
-                 time.strftime('%a %b %d %Y %H:%M:%S',
-                               time.localtime(timer.nextcall))),
-                                       secondary=timer.plugin.sname)
+                                    (timer.name,
+                                     time.strftime('%a %b %d %Y %H:%M:%S',
+                                                   time.localtime(timer.nextcall))),
+                                   secondary=timer.plugin.sname)
             self._addtimer(timer)
           else:
             self.api('timers.remove')(timer.name)
-          if len(self.timerevents[i]) == 0:
+          if not self.timerevents[i]:
             del self.timerevents[i]
 
     self.lasttime = ntime

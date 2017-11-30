@@ -184,10 +184,10 @@ class Sqldb(object):
     if tstr:
       if like:
         return "'%" + tstr.replace("'", "''") + "%'"
-      else:
-        return "'" + tstr.replace("'", "''") + "'"
-    else:
-      return 'NULL'
+
+      return "'" + tstr.replace("'", "''") + "'"
+
+    return 'NULL'
 
   def addcmds(self):
     """
@@ -396,8 +396,8 @@ class Sqldb(object):
       sql = "DELETE FROM %s where %s=%s;" % (table, keyfield, rownumber)
       self.api('%s.modify' % self.plugin.sname)(sql)
       return True, '%s was removed from table %s' % (rownumber, table)
-    else:
-      return False, '%s is not a table' % table
+
+    return False, '%s is not a table' % table
 
   def getcolumnsfromsql(self, tablename):
     """
@@ -694,7 +694,7 @@ class Sqldb(object):
     colid = self.tables[ttable]['keyfield']
     rows = self.api('%s.select' % self.plugin.sname)(
         "SELECT MAX(%s) AS MAX FROM %s" % (colid, ttable))
-    if len(rows) > 0:
+    if rows:
       last = rows[0]['MAX']
 
     return last

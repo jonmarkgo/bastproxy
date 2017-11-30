@@ -5,13 +5,13 @@ class SimpleQueue(object):
   """
   a simple queue class
   """
-  def __init__(self, len=10):
+  def __init__(self, length=10):
     """
     initialize the class
 
     len is the length of the queue
     """
-    self.len = len
+    self.len = length
     self.items = []
 
   def isempty(self):

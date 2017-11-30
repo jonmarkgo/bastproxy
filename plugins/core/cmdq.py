@@ -62,7 +62,7 @@ class CmdQueue(object):
     send the next command
     """
     self.plugin.api('send.msg')('checking queue')
-    if len(self.queue) == 0 or self.currentcmd:
+    if not self.queue or self.currentcmd:
       return
 
     cmdt = self.queue.pop(0)
@@ -75,7 +75,7 @@ class CmdQueue(object):
 
     self.currentcmd = cmdt
     self.starttime = default_timer()
-    self.plugin.api('send.msg')('cmd: %s - started' % (cmd), secondary=['cmdq','timing'])
+    self.plugin.api('send.msg')('cmd: %s - started' % (cmd), secondary=['cmdq', 'timing'])
     self.plugin.api('send.execute')(cmd)
 
   def checkinqueue(self, cmd):
@@ -101,7 +101,8 @@ class CmdQueue(object):
         self.cmds[cmdtype]['afterf']()
       finishtime = default_timer()
       self.plugin.api('send.msg')('cmd: %s - took %0.3f ms' % \
-              (self.currentcmd['cmd'], (finishtime - self.starttime)*1000.0), secondary=['cmdq','timing'])
+              (self.currentcmd['cmd'], (finishtime - self.starttime)*1000.0),
+                                  secondary=['cmdq', 'timing'])
       self.currentcmd = {}
       self.sendnext()
 
@@ -121,7 +122,7 @@ class CmdQueue(object):
       if not self.currentcmd:
         self.sendnext()
 
-  def resetqueue(self, args=None):
+  def resetqueue(self, _=None):
     """
     reset the queue
     """

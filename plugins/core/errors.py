@@ -42,19 +42,19 @@ class Plugin(BasePlugin):
                         default='-1',
                         nargs='?')
     self.api('commands.add')('show',
-                                 self.cmd_show,
-                                 parser=parser)
+                             self.cmd_show,
+                             parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='clear errors')
     self.api('commands.add')('clear',
-                                 self.cmd_clear,
-                                 parser=parser)
+                             self.cmd_clear,
+                             parser=parser)
 
     self.api('events.register')('proxy_ready', self.proxy_ready)
 
   # show all errors that happened during startup
-  def proxy_ready(self, args=None):
+  def proxy_ready(self, _=None):
     """
     show all errors that happened during startup
     """
@@ -114,7 +114,7 @@ class Plugin(BasePlugin):
 
     errors = self.api('errors.gete')()
 
-    if len(errors) == 0:
+    if not errors:
       msg.append('There are no errors')
     else:
       if args and number > 0:
@@ -139,4 +139,3 @@ class Plugin(BasePlugin):
     self.api('errors.clear')()
 
     return True, ['Errors cleared']
-
