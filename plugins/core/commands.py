@@ -477,8 +477,8 @@ class Plugin(BasePlugin):
           if 'trace' in data:
             data['trace']['changes'].append(
                 {'flag':'Nomultiple',
-                 'data':
-                  'This command has been flagged not to be sent multiple times in a row',
+                 'data':'This command has been flagged" \
+                   " not to be sent multiple times in a row',
                  'plugin':self.sname})
 
           data['fromdata'] = ''

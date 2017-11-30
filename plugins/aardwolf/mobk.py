@@ -32,7 +32,7 @@ def addtodamage(tdam, damtable):
   if not damtype:
     damtype = 'Unknown'
 
-  if not (damtype in damtable):
+  if damtype not in damtable:
     damtable[damtype] = damagedefault()
 
   if tdam['damverb'] == 'misses':
@@ -64,67 +64,92 @@ class Plugin(AardwolfBasePlugin):
     AardwolfBasePlugin.load(self)
 
     self.api('setting.add')('instatext', '@x0', 'color',
-                      'the text color for an instakill')
+                            'the text color for an instakill')
     self.api('setting.add')('instaback', '@z10', 'color',
-                      'the background color for an instakill')
+                            'the background color for an instakill')
 
-    self.api('triggers.add')('mobxp',
-            "^You (don't )?receive (?P<xp>\d+(?:\+\d+)*) experience points?\.$")
-    self.api('triggers.add')('mobrarexp',
-            "^You (don't )?receive (?P<xp>\d+) 'rare kill' experience bonus.$")
-    self.api('triggers.add')('mobblessxp',
-            "^You (don't )?receive (?P<xp>\d+) bonus " \
-              "experience points from your daily blessing.$", priority=99,
-            stopevaluating=True)
-    self.api('triggers.add')('mobbonusxp',
-              "^You (don't )?receive (?P<xp>\d+) bonus experience points.+$")
-    self.api('triggers.add')('mobxpptless',
-              "^That was a pointless no experience kill!$")
-    self.api('triggers.add')('mobswitch',
-              "^You switch targets and " \
-                "direct your attacks at (?P<name>.*).\.$")
-    self.api('triggers.add')('mobflee',
-              "^You flee from combat!$")
-    self.api('triggers.add')('mobretreat',
-              "^You retreat from the combat!$")
-    self.api('triggers.add')('mobgold',
-              "^You get (?P<gold>.+) gold coins " \
-                "from .+ corpse of (?P<name>.+)\.$")
-    self.api('triggers.add')('mobname',
-              "^You get .+ corpse of (?P<name>.+)\.$")
-    self.api('triggers.add')('mobsac',
-              "^.* gives you (?P<sacgold>.+) gold coins? for " \
-                "the .* ?corpse of (?P<name>.+)\.$")
-    self.api('triggers.add')('mobconsume',
-              "^You bury your fangs deep into the " \
-                ".* ?corpse of (?P<name>.+), drinking thirstily.$")
-    self.api('triggers.add')('mobsplitgold',
-              "^\w+ splits? \d+ gold coins?. " \
-                "Your share is (?P<gold>\d+) gold\.$")
-    self.api('triggers.add')('mobtrivia',
-              "^You killed a Triv bonus mob!! Triv point added\.$")
-    self.api('triggers.add')('mobtrivia2',
-              "^^You killed a Trivia Point bonus mob!! Trivia point added\.$")
-    self.api('triggers.add')('mobvorpal',
-              "^Deep magic stirs within your weapon. " \
-                "It seems to have a life of its own.$")
-    self.api('triggers.add')('mobassassin',
-              "^You assassinate (?P<name>.*) with cold efficiency.$")
-    self.api('triggers.add')('mobdeathblow',
-              "^Your death blow CLEAVES (?P<name>.*) in two!$")
-    self.api('triggers.add')('mobslit',
-              "^You sneak behind (?P<name>.*) and slit .* throat.$")
-    self.api('triggers.add')('mobdisintegrate',
-              "^You have disintegrated (?P<name>.*)!$")
-    self.api('triggers.add')('mobbanish',
-              "^You look at (?P<name>.*) very strangely.$")
-    self.api('triggers.add')('mobdamage',
-              "^\[(.*)\] Your (.*) \[(.*)\]$")
-    self.api('triggers.add')('mobdamage2',
-              "^Your (.*) \[(.*)\]$")
-    self.api('triggers.add')('bsincombat',
-              "^You spin around (.*), catching (.*) off guard, " \
-                "and execute a vicious double backstab.$")
+    self.api('triggers.add')(
+        'mobxp',
+        r"^You (don't )?receive (?P<xp>\d+(?:\+\d+)*) experience points?\.$")
+    self.api('triggers.add')(
+        'mobrarexp',
+        r"^You (don't )?receive (?P<xp>\d+) 'rare kill' experience bonus.$")
+    self.api('triggers.add')(
+        'mobblessxp',
+        r"^You (don't )?receive (?P<xp>\d+) bonus " \
+          r"experience points from your daily blessing.$",
+        priority=99,
+        stopevaluating=True)
+    self.api('triggers.add')(
+        'mobbonusxp',
+        r"^You (don't )?receive (?P<xp>\d+) bonus experience points.+$")
+    self.api('triggers.add')(
+        'mobxpptless',
+        r"^That was a pointless no experience kill\!$")
+    self.api('triggers.add')(
+        'mobswitch',
+        r"^You switch targets and " \
+          r"direct your attacks at (?P<name>.*).\.$")
+    self.api('triggers.add')(
+        'mobflee',
+        r"^You flee from combat\!$")
+    self.api('triggers.add')(
+        'mobretreat',
+        r"^You retreat from the combat\!$")
+    self.api('triggers.add')(
+        'mobgold',
+        r"^You get (?P<gold>.+) gold coins " \
+          r"from .+ corpse of (?P<name>.+)\.$")
+    self.api('triggers.add')(
+        'mobname',
+        r"^You get .+ corpse of (?P<name>.+)\.$")
+    self.api('triggers.add')(
+        'mobsac',
+        r"^.* gives you (?P<sacgold>.+) gold coins? for " \
+          r"the .* ?corpse of (?P<name>.+)\.$")
+    self.api('triggers.add')(
+        'mobconsume',
+        r"^You bury your fangs deep into the " \
+          r".* ?corpse of (?P<name>.+), drinking thirstily.$")
+    self.api('triggers.add')(
+        'mobsplitgold',
+        r"^\w+ splits? \d+ gold coins?. " \
+          r"Your share is (?P<gold>\d+) gold\.$")
+    self.api('triggers.add')(
+        'mobtrivia',
+        r"^You killed a Triv bonus mob!! Triv point added\.$")
+    self.api('triggers.add')(
+        'mobtrivia2',
+        r"^You killed a Trivia Point bonus mob!! Trivia point added\.$")
+    self.api('triggers.add')(
+        'mobvorpal',
+        r"^Deep magic stirs within your weapon. " \
+          r"It seems to have a life of its own.$")
+    self.api('triggers.add')(
+        'mobassassin',
+        r"^You assassinate (?P<name>.*) with cold efficiency.$")
+    self.api('triggers.add')(
+        'mobdeathblow',
+        r"^Your death blow CLEAVES (?P<name>.*) in two!$")
+    self.api('triggers.add')(
+        'mobslit',
+        r"^You sneak behind (?P<name>.*) and slit .* throat.$")
+    self.api('triggers.add')(
+        'mobdisintegrate',
+        r"^You have disintegrated (?P<name>.*)!$")
+    self.api('triggers.add')(
+        'mobbanish',
+        r"^You look at (?P<name>.*) very strangely.$")
+    self.api('triggers.add')(
+        'mobdamage',
+        r"^\[(.*)\] Your (.*) \[(.*)\]$")
+    self.api('triggers.add')(
+        'mobdamage2',
+        r"^Your (.*) \[(.*)\]$")
+    self.api('triggers.add')(
+        'bsincombat',
+        r"^You spin around (.*), catching (.*) off guard, " \
+          r"and execute a vicious double backstab.$")
 
     self.api('events.register')('trigger_mobxp', self.mobxp)
     self.api('events.register')('trigger_mobblessxp', self.bonusxp)
@@ -146,7 +171,7 @@ class Plugin(AardwolfBasePlugin):
     self.api('events.register')('trigger_mobdeathblow', self.mobdeathblow)
     self.api('events.register')('trigger_mobslit', self.mobslit)
     self.api('events.register')('trigger_mobdisintegrate',
-                                                    self.mobdisintegrate)
+                                self.mobdisintegrate)
     self.api('events.register')('trigger_mobbanish', self.mobbanish)
     self.api('events.register')('trigger_mobdamage', self.mobdamage)
     self.api('events.register')('trigger_mobdamage2', self.mobdamage)
@@ -161,7 +186,7 @@ class Plugin(AardwolfBasePlugin):
     status = args['data']
     if status['enemy'] != "" and self.kill_info['name'] == "":
       self.kill_info['name'] = self.api('colors.stripansi')(
-                                                      status['enemy'])
+          status['enemy'])
       self.reset_damage()
 
   def reset_kill(self):
@@ -204,8 +229,7 @@ class Plugin(AardwolfBasePlugin):
     self.kill_info['starttime'] = None
     self.kill_info['finishtime'] = None
 
-
-  def mobnone(self, _=None):
+  def mobnone(self, args=None):
     """
     reset the mob name
     """
@@ -359,7 +383,7 @@ class Plugin(AardwolfBasePlugin):
 
       self.api('send.msg')('raising a mobkill: %s' % self.kill_info)
       self.api('events.eraise')('aard_mobkill',
-                                          copy.deepcopy(self.kill_info))
+                                copy.deepcopy(self.kill_info))
 
     self.reset_kill()
 
@@ -368,7 +392,7 @@ class Plugin(AardwolfBasePlugin):
     just saw an incombat backstab
     """
     self.api('send.msg')('saw bs in combat')
-    if not ('backstab' in self.kill_info['damage']):
+    if 'backstab' not in self.kill_info['damage']:
       self.kill_info['damage']['backstab'] = damagedefault()
 
     self.kill_info['damage']['backstab']['incombat'] = True
@@ -379,7 +403,7 @@ class Plugin(AardwolfBasePlugin):
     """
     mobname = args['name']
     immunity = args['immunity']
-    if not (immunity in self.kill_info['immunities']) \
+    if immunity not in self.kill_info['immunities'] \
           and self.kill_info['name'] == mobname:
       self.kill_info['immunities'][immunity] = True
 
@@ -394,16 +418,15 @@ class Plugin(AardwolfBasePlugin):
     if tdam['enemy'] \
         and self.kill_info['name'] != '' \
         and tdam['enemy'] != self.kill_info['name']:
-      if not (tdam['enemy'] in  self.mobdamcache):
+      if tdam['enemy'] not in  self.mobdamcache:
         self.mobdamcache[tdam['enemy']] = {}
       addtodamage(tdam, self.mobdamcache[tdam['enemy']])
       return
 
     if tdam['enemy'] in self.mobdamcache:
       self.kill_info['damage'] = self.mobdamcache[tdam['enemy']]
-      del(self.mobdamcache[tdam['enemy']])
+      del self.mobdamcache[tdam['enemy']]
     addtodamage(tdam, self.kill_info['damage'])
 
     if not self.kill_info['name']:
       self.kill_info['name'] = tdam['enemy']
-

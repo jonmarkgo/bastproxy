@@ -9,7 +9,6 @@ from datetime import datetime
 import libs.argp as argp
 from plugins._baseplugin import BasePlugin
 
-
 #these 5 are required
 NAME = 'gmail'
 SNAME = 'gmail'
@@ -19,7 +18,6 @@ VERSION = 1
 
 # This keeps the plugin from being autoloaded if set to False
 AUTOLOAD = False
-
 
 class Plugin(BasePlugin):
   """
@@ -42,15 +40,15 @@ class Plugin(BasePlugin):
     self.api('events.register')('client_connected', self.checkpassword)
 
     parser = argp.ArgumentParser(add_help=False,
-                 description='set the password for the mail account')
+                                 description='set the password for the mail account')
     parser.add_argument('password',
                         help='the top level api to show (optional)',
                         default='', nargs='?')
     self.api('commands.add')('password', self.cmd_pw, showinhistory=False,
-                                        parser=parser)
+                             parser=parser)
 
     parser = argp.ArgumentParser(add_help=False,
-                 description='send a test email')
+                                 description='send a test email')
     parser.add_argument('subject',
                         help='the subject of the test email (optional)',
                         default='Test subject from bastproxy', nargs='?')
@@ -58,27 +56,28 @@ class Plugin(BasePlugin):
                         help='the message of the test email (optional)',
                         default='Msg from bastproxy', nargs='?')
     self.api('commands.add')('test', self.cmd_test,
-                                        parser=parser)
+                             parser=parser)
 
-    parser = argp.ArgumentParser(add_help=False,
-                 description='check to make sure all settings are applied')
+    parser = argp.ArgumentParser(
+        add_help=False,
+        description='check to make sure all settings are applied')
     self.api('commands.add')('check', self.cmd_check,
-                      parser=parser)
+                             parser=parser)
 
     self.api('setting.add')('server', '', str,
-                                'the smtp server to send mail through')
+                            'the smtp server to send mail through')
     self.api('setting.add')('port', '', int,
-                                'the port to use when sending mail')
+                            'the port to use when sending mail')
     self.api('setting.add')('username', '', str,
-                                'the username to connect as',
-                  nocolor=True)
+                            'the username to connect as',
+                            nocolor=True)
     self.api('setting.add')('to', '', str, 'the address to send mail to',
-                  nocolor=True)
+                            nocolor=True)
     self.api('setting.add')('from', '', str,
-                                'the address to send mail from',
-                  nocolor=True)
+                            'the address to send mail from',
+                            nocolor=True)
     self.api('setting.add')('ssl', '', bool,
-                          'set this to True if the connection will use ssl')
+                            'set this to True if the connection will use ssl')
 
     if self.api('setting.gets')('username') != '':
       self.api('send.client')('Please set the mail password')
@@ -115,6 +114,7 @@ class Plugin(BasePlugin):
 
   def send_gmail(self, subject, msg, mailto=None):
     """
+    send an email through gmail
     """
     pass
 
@@ -132,7 +132,7 @@ Subject: %s
 X-Mailer: My-Mail
 
 %s""" % (senddate,
-        self.api('setting.gets')('from'), mailto, subject, msg)
+         self.api('setting.gets')('from'), mailto, subject, msg)
     oldchild = signal.get_signal(signal.SIGCHLD)
 
     try:
@@ -140,7 +140,7 @@ X-Mailer: My-Mail
       pid = os.fork()
       if pid == 0:
         server = '%s:%s' % (self.api('setting.gets')('server'),
-                                  self.api('setting.gets')('port'))
+                            self.api('setting.gets')('port'))
         server = smtplib.SMTP(server)
         if self.api('setting.gets')('ssl'):
           server.starttls()
@@ -152,7 +152,7 @@ X-Mailer: My-Mail
 
     except:
       server = '%s:%s' % (self.api('setting.gets')('server'),
-                            self.api('setting.gets')('port'))
+                          self.api('setting.gets')('port'))
       server = smtplib.SMTP(server)
       if self.api('setting.gets')('ssl'):
         server.starttls()
@@ -170,7 +170,7 @@ X-Mailer: My-Mail
     if self.api('setting.gets')('username'):
       if not self.password:
         self.api('send.client')(
-                      '@CPlease set the email password for account: @M%s@w' \
+            '@CPlease set the email password for account: @M%s@w' \
                 % self.api('setting.gets')('username').replace('@', '@@'))
         self.api('send.client')('#bp.mail.password "somepassword"')
 
@@ -184,8 +184,8 @@ X-Mailer: My-Mail
     if args['password']:
       self.password = args['password']
       return True, ['Password is set']
-    else:
-      return False, ['@RPlease specify a password@x']
+
+    return False, ['@RPlease specify a password@x']
 
   def cmd_check(self, _=None):
     """
@@ -225,9 +225,9 @@ X-Mailer: My-Mail
     if self.check():
       self.api('mail.send')(subject, msg)
       return True, ['Attempted to send test message',
-                              'Please check your email']
-    else:
-      msg = []
-      msg.append('There is not enough information to send mail')
-      msg.append('Please check all info')
-      return True, msg
+                    'Please check your email']
+
+    msg = []
+    msg.append('There is not enough information to send mail')
+    msg.append('Please check all info')
+    return True, msg
