@@ -30,10 +30,10 @@ class Plugin(AardwolfBasePlugin):
     AardwolfBasePlugin.load(self)
 
     self.api('setting.add')('channel', 'gt', str,
-                        'the channel to send the repop message')
+                            'the channel to send the repop message')
     self.api('setting.add')('format',
-                        "@r[@RRepop@r]@w ${zone} @R@@ @w${time}", str,
-                        'the format of the message')
+                            "@r[@RRepop@r]@w ${zone} @R@@ @w${time}", str,
+                            'the format of the message')
 
     self.api('events.register')('GMCP:comm.repop', self.repop)
 

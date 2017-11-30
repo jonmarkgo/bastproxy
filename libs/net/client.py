@@ -89,7 +89,7 @@ class Client(Telnet):
               {'todata':self.api('colors.convertcolors')(
                   '@R#BP@w: @RYou are in view mode!@w')})
         else:
-          if len(data) > 0:
+          if data:
             self.api('send.execute')(data, fromclient=True)
 
       elif self.state == PASSWORD:

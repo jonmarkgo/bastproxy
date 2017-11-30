@@ -30,12 +30,12 @@ AOPTIONS['EXITS'] = 14
 AOPTIONS['EDITORTAGS'] = 15
 AOPTIONS['EQTAGS'] = 16
 AOPTIONS['INVTAGS'] = 17
-AOPTIONS['ROOMDESCTAGS'] =  18
+AOPTIONS['ROOMDESCTAGS'] = 18
 AOPTIONS['ROOMNAMETAGS'] = 19
 AOPTIONS['REPOPTAGS'] = 21
 
 AOPTIONS['QUIETTAGS'] = 50
-AOPTIONS['AUTOTICK'] =  51
+AOPTIONS['AUTOTICK'] = 51
 AOPTIONS['PROMPT'] = 52
 AOPTIONS['PAGING'] = 53
 AOPTIONS['AUTOMAP'] = 54
@@ -99,9 +99,11 @@ class Plugin(BasePlugin):
     Format: IAC SB A102 <atcp message text> IAC SE
 
     this function returns no values"""
-    self.api('events.eraise')('to_mud_event', {'data':'%s%s%s%s%s%s' % \
-          (IAC, SB, A102, message.replace(IAC, IAC+IAC), IAC, SE),
-          'raw':True, 'dtype':A102})
+    self.api('events.eraise')('to_mud_event',
+                              {'data':'%s%s%s%s%s%s' % \
+                              (IAC, SB, A102, message.replace(IAC, IAC+IAC),
+                               IAC, SE),
+                               'raw':True, 'dtype':A102})
 
   def a102disconnect(self, _=None):
     """
@@ -121,14 +123,14 @@ class Plugin(BasePlugin):
     if aoption in AOPTIONS:
       self.a102toggleoption(AOPTIONS[aoption], mstate)
       return True
-    else:
-      return False
+
+    return False
 
   def a102toggleoption(self, aoption, mstate):
     """
     toggle an a102 option
     """
-    if not (aoption in self.optionstates):
+    if aoption not in self.optionstates:
       if mstate:
         self.optionstates[aoption] = 0
       else:
@@ -216,7 +218,7 @@ class SERVER(BaseTelnetOption):
     handle the a102 option from the server
     """
     self.telnetobj.msg('A102:', ord(command), '- in handleopt',
-                        level=2, mtype='A102')
+                       level=2, mtype='A102')
     if command == WILL:
       self.telnetobj.msg('A102: sending IAC DO A102', level=2, mtype='A102')
       self.telnetobj.send(IAC + DO + A102)
@@ -236,9 +238,10 @@ class SERVER(BaseTelnetOption):
       self.telnetobj.msg('A102: got %s,%s from server' % \
               (tdata['option'], tdata['flag']), level=2, mtype='A102')
       self.api('events.eraise')('to_client_event',
-                  {'original':'%s%s%s%s%s%s' % (IAC, SB, A102,
-                  sbdata.replace(IAC, IAC+IAC), IAC, SE),
-                  'raw':True, 'dtype':A102})
+                                {'original':'%s%s%s%s%s%s' % \
+                                  (IAC, SB, A102,
+                                   sbdata.replace(IAC, IAC+IAC), IAC, SE),
+                                 'raw':True, 'dtype':A102})
       self.api('events.eraise')('A102_from_server', tdata)
 
 # Client
@@ -266,4 +269,3 @@ class CLIENT(BaseTelnetOption):
     elif command == SE:
       self.api('events.eraise')('A102_from_client',
                                 {'data': sbdata, 'client':self.telnetobj})
-

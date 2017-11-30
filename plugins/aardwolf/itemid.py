@@ -14,7 +14,7 @@ VERSION = 1
 
 AUTOLOAD = False
 
-DETAILS_RE = '^\{(?P<header>.*)\}(?P<data>.*)$'
+DETAILS_RE = r'^\{(?P<header>.*)\}(?P<data>.*)$'
 DETAILS_REC = re.compile(DETAILS_RE)
 
 class Plugin(AardwolfBasePlugin):
@@ -49,40 +49,40 @@ class Plugin(AardwolfBasePlugin):
     AardwolfBasePlugin.load(self)
 
     self.api('setting.add')('idcmd', True, str,
-                      'identify')
+                            'identify')
 
     parser = argparse.ArgumentParser(add_help=False,
-                 description='id an item')
+                                     description='id an item')
     parser.add_argument('serial', help='the item to id', default='', nargs='?')
     self.api('commands.add')('id', self.cmd_id,
-                                parser=parser, format=False, preamble=False)
+                             parser=parser, format=False, preamble=False)
 
     self.api('triggers.add')('invdetailsstart',
-      "^\{invdetails\}$", group='invdetails',
-      enabled=False, omit=True)
+                             r"^\{invdetails\}$", group='invdetails',
+                             enabled=False, omit=True)
 
     self.api('triggers.add')('invdetailsline',
-      "^\{invdetails(?P<header>.*)\}(?P<data>.*)$", group='invdetails',
-      enabled=False, omit=True)
+                             r"^\{invdetails(?P<header>.*)\}(?P<data>.*)$",
+                             group='invdetails', enabled=False, omit=True)
 
     self.api('triggers.add')('invdetailsend',
-      "^\{/invdetails\}$",
-      enabled=False, group='invdetails', omit=True)
+                             r"^\{/invdetails\}$",
+                             enabled=False, group='invdetails', omit=True)
 
     self.api('triggers.add')('identifyon',
-      "\+-*\+",
-      enabled=False, group='identify', omit=True)
+                             r"\+-*\+",
+                             enabled=False, group='identify', omit=True)
 
     self.api('triggers.add')('identify1',
-      '^\|\s*(?P<data>.*)\s*\|$', group='identify',
-      enabled=False, omit=True)
+                             r'^\|\s*(?P<data>.*)\s*\|$',
+                             group='identify', enabled=False, omit=True)
 
     self.api('events.register')('trigger_invdetailsstart',
-                                      self.invdetailsstart)
+                                self.invdetailsstart)
     self.api('events.register')('trigger_invdetailsend',
-                                      self.invdetailsend)
+                                self.invdetailsend)
     self.api('events.register')('trigger_invdetailsline',
-                                      self.invdetailsline)
+                                self.invdetailsline)
     self.api('events.register')('trigger_identifyon', self.identifyon)
     self.api('events.register')('trigger_identify1', self.identifyline)
 
@@ -101,17 +101,17 @@ class Plugin(AardwolfBasePlugin):
     """
     add a mod to an item (stat, skills, resist, etc)
     """
-    if not (ltype in self.currentitem):
+    if ltype not in self.currentitem:
       self.currentitem[ltype] = {}
 
     if ltype == 'tempmod':
-      if not (mod['type'] in self.currentitem[ltype]):
+      if mod['type'] not in self.currentitem[ltype]:
         self.currentitem[ltype][mod['type']] = []
       self.currentitem[ltype][mod['type']].append(mod)
     else:
       self.currentitem[ltype][mod['name']] = int(mod['value'])
 
-  def invdetailsstart(self, args):
+  def invdetailsstart(self, _=None):
     """
     start gathering the invdetails data
     """
@@ -126,9 +126,9 @@ class Plugin(AardwolfBasePlugin):
     header = args['header']
     data = args['data']
     self.api('send.msg')('match: %s - %s' % (header,
-                                                  data))
+                                             data))
     titem = self.api('itemu.dataparse')(data,
-                                            header)
+                                        header)
     if header == 'invheader':
       self.currentitem = titem
     elif header in ['statmod', 'resistmod', 'skillmod']:
@@ -137,14 +137,14 @@ class Plugin(AardwolfBasePlugin):
       self.currentitem[header] = titem
     self.api('send.msg')('invdetails parsed item: %s' % titem)
 
-  def invdetailsend(self, args):
+  def invdetailsend(self, _=None):
     """
     reset current when seeing an {/invdetails}
     """
     self.api('send.msg')('found {/invdetails}')
     self.api('triggers.togglegroup')('invdetails', False)
 
-  def identifyon(self, args):
+  def identifyon(self, _=None):
     """
     start gathering the identify data, this is also triggered by an
     identify divider, the line with multiple ---- in it
@@ -214,12 +214,12 @@ class Plugin(AardwolfBasePlugin):
       self.nonotes = True
     elif self.pastkeywords and not self.nonotes:
       if args['line'][2] != ' ':
-        if not ('notes' in self.currentitem):
+        if 'notes' not in self.currentitem:
           self.currentitem['notes'] = []
         tdat = args['colorline'][1:-1]
         self.currentitem['notes'].append(tdat.strip())
 
-  def identifyend(self, args):
+  def identifyend(self, _=None):
     """
     stop gathering identify data
 
@@ -231,14 +231,12 @@ class Plugin(AardwolfBasePlugin):
     self.dividercount = 0
     if self.currentitem['serial'] in self.waitingforid:
       del self.waitingforid[self.currentitem['serial']]
-    titem = self.api('eq.addidentify')(self.currentitem['serial'],
-                                          self.currentitem)
     self.api('events.eraise')('itemid_%s' % self.currentitem['serial'],
-                            {'item':self.api('eq.getitem')(
-				      self.currentitem['serial'])})
+                              {'item':self.api('eq.getitem')(
+				                              self.currentitem['serial'])})
     self.api('events.eraise')('itemid_all' % self.currentitem['serial'],
-                            {'item':self.api('eq.getitem')(
-                                      self.currentitem['serial'])})
+                              {'item':self.api('eq.getitem')(
+                                  self.currentitem['serial'])})
     ### Get the item from eq and update it
 
   # identify an item
@@ -257,8 +255,9 @@ class Plugin(AardwolfBasePlugin):
         self.api('eq.get')(serial)
       self.sendcmd('invdetails %s' % serial)
       self.sendcmd('identify %s' % serial)
-      self.api('events.register')('itemid_%s' % titem.serial, self.putincontainer,
-				  prio=40)
+      self.api('events.register')('itemid_%s' % titem.serial,
+                                  self.putincontainer,
+				                              prio=40)
       return None
 
   def putincontainer(self, args):
@@ -296,7 +295,7 @@ class Plugin(AardwolfBasePlugin):
           self.api('itemid.show')(serial)
         else:
           self.api('events.register')('itemid_%s' % serial,
-                                          self.event_showitem)
+                                      self.event_showitem)
           self.api('itemid.identify')(serial)
       #except ValueError:
         #msg.append('%s is not a serial number' % args['serial'])
@@ -344,7 +343,7 @@ class Plugin(AardwolfBasePlugin):
                           linecolour, linename2, data2)
 
   def formatspecialline(self, linename, linecolour, data,
-                                linename2='', data2=''):
+                        linename2='', data2=''):
     """
     format a special text line
      | Skill Mods : Modifies Dagger by +2                              |
@@ -379,8 +378,8 @@ class Plugin(AardwolfBasePlugin):
     """
     return '|     @w%-4s %-4s  %-3s %-3s %-3s ' \
                   '%-3s %-3s %-3s   %-3s   %-4s %-4s %-4s   |' % (
-                            'DR', 'HR', 'Str', 'Int', 'Wis',
-                            'Dex', 'Con', 'Luc', 'Sav', 'HP', 'MN', 'MV')
+                      'DR', 'HR', 'Str', 'Int', 'Wis',
+                      'Dex', 'Con', 'Luc', 'Sav', 'HP', 'MN', 'MV')
 
   def formatstats(self, stats):
     """
@@ -395,8 +394,8 @@ class Plugin(AardwolfBasePlugin):
         colors[i] = '@R'
 
     allstats = ['Damage roll', 'Hit roll', 'Strength', 'Intelligence',
-              'Wisdom', 'Dexterity', 'Constitution', 'Luck', 'Saves',
-              'Hit points', 'Mana', 'Moves']
+                'Wisdom', 'Dexterity', 'Constitution', 'Luck', 'Saves',
+                'Hit points', 'Mana', 'Moves']
 
     for i in allstats:
       if i in stats:
@@ -448,8 +447,8 @@ class Plugin(AardwolfBasePlugin):
                  'All magic', 'Disease', 'Poison']
 
     secondline = ['Acid', 'Air', 'Cold', 'Earth', 'Electric', 'Energy',
-              'Fire', 'Holy', 'Light', 'Magic', 'Mental', 'Negative', 'Shadow',
-              'Sonic', 'Water']
+                  'Fire', 'Holy', 'Light', 'Magic', 'Mental', 'Negative', 'Shadow',
+                  'Sonic', 'Water']
 
     allresists = firstline + secondline
 
@@ -472,26 +471,26 @@ class Plugin(AardwolfBasePlugin):
 
     if foundfirst:
       ttext.append('|%5s@w%-5s %-7s %-7s  %-8s  %-8s  %-5s %-5s %5s|' % (
-                              '', 'Bash', 'Pierce', 'Slash', 'All Phys',
-                              'All Mag', 'Diss', 'Poisn', ''))
+          '', 'Bash', 'Pierce', 'Slash', 'All Phys',
+          'All Mag', 'Diss', 'Poisn', ''))
       ttext.append(
-        '|%6s%s%-5s  %s%-7s %s%-7s   %s%-8s %s%-8s %s%-5s %s%-5s @w%4s|' % (
-                        '',
-                        colors['Bash'], resists['Bash'] or '-',
-                        colors['Pierce'], resists['Pierce'] or '-',
-                        colors['Slash'], resists['Slash'] or '-',
-                        colors['All physical'], resists['All physical'] or '-',
-                        colors['All magic'], resists['All magic'] or '-',
-                        colors['Disease'], resists['Disease'] or '-',
-                        colors['Poison'], resists['Poison'] or '-',
-                        ''))
+          '|%6s%s%-5s  %s%-7s %s%-7s   %s%-8s %s%-8s %s%-5s %s%-5s @w%4s|' % (
+              '',
+              colors['Bash'], resists['Bash'] or '-',
+              colors['Pierce'], resists['Pierce'] or '-',
+              colors['Slash'], resists['Slash'] or '-',
+              colors['All physical'], resists['All physical'] or '-',
+              colors['All magic'], resists['All magic'] or '-',
+              colors['Disease'], resists['Disease'] or '-',
+              colors['Poison'], resists['Poison'] or '-',
+              ''))
 
     if foundsecond:
       ttext.append(divider)
       ttext.append('|%5s%-5s  %-5s %-5s %-5s   %-5s   ' \
                     '%-5s   %-5s   %-5s@w %3s|' % (
-                            '', 'Acid', 'Air', 'Cold', 'Earth',
-                            'Eltrc', 'Enrgy', 'Fire', 'Holy', ''))
+                        '', 'Acid', 'Air', 'Cold', 'Earth',
+                        'Eltrc', 'Enrgy', 'Fire', 'Holy', ''))
 
       ttext.append('|%5s%s%-5s  %s%-5s %s%-5s %s%-5s   ' \
                         '%s%-5s   %s%-5s   %s%-5s   %s%-5s@w %3s|' % (
@@ -507,25 +506,28 @@ class Plugin(AardwolfBasePlugin):
                             ''))
 
       ttext.append(
-                '|%4s %-5s  %-5s %-5s %-5s   %-5s   %-5s   %-5s @w %10s|' % (
-                            '', 'Light', 'Magic', 'Mntl', 'Ngtv',
-                            'Shdw', 'Sonic', 'Water', ''))
+          '|%4s %-5s  %-5s %-5s %-5s   %-5s   %-5s   %-5s @w %10s|' % (
+              '', 'Light', 'Magic', 'Mntl', 'Ngtv',
+              'Shdw', 'Sonic', 'Water', ''))
 
       ttext.append('|%4s %s%-5s  %s%-5s %s%-5s %s%-5s   %s%-5s   ' \
                             '%s%-5s   %s%-5s@w %11s|' % (
-                            '',
-                            colors['Light'], resists['Light'] or '-',
-                            colors['Magic'], resists['Magic'] or '-',
-                            colors['Mental'], resists['Mental'] or '-',
-                            colors['Negative'], resists['Negative'] or '-',
-                            colors['Shadow'], resists['Shadow'] or '-',
-                            colors['Sonic'], resists['Sonic'] or '-',
-                            colors['Water'], resists['Water'] or '-',
-                            ''))
+                                '',
+                                colors['Light'], resists['Light'] or '-',
+                                colors['Magic'], resists['Magic'] or '-',
+                                colors['Mental'], resists['Mental'] or '-',
+                                colors['Negative'], resists['Negative'] or '-',
+                                colors['Shadow'], resists['Shadow'] or '-',
+                                colors['Sonic'], resists['Sonic'] or '-',
+                                colors['Water'], resists['Water'] or '-',
+                                ''))
 
     return ttext
 
   def checkattr(self, item, attr):
+    """
+    check for an attribute
+    """
     if hasattr(item, attr) and item.__dict__[attr]:
       return True
 
@@ -563,17 +565,16 @@ class Plugin(AardwolfBasePlugin):
       if item.curcontainer.cid == 'Worn':
         wearlocs = self.api('itemu.wearlocs')()
         iteml.append(self.formatsingleline('Location', '@R',
-                                         'Worn - %s' % wearlocs[item.wearslot]))
+                                           'Worn - %s' % wearlocs[item.wearslot]))
       else:
         iteml.append(self.formatsingleline('Location', '@R',
-                                         item.curcontainer.cid))
+                                           item.curcontainer.cid))
 
     if item.checkattr('itype') and item.checkattr('level'):
-      objtypes = self.api('itemu.objecttypes')()
       ntype = item.itype.capitalize()
       iteml.append(self.formatdoubleline('Type', '@c', ntype,
                                          'Level', item.level))
-    elif item.checkattr(level):
+    elif item.checkattr('level'):
       iteml.append(self.formatsingleline('Level', '@c', item.level))
 
     if item.checkattr('worth') and item.checkattr('weight'):
@@ -633,26 +634,27 @@ class Plugin(AardwolfBasePlugin):
     if item.checkattr('container'):
       iteml.append(divider)
       iteml.append(self.formatspecialline('Capacity', '@c',
-                          item.container['capacity'], 'Heaviest Item',
-                          item.container['heaviestitem']))
+                                          item.container['capacity'], 'Heaviest Item',
+                                          item.container['heaviestitem']))
       iteml.append(self.formatspecialline('Holding', '@c',
-                            item.container['holding'], 'Items Inside',
-                            item.container['itemsinside']))
+                                          item.container['holding'], 'Items Inside',
+                                          item.container['itemsinside']))
       iteml.append(self.formatspecialline('Tot Weight', '@c',
-                            item.container['totalweight'], 'Item Burden',
-                            item.container['itemburden']))
-      iteml.append(self.formatspecialline('', '@c',
-                  '@wItems inside weigh @Y%d@w%%@w of their usual weight' % \
-                          item.container['itemweightpercent']))
+                                          item.container['totalweight'], 'Item Burden',
+                                          item.container['itemburden']))
+      iteml.append(self.formatspecialline(
+          '', '@c',
+          '@wItems inside weigh @Y%d@w%%@w of their usual weight' % \
+          item.container['itemweightpercent']))
 
     if item.checkattr('weapon'):
       iteml.append(divider)
       iteml.append(self.formatspecialline('Weapon Type', '@c',
-                                  item.weapon['wtype'], 'Average Dam',
-                                  item.weapon['avedam']))
+                                          item.weapon['wtype'], 'Average Dam',
+                                          item.weapon['avedam']))
       iteml.append(self.formatspecialline('Inflicts', '@c',
-                                  item.weapon['inflicts'], 'Damage Type',
-                                  item.weapon['damtype']))
+                                          item.weapon['inflicts'], 'Damage Type',
+                                          item.weapon['damtype']))
       if 'special' in item.weapon and item.weapon['special']:
         iteml.append(self.formatspecialline('Specials', '@c',
                                             item.weapon['special']))
@@ -661,7 +663,8 @@ class Plugin(AardwolfBasePlugin):
       if item.checkattr('portal'):
         iteml.append(divider)
         iteml.append(self.formatsingleline('Portal', '@R',
-                  '@Y%s@w uses remaining.' % item.portal['uses']))
+                                           '@Y%s@w uses remaining.' % \
+                                              item.portal['uses']))
 
     if item.checkattr('statmod'):
       iteml.append(divider)
@@ -682,8 +685,9 @@ class Plugin(AardwolfBasePlugin):
         if int(item.skillmod[i]) > 0:
           color = '@G'
         iteml.append(self.formatspecialline(header, '@c',
-               'Modifies @g%s@w by %s%+d@w' % (str(spell['name']).capitalize(),
-               color, int(item.skillmod[i]))))
+                                            'Modifies @g%s@w by %s%+d@w' % \
+                                              (str(spell['name']).capitalize(),
+                                               color, int(item.skillmod[i]))))
         header = ''
 
     if item.checkattr('spells'):
@@ -698,37 +702,39 @@ class Plugin(AardwolfBasePlugin):
           if int(item.spells['uses']) > 1:
             plural = 's'
           iteml.append(self.formatspecialline(header, '@c',
-                    "%d use%s of level %d '@g%s@w'" % (
-                            item.spells['uses'], plural,
-                            item.spells['level'],
-                            spell['name'].lower())))
+                                              "%d use%s of level %d '@g%s@w'" % (
+                                                  item.spells['uses'], plural,
+                                                  item.spells['level'],
+                                                  spell['name'].lower())))
           header = ''
 
     if item.checkattr('food'):
       iteml.append(divider)
       header = 'Food'
       iteml.append(self.formatspecialline(header, '@c',
-          "Will replenish hunger by %d%%" % (item.food['percent'])))
+                                          "Will replenish hunger by %d%%" % \
+                                            (item.food['percent'])))
 
     if item.checkattr('drink'):
       iteml.append(divider)
       iteml.append(self.formatspecialline('Drink', '@c',
-                  "%d servings of %s. Max: %d" % (item.drink['servings'],
-                                    item.drink['liquid'],
-                                    item.drink['liquidmax']/20 or 1)))
+                                          "%d servings of %s. Max: %d" % \
+                                            (item.drink['servings'],
+                                             item.drink['liquid'],
+                                             item.drink['liquidmax']/20 or 1)))
       iteml.append(self.formatspecialline('', '@c',
-                  "Each serving replenishes thirst by %d%%" % \
-                    item.drink['thirstpercent']))
+                                          "Each serving replenishes thirst by %d%%" % \
+                                           item.drink['thirstpercent']))
       iteml.append(self.formatspecialline('', '@c',
-                  "Each serving replenishes hunger by %d%%" % \
-                    item.drink['hungerpercent']))
+                                          "Each serving replenishes hunger by %d%%" % \
+                                           item.drink['hungerpercent']))
 
     if item.checkattr('furniture'):
       iteml.append(divider)
       iteml.append(self.formatspecialline('Heal Rate', '@c',
-              "Health [@Y%d@w]    Magic [@Y%d@w]" % (
-                    item.furniture['hpregen'],
-                    item.furniture['manaregen'])))
+                                          "Health [@Y%d@w]    Magic [@Y%d@w]" % \
+                                           (item.furniture['hpregen'],
+                                            item.furniture['manaregen'])))
 
     iteml.append(divider)
 

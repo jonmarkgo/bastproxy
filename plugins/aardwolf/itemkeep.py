@@ -28,7 +28,7 @@ class Plugin(AardwolfBasePlugin):
 
     for i in itemtypes:
       self.api('setting.add')(i, False, bool,
-                                    'autokeep %s' % i)
+                              'autokeep %s' % i)
 
     self.api('events.register')('inventory_added', self.inventory_added)
 
@@ -41,5 +41,5 @@ class Plugin(AardwolfBasePlugin):
     ntype = itemtypesrev[item.itype]
 
     if self.api('setting.gets')(ntype):
-      if not ('K' in item.shortflags):
+      if 'K' not in item.shortflags:
         self.api('send.execute')('keep %s' % item.serial)

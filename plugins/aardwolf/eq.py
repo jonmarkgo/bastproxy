@@ -82,10 +82,10 @@ class EqContainer(object):
     ## startregex = the line to match to start collecting data "{invdata 83744667}"
     ## endregex = the line to match to end collecting data "{/invdata}"
     self.cid = cid
-    self.cmd = cmd or "invdata %s" % self.cid
-    self.cmdregex = cmdregex or "^invdata %s$" % self.cid
-    self.startregex = startregex or "\{invdata %s\}" % self.cid
-    self.endregex = endregex or "\{/invdata\}"
+    self.cmd = cmd or r"invdata %s" % self.cid
+    self.cmdregex = cmdregex or r"^invdata %s$" % self.cid
+    self.startregex = startregex or r"\{invdata %s\}" % self.cid
+    self.endregex = endregex or r"\{/invdata\}"
     self.plugin = plugin
     self.api = self.plugin.api
     self.cmdqueue = self.plugin.cmdqueue
@@ -160,14 +160,14 @@ class EqContainer(object):
     this will be called before the the command
     """
     self.api('triggers.add')('%sstart' % self.cid,
-                                 self.startregex,
-                                 enabled=False, group='%sdata' % self.cid,
-                                 omit=True)
+                             self.startregex,
+                             enabled=False, group='%sdata' % self.cid,
+                             omit=True)
 
     self.api('triggers.add')('%send' % self.cid,
-                                 self.endregex,
-                                 enabled=False, group='%sdata' % self.cid,
-                                 omit=True)
+                             self.endregex,
+                             enabled=False, group='%sdata' % self.cid,
+                             omit=True)
 
     self.api('events.register')('trigger_%sstart' % self.cid, self.datastart)
     self.api('events.register')('trigger_%send' % self.cid, self.dataend)
@@ -179,11 +179,11 @@ class EqContainer(object):
       self.api('triggers.remove')('dataline', force=True)
 
     self.api('triggers.add')('dataline',
-                                 r"^\s*(\d+),(.*),(.+),(.+),(.+),(.+),(.+),(.+)$",
-                                 enabled=True, group='dataline', omit=True)
+                             r"^\s*(\d+),(.*),(.+),(.+),(.+),(.+),(.+),(.+)$",
+                             enabled=True, group='dataline', omit=True)
 
     self.api('events.register')('trigger_dataline', self.dataline,
-                                    plugin=self.plugin.sname)
+                                plugin=self.plugin.sname)
 
   def dataafter(self):
     """
@@ -385,7 +385,7 @@ class Inventory(EqContainer):
     init the class
     """
     EqContainer.__init__(self, plugin, 'Inventory', cmd='invdata',
-                         cmdregex='^invdata$', startregex="\{invdata\}")
+                         cmdregex=r'^invdata$', startregex=r"\{invdata\}")
 
   def build(self, args):
     """
@@ -416,8 +416,8 @@ class Worn(EqContainer):
     init the class
     """
     EqContainer.__init__(self, plugin, 'Worn', cmd='eqdata',
-                         cmdregex='^eqdata$', startregex="\{eqdata\}",
-                         endregex="\{/eqdata\}")
+                         cmdregex=r'^eqdata$', startregex=r"\{eqdata\}",
+                         endregex=r"\{/eqdata\}")
 
     self.lastworn = {}
 
@@ -636,8 +636,8 @@ class Keyring(EqContainer):
     init the class
     """
     EqContainer.__init__(self, plugin, 'Keyring', cmd='keyring data',
-                         cmdregex='^keyring data$', startregex="\{keyring\}",
-                         endregex="\{/keyring\}")
+                         cmdregex=r'^keyring data$', startregex=r"\{keyring\}",
+                         endregex=r"\{/keyring\}")
 
   def get(self, serial):
     """
@@ -667,8 +667,8 @@ class Vault(EqContainer):
     init the class
     """
     EqContainer.__init__(self, plugin, 'Vault', cmd='vault data',
-                         cmdregex='^vault data$', startregex="\{vault\}",
-                         endregex="\{/vault\}")
+                         cmdregex=r'^vault data$', startregex=r"\{vault\}",
+                         endregex=r"\{/vault\}")
     self.itemcount = 0
     self.itemtotal = 0
     self.itemmax = 0
@@ -728,8 +728,8 @@ class Vault(EqContainer):
                                 (self.itemcount, self.itemmax))
     if self.itemtotal > self.itemcount:
       msg.append(
-        "Including keep flagged items, you have @Y%s@w items in your vault." % \
-          (self.itemtotal))
+          "Including keep flagged items, you have @Y%s@w items in your vault." % \
+            (self.itemtotal))
 
     msg.append("")
     return "\n".join(msg)
@@ -811,10 +811,10 @@ class Plugin(AardwolfBasePlugin):
                         help="show serial, default False",
                         action="store_true")
     self.api('commands.add')('eq',
-                                 self.cmd_eq,
-                                 parser=parser,
-                                 format=False,
-                                 preamble=False)
+                             self.cmd_eq,
+                             parser=parser,
+                             format=False,
+                             preamble=False)
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='show inventory of a container')
@@ -839,16 +839,16 @@ class Plugin(AardwolfBasePlugin):
                         help="don't group items, default False",
                         action="store_true")
     self.api('commands.add')('inv',
-                                 self.cmd_inv,
-                                 parser=parser,
-                                 format=False,
-                                 preamble=False)
+                             self.cmd_inv,
+                             parser=parser,
+                             format=False,
+                             preamble=False)
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='refresh eq')
     self.api('commands.add')('refresh',
-                                 self.cmd_refresh,
-                                 parser=parser)
+                             self.cmd_refresh,
+                             parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='get an item and put it in inventory')
@@ -861,10 +861,10 @@ class Plugin(AardwolfBasePlugin):
                         default=[],
                         nargs='*')
     self.api('commands.add')('get',
-                                 self.cmd_get,
-                                 parser=parser,
-                                 format=False,
-                                 preamble=False)
+                             self.cmd_get,
+                             parser=parser,
+                             format=False,
+                             preamble=False)
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='put an item into a container')
@@ -877,10 +877,10 @@ class Plugin(AardwolfBasePlugin):
                         default=[],
                         nargs='*')
     self.api('commands.add')('put',
-                                 self.cmd_put,
-                                 parser=parser,
-                                 format=False,
-                                 preamble=False)
+                             self.cmd_put,
+                             parser=parser,
+                             format=False,
+                             preamble=False)
 
     parser = argparse.ArgumentParser(add_help=False,
                                      description='show an item from the cache')
@@ -889,13 +889,13 @@ class Plugin(AardwolfBasePlugin):
                         default='',
                         nargs='?')
     self.api('commands.add')('icache',
-                                 self.cmd_icache,
-                                 parser=parser)
+                             self.cmd_icache,
+                             parser=parser)
 
     self.api('triggers.add')('dead',
-                                 r"^You die.$",
-                                 enabled=True,
-                                 group='dead')
+                             r"^You die.$",
+                             enabled=True,
+                             group='dead')
 
     self.api('triggers.add')(
         'badinvdata1',
@@ -974,7 +974,7 @@ class Plugin(AardwolfBasePlugin):
     return None
 
   # find an item with name in it
-  def api_findname(self, name, exact=False):
+  def api_findname(self, name, _=False):
     """
     find an item with name in it
     """
@@ -1008,8 +1008,8 @@ class Plugin(AardwolfBasePlugin):
 
     if nitem in self.itemcache:
       return self.itemcache[nitem]
-    else:
-      return None
+
+    return None
 
   # get a container
   def api_getcontainer(self, container):
@@ -1148,8 +1148,8 @@ class Plugin(AardwolfBasePlugin):
       #check for identifiers here
       if item == 'tokenbag':
         return 417249394
-      else:
-        return "'%s'" % item if ' ' in item else item
+
+      return "'%s'" % item if ' ' in item else item
 
     return None
 
@@ -1253,8 +1253,8 @@ class Plugin(AardwolfBasePlugin):
 
     if container in self.containers:
       return True, self.containers[container].build(args)
-    else:
-      return True, ["container %s does not exist" % container]
+
+    return True, ["container %s does not exist" % container]
 
   def invmon(self, args):
     #pylint: disable=too-many-branches,too-many-statements
@@ -1275,7 +1275,7 @@ class Plugin(AardwolfBasePlugin):
         self.containers['Worn'].remove(serial)
         self.containers['Inventory'].add(serial, place=0)
         self.api('events.eraise')('eq_removed',
-                                      {'item':self.itemcache[serial]})
+                                  {'item':self.itemcache[serial]})
       else:
         self.containers['Worn'].refresh()
         self.containers['Inventory'].refresh()
@@ -1285,8 +1285,8 @@ class Plugin(AardwolfBasePlugin):
         self.containers['Inventory'].remove(serial)
         self.containers['Worn'].add(serial, location)
         self.api('events.eraise')('eq_worn',
-                                      {'item':self.itemcache[serial],
-                                       'location':location})
+                                  {'item':self.itemcache[serial],
+                                   'location':location})
       else:
         self.containers['Inventory'].refresh()
         self.containers['Worn'].refresh()

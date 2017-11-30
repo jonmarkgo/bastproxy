@@ -39,13 +39,13 @@ class Plugin(AardwolfBasePlugin):
 
     self.api('events.register')('trigger_reboot', self.reboot)
 
-  def iceage(self, args):
+  def iceage(self, _=None):
     """
     raise an iceage event
     """
     self.api('events.eraise')('aard_iceage', {})
 
-  def reboot(self, args):
+  def reboot(self, _=None):
     """
     raise a reboot event
     """

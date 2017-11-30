@@ -16,56 +16,56 @@ VERSION = 1
 AUTOLOAD = False
 
 AARCHITEMS = {
- 1: "Johnny's Appleseed",
- 2: 'An Ancient Skull',
- 3: 'A Golden Truffle',
- 4: 'An Ancient Game Token',
- 5: "Neptune's Retired Staff",
- 6: "Percival's Retired Crown",
- 7: 'Photo of an F1 Tornado',
- 8: 'A Ring of Thandeld',
- 9: 'Petrified Volcano Ash',
- 10: "An Old Coyote's Tooth",
- 11: "Dorothy's Lost Earring",
- 12: 'A Golden Cross',
- 13: 'Skeleton of a Goblin',
- 14: 'A Rusted Coin',
- 15: 'A Rusted Trumpet',
- 16: 'A Coffin Lid',
- 17: 'A Wedding Ring',
- 18: 'A Dinosaur Bone',
- 19: "A Dragon's Tooth",
- 20: 'Unknown Element',
- 21: 'A Destroyed Mosaic',
- 22: 'A Silver Cross',
- 23: 'Lost Binoculars',
- 24: "Pirate's Hat",
- 25: 'A Rusted Cleaver',
- 26: 'Wilted Rose',
- 27: 'Casino Chip',
- 28: "Torn Visitor's Pass",
- 29: 'Ten-year-old Textbook',
- 30: 'Ivory Tusks',
- 31: 'An Oasis',
- 32: 'Skeleton of a Monkey',
- 33: 'An Ancient Stalactite',
- 34: 'Shoes of a Gnome',
- 35: 'A Torn Peace Agreement',
- 36: 'Chunk of an Iceberg',
- 37: 'Wings of a Harpy',
- 38: 'Petrified Tree Branch',
- 39: 'A Golden Leaf',
- 40: 'Writings of a Dream',
- 41: 'An Old Rope',
- 42: 'A Broken Twig',
- 43: 'Brick from a Castle',
- 44: 'A Rusted Belt Buckle',
- 45: 'A Biblical Textbook',
- 46: 'Frozen Flames',
- 47: 'Fox Tooth',
- 48: 'Picture of a Forest',
- 49: 'Moon in a Bottle',
- 50: 'Rotting Reed'
+    1: "Johnny's Appleseed",
+    2: 'An Ancient Skull',
+    3: 'A Golden Truffle',
+    4: 'An Ancient Game Token',
+    5: "Neptune's Retired Staff",
+    6: "Percival's Retired Crown",
+    7: 'Photo of an F1 Tornado',
+    8: 'A Ring of Thandeld',
+    9: 'Petrified Volcano Ash',
+    10: "An Old Coyote's Tooth",
+    11: "Dorothy's Lost Earring",
+    12: 'A Golden Cross',
+    13: 'Skeleton of a Goblin',
+    14: 'A Rusted Coin',
+    15: 'A Rusted Trumpet',
+    16: 'A Coffin Lid',
+    17: 'A Wedding Ring',
+    18: 'A Dinosaur Bone',
+    19: "A Dragon's Tooth",
+    20: 'Unknown Element',
+    21: 'A Destroyed Mosaic',
+    22: 'A Silver Cross',
+    23: 'Lost Binoculars',
+    24: "Pirate's Hat",
+    25: 'A Rusted Cleaver',
+    26: 'Wilted Rose',
+    27: 'Casino Chip',
+    28: "Torn Visitor's Pass",
+    29: 'Ten-year-old Textbook',
+    30: 'Ivory Tusks',
+    31: 'An Oasis',
+    32: 'Skeleton of a Monkey',
+    33: 'An Ancient Stalactite',
+    34: 'Shoes of a Gnome',
+    35: 'A Torn Peace Agreement',
+    36: 'Chunk of an Iceberg',
+    37: 'Wings of a Harpy',
+    38: 'Petrified Tree Branch',
+    39: 'A Golden Leaf',
+    40: 'Writings of a Dream',
+    41: 'An Old Rope',
+    42: 'A Broken Twig',
+    43: 'Brick from a Castle',
+    44: 'A Rusted Belt Buckle',
+    45: 'A Biblical Textbook',
+    46: 'Frozen Flames',
+    47: 'Fox Tooth',
+    48: 'Picture of a Forest',
+    49: 'Moon in a Bottle',
+    50: 'Rotting Reed'
 }
 
 AARCHITEMSREV = {}
@@ -88,18 +88,18 @@ class Plugin(AardwolfBasePlugin):
     AardwolfBasePlugin.load(self)
 
     parser = argparse.ArgumentParser(add_help=False,
-                 description='show needed aarch items')
+                                     description='show needed aarch items')
     parser.add_argument('filter', help='a word in an aarch piece to check for',
                         default='', nargs='?')
     self.api('commands.add')('need', self.cmd_need,
-                                parser=parser)
+                             parser=parser)
 
   def cmd_need(self, args):
     """
     find out which aarch items are needed to complete a set
     """
     tmsg = []
-    all = AARCHITEMS.keys()
+    tall = AARCHITEMS.keys()
     have = []
 
     aarchi = self.api('eq.findname')('(Aarchaeology)')
@@ -116,20 +116,20 @@ class Plugin(AardwolfBasePlugin):
           items = items + 1
           have.append(AARCHITEMSREV[nname])
 
-    tneed = set(all) - set(have)
+    tneed = set(tall) - set(have)
     if args['filter']:
       need = []
-      filter = args['filter']
+      tfilter = args['filter']
       for i in tneed:
-        if filter in AARCHITEMS[i].lower():
+        if tfilter in AARCHITEMS[i].lower():
           need.append(i)
     else:
       need = tneed
 
     tmsg.append('You have %s Aarcheology Items and %s Pamphlets' % (items, pam))
-    if len(tneed) > 0:
+    if tneed:
       tmsg.append('You need %s pieces:' % len(tneed))
-      if args['filter'] and len(need) == 0:
+      if args['filter'] and not need:
         tmsg.append('  Nothing with the filter: %s' % args['filter'])
       else:
         for i in sorted(need):

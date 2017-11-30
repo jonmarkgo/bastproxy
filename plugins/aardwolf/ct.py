@@ -65,20 +65,19 @@ class Plugin(AardwolfBasePlugin):
     totald = sum(damages[d]['damage'] for d in damages)
     if args['finishtime'] and args['starttime']:
       timestr = '%s' % self.api('utils.timedeltatostring')(
-              args['starttime'],
-              args['finishtime'],
-              colorn=statcolor,
-              colors=infocolor)
+          args['starttime'],
+          args['finishtime'],
+          colorn=statcolor,
+          colors=infocolor)
 
     xpstr = '%s%s%sxp' % (statcolor, args['totalxp'], infocolor)
 
     namestr = "{statcolor}{name}{infocolor} : {time}{infocolor} - {xp}".format(
-            infocolor = infocolor,
-            statcolor = statcolor,
-            name = args['name'],
-            time=timestr,
-            xp=xpstr
-            )
+        infocolor=infocolor,
+        statcolor=statcolor,
+        name=args['name'],
+        time=timestr,
+        xp=xpstr)
     tstr = infocolor + self.api('utils.center')(namestr, '-', linelen)
 
     msg.append(tstr)
@@ -88,16 +87,15 @@ class Plugin(AardwolfBasePlugin):
                 "{damage:^10} ({percent:4.0%}) {misses:^10} {average:^10}"
 
     msg.append(bstringt.format(
-           statcolor=infocolor,
-           infocolor=infocolor,
-           dtype='Dam Type',
-           hits='Hits',
-           percent=0,
-           damage='Damage',
-           misses='Misses',
-           average='Average'))
+        statcolor=infocolor,
+        infocolor=infocolor,
+        dtype='Dam Type',
+        hits='Hits',
+        percent=0,
+        damage='Damage',
+        misses='Misses',
+        average='Average'))
     msg.append(infocolor + '-' * linelen)
-    #totald = 0
     totalm = 0
     totalh = 0
     tkeys = damages.keys()
@@ -105,7 +103,6 @@ class Plugin(AardwolfBasePlugin):
     for i in tkeys:
       if i != 'enemy' and i != 'starttime' and i != 'finishtime':
         vdict = args['damage'][i]
-        #totald = totald + vdict['damage']
         totalm = totalm + vdict['misses']
         totalh = totalh + vdict['hits']
         damt = i
@@ -113,7 +110,7 @@ class Plugin(AardwolfBasePlugin):
           damt = i + " (in)"
 
         if vdict['hits'] == 0:
-          avedamage =  0
+          avedamage = 0
         else:
           avedamage = vdict['damage'] / vdict['hits']
 
@@ -124,25 +121,25 @@ class Plugin(AardwolfBasePlugin):
           tperc = 0
 
         msg.append(bstringt.format(
-           statcolor=statcolor,
-           infocolor=infocolor,
-           dtype=damt,
-           hits=vdict['hits'],
-           percent=tperc,
-           damage=vdict['damage'],
-           misses=vdict['misses'],
-           average=avedamage))
+            statcolor=statcolor,
+            infocolor=infocolor,
+            dtype=damt,
+            hits=vdict['hits'],
+            percent=tperc,
+            damage=vdict['damage'],
+            misses=vdict['misses'],
+            average=avedamage))
 
     msg.append(infocolor + '-' * linelen)
     msg.append(bstringt.format(
-           statcolor=statcolor,
-           infocolor=infocolor,
-           dtype='Total',
-           hits=totalh,
-           percent=1,
-           damage=totald,
-           misses=totalm,
-           average=totald/(totalh or 1)))
+        statcolor=statcolor,
+        infocolor=infocolor,
+        dtype='Total',
+        hits=totalh,
+        percent=1,
+        damage=totald,
+        misses=totalm,
+        average=totald/(totalh or 1)))
     msg.append(infocolor + '-' * linelen)
     self.addmessage('\n'.join(msg))
 
@@ -158,11 +155,8 @@ class Plugin(AardwolfBasePlugin):
     """
     show a message
     """
-
     self.api('events.unregister')('trigger_emptyline', self.showmessages)
     for i in self.msgs:
       self.api('send.client')(i, preamble=False)
 
     self.msgs = []
-
-

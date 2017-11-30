@@ -35,12 +35,12 @@ class Plugin(AardwolfBasePlugin):
     AardwolfBasePlugin.load(self)
 
     self.api('setting.add')('preremort', False, bool,
-                                'flag for pre remort')
+                            'flag for pre remort')
     self.api('setting.add')('remortcomp', False, bool,
-                                'flag for remort completion')
+                            'flag for remort completion')
     self.api('setting.add')('tiering', False, bool, 'flag for tiering')
     self.api('setting.add')('seen2', False, bool,
-                                'we saw a state 2 after tiering')
+                            'we saw a state 2 after tiering')
 
     self.api('watch.add')('shloud', '^superhero loud$')
     self.api('watch.add')('shsilent', '^superhero silent$')
@@ -48,67 +48,71 @@ class Plugin(AardwolfBasePlugin):
     self.api('watch.add')('shloudconfirm', '^superhero loud confirm$')
 
     self.api('triggers.add')('lvlpup',
-        "^Congratulations, hero. You have increased your powers!$")
+                             r"^Congratulations, hero. You have increased your powers!$")
     self.api('triggers.add')('lvlpupbless',
-        "^You gain a powerup\.$")
+                             r"^You gain a powerup\.$")
     self.api('triggers.add')('lvllevel',
-        "^You raise a level! You are now level (?P<level>\d*).$",
-        argtypes={'level':int})
+                             r"^You raise a level! You are now level (?P<level>\d*).$",
+                             argtypes={'level':int})
     self.api('triggers.add')('lvlsh',
-        "^Congratulations! You are now a superhero!$",
-        argtypes={'level':int})
+                             r"^Congratulations! You are now a superhero!$",
+                             argtypes={'level':int})
     self.api('triggers.add')('lvlbless',
-        "^You gain a level - you are now level (?P<level>\d*).$",
-        argtypes={'level':int})
+                             r"^You gain a level - you are now level (?P<level>\d*).$",
+                             argtypes={'level':int})
     self.api('triggers.add')('lvlgains',
-        "^You gain (?P<hp>\d*) hit points, (?P<mp>\d*) mana, "\
-          "(?P<mv>\d*) moves, (?P<pr>\d*) practices and (?P<tr>\d*) trains.$",
-        enabled=False, group='linfo',
-        argtypes={'hp':int, 'mn':int, 'mv':int, 'pr':int, 'tr':int})
+                             r"^You gain (?P<hp>\d*) hit points, (?P<mp>\d*) mana, "\
+                               r"(?P<mv>\d*) moves, (?P<pr>\d*) practices and " \
+                               r"(?P<tr>\d*) trains.$",
+                             enabled=False, group='linfo',
+                             argtypes={'hp':int, 'mn':int, 'mv':int, 'pr':int, 'tr':int})
     self.api('triggers.add')('lvlblesstrain',
-        "^You gain (?P<tr>\d*) extra trains? daily blessing bonus.$",
-        enabled=False, group='linfo',
-        argtypes={'tr':int})
+                             r"^You gain (?P<tr>\d*) extra trains? " \
+                               r"daily blessing bonus.$",
+                             enabled=False, group='linfo',
+                             argtypes={'tr':int})
     self.api('triggers.add')('lvlpupgains',
-        "^You gain (?P<tr>\d*) trains.$",
-        enabled=False, group='linfo',
-        argtypes={'tr':int})
+                             r"^You gain (?P<tr>\d*) trains.$",
+                             enabled=False, group='linfo',
+                             argtypes={'tr':int})
     self.api('triggers.add')('lvlbattlelearntrains',
-        "^You gain (?P<tr>\d*) additional training sessions? from your enhanced battle learning.$",
-        enabled=False, group='linfo',
-        argtypes={'tr':int})
+                             r"^You gain (?P<tr>\d*) additional training sessions? " \
+                               r"from your enhanced battle learning.$",
+                             enabled=False, group='linfo',
+                             argtypes={'tr':int})
     self.api('triggers.add')('lvlbonustrains',
-        "^Lucky! You gain an extra (?P<tr>\d*) training sessions?!$",
-        enabled=False, group='linfo',
-        argtypes={'tr':int})
+                             r"^Lucky! You gain an extra (?P<tr>\d*) " \
+                               r"training sessions?!$",
+                             enabled=False, group='linfo',
+                             argtypes={'tr':int})
     self.api('triggers.add')('lvlbonusstat',
-        "^You gain a bonus (?P<stat>.*) point!$",
-        enabled=False, group='linfo')
+                             r"^You gain a bonus (?P<stat>.*) point!$",
+                             enabled=False, group='linfo')
 
     self.api('triggers.add')('lvlshbadstar',
-        "^%s$" % re.escape("*******************************" \
-              "****************************************"),
-        enabled=False, group='superhero')
+                             r"^%s$" % re.escape("*******************************" \
+                                "****************************************"),
+                             enabled=False, group='superhero')
     self.api('triggers.add')('lvlshbad',
-        "^Use either: 'superhero loud'   - (?P<mins>.*) mins of " \
-          "double xp, (?P<qp>.*)qp and (?P<gold>.*) gold$",
-        enabled=False, group='superhero')
+                             r"^Use either: 'superhero loud'   - (?P<mins>.*) mins of " \
+                               r"double xp, (?P<qp>.*)qp and (?P<gold>.*) gold$",
+                             enabled=False, group='superhero')
     self.api('triggers.add')('lvlshnogold',
-        "^You must be carrying at least 500,000 gold coins.$",
-        enabled=False, group='superhero')
+                             r"^You must be carrying at least 500,000 gold coins.$",
+                             enabled=False, group='superhero')
     self.api('triggers.add')('lvlshnoqp',
-        "^You must have at least 1000 quest points.$",
-        enabled=False, group='superhero')
+                             r"^You must have at least 1000 quest points.$",
+                             enabled=False, group='superhero')
 
     self.api('triggers.add')('lvlpreremort',
-        "^You are now flagged as remorting.$",
-        enabled=True, group='remort')
+                             r"^You are now flagged as remorting.$",
+                             enabled=True, group='remort')
     self.api('triggers.add')('lvlremortcomp',
-        "^\* Remort transformation complete!$",
-        enabled=True, group='remort')
+                             r"^\* Remort transformation complete!$",
+                             enabled=True, group='remort')
     self.api('triggers.add')('lvltier',
-        "^## You have already remorted the max number of times.$",
-        enabled=True, group='remort')
+                             r"^## You have already remorted the max number of times.$",
+                             enabled=True, group='remort')
 
     self.api('events.register')('trigger_lvlpup', self._lvl)
     self.api('events.register')('trigger_lvlpupbless', self._lvl)
@@ -117,19 +121,19 @@ class Plugin(AardwolfBasePlugin):
     self.api('events.register')('trigger_lvlgains', self._lvlgains)
     self.api('events.register')('trigger_lvlpupgains', self._lvlgains)
     self.api('events.register')('trigger_lvlblesstrain',
-                                    self._lvlblesstrains)
+                                self._lvlblesstrains)
     self.api('events.register')('trigger_lvlbonustrains',
-                                    self._lvlbonustrains)
+                                self._lvlbonustrains)
     self.api('events.register')('trigger_lvlbonusstat',
-                                    self._lvlbonusstat)
+                                self._lvlbonusstat)
     self.api('events.register')('trigger_lvlbattlelearntrains',
-                                    self._lvlbattlelearntrains)
+                                self._lvlbattlelearntrains)
 
     self.api('events.register')('trigger_lvlshbadstar',
-                                    self._superherobad)
+                                self._superherobad)
     self.api('events.register')('trigger_lvlshbad', self._superherobad)
     self.api('events.register')('trigger_lvlshnogold',
-                                    self._superherobad)
+                                self._superherobad)
     self.api('events.register')('trigger_lvlshnoqp', self._superherobad)
 
     self.api('events.register')('watch_shloud', self.cmd_superhero)
@@ -180,7 +184,7 @@ class Plugin(AardwolfBasePlugin):
     do stuff when a remort is complete
     """
     self.api('setting.change')('preremort', False)
-    self.api('setting.change')('remortcomp',  True)
+    self.api('setting.change')('remortcomp', True)
     self._lvl({'level':1})
 
   def _preremort(self, _=None):
@@ -252,7 +256,7 @@ class Plugin(AardwolfBasePlugin):
     else:
       self.levelinfo['level'] = args['level']
       self.levelinfo['totallevels'] = self.api('aardu.getactuallevel')(
-                                                            args['level'])
+          args['level'])
       self.levelinfo['type'] = 'level'
 
     self.api('triggers.togglegroup')('linfo', True)
@@ -308,7 +312,7 @@ class Plugin(AardwolfBasePlugin):
     self.api('triggers.togglegroup')('linfo', False)
     self.api('events.unregister')('trigger_emptyline', self._finish)
     self.api('events.eraise')('aard_level_gain',
-                                  copy.deepcopy(self.levelinfo))
+                              copy.deepcopy(self.levelinfo))
     if self.levelinfo['level'] == 200 and self.levelinfo['type'] == 'level':
       self.api('send.msg')('raising hero event', 'level')
       self.api('events.eraise')('aard_level_hero', {})
@@ -326,9 +330,8 @@ class Plugin(AardwolfBasePlugin):
         self.api('setting.change')('remortcomp', False)
         self.api('events.eraise')('aard_level_remort', {})
 
-  def _savestate(self, args=None):
+  def _savestate(self, _=None):
     """
     save states
     """
     self.levelinfo.sync()
-

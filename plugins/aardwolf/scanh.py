@@ -34,23 +34,23 @@ class Plugin(AardwolfBasePlugin):
     AardwolfBasePlugin.load(self)
 
     self.api('setting.add')('cpbackcolor', '@z14', 'color',
-                        'the background color for cp mobs')
+                            'the background color for cp mobs')
     self.api('setting.add')('gqbackcolor', '@z9', 'color',
-                        'the background color for gq mobs')
+                            'the background color for gq mobs')
     self.api('setting.add')('questbackcolor', '@z13', 'color',
-                        'the background color for quest mobs')
+                            'the background color for quest mobs')
     self.api('setting.add')('cptextcolor', '@x0', 'color',
-                        'the background color for cp mobs')
+                            'the background color for cp mobs')
     self.api('setting.add')('gqtextcolor', '@x0', 'color',
-                        'the background color for gq mobs')
+                            'the background color for gq mobs')
     self.api('setting.add')('questtextcolor', '@x0', 'color',
-                        'the background color for quest mobs')
+                            'the background color for quest mobs')
 
     self.api('triggers.add')('scanstart',
-            "^\{scan\}$")
+                             r"^\{scan\}$")
     self.api('triggers.add')('scanend',
-            "^\{/scan\}$",
-            enabled=False, group='scan')
+                             r"^\{/scan\}$",
+                             enabled=False, group='scan')
 
     self.api('events.register')('trigger_scanstart', self.scanstart)
     self.api('events.register')('trigger_scanend', self.scanend)
@@ -65,7 +65,7 @@ class Plugin(AardwolfBasePlugin):
     self.api('events.register')('aard_quest_failed', self.questclear)
     self.api('events.register')('aard_quest_comp', self.questclear)
 
-  def scanstart(self, args):
+  def scanstart(self, _=None):
     """
     toggle the "scan" trigger group when seeing {scan}
     """
@@ -111,7 +111,7 @@ class Plugin(AardwolfBasePlugin):
 
     return args
 
-  def scanend(self, args):
+  def scanend(self, _=None):
     """
     reset current when seeing a scan ending
     """
@@ -127,13 +127,13 @@ class Plugin(AardwolfBasePlugin):
     if 'mobsleft' in args:
       self.mobs['cp'] = args['mobsleft']
 
-  def cpclear(self, args):
+  def cpclear(self, _=None):
     """
     clear the cp mobs
     """
     self.api('send.msg')('clearing cp mobs')
     if 'cp' in self.mobs:
-      del(self.mobs['cp'])
+      del self.mobs['cp']
 
   def gqmobs(self, args):
     """
@@ -143,13 +143,13 @@ class Plugin(AardwolfBasePlugin):
     if 'mobsleft' in args:
       self.mobs['gq'] = args['mobsleft']
 
-  def gqclear(self, args):
+  def gqclear(self, _=None):
     """
     clear the gq mob
     """
     self.api('send.msg')('clearing gq mobs')
     if 'gq' in self.mobs:
-      del(self.mobs['gq'])
+      del self.mobs['gq']
 
   def questmob(self, args):
     """
@@ -158,10 +158,10 @@ class Plugin(AardwolfBasePlugin):
     self.api('send.msg')('got quest mob')
     self.mobs['quest'] = args['mobname']
 
-  def questclear(self, args):
+  def questclear(self, _=None):
     """
     clear the quest mob
     """
     self.api('send.msg')('clearing quest mob')
     if 'quest' in self.mobs:
-      del(self.mobs['quest'])
+      del self.mobs['quest']

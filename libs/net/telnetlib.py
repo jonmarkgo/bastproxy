@@ -198,7 +198,7 @@ class Telnet(asyncore.dispatcher):
     self.msg('SE', command == SE, level=2)
 
     if command == SE:
-      if len(self.sbdataq) > 0:
+      if self.sbdataq:
         subc = self.sbdataq[0]
       self.msg('SE: got subc', ord(subc), level=2)
 

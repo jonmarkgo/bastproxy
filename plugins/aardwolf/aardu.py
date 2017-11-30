@@ -23,14 +23,14 @@ AUTOLOAD = False
 
 # a table of class abbreviations
 CLASSABB = {
-  'mag':'mage',
-  'thi':'thief',
-  'pal':'paladin',
-  'war':'warrior',
-  'psi':'psionicist',
-  'cle':'cleric',
-  'ran':'ranger',
-  }
+    'mag':'mage',
+    'thi':'thief',
+    'pal':'paladin',
+    'war':'warrior',
+    'psi':'psionicist',
+    'cle':'cleric',
+    'ran':'ranger',
+}
 
 # the reverse of CLASSABB
 CLASSABBREV = {}
@@ -39,72 +39,72 @@ for classn in CLASSABB:
 
 # a table of rewards
 REWARDTABLE = {
-        'quest':'qp',
-        'training':'trains',
-        'gold':'gold',
-        'trivia':'tp',
-        'practice':'pracs',
-    }
+    'quest':'qp',
+    'training':'trains',
+    'gold':'gold',
+    'trivia':'tp',
+    'practice':'pracs',
+}
 
 # a table of damages
 DAMAGES = [
-  'misses',
-  'tickles',
-  'bruises',
-  'scratches',
-  'grazes',
-  'nicks',
-  'scars',
-  'hits',
-  'injures',
-  'wounds',
-  'mauls',
-  'maims',
-  'mangles',
-  'mars',
-  'LACERATES',
-  'DECIMATES',
-  'DEVASTATES',
-  'ERADICATES',
-  'OBLITERATES',
-  'EXTIRPATES',
-  'INCINERATES',
-  'MUTILATES',
-  'DISEMBOWELS',
-  'MASSACRES',
-  'DISMEMBERS',
-  'RENDS',
-  '- BLASTS -',
-  '-= DEMOLISHES =-',
-  '** SHREDS **',
-  '**** DESTROYS ****',
-  '***** PULVERIZES *****',
-  '-=- VAPORIZES -=-',
-  '<-==-> ATOMIZES <-==->',
-  '<-:-> ASPHYXIATES <-:->',
-  '<-*-> RAVAGES <-*->',
-  '<>*<> FISSURES <>*<>',
-  '<*><*> LIQUIDATES <*><*>',
-  '<*><*><*> EVAPORATES <*><*><*>',
-  '<-=-> SUNDERS <-=->',
-  '<=-=><=-=> TEARS INTO <=-=><=-=>',
-  '<->*<=> WASTES <=>*<->',
-  '<-+-><-*-> CREMATES <-*-><-+->',
-  '<*><*><*><*> ANNIHILATES <*><*><*><*>',
-  '<--*--><--*--> IMPLODES <--*--><--*-->',
-  '<-><-=-><-> EXTERMINATES <-><-=-><->',
-  '<-==-><-==-> SHATTERS <-==-><-==->',
-  '<*><-:-><*> SLAUGHTERS <*><-:-><*>',
-  '<-*-><-><-*-> RUPTURES <-*-><-><-*->',
-  '<-*-><*><-*-> NUKES <-*-><*><-*->',
-  '-<[=-+-=]<:::<>:::> GLACIATES <:::<>:::>[=-+-=]>-',
-  '<-=-><-:-*-:-><*--*> METEORITES <*--*><-:-*-:-><-=->',
-  '<-:-><-:-*-:-><-*-> SUPERNOVAS <-*-><-:-*-:-><-:->',
-  'does UNSPEAKABLE things to',
-  'does UNTHINKABLE things to',
-  'does UNIMAGINABLE things to',
-  'does UNBELIEVABLE things to',
-  'pimpslaps'
+    'misses',
+    'tickles',
+    'bruises',
+    'scratches',
+    'grazes',
+    'nicks',
+    'scars',
+    'hits',
+    'injures',
+    'wounds',
+    'mauls',
+    'maims',
+    'mangles',
+    'mars',
+    'LACERATES',
+    'DECIMATES',
+    'DEVASTATES',
+    'ERADICATES',
+    'OBLITERATES',
+    'EXTIRPATES',
+    'INCINERATES',
+    'MUTILATES',
+    'DISEMBOWELS',
+    'MASSACRES',
+    'DISMEMBERS',
+    'RENDS',
+    '- BLASTS -',
+    '-= DEMOLISHES =-',
+    '** SHREDS **',
+    '**** DESTROYS ****',
+    '***** PULVERIZES *****',
+    '-=- VAPORIZES -=-',
+    '<-==-> ATOMIZES <-==->',
+    '<-:-> ASPHYXIATES <-:->',
+    '<-*-> RAVAGES <-*->',
+    '<>*<> FISSURES <>*<>',
+    '<*><*> LIQUIDATES <*><*>',
+    '<*><*><*> EVAPORATES <*><*><*>',
+    '<-=-> SUNDERS <-=->',
+    '<=-=><=-=> TEARS INTO <=-=><=-=>',
+    '<->*<=> WASTES <=>*<->',
+    '<-+-><-*-> CREMATES <-*-><-+->',
+    '<*><*><*><*> ANNIHILATES <*><*><*><*>',
+    '<--*--><--*--> IMPLODES <--*--><--*-->',
+    '<-><-=-><-> EXTERMINATES <-><-=-><->',
+    '<-==-><-==-> SHATTERS <-==-><-==->',
+    '<*><-:-><*> SLAUGHTERS <*><-:-><*>',
+    '<-*-><-><-*-> RUPTURES <-*-><-><-*->',
+    '<-*-><*><-*-> NUKES <-*-><*><-*->',
+    '-<[=-+-=]<:::<>:::> GLACIATES <:::<>:::>[=-+-=]>-',
+    '<-=-><-:-*-:-><*--*> METEORITES <*--*><-:-*-:-><-=->',
+    '<-:-><-:-*-:-><-*-> SUPERNOVAS <-*-><-:-*-:-><-:->',
+    'does UNSPEAKABLE things to',
+    'does UNTHINKABLE things to',
+    'does UNIMAGINABLE things to',
+    'does UNBELIEVABLE things to',
+    'pimpslaps'
 ]
 
 # the reverse of DAMAGES
@@ -133,7 +133,7 @@ class Plugin(AardwolfBasePlugin):
 
   # convert level, remort, tier, redos to the total levels
   def api_getactuallevel(self, level=None, remort=None,
-                                      tier=None, redos=None):
+                         tier=None, redos=None):
     """  convert level, remort, tier, redos to the total levels
     @Ylevel@w  = the level, defaults to GMCP value
     @Yremort@w  = the # of remorts, default to GMCP value
@@ -147,8 +147,8 @@ class Plugin(AardwolfBasePlugin):
     redos = int(redos or self.api('GMCP.getv')('char.base.redos') or 0)
     if redos == 0:
       return (tier * 7 * 201) + ((remort - 1) * 201) + level
-    else:
-      return (tier * 7 * 201) + (redos * 7 * 201) + \
+
+    return (tier * 7 * 201) + (redos * 7 * 201) + \
                                   ((remort - 1) * 201) + level
 
   # parse an Aardwolf damage line
@@ -165,7 +165,7 @@ class Plugin(AardwolfBasePlugin):
     ddict = {}
     tsplit = line.split(' ')
     ddict['hits'] = 1
-    thits = re.match('^\[(?P<hits>\d*)\]', tsplit[0])
+    thits = re.match(r'^\[(?P<hits>\d*)\]', tsplit[0])
     if thits:
       ddict['hits'] = int(thits.groupdict()['hits'])
       del tsplit[0]
@@ -174,7 +174,7 @@ class Plugin(AardwolfBasePlugin):
       del tsplit[0]
 
     ddict['damage'] = 0
-    tdam = re.match('^\[(?P<damage>\d*)\]', tsplit[-1])
+    tdam = re.match(r'^\[(?P<damage>\d*)\]', tsplit[-1])
     if tdam:
       ddict['damage'] = int(tdam.groupdict()['damage'])
       del tsplit[-1]
@@ -182,7 +182,7 @@ class Plugin(AardwolfBasePlugin):
     nline = ' '.join(tsplit)
     for i in DAMAGES:
       if i in nline:
-        regex = '^(?P<damtype>.*) (%s) (?P<enemy>.*)[!|\.]$' % re.escape(i)
+        regex = r'^(?P<damtype>.*) (%s) (?P<enemy>.*)[!|\.]$' % re.escape(i)
         mat = re.match(regex, nline)
         if mat:
           ddict['damtype'] = mat.groupdict()['damtype']
@@ -232,8 +232,8 @@ class Plugin(AardwolfBasePlugin):
         'mage' : 'mag'"""
     if rev:
       return CLASSABB
-    else:
-      return CLASSABBREV
+
+    return CLASSABBREV
 
   # get the reward table
   def api_rewardtable(self):

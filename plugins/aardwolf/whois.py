@@ -6,7 +6,6 @@ import copy
 from libs.persistentdict import PersistentDict
 from plugins.aardwolf._aardwolfbaseplugin import AardwolfBasePlugin
 
-
 NAME = 'Aardwolf Whois'
 SNAME = 'whois'
 PURPOSE = 'Gather whois data'
@@ -36,37 +35,41 @@ class Plugin(AardwolfBasePlugin):
     self.api('watch.add')('whois', '^(whoi|whois)$')
 
     self.api('triggers.add')('whoisheader',
-      "^\[.*\]\s+.*\s*\((?P<sex>\w+)\s+\w+\)$",
-      enabled=False,
-      group='whois')
+                             r"^\[.*\]\s+.*\s*\((?P<sex>\w+)\s+\w+\)$",
+                             enabled=False,
+                             group='whois')
     self.api('triggers.add')('whoisclasses',
-      "^\[Multiclass Player: (?P<classes>.*) \]$",
-      enabled=False,
-      group='whois')
-    self.api('triggers.add')('whois1',
-      "^(?P<name1>[\w\s]*)\s*:\s*\[\s*(?P<val1>[\w\d\s]*)\s*\]\s*$",
-      enabled=False,
-      group='whois')
-    self.api('triggers.add')('whois2',
-      "^(?P<name1>[\w\s]*)\s*:\s*\[\s*(?P<val1>[\w\d\s]*)\s*\]" \
-        "\s*(?P<name2>[\w\s]*)\s*:\s*\[\s*(?P<val2>[\w\d\s]*)\s*\]\s*$",
-      enabled=False,
-      group='whois')
-    self.api('triggers.add')('whois3',
-      "^(?P<name1>[\w\s]*)\s*:\s*\[\s*(?P<val1>[\w\d\s]*)\s*\]" \
-        "\s*(?P<name2>[\w\s]*)\s*:\s*\[\s*(?P<val2>[\w\d\s]*)\s*\]" \
-        "\s*(?P<name3>[\w\s]*)\s*:\s*\[\s*(?P<val3>[\w\d\s]*)\s*\]\s*$",
-      enabled=False,
-      group='whois')
-    self.api('triggers.add')('whoispowerup',
-      "^(?P<name1>[\w\s]*)\s*:\s*\[\s*(?P<val1>[\w\d\s]*)\s*\]" \
-        "\s*([\w\s]*)\s*:\s*\[\s*(?P<pval1>[\w\d\s]*)\s*\]\s*\[\s*" \
-        "(?P<pval2>[\w\d\s]*)\s*\]\s*$",
-      enabled=False,
-      group='whois')
+                             r"^\[Multiclass Player: (?P<classes>.*) \]$",
+                             enabled=False,
+                             group='whois')
+    self.api('triggers.add')(
+        'whois1',
+        r"^(?P<name1>[\w\s]*)\s*:\s*\[\s*(?P<val1>[\w\d\s]*)\s*\]\s*$",
+        enabled=False,
+        group='whois')
+    self.api('triggers.add')(
+        'whois2',
+        r"^(?P<name1>[\w\s]*)\s*:\s*\[\s*(?P<val1>[\w\d\s]*)\s*\]" \
+          r"\s*(?P<name2>[\w\s]*)\s*:\s*\[\s*(?P<val2>[\w\d\s]*)\s*\]\s*$",
+        enabled=False,
+        group='whois')
+    self.api('triggers.add')(
+        'whois3',
+        r"^(?P<name1>[\w\s]*)\s*:\s*\[\s*(?P<val1>[\w\d\s]*)\s*\]" \
+          r"\s*(?P<name2>[\w\s]*)\s*:\s*\[\s*(?P<val2>[\w\d\s]*)\s*\]" \
+          r"\s*(?P<name3>[\w\s]*)\s*:\s*\[\s*(?P<val3>[\w\d\s]*)\s*\]\s*$",
+        enabled=False,
+        group='whois')
+    self.api('triggers.add')(
+        'whoispowerup',
+        r"^(?P<name1>[\w\s]*)\s*:\s*\[\s*(?P<val1>[\w\d\s]*)\s*\]" \
+          r"\s*([\w\s]*)\s*:\s*\[\s*(?P<pval1>[\w\d\s]*)\s*\]\s*\[\s*" \
+          r"(?P<pval2>[\w\d\s]*)\s*\]\s*$",
+        enabled=False,
+        group='whois')
     self.api('triggers.add')('whoisend',
-      "^-{74,74}$",
-      enabled=False)
+                             r"^-{74,74}$",
+                             enabled=False)
 
     self.api('events.register')('watch_whois', self._whois)
     self.api('events.register')('trigger_whoisheader', self._whoisheader)
@@ -117,7 +120,7 @@ class Plugin(AardwolfBasePlugin):
     self.whois['race'] = self.api('GMCP.getv')('char.base.race').lower()
     self.whois['sex'] = args['sex'].lower()
     self.whois['subclass'] = self.api('GMCP.getv')(
-                                            'char.base.subclass').lower()
+        'char.base.subclass').lower()
     self.whois['powerupsall'] = 0
     self.whois['powerupsmort'] = 0
     self.whois['remorts'] = self.api('GMCP.getv')('char.base.remorts')
@@ -125,8 +128,8 @@ class Plugin(AardwolfBasePlugin):
       classabs = self.api('aardu.classabb')()
       self.whois['classes'] = []
       self.whois['classes'].append({'remort':1,
-              'class':classabs[self.api('GMCP.getv')(
-                                      'char.base.class').lower()]})
+                                    'class':classabs[self.api('GMCP.getv')(
+                                        'char.base.class').lower()]})
 
     self.api('triggers.toggle')('whoisend', True)
 
@@ -141,7 +144,7 @@ class Plugin(AardwolfBasePlugin):
     for i in range(remorts):
       tclass = tlist[i].strip().lower()
       self.whois['classes'].append({'remort':i + 1,
-                'class':classabs[tclass.lower()]})
+                                    'class':classabs[tclass.lower()]})
 
     self.whois['remorts'] = remorts
 
@@ -150,17 +153,16 @@ class Plugin(AardwolfBasePlugin):
     send a whois
     """
     self.whois['totallevels'] = self.api('aardu.getactuallevel')(
-                      self.whois['level'], self.whois['remorts'],
-                      self.whois['tiers'], self.whois['redos'])
+        self.whois['level'], self.whois['remorts'],
+        self.whois['tiers'], self.whois['redos'])
     self.whois.sync()
     self.api('triggers.togglegroup')('whois', False)
     self.api('triggers.toggle')('whoisend', False)
     self.api('events.eraise')('aard_whois', copy.deepcopy(self.whois))
     self.api('send.msg')('whois: %s' % self.whois)
 
-  def _savestate(self, args=None):
+  def _savestate(self, _=None):
     """
     save states
     """
     self.whois.sync()
-

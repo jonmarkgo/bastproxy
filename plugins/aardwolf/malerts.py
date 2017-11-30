@@ -39,7 +39,7 @@ class Plugin(AardwolfBasePlugin):
     AardwolfBasePlugin.load(self)
 
     self.api('setting.add')('email', '', str,
-                        'the email to send the alerts', nocolor=True)
+                            'the email to send the alerts', nocolor=True)
     self.api('events.register')('aard_gq_declared', self._gqdeclared)
     self.api('events.register')('aard_quest_ready', self._quest)
     self.api('events.register')('aard_iceage', self._iceage)
@@ -52,12 +52,12 @@ class Plugin(AardwolfBasePlugin):
     proxy = self.api('managers.getm')('proxy')
     times = time.asctime(time.localtime())
     msg = '%s:%s - A GQuest has been declared for levels %s to %s. (%s)' % (
-              proxy.host, proxy.port,
-              args['lowlev'], args['highlev'], times)
+        proxy.host, proxy.port,
+        args['lowlev'], args['highlev'], times)
     email = self.api('setting.gets')('email')
     if email:
       self.api('mail.send')('New GQuest', msg,
-              email)
+                            email)
     else:
       self.api('mail.send')('New GQuest', msg)
 
@@ -68,11 +68,11 @@ class Plugin(AardwolfBasePlugin):
     proxy = self.api('managers.getm')('proxy')
     times = time.asctime(time.localtime())
     msg = '%s:%s - Time to quest! (%s)' % (
-              proxy.host, proxy.port, times)
+        proxy.host, proxy.port, times)
     email = self.api('setting.gets')('email')
     if email:
       self.api('mail.send')('Quest Time', msg,
-              email)
+                            email)
     else:
       self.api('mail.send')('Quest Time', msg)
 
@@ -83,11 +83,11 @@ class Plugin(AardwolfBasePlugin):
     proxy = self.api('managers.getm')('proxy')
     times = time.asctime(time.localtime())
     msg = '%s:%s - An ice age approaches! (%s)' % (
-              proxy.host, proxy.port, times)
+        proxy.host, proxy.port, times)
     email = self.api('setting.gets')('email')
     if email:
       self.api('mail.send')('Ice Age', msg,
-              email)
+                            email)
     else:
       self.api('mail.send')('Ice Age', msg)
 
@@ -98,10 +98,10 @@ class Plugin(AardwolfBasePlugin):
     proxy = self.api('managers.getm')('proxy')
     times = time.asctime(time.localtime())
     msg = '%s:%s - Aardwolf is rebooting (%s)' % (
-              proxy.host, proxy.port, times)
+        proxy.host, proxy.port, times)
     email = self.api('setting.gets')('email')
     if email:
       self.api('mail.send')('Reboot', msg,
-              email)
+                            email)
     else:
       self.api('mail.send')('Reboot', msg)

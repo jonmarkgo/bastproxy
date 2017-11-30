@@ -90,7 +90,7 @@ class Plugin(AardwolfBasePlugin):
       self.api('events.eraise')('aard_quest_reset', {})
     self.queststuff.sync()
 
-  def _savestate(self, args=None):
+  def _savestate(self, _=None):
     """
     save states
     """

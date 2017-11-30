@@ -16,10 +16,10 @@ VERSION = 1
 # This keeps the plugin from being autoloaded if set to False
 AUTOLOAD = False
 
-TITLEMATCH = '^Your title is: (?P<title>.*)\.$'
+TITLEMATCH = r'^Your title is: (?P<title>.*)\.$'
 TITLERE = re.compile(TITLEMATCH)
 
-TITLESETMATCH = 'Title now set to: (?P<title>.*)$'
+TITLESETMATCH = r'Title now set to: (?P<title>.*)$'
 TITLESET = re.compile(TITLESETMATCH)
 
 class Plugin(AardwolfBasePlugin):
@@ -41,34 +41,34 @@ class Plugin(AardwolfBasePlugin):
     AardwolfBasePlugin.load(self)
 
     self.api('setting.add')('afktitle', 'is AFK.', str,
-                        'the title when afk mode is enabled')
+                            'the title when afk mode is enabled')
     self.api('setting.add')('lasttitle', '', str,
-                        'the title before afk mode is enabled')
+                            'the title before afk mode is enabled')
     self.api('setting.add')('queue', [], list, 'the tell queue',
-                                readonly=True)
+                            readonly=True)
     self.api('setting.add')('isafk', False, bool, 'AFK flag',
-                                readonly=True)
+                            readonly=True)
 
     parser = argparse.ArgumentParser(add_help=False,
-                 description='show the communication queue')
+                                     description='show the communication queue')
     self.api('commands.add')('show', self.cmd_show,
-                                  parser=parser)
+                             parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
-                 description='clear the communication queue')
+                                     description='clear the communication queue')
     self.api('commands.add')('clear', self.cmd_clear,
-                                  parser=parser)
+                             parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
-                 description='toggle afk')
+                                     description='toggle afk')
     self.api('commands.add')('toggle', self.cmd_toggle,
-                                  parser=parser)
+                             parser=parser)
 
     self.api('watch.add')('titleset', '^(tit|titl|title) (?P<title>.*)$')
 
     self.api('events.register')('client_connected', self.clientconnected)
     self.api('events.register')('client_disconnected',
-                                              self.clientdisconnected)
+                                self.clientdisconnected)
     self.api('events.register')('watch_titleset', self._titlesetevent)
 
   def afterfirstactive(self, _=None):
@@ -112,7 +112,7 @@ class Plugin(AardwolfBasePlugin):
     """
     msg = []
     queue = self.api('setting.gets')('queue')
-    if len(queue) == 0:
+    if queue:
       msg.append('The queue is empty')
     else:
       msg.append('Tells received while afk')
@@ -188,7 +188,7 @@ class Plugin(AardwolfBasePlugin):
 
     queue = self.api('setting.gets')('queue')
 
-    if len(queue) > 0:
+    if queue:
       self.api('send.client')("@BAFK Queue")
       self.api('send.client')("@BYou have %s tells in the queue" % \
                 len(queue))
@@ -209,7 +209,6 @@ class Plugin(AardwolfBasePlugin):
     if this is the last client, enable afk triggers
     """
     proxy = self.api('managers.getm')('proxy')
-    if len(proxy.clients) == 0:
+    if proxy.clients:
       self.api('send.msg')('enabling afk mode')
       self.enableafk()
-

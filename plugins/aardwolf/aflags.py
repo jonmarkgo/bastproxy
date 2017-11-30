@@ -27,6 +27,7 @@ class Plugin(AardwolfBasePlugin):
     self.api('api.add')('check', self.api_checkflag)
 
     self.currentflags = {}
+    self.cmdqueue = None
 
   def load(self):
     """
@@ -36,41 +37,41 @@ class Plugin(AardwolfBasePlugin):
 
     self.cmdqueue = self.api('cmdq.baseclass')()(self)
     self.cmdqueue.addcmdtype('aflags', 'aflags', "^aflags$",
-              beforef=self.aflagsbefore, afterf=self.aflagsafter)
+                             beforef=self.aflagsbefore, afterf=self.aflagsafter)
 
     parser = argparse.ArgumentParser(add_help=False,
-                 description='refresh affect flags')
+                                     description='refresh affect flags')
     self.api('commands.add')('refresh', self.cmd_refresh,
-                                 parser=parser)
+                             parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
-                 description='check to see if affected by a flag')
+                                     description='check to see if affected by a flag')
     parser.add_argument('flag', help='the flag to check',
                         default='', nargs='?')
     self.api('commands.add')('check', self.cmd_check,
-                                 parser=parser)
+                             parser=parser)
 
     parser = argparse.ArgumentParser(add_help=False,
-                 description='list affect flags')
+                                     description='list affect flags')
     self.api('commands.add')('list', self.cmd_list,
-                                 parser=parser)
+                             parser=parser)
 
     self.api('triggers.add')('aflagsstart',
-            "^Affect Flags: (?P<flags>.*)$", enabled=False,
-            group="aflags")
+                             "^Affect Flags: (?P<flags>.*)$", enabled=False,
+                             group="aflags")
 
     self.api('events.register')('aard_skill_affoff',
-                                  self.refreshflags, prio=99)
+                                self.refreshflags, prio=99)
     self.api('events.register')('aard_skill_affon',
-                                  self.refreshflags, prio=99)
+                                self.refreshflags, prio=99)
     self.api('events.register')('aard_skill_recoff',
-                                  self.refreshflags, prio=99)
+                                self.refreshflags, prio=99)
     self.api('events.register')('aard_skill_recon',
-                                  self.refreshflags, prio=99)
+                                self.refreshflags, prio=99)
     self.api('events.register')('skills_affected_update',
-                                  self.refreshflags, prio=99)
+                                self.refreshflags, prio=99)
 
-  def afterfirstactive(self, args=None):
+  def afterfirstactive(self, _=None):
     """
     refresh flags
     """
@@ -79,6 +80,9 @@ class Plugin(AardwolfBasePlugin):
 
   # check if affected by a flag
   def api_checkflag(self, flag):
+    """
+    check if affected by a flag
+    """
     flag = flag.lower()
     if flag and flag in self.currentflags:
       return True
@@ -123,7 +127,7 @@ class Plugin(AardwolfBasePlugin):
 
     return args
 
-  def aflagsdone(self, args):
+  def aflagsdone(self, _=None):
     """
     finished aflags when seeing an emptyline
     """
@@ -138,13 +142,13 @@ class Plugin(AardwolfBasePlugin):
     self.savestate()
     self.api('triggers.togglegroup')('aflags', False)
 
-  def refreshflags(self, args=None):
+  def refreshflags(self, _=None):
     """
     start to refresh flags
     """
     self.cmdqueue.addtoqueue('aflags')
 
-  def cmd_refresh(self, args):
+  def cmd_refresh(self, _=None):
     """
     refresh aflags
     """
@@ -164,16 +168,15 @@ class Plugin(AardwolfBasePlugin):
 
     return True, ['Affect %s is inactive' % args['flag']]
 
-  def cmd_list(self, args):
+  def cmd_list(self, _=None):
     """
     list all affects
     """
-    if len(self.currentflags) == 0:
+    if not self.currentflags:
       return True, ["There are no affects active"]
-    else:
-      msg = ["The following %s affects are active" % len(self.currentflags)]
-      for i in sorted(self.currentflags.keys()):
-        msg.append('  ' + i)
 
-      return True, msg
+    msg = ["The following %s affects are active" % len(self.currentflags)]
+    for i in sorted(self.currentflags.keys()):
+      msg.append('  ' + i)
 
+    return True, msg

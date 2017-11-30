@@ -20,71 +20,71 @@ VERSION = 1
 AUTOLOAD = False
 
 OBJECTTYPES = [
-  'none',
-  'light',
-  'scroll',
-  'wand',
-  'staff',
-  'weapon',
-  'treasure',
-  'armor',
-  'potion',
-  'furniture',
-  'trash',
-  'container',
-  'drink',
-  'key',
-  'food',
-  'boat',
-  'mobcorpse',
-  'corpse',
-  'fountain',
-  'pill',
-  'portal',
-  'beacon',
-  'giftcard',
-  'gold',
-  'raw material',
-  'campfire'
+    'none',
+    'light',
+    'scroll',
+    'wand',
+    'staff',
+    'weapon',
+    'treasure',
+    'armor',
+    'potion',
+    'furniture',
+    'trash',
+    'container',
+    'drink',
+    'key',
+    'food',
+    'boat',
+    'mobcorpse',
+    'corpse',
+    'fountain',
+    'pill',
+    'portal',
+    'beacon',
+    'giftcard',
+    'gold',
+    'raw material',
+    'campfire'
 ]
 OBJECTTYPESREV = {}
 for objectt in OBJECTTYPES:
   OBJECTTYPESREV[objectt] = OBJECTTYPES.index(objectt)
 
 WEARLOCS = [
- 'light',
- 'head',
- 'eyes',
- 'lear',
- 'rear',
- 'neck1',
- 'neck2',
- 'back',
- 'medal1',
- 'medal2',
- 'medal3',
- 'medal4',
- 'torso',
- 'body',
- 'waist',
- 'arms',
- 'lwrist',
- 'rwrist',
- 'hands',
- 'lfinger',
- 'rfinger',
- 'legs',
- 'feet',
- 'shield',
- 'wielded',
- 'second',
- 'hold',
- 'float',
- 'tattoo1',
- 'tattoo2',
- 'above',
- 'portal',
- 'sleeping',
+    'light',
+    'head',
+    'eyes',
+    'lear',
+    'rear',
+    'neck1',
+    'neck2',
+    'back',
+    'medal1',
+    'medal2',
+    'medal3',
+    'medal4',
+    'torso',
+    'body',
+    'waist',
+    'arms',
+    'lwrist',
+    'rwrist',
+    'hands',
+    'lfinger',
+    'rfinger',
+    'legs',
+    'feet',
+    'shield',
+    'wielded',
+    'second',
+    'hold',
+    'float',
+    'tattoo1',
+    'tattoo2',
+    'above',
+    'portal',
+    'sleeping',
 ]
 
 WEARLOCSREV = {}
@@ -94,19 +94,19 @@ for wearlocs in WEARLOCS:
 ITEMFLAGS = ['K', 'G', 'H', 'I', 'M']
 
 ITEMFLAGSCOLORS = {
- 'K':'R',
- 'M':'B',
- 'G':'W',
- 'H':'C',
- 'I':'w',
+    'K':'R',
+    'M':'B',
+    'G':'W',
+    'H':'C',
+    'I':'w',
 }
 
 ITEMFLAGSNAME = {
- 'K':'kept',
- 'M':'magic',
- 'G':'glow',
- 'H':'hum',
- 'I':'invis',
+    'K':'kept',
+    'M':'magic',
+    'G':'glow',
+    'H':'hum',
+    'I':'invis',
 }
 
 class Plugin(AardwolfBasePlugin):
@@ -125,25 +125,25 @@ class Plugin(AardwolfBasePlugin):
 
     self.invlayout = {}
     self.invlayout['invheader'] = ["serial", "level", "itype", "worth",
-                                "weight", "wearable", "flags", "owner",
-                                "fromclan", "timer", "u1", "u2", "u3",
-                                "score"]
+                                   "weight", "wearable", "flags", "owner",
+                                   "fromclan", "timer", "u1", "u2", "u3",
+                                   "score"]
     self.invlayout['container'] = ["capacity", "heaviestitem", "holding",
-                                "itemsinside", "totalweight", "itemburden",
-                                "itemweightpercent"]
+                                   "itemsinside", "totalweight", "itemburden",
+                                   "itemweightpercent"]
     self.invlayout['statmod'] = ['name', 'value']
     self.invlayout['resistmod'] = ['name', 'value']
     self.invlayout['weapon'] = ["wtype", "avedam", "inflicts", "damtype",
-                             "special"]
+                                "special"]
     self.invlayout['skillmod'] = ['name', 'value']
     self.invlayout['spells'] = ["uses", "level", "sn1", "sn2", "sn3", "sn4",
-                             "u1"]
+                                "u1"]
     self.invlayout['food'] = ['percent']
     self.invlayout['drink'] = ["servings", "liquid", "liquidmax", "liquidleft",
-                            "thirstpercent", "hungerpercent", "u1"]
+                               "thirstpercent", "hungerpercent", "u1"]
     self.invlayout['furniture'] = ["hpregen", "manaregen", "u1"]
     self.invlayout['eqdata'] = ["serial", "shortflags", "cname", "level",
-                             "itype", "unique", "wearslot", "timer"]
+                                "itype", "unique", "wearslot", "timer"]
     self.invlayout['light'] = ['duration']
     self.invlayout['portal'] = ['uses']
     self.invlayout['tempmod'] = ['sn', 'u1', 'u2', 'statmod', 'duration']
@@ -179,8 +179,8 @@ class Plugin(AardwolfBasePlugin):
     """
     if rev:
       return WEARLOCSREV
-    else:
-      return WEARLOCS
+
+    return WEARLOCS
 
   # get the object types table
   def api_objecttypes(self, rev=False):
@@ -189,8 +189,8 @@ class Plugin(AardwolfBasePlugin):
     """
     if rev:
       return OBJECTTYPESREV
-    else:
-      return OBJECTTYPES
+
+    return OBJECTTYPES
 
   # parse a line from invitem, invdata, eqdata, invdetails
   def api_dataparse(self, line, layoutname):

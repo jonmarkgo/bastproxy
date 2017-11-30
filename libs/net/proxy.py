@@ -202,4 +202,3 @@ class Proxy(Telnet):
     for client in self.clients:
       client.handle_close()
     self.api('send.msg')('Proxy: shutdown finished', primary='net')
-
