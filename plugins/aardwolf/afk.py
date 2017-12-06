@@ -209,6 +209,6 @@ class Plugin(AardwolfBasePlugin):
     if this is the last client, enable afk triggers
     """
     proxy = self.api('managers.getm')('proxy')
-    if proxy.clients:
+    if not proxy.clients:
       self.api('send.msg')('enabling afk mode')
       self.enableafk()
