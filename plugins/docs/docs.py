@@ -171,7 +171,8 @@ class Plugin(BasePlugin):
 
     return tocl
 
-  def checknodocs(self, plugin):
+  @staticmethod
+  def checknodocs(plugin):
     """
     check for no docs setting
     """
@@ -255,7 +256,8 @@ class Plugin(BasePlugin):
 
     tfile.close()
 
-  def addelementclass(self, html, element, eclass):
+  @staticmethod
+  def addelementclass(html, element, eclass):
     """
     add a class to an element
 
@@ -315,7 +317,8 @@ class Plugin(BasePlugin):
 
     return toc
 
-  def adddivstodoc(self, thtml):
+  @staticmethod
+  def adddivstodoc(thtml):
     """
     put divs around headers
     """
@@ -358,97 +361,64 @@ class Plugin(BasePlugin):
 
     return '\n'.join(html)
 
-  def build_plugin(self, plugin, title, pluginmenu, template):
+  def _build_cmds(self, pmod):
     """
-    build a plugin page
+    build the cmds part of the page
     """
+    tcmds = self.api('commands.list')(pmod.sname, cformat=False)
 
-    tlist = plugin['fullimploc'].split('.')
-    pdir = tlist[1]
+    cmds = []
 
-    pmod = self.api('plugins.getp')(plugin['modpath'])
+    if tcmds:
+      groups = {}
+      for i in sorted(tcmds.keys()):
+        if i != 'default':
+          if cmds[i]['group'] not in groups:
+            groups[cmds[i]['group']] = []
 
-    if pmod and self.checknodocs(pmod):
-      self.api('send.msg')(
-          'skipping %s' % plugin['fullimploc'])
-      return
+          groups[cmds[i]['group']].append(i)
 
-    self.api('send.msg')('building %s' % plugin['fullimploc'])
+      cmds = ['<h2 id="commands" class="bph2">Commands</h2>']
 
-    try:
-      testdoc = sys.modules[pmod.fullimploc].__doc__
-    except AttributeError:
-      self.api('send.msg')('Plugin %s is not loaded' % plugin['modpath'])
-      return
+      for group in sorted(groups.keys()):
+        if group != 'Base':
+          cmds.append('<div class="indenth3">')
+          cmds.append('<h3 id="cmdgroup%(NAME)s" class="bph3">%(NAME)s</h3>' % \
+                        {'NAME':group})
+          cmds.append('</div>')
+          cmds.append('<div class="indenth4">')
+          for i in groups[group]:
+            cmds.append('<h4 id="cmd%(NAME)s" class="bph4">%(NAME)s</h4>' % \
+                          {'NAME':i})
+            cmds.append('<pre><code>')
+            chelp = self.api('commands.cmdhelp')(pmod.sname, i)
+            chelp = self.api('colors.colortohtml')(escape(chelp))
+            cmds.extend(chelp.split('\n'))
+            cmds.append('</code></pre>')
+          cmds.append('</div>')
 
-    wplugin = plugin['fullimploc'].split('.')
+      cmds.append('<div class="indenth3">')
+      cmds.append('<h3 id="cmdgroup%(NAME)s" class="bph3">%(NAME)s</h3>' % \
+                    {'NAME':'Base'})
+      cmds.append('</div>')
+      cmds.append('<div class="indenth4">')
+      for i in groups['Base']:
+        cmds.append('<h4 id="cmd%(NAME)s" class="bph4">%(NAME)s</h4>' % \
+                      {'NAME':i})
+        cmds.append('<pre><code>')
+        chelp = self.api('commands.cmdhelp')(pmod.sname, i)
+        chelp = self.api('colors.colortohtml')(escape(chelp))
+        cmds.extend(chelp.split('\n'))
+        cmds.append('</code></pre>')
+      cmds.append('</div>')
 
-    wpluginname = '.'.join(wplugin[1:])
+    return cmds
 
-    aboutb = markdown2.markdown(testdoc,
-                                extras=['header-ids', 'fenced-code-blocks',
-                                        'wiki-tables'])
-
-    aboutb = self.api('colors.colortohtml')(aboutb)
-
-    aboutl = []
-
-    aboutl.append('<h2 id="about">About</h2>\n')
-    aboutl.append(aboutb)
-
-    about = '\n'.join(aboutl)
-
-    nbody = self.adddivstodoc(about)
-
-    nbody = self.addhclasses(nbody)
-
-    body = self.addtableclasses(nbody)
-
-    cmds = self.api('commands.list')(pmod.sname, cformat=False)
-
-    groups = {}
-    for i in sorted(cmds.keys()):
-      if i != 'default':
-        if cmds[i]['group'] not in groups:
-          groups[cmds[i]['group']] = []
-
-        groups[cmds[i]['group']].append(i)
-
-    cmds = ['<h2 id="commands" class="bph2">Commands</h2>']
-
-    for group in sorted(groups.keys()):
-      if group != 'Base':
-        cmds.append('<div class="indenth3">')
-        cmds.append('<h3 id="cmdgroup%(NAME)s" class="bph3">%(NAME)s</h3>' % \
-                      {'NAME':group})
-        cmds.append('</div>')
-        cmds.append('<div class="indenth4">')
-        for i in groups[group]:
-          cmds.append('<h4 id="cmd%(NAME)s" class="bph4">%(NAME)s</h4>' % \
-                        {'NAME':i})
-          cmds.append('<pre><code>')
-          chelp = self.api('commands.cmdhelp')(pmod.sname, i)
-          chelp = self.api('colors.colortohtml')(escape(chelp))
-          cmds.extend(chelp.split('\n'))
-          cmds.append('</code></pre>')
-        cmds.append('</div>')
-
-    cmds.append('<div class="indenth3">')
-    cmds.append('<h3 id="cmdgroup%(NAME)s" class="bph3">%(NAME)s</h3>' % \
-                  {'NAME':'Base'})
-    cmds.append('</div>')
-    cmds.append('<div class="indenth4">')
-    for i in groups['Base']:
-      cmds.append('<h4 id="cmd%(NAME)s" class="bph4">%(NAME)s</h4>' % \
-                    {'NAME':i})
-      cmds.append('<pre><code>')
-      chelp = self.api('commands.cmdhelp')(pmod.sname, i)
-      chelp = self.api('colors.colortohtml')(escape(chelp))
-      cmds.extend(chelp.split('\n'))
-      cmds.append('</code></pre>')
-    cmds.append('</div>')
-
-    body.extend(cmds)
+  def _build_settings(self, pmod):
+    """
+    build the settings for a plugin
+    """
+    settings = []
 
     if pmod.settings:
       settings = ['<h2 id="settings" class="bph2">Settings</h2>']
@@ -463,9 +433,15 @@ class Plugin(BasePlugin):
 
       settings.append('</div>')
 
-      body.extend(settings)
+    return settings
 
+  def _build_apis(self, pmod):
+    """
+    build the api list for the plugin
+    """
     papis = self.api('api.getchildren')(pmod.sname)
+
+    apis = []
 
     if papis:
       apis = ['<h2 id="api" class="bph2">API</h2>']
@@ -482,7 +458,45 @@ class Plugin(BasePlugin):
 
       apis.append('</div>')
 
-      body.extend(apis)
+    return apis
+
+  def build_plugin(self, plugin, title, pluginmenu, template):
+    """
+    build a plugin page
+    """
+    pmod = self.api('plugins.getp')(plugin['modpath'])
+
+    if pmod and self.checknodocs(pmod):
+      self.api('send.msg')(
+          'skipping %s' % plugin['fullimploc'])
+      return
+
+    self.api('send.msg')('building %s' % plugin['fullimploc'])
+
+    try:
+      testdoc = sys.modules[pmod.fullimploc].__doc__
+    except AttributeError:
+      self.api('send.msg')('Plugin %s is not loaded' % plugin['modpath'])
+      return
+
+    wpluginname = '.'.join(plugin['fullimploc'].split('.')[1:])
+
+    body = '<h2 id="about">About</h2>\n' + self.api('colors.colortohtml')(
+        markdown2.markdown(testdoc,
+                           extras=['header-ids', 'fenced-code-blocks',
+                                   'wiki-tables']))
+
+    body = self.adddivstodoc(body)
+
+    body = self.addhclasses(body)
+
+    body = self.addtableclasses(body)
+
+    body.extend(self._build_cmds(pmod))
+
+    body.extend(self._build_settings(pmod))
+
+    body.extend(self._build_apis(pmod))
 
     testt = self.gettoc('<body>\n' + '\n'.join(body) + '\n</body>')
 
@@ -492,7 +506,8 @@ class Plugin(BasePlugin):
                        'PLUGINMENU':pluginmenu, 'PNAME':wpluginname, 'CSS':'dark.css',
                        'THEMEMENU':self.themelist}
 
-    outdir = os.path.join(self.api.BASEPATH, 'docsout', 'plugins', pdir)
+    outdir = os.path.join(self.api.BASEPATH, 'docsout', 'plugins',
+                          plugin['fullimploc'].split('.')[1])
 
     try:
       os.makedirs(outdir)
