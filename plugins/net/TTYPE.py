@@ -2,7 +2,7 @@
 this module handles telnet option 25, Terminal Type
 """
 from libs.net._basetelnetoption import BaseTelnetOption
-from libs.net.telnetlib import WILL, DO, IAC, SE, SB, DONT, NOOPT
+from libs.net.telnetlib import WILL, DO, IAC, SE, SB, DONT, NOOPT, CODES
 from plugins._baseplugin import BasePlugin
 
 NAME = 'Term Type Telnet Option'
@@ -15,6 +15,8 @@ PRIORITY = 35
 AUTOLOAD = True
 
 TTYPE = chr(24)  # Terminal Type
+
+CODES[24] = "<TERMTYPE>"
 
 # Plugin
 class Plugin(BasePlugin):
@@ -51,11 +53,11 @@ class SERVER(BaseTelnetOption):
     """
     handle the opt
     """
-    self.telnetobj.msg('TTYPE:', ord(command), '- in handleopt',
+    self.telnetobj.msg('%s - in handleopt' % self.telnetobj.ccode(command),
                        mtype='TTYPE')
     if command == DO:
       self.telnetobj.msg(
-          'TTYPE: sending IAC SB TTYPE NOOPT MUSHclient-Aard IAC SE',
+          'sending IAC SB TTYPE NOOPT MUSHclient-Aard IAC SE',
           mtype='TTYPE')
       self.telnetobj.send(
           IAC + SB + TTYPE + NOOPT + self.telnetobj.ttype + IAC + SE)
@@ -71,15 +73,15 @@ class CLIENT(BaseTelnetOption):
     """
     BaseTelnetOption.__init__(self, telnetobj, TTYPE)
     #self.telnetobj.debug_types.append('TTYPE')
-    self.telnetobj.msg('TTYPE: sending IAC WILL TTYPE', mtype='TTYPE')
-    self.telnetobj.addtooutbuffer(IAC + DO + TTYPE, True)
+    self.telnetobj.msg('sending IAC WILL TTYPE', mtype='TTYPE')
 
   def handleopt(self, command, sbdata):
     """
     handle the opt
     """
-    self.telnetobj.msg('TTYPE:', ord(command), '- in handleopt: ',
-                       sbdata, mtype='TTYPE')
+    self.telnetobj.msg('%s - in handleopt: %s' % \
+                         (self.telnetobj.ccode(command), sbdata),
+                       mtype='TTYPE')
 
     if command == WILL:
       self.telnetobj.addtooutbuffer(
@@ -91,15 +93,14 @@ class CLIENT(BaseTelnetOption):
     """
     negotiate when receiving an op
     """
-    self.telnetobj.msg("TTYPE: starting TTYPE", level=2, mtype='TTYPE')
-    self.telnetobj.msg('TTYPE: sending IAC SB TTYPE IAC SE', mtype='TTYPE')
-    self.telnetobj.send(IAC + SB + TTYPE + IAC + SE)
+    self.telnetobj.msg("starting TTYPE", level=2, mtype='TTYPE')
+    self.telnetobj.msg('sending IAC SB TTYPE IAC SE', mtype='TTYPE')
 
   def reset(self, onclose=False):
     """
     reset the opt
     """
-    self.telnetobj.msg('TTYPE: resetting', mtype='TTYPE')
+    self.telnetobj.msg('resetting', mtype='TTYPE')
     if not onclose:
       self.telnetobj.addtooutbuffer(IAC + DONT + TTYPE, True)
     BaseTelnetOption.reset(self)

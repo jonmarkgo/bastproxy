@@ -4,11 +4,9 @@ This plugins handles TCP option 201, GMCP (aardwolf implementation)
 import pprint
 import libs.argp as argp
 from libs.net._basetelnetoption import BaseTelnetOption
-from libs.net.telnetlib import WILL, DO, IAC, SE, SB
+from libs.net.telnetlib import WILL, DO, IAC, SE, SB, CODES
 from libs.persistentdict import convert
 from plugins._baseplugin import BasePlugin
-
-GMCP = chr(201)
 
 NAME = 'GMCP'
 SNAME = 'GMCP'
@@ -19,6 +17,10 @@ PRIORITY = 35
 
 # This keeps the plugin from being autoloaded if set to False
 AUTOLOAD = True
+
+GMCP = chr(201)
+
+CODES[201] = '<GMCP>'
 
 # Plugin
 class Plugin(BasePlugin):
@@ -309,11 +311,13 @@ class SERVER(BaseTelnetOption):
     """
     handle the gmcp option
     """
-    self.telnetobj.msg('GMCP:', ord(command), '- in handleopt',
+    self.telnetobj.msg('CMD: %s - in handleopt' % self.telnetobj.ccode(command),
                        level=2, mtype='GMCP')
+    self.telnetobj.msg('DATA: "%s"- in handleopt' % (sbdata),
+                       level=2, mtype='GMCP')
+
     if command == WILL:
-      self.telnetobj.msg('GMCP: sending IAC DO GMCP', level=2, mtype='GMCP')
-      self.telnetobj.send(IAC + DO + GMCP)
+      self.telnetobj.msg('sending IAC DO GMCP', level=2, mtype='GMCP')
       self.telnetobj.options[ord(GMCP)] = True
       self.api('events.eraise')('GMCP:server-enabled', {})
 
@@ -334,8 +338,9 @@ class SERVER(BaseTelnetOption):
       except (UnicodeDecodeError, ValueError):
         newdata = {}
         self.api('send.traceback')('Could not decode: %s' % data)
-      self.telnetobj.msg(modname, data, level=2, mtype='GMCP')
-      self.telnetobj.msg(type(newdata), newdata, level=2, mtype='GMCP')
+      self.telnetobj.msg("mod: %s, data: '%s'" % (modname, data), level=2, mtype='GMCP')
+      self.telnetobj.msg("modtype: %s, data %s" % (type(newdata), newdata),
+                         level=2, mtype='GMCP')
       tdata = {}
       tdata['data'] = newdata
       tdata['module'] = modname
@@ -358,17 +363,16 @@ class CLIENT(BaseTelnetOption):
     """
     BaseTelnetOption.__init__(self, telnetobj, GMCP)
     #self.telnetobj.debug_types.append('GMCP')
-    self.telnetobj.msg('GMCP: sending IAC WILL GMCP', mtype='GMCP')
-    self.telnetobj.addtooutbuffer(IAC + WILL + GMCP, True)
+    self.telnetobj.msg('sending IAC WILL GMCP', mtype='GMCP')
     self.cmdqueue = []
 
   def handleopt(self, command, sbdata):
     """
     handle gmcp data from a client
     """
-    self.telnetobj.msg('GMCP:', ord(command), '- in handleopt', mtype='GMCP')
+    self.telnetobj.msg('%s - in handleopt' % self.telnetobj.ccode(command), mtype='GMCP')
     if command == DO:
-      self.telnetobj.msg('GMCP:setting options["GMCP"] to True',
+      self.telnetobj.msg('setting options["GMCP"] to True',
                          mtype='GMCP')
       self.telnetobj.options[ord(GMCP)] = True
     elif command == SE:

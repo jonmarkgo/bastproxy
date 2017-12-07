@@ -21,19 +21,19 @@ class BaseTelnetOption(object):
     """
     a method for when an option connects
     """
-    self.telnetobj.msg('onconnect for option', ord(self.option),
+    self.telnetobj.msg('onconnect for option: %s' % ord(self.option),
                        mtype='option')
 
   def handleopt(self, command, sbdata):
     """
     handle an option
     """
-    self.telnetobj.msg('handleopt for option', ord(self.option),
-                       command, sbdata, mtype='option')
+    self.telnetobj.msg('handleopt for option: %s, command: %s, sbdata: %s' % \
+                        (ord(self.option), command, sbdata), mtype='option')
 
   def reset(self, onclose=False): # pylint: disable=unused-argument
     """
     reset and option
     """
-    self.telnetobj.msg('reset for option', ord(self.option), mtype='option')
+    self.telnetobj.msg('reset for option: %s' % ord(self.option), mtype='option')
     self.telnetobj.options[ord(self.option)] = False

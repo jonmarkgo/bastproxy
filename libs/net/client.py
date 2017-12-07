@@ -144,6 +144,8 @@ class Client(Telnet):
     """
     self.api('send.client')("%s - %s: Client Disconnected" % \
                                 (self.host, self.port))
+    self.api('send.msg')("%s - %s: Client Disconnected" % \
+                                (self.host, self.port), primary='net')
     self.api('managers.getm')('proxy').removeclient(self)
     self.api('events.eraise')('client_disconnected', {'client':self})
     self.api('events.unregister')('to_client_event', self.addtooutbuffer)

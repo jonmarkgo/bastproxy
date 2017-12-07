@@ -122,7 +122,6 @@ CODES = {255: "IAC",
          1:   "[<ECHO> or <SEND/MODE>]",
          3:   "<SGA>",
          5:   "STATUS",
-         24:  "<TERMTYPE>",
          25:  "<EOR>",
          31:  "<NegoWindoSize>",
          32:  "<TERMSPEED>",
@@ -189,44 +188,59 @@ class Telnet(asyncore.dispatcher):
     self.ttype = 'Unknown'
     self.debug_types = []
 
+  @staticmethod
+  def ccode(newchar):
+    """
+    convert a char to a string if in CODES lookup table
+    """
+    tchar = ord(newchar)
+    if tchar in CODES:
+      return CODES[tchar]
+
+    return tchar
+
   def handleopt(self, command, option):
     """
     handle an option
     """
-    self.msg('Command:', ord(command), 'with option', ord(option), level=2)
+    cmdstr = self.ccode(command)
+    optstr = self.ccode(option)
+
+    self.msg('Command %s with option: %s' % (cmdstr, optstr), mtype='OPTION')
+
     subc = NOOPT
-    self.msg('SE', command == SE, level=2)
+    self.msg('SE: Test - %s' % (command == SE), level=2)
 
     if command == SE:
       if self.sbdataq:
         subc = self.sbdataq[0]
-      self.msg('SE: got subc', ord(subc), level=2)
+      self.msg('SE: got subc - %s' % self.ccode(subc), level=2)
 
     if ord(option) in self.option_handlers:
-      self.msg('calling handleopt for', ord(option), level=2)
+      self.msg('calling handleopt for: %s' % optstr, mtype='OPTION')
       self.option_handlers[ord(option)].handleopt(command, '')
     elif command == SE and ord(subc) in self.option_handlers:
-      self.msg('calling handleopt with SE for', ord(subc), level=2)
+      self.msg('calling handleopt with SE for %s' % self.ccode(subc), mtype='OPTION')
       self.option_handlers[ord(subc)].handleopt(SE, self.sbdataq[1:])
     elif command == WILL:
-      self.msg('Sending IAC WONT %s' % ord(option), level=2)
+      self.msg('Sending IAC WONT %s' % optstr, mtype='OPTION')
       self.send("".join([IAC, WONT, option]))
     elif command == DO:
-      self.msg('Sending IAC DONT %s' % ord(option), level=2)
+      self.msg('Sending IAC DONT %s' % optstr, mtype='OPTION')
       self.send("".join([IAC, DONT, option]))
     elif command == DONT or command == WONT:
       pass
     else:
-      self.msg('Fallthrough:', ord(command), 'with option',
-               option, ord(option), level=2)
+      self.msg('Fallthrough: %s with option %s'  % (cmdstr, optstr), mtype='OPTION')
       if command == SE:
-        self.msg('sbdataq: %r' % self.sbdataq, level=2)
+        self.msg('sbdataq: %r' % self.sbdataq, mtype='OPTION')
 
-      self.msg('length of sbdataq', len(self.sbdataq), level=2)
+      self.msg('length of sbdataq: %s' % len(self.sbdataq), mtype='OPTION')
       if len(self.sbdataq) == 1:
-        self.msg('should look at the sbdataq', ord(self.sbdataq), level=2)
+        self.msg('should look at the sbdataq: %s' % self.ccode(self.sbdataq),
+                 mtype='OPTION')
       else:
-        self.msg('should look at the sbdataq', self.sbdataq, level=2)
+        self.msg('should look at the sbdataq: %s' % self.sbdataq, mtype='OPTION')
 
   def readdatafromsocket(self):
     """
@@ -242,7 +256,7 @@ class Telnet(asyncore.dispatcher):
     """
     self.close()
 
-  def msg(self, *args, **kwargs):
+  def msg(self, msg, **kwargs):
     """
     Print a debug message, when the debug level is > 0.
 
@@ -256,8 +270,8 @@ class Telnet(asyncore.dispatcher):
     if 'mtype' in kwargs:
       mtype = kwargs['mtype']
     if kwargs['level'] >= self.debuglevel or mtype in self.debug_types:
-      self.api('send.msg')('Telnet(%-15s - %-5s %-7s %-5s): ' % \
-                          (self.host, self.port, self.ttype, mtype), args)
+      print('Telnet(%-15s - %-5s %-7s %-5s): %s' % \
+                          (self.host, self.port, self.ttype, mtype, msg))
 
   def set_debuglevel(self, debuglevel):
     """
@@ -298,7 +312,7 @@ class Telnet(asyncore.dispatcher):
     """
     write to a connection
     """
-    self.msg('Handle_write', self.outbuffer)
+    self.msg('Handle_write: %s' % self.outbuffer)
     sent = self.send(self.outbuffer)
     self.outbuffer = self.outbuffer[sent:]
 
@@ -310,7 +324,7 @@ class Telnet(asyncore.dispatcher):
     socket.error if the connection is closed.
 
     """
-    self.msg('adding to buffer', raw, outbuffer)
+    self.msg('Handle_write :%s' % self.outbuffer)
     if not raw and IAC in outbuffer:
     #if not raw and outbuffer.find(IAC) >= 0:
       outbuffer = outbuffer.replace(IAC, IAC+IAC)
@@ -428,11 +442,9 @@ class Telnet(asyncore.dispatcher):
               self.sbdataq = self.sbdataq + buf[1]
               buf[1] = ''
               if len(self.sbdataq) == 1:
-                self.msg('proccess_rawq: got an SE',
-                         ord(self.sbdataq), level=2)
+                self.msg('proccess_rawq: got an SE: %s' % ord(self.sbdataq), level=2)
               else:
-                self.msg('proccess_rawq: got an SE (2)',
-                         self.sbdataq, level=2)
+                self.msg('proccess_rawq: got an SE (2): %s' % self.sbdataq, level=2)
             if self.option_callback:
               # Callback is supposed to look into
               # the sbdataq
@@ -505,4 +517,4 @@ class Telnet(asyncore.dispatcher):
     #print 'fill_rawq', self.ttype, self.host, self.port, 'received', buf
     self.eof = (not buf)
     self.rawq = "".join([self.rawq, buf])
-    self.msg('rawq', self.rawq)
+    self.msg('rawq: %s' % self.rawq)

@@ -2,7 +2,7 @@
 This plugin handles Aardwolf 102 telnet option
 """
 from plugins._baseplugin import BasePlugin
-from libs.net.telnetlib import WILL, DO, IAC, SE, SB
+from libs.net.telnetlib import WILL, DO, IAC, SE, SB, CODES
 from libs.net._basetelnetoption import BaseTelnetOption
 
 NAME = 'A102'
@@ -49,6 +49,8 @@ ON = chr(1)
 OFF = chr(2)
 
 A102 = chr(102)
+
+CODES[102] = '<A102>'
 
 # Plugin
 class Plugin(BasePlugin):
@@ -208,16 +210,15 @@ class SERVER(BaseTelnetOption):
     initialize the instance
     """
     BaseTelnetOption.__init__(self, telnetobj, A102)
-    self.telnetobj.debug_types.append('A102')
 
   def handleopt(self, command, sbdata):
     """
     handle the a102 option from the server
     """
-    self.telnetobj.msg('A102:', ord(command), '- in handleopt',
+    self.telnetobj.msg('%s - in handleopt' % self.telnetobj.ccode(command),
                        level=2, mtype='A102')
     if command == WILL:
-      self.telnetobj.msg('A102: sending IAC DO A102', level=2, mtype='A102')
+      self.telnetobj.msg('sending IAC DO A102', level=2, mtype='A102')
       self.telnetobj.send(IAC + DO + A102)
       self.telnetobj.options[ord(A102)] = True
       self.api('events.eraise')('A102:server-enabled', {})
@@ -232,7 +233,7 @@ class SERVER(BaseTelnetOption):
       tdata['option'] = ord(sbdata[0])
       tdata['flag'] = ord(sbdata[1])
       tdata['server'] = self.telnetobj
-      self.telnetobj.msg('A102: got %s,%s from server' % \
+      self.telnetobj.msg('got %s,%s from server' % \
               (tdata['option'], tdata['flag']), level=2, mtype='A102')
       self.api('events.eraise')('to_client_event',
                                 {'original':'%s%s%s%s%s%s' % \
@@ -251,7 +252,7 @@ class CLIENT(BaseTelnetOption):
     initialize the instance
     """
     BaseTelnetOption.__init__(self, telnetobj, A102)
-    self.telnetobj.msg('A102: sending IAC WILL A102', mtype='A102')
+    self.telnetobj.msg('sending IAC WILL A102', mtype='A102')
     self.telnetobj.addtooutbuffer(IAC + WILL + A102, True)
     self.cmdqueue = []
 
@@ -259,9 +260,9 @@ class CLIENT(BaseTelnetOption):
     """
     handle the a102 option for the client
     """
-    self.telnetobj.msg('A102:', ord(command), '- in handleopt', mtype='A102')
+    self.telnetobj.msg('%s - in handleopt' % self.telnetobj.ccode(command), mtype='A102')
     if command == DO:
-      self.telnetobj.msg('A102:setting options[A102] to True', mtype='A102')
+      self.telnetobj.msg('setting options[A102] to True', mtype='A102')
       self.telnetobj.options[ord(A102)] = True
     elif command == SE:
       self.api('events.eraise')('A102_from_client',
