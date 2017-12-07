@@ -318,6 +318,7 @@ class SERVER(BaseTelnetOption):
 
     if command == WILL:
       self.telnetobj.msg('sending IAC DO GMCP', level=2, mtype='GMCP')
+      self.telnetobj.send("".join([IAC, DO, GMCP]))
       self.telnetobj.options[ord(GMCP)] = True
       self.api('events.eraise')('GMCP:server-enabled', {})
 
@@ -364,6 +365,7 @@ class CLIENT(BaseTelnetOption):
     BaseTelnetOption.__init__(self, telnetobj, GMCP)
     #self.telnetobj.debug_types.append('GMCP')
     self.telnetobj.msg('sending IAC WILL GMCP', mtype='GMCP')
+    self.telnetobj.addtooutbuffer("".join([IAC, WILL, GMCP]), True)
     self.cmdqueue = []
 
   def handleopt(self, command, sbdata):

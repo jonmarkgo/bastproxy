@@ -38,7 +38,7 @@ class Proxy(Telnet):
 
     data = self.getdata()
     if data:
-      ndata = self.lastmsg + data
+      ndata = "".join([self.lastmsg, data])
       alldata = ndata.replace("\r", "")
       ndatal = alldata.split('\n')
       self.lastmsg = ndatal[-1]

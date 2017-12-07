@@ -60,20 +60,19 @@ class Client(Telnet):
     if outbuffer != None:
       if (dtype == 'fromproxy' or dtype == 'frommud') \
             and self.state == CONNECTED:
-        outbuffer = outbuffer + '\r\n'
+        outbuffer = "".join([outbuffer, '\r\n'])
         Telnet.addtooutbuffer(self, outbuffer, raw)
       elif len(dtype) == 1 and ord(dtype) in self.options \
             and self.state == CONNECTED:
         Telnet.addtooutbuffer(self, outbuffer, raw)
       elif dtype == 'passwd' and self.state == PASSWORD:
-        outbuffer = outbuffer + '\r\n'
+        outbuffer = "".join([outbuffer, '\r\n'])
         Telnet.addtooutbuffer(self, outbuffer, raw)
 
   def handle_read(self):
     """
     handle a read
     """
-
     proxy = self.api('managers.getm')('proxy')
 
     if not self.connected:

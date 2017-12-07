@@ -60,7 +60,7 @@ class SERVER(BaseTelnetOption):
           'sending IAC SB TTYPE NOOPT MUSHclient-Aard IAC SE',
           mtype='TTYPE')
       self.telnetobj.send(
-          IAC + SB + TTYPE + NOOPT + self.telnetobj.ttype + IAC + SE)
+          "".join([IAC, SB, TTYPE, NOOPT, self.telnetobj.ttype, IAC, SE]))
 
 
 class CLIENT(BaseTelnetOption):
@@ -74,6 +74,7 @@ class CLIENT(BaseTelnetOption):
     BaseTelnetOption.__init__(self, telnetobj, TTYPE)
     #self.telnetobj.debug_types.append('TTYPE')
     self.telnetobj.msg('sending IAC WILL TTYPE', mtype='TTYPE')
+    self.telnetobj.addtooutbuffer("".join([IAC, DO, TTYPE]), True)
 
   def handleopt(self, command, sbdata):
     """
@@ -85,8 +86,7 @@ class CLIENT(BaseTelnetOption):
 
     if command == WILL:
       self.telnetobj.addtooutbuffer(
-          IAC + SB + TTYPE +  chr(1)  + IAC + SE, True)
-    elif command == SE:
+          "".join([IAC, SB, TTYPE, chr(1), IAC, SE]), True)
       self.telnetobj.ttype = sbdata.strip()
 
   def negotiate(self):
@@ -95,6 +95,7 @@ class CLIENT(BaseTelnetOption):
     """
     self.telnetobj.msg("starting TTYPE", level=2, mtype='TTYPE')
     self.telnetobj.msg('sending IAC SB TTYPE IAC SE', mtype='TTYPE')
+    self.telnetobj.send("".join([IAC, SB, TTYPE, IAC, SE]))
 
   def reset(self, onclose=False):
     """
@@ -102,5 +103,5 @@ class CLIENT(BaseTelnetOption):
     """
     self.telnetobj.msg('resetting', mtype='TTYPE')
     if not onclose:
-      self.telnetobj.addtooutbuffer(IAC + DONT + TTYPE, True)
+      self.telnetobj.addtooutbuffer("".join([IAC, DONT, TTYPE]), True)
     BaseTelnetOption.reset(self)

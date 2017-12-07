@@ -59,6 +59,7 @@ class SERVER(BaseTelnetOption):
                        mtype='MCCP2')
     if command == WILL:
       self.telnetobj.msg('sending IAC DO MCCP2', mtype='MCCP2')
+      self.telnetobj.send("".join([IAC, DO, MCCP2]))
 
       self.telnetobj.msg('got an SE mccp in handleopt',
                          mtype='MCCP2')
@@ -84,7 +85,7 @@ class SERVER(BaseTelnetOption):
       try:
         tempraw = self.telnetobj.rawq[:ind]
         rawq = self.zlib_decomp.decompress(self.telnetobj.rawq[ind:])
-        self.telnetobj.rawq = tempraw + rawq
+        self.telnetobj.rawq = "".join([tempraw, rawq])
         self.telnetobj.process_rawq()
       except Exception: # pylint: disable=broad-except
         self.telnetobj.handle_error()
@@ -109,6 +110,7 @@ class SERVER(BaseTelnetOption):
     resetting the option
     """
     self.telnetobj.msg('resetting', mtype='MCCP2')
+    self.telnetobj.addtooutbuffer("".join([IAC, DONT, MCCP2]), True)
     self.telnetobj.rawq = self.zlib_decomp.decompress(self.telnetobj.rawq)
     setattr(self.telnetobj, 'readdatafromsocket',
             self.orig_readdatafromsocket)
@@ -127,6 +129,7 @@ class CLIENT(BaseTelnetOption):
     self.orig_convert_outdata = None
     self.zlib_comp = None
     self.telnetobj.msg('sending IAC WILL MCCP2', mtype='MCCP2')
+    self.telnetobj.send("".join([IAC, WILL, MCCP2]))
 
   def handleopt(self, command, sbdata):
     """
@@ -145,6 +148,7 @@ class CLIENT(BaseTelnetOption):
     """
     self.telnetobj.msg("starting mccp", level=2, mtype='MCCP2')
     self.telnetobj.msg('sending IAC SB MCCP2 IAC SE', mtype='MCCP2')
+    self.telnetobj.send("".join([IAC, SB, MCCP2, IAC, SE]))
 
     self.zlib_comp = zlib.compressobj(9)
     self.telnetobj.outbuffer = \
@@ -159,6 +163,8 @@ class CLIENT(BaseTelnetOption):
       """
       data = orig_convert_outdata(data)
       self.telnetobj.msg('compressing', mtype='MCCP2')
+      return "".join([self.zlib_comp.compress(data),
+                      self.zlib_comp.flush(zlib.Z_SYNC_FLUSH)])
 
     setattr(self.telnetobj, 'convert_outdata', mccp_convert_outdata)
 
@@ -168,7 +174,7 @@ class CLIENT(BaseTelnetOption):
     """
     self.telnetobj.msg('resetting', mtype='MCCP2')
     if not onclose:
-      self.telnetobj.addtooutbuffer(IAC + DONT + MCCP2, True)
+      self.telnetobj.addtooutbuffer("".join([IAC, DONT, MCCP2]), True)
     setattr(self.telnetobj, 'convert_outdata', self.orig_convert_outdata)
     self.telnetobj.outbuffer = \
                         self.zlib_comp.uncompress(self.telnetobj.outbuffer)

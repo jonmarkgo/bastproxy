@@ -420,26 +420,26 @@ class Telnet(asyncore.dispatcher):
           if tchar == "\021":
             continue
           if tchar != IAC:
-            buf[self.sbse] = buf[self.sbse] + tchar
+            buf[self.sbse] = "".join([buf[self.sbse], tchar])
             continue
           else:
-            self.iacseq += tchar
+            self.iacseq = "".join([self.iacseq, tchar])
         elif len(self.iacseq) == 1:
           # 'IAC: IAC CMD [OPTION only for WILL/WONT/DO/DONT]'
           if tchar in (DO, DONT, WILL, WONT):
-            self.iacseq += tchar
+            self.iacseq = "".join([self.iacseq, tchar])
             continue
 
           self.iacseq = ''
           if tchar == IAC:
-            buf[self.sbse] = buf[self.sbse] + tchar
+            buf[self.sbse] = "".join([buf[self.sbse], tchar])
           else:
             if tchar == SB: # SB ... SE start.
               self.sbse = 1
               self.sbdataq = ''
             elif tchar == SE:
               self.sbse = 0
-              self.sbdataq = self.sbdataq + buf[1]
+              self.sbdataq = "".join([self.sbdataq, buf[1]])
               buf[1] = ''
               if len(self.sbdataq) == 1:
                 self.msg('proccess_rawq: got an SE: %s' % ord(self.sbdataq), level=2)
@@ -465,7 +465,7 @@ class Telnet(asyncore.dispatcher):
               self.option_callback(cmd, opt)
             else:
               self.msg('Sending IAC WONT %s' % ord(opt), level=2)
-              self.send(IAC + WONT + opt)
+              self.send("".join([IAC, WONT, opt]))
           elif cmd in (WILL, WONT):
             self.msg('IAC %s %d' %
                      (cmd == WILL and 'WILL' or 'WONT', ord(opt)))
@@ -473,7 +473,7 @@ class Telnet(asyncore.dispatcher):
               self.option_callback(cmd, opt)
           else:
             self.msg('Sending IAC DONT %s' % ord(opt))
-            self.send(IAC + DONT + opt)
+            self.send("".join([IAC, DONT, opt]))
     except EOFError: # raised by self.rawq_getchar()
       self.iacseq = '' # Reset on EOF
       self.sbse = 0
