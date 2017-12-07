@@ -482,7 +482,7 @@ class Telnet(asyncore.dispatcher):
       i = data.find(IAC, i)
 
     if marker != -1:
-      self.msg('MARKER - not 1' % data, mtype='OPTION')
+      self.msg('MARKER - not 1 with data %s' % data, mtype='OPTION')
       self._sbdatabuffer = data[marker:]
       self.msg('MARKER - _sbdatabuffer: "%s"' % self._sbdatabuffer, mtype='OPTION')
       data = data[:marker]
