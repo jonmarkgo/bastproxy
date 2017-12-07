@@ -61,6 +61,7 @@ class SERVER(BaseTelnetOption):
       self.telnetobj.msg('sending IAC DO MCCP2', mtype='MCCP2')
       self.telnetobj.send("".join([IAC, DO, MCCP2]))
 
+    elif command in [SE, SB]:
       self.telnetobj.msg('got an SE mccp in handleopt',
                          mtype='MCCP2')
       self.telnetobj.msg('starting compression with server',

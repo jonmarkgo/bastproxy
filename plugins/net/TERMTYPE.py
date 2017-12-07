@@ -87,6 +87,7 @@ class CLIENT(BaseTelnetOption):
     if command == WILL:
       self.telnetobj.addtooutbuffer(
           "".join([IAC, SB, TTYPE, chr(1), IAC, SE]), True)
+    elif command in [SE, SB]:
       self.telnetobj.ttype = sbdata.strip()
 
   def negotiate(self):

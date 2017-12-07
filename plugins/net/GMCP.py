@@ -322,7 +322,7 @@ class SERVER(BaseTelnetOption):
       self.telnetobj.options[ord(GMCP)] = True
       self.api('events.eraise')('GMCP:server-enabled', {})
 
-    elif command == SE:
+    elif command in [SE, SB]:
       if not self.telnetobj.options[ord(GMCP)]:
         # somehow we missed negotiation
         self.telnetobj.msg('##BUG: Enabling GMCP, missed negotiation',
@@ -377,6 +377,6 @@ class CLIENT(BaseTelnetOption):
       self.telnetobj.msg('setting options["GMCP"] to True',
                          mtype='GMCP')
       self.telnetobj.options[ord(GMCP)] = True
-    elif command == SE:
+    elif command in [SE, SB]:
       self.api('events.eraise')('GMCP_from_client',
                                 {'data': sbdata, 'client':self.telnetobj})

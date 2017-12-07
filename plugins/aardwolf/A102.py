@@ -223,7 +223,7 @@ class SERVER(BaseTelnetOption):
       self.telnetobj.options[ord(A102)] = True
       self.api('events.eraise')('A102:server-enabled', {})
 
-    elif command == SE:
+    elif command in [SB, SE]:
       if not self.telnetobj.options[ord(A102)]:
         print '##BUG: Enabling A102, missed negotiation'
         self.telnetobj.options[ord(A102)] = True
@@ -264,6 +264,6 @@ class CLIENT(BaseTelnetOption):
     if command == DO:
       self.telnetobj.msg('setting options[A102] to True', mtype='A102')
       self.telnetobj.options[ord(A102)] = True
-    elif command == SE:
+    elif command in [SB, SE]:
       self.api('events.eraise')('A102_from_client',
                                 {'data': sbdata, 'client':self.telnetobj})
