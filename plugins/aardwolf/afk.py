@@ -199,7 +199,7 @@ class Plugin(AardwolfBasePlugin):
     if we have enabled triggers when there were no clients, disable them
     """
     proxy = self.api('managers.getm')('proxy')
-    if len(proxy.clients) == 1:
+    if proxy.clients:
       self.api('send.msg')('disabling afk mode')
       self.disableafk()
 
