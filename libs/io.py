@@ -1,6 +1,7 @@
 """
 handle output and input functions, adds items under the send api
 """
+from __future__ import print_function
 import time
 import sys
 import traceback
@@ -75,8 +76,9 @@ class ProxyIO(object):
     try:
       self.api('log.msg')(tmsg, tags=tags)
     except (AttributeError, RuntimeError): #%s - %-10s :
-      print '%s - %-10s : %s' % (time.strftime(self.api.timestring,
-                                               time.localtime()), primary or plugin, tmsg)
+      print('%s - %-10s : %s' % (time.strftime(self.api.timestring,
+                                               time.localtime()),
+                                 primary or plugin, tmsg))
 
   # write and format a traceback
   def _api_traceback(self, message=""):
@@ -89,7 +91,7 @@ class ProxyIO(object):
                                              sys.exc_info()[2]))
 
     if message:
-      message = message + "\n" + exc
+      message = "".join([message, "\n", exc])
     else:
       message = exc
 
@@ -135,7 +137,7 @@ class ProxyIO(object):
       test = []
       for i in text:
         if preamble:
-          i = '@C#BP@w: ' + i
+          i = "".join(['@C#BP@w: ', i])
         if self.api('api.has')('colors.convertcolors'):
           test.append(self.api('colors.convertcolors')(i))
         else:
@@ -222,7 +224,7 @@ class ProxyIO(object):
           else:
             tcommand = tcommand.replace('||', '|')
             if tcommand[-1] != '\n':
-              tcommand = tcommand + '\n'
+              tcommand = "".join([tcommand, '\n'])
             self.api('send.msg')('sending %s to the mud' % tcommand.strip(),
                                  primary='inputparse')
             self.api('events.eraise')('to_mud_event',
@@ -245,7 +247,7 @@ class ProxyIO(object):
     this function returns no values
     """
     if data[-1] != '\n':
-      data = data + '\n'
+      data = "".join([data, '\n'])
     self.api('events.eraise')('to_mud_event',
                               {'data':data,
                                'dtype':'fromclient'})
