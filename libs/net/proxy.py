@@ -154,43 +154,44 @@ class Proxy(Telnet):
     self.connectedtime = None
     self.api('events.eraise')('muddisconnect', {})
 
-  def addtooutbuffer(self, args, raw=False):
+  def addtooutbuffer(self, data, raw=False):
     """
     add to the outbuffer
 
     required:
-      args - a string
+      data - a string
              or a dictionary that contains a data key and a raw key
 
     optional:
       raw - set a raw flag, which means IAC will not be doubled
     """
-    data = ''
     dtype = 'fromclient'
-    data = args
+    datastr = ""
     trace = None
-    if isinstance(args, dict):
-      data = args['data']
-      dtype = args['dtype']
-      if 'raw' in args:
-        raw = args['raw']
-      if 'trace' in args:
-        trace = args['trace']
+    if isinstance(data, dict):
+      datastr = data['data']
+      dtype = data['dtype']
+      if 'raw' in data:
+        raw = data['raw']
+      if 'trace' in data:
+        trace = data['trace']
+    else:
+      datastr = data
 
     if len(dtype) == 1 and ord(dtype) in self.options:
       if trace:
         trace['changes'].append({'flag':'Sent',
                                  'data':'"%s" to mud with raw: %s and datatype: %s' %
-                                        (repr(data.strip()), raw, dtype),
+                                        (repr(datastr.strip()), raw, dtype),
                                  'plugin':'proxy'})
-      Telnet.addtooutbuffer(self, data, raw)
+      Telnet.addtooutbuffer(self, datastr, raw)
     elif dtype == 'fromclient':
       if trace:
         trace['changes'].append({'flag':'Sent',
                                  'data':'"%s" to mud with raw: %s and datatype: %s' %
-                                        (data.strip(), raw, dtype),
+                                        (datastr.strip(), raw, dtype),
                                  'plugin':'proxy'})
-      Telnet.addtooutbuffer(self, data, raw)
+      Telnet.addtooutbuffer(self, datastr, raw)
 
   def shutdown(self):
     """
