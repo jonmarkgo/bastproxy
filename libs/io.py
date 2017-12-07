@@ -194,7 +194,7 @@ class ProxyIO(object):
       if len(commands) > 1:
         self.currenttrace['changes'].append({'flag':'Splitcr',
                                              'data':'split command: "%s" into: "%s"' % \
-                                              (command, ", ".join(command)),
+                                              (command, ", ".join(commands)),
                                              'plugin':'io'})
 
       for tcommand in commands:
