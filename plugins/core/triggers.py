@@ -1,6 +1,7 @@
 """
 This plugin handles internal triggers for the proxy
 """
+from __future__ import print_function
 import sys
 import time
 try:
@@ -146,8 +147,8 @@ class Plugin(BasePlugin):
     except re.error:
       self.api('send.traceback')('Could not compile regex')
 
-
-  def getuniquename(self, name):
+  @staticmethod
+  def getuniquename(name):
     """
     get a unique name for a trigger
     """
@@ -175,7 +176,7 @@ class Plugin(BasePlugin):
       plugin = self.api('api.callerplugin')(skipplugin=self.sname)
 
     if not plugin:
-      print 'could not add a trigger for triggername', triggername
+      print('could not add a trigger for triggername', triggername)
       return False
 
     uniquetriggername = self.getuniquename(triggername)

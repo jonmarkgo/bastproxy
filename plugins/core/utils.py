@@ -49,7 +49,8 @@ class Plugin(BasePlugin):
     """
     BasePlugin.load(self)
 
-  def listtocolumns(self, obj, cols=4, columnwise=True, gap=4):
+  @staticmethod
+  def listtocolumns(obj, cols=4, columnwise=True, gap=4):
     """
     Print the given list in evenly-spaced columns.
 

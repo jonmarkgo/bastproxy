@@ -1080,7 +1080,8 @@ class Plugin(AardwolfBasePlugin):
 
     return True, msg
 
-  def _format_row(self, rowname, data1, data2, datacolor="@W",
+  @staticmethod
+  def _format_row(rowname, data1, data2, datacolor="@W",
                   headercolor="@C"):
     """
     format a row of data

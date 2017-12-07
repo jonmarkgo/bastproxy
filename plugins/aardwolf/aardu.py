@@ -151,8 +151,9 @@ class Plugin(AardwolfBasePlugin):
     return (tier * 7 * 201) + (redos * 7 * 201) + \
                                   ((remort - 1) * 201) + level
 
+  @staticmethod
   # parse an Aardwolf damage line
-  def api_parsedamageline(self, line):
+  def api_parsedamageline(line):
     """  parse an Aardwolf damage line from combat
     @Yline@w  = the line to parse
 
@@ -192,8 +193,9 @@ class Plugin(AardwolfBasePlugin):
 
     return ddict
 
+  @staticmethod
   # convert a level to redos, tier, remort, level
-  def api_convertlevel(self, level):
+  def api_convertlevel(level):
     """  convert a level to redos, tier, remort, level
     @Ylevel@w  = the level to convert
 
@@ -219,8 +221,9 @@ class Plugin(AardwolfBasePlugin):
     return {'tier':int(tier), 'redos':int(redos),
             'remort':int(remort), 'level':int(alevel)}
 
+  @staticmethod
   # get the Class abbreviations table
-  def api_classabb(self, rev=False):
+  def api_classabb(rev=False):
     """  get the class abbreviations
     @Yrev@w  = if True, return the reversed table
 
@@ -235,8 +238,9 @@ class Plugin(AardwolfBasePlugin):
 
     return CLASSABBREV
 
+  @staticmethod
   # get the reward table
-  def api_rewardtable(self):
+  def api_rewardtable():
     """  get the reward table
     @Yrev@w  = if True, return the reversed table
 

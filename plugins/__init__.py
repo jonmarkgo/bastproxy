@@ -719,7 +719,8 @@ class PluginMgr(BasePlugin):
     pluginn = self.api('plugins.getp')(plugin.name)
     plugins = self.api('plugins.getp')(plugin.sname)
     if plugins or pluginn:
-      self.api('send.msg')('Plugin %s already exists' % plugin.name, secondary=plugin.sname)
+      self.api('send.msg')('Plugin %s already exists' % plugin.name,
+                           secondary=plugin.sname)
       return False
 
     if load:

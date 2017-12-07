@@ -1,3 +1,4 @@
+# pylint: disable=line-too-long
 """
 This plugin includes a combat tracker for aardwolf
 
@@ -16,6 +17,7 @@ This plugin includes a combat tracker for aardwolf
     @x033------------------------------------------------------------------------@w
 
 """
+# pylint: enable=line-too-long
 from plugins.aardwolf._aardwolfbaseplugin import AardwolfBasePlugin
 
 NAME = 'CombatTracker'

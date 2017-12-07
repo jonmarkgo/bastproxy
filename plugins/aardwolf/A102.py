@@ -55,7 +55,7 @@ class Plugin(BasePlugin):
   """
   the plugin to handle external a102 stuff
   """
-  def __init__(self, tname, tsname, filename, directory, importloc):
+  def __init__(self, *args, **kwargs):
     """
     Iniitilaize the class
 
@@ -65,7 +65,7 @@ class Plugin(BasePlugin):
                             that were enabled by the client before
                              connected to the server
     """
-    BasePlugin.__init__(self, tname, tsname, filename, directory, importloc)
+    BasePlugin.__init__(self, *args, **kwargs)
 
     self.canreload = False
 
@@ -192,10 +192,7 @@ class Plugin(BasePlugin):
     data = args['data']
     option = ord(data[0])
     mstate = ord(data[1])
-    if mstate == 1:
-      mstate = True
-    else:
-      mstate = False
+    mstate = bool(mstate)
     if not proxy.connected:
       self.a102optionqueue.append({'option':option, 'toggle':mstate})
     else:

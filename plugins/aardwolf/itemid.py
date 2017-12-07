@@ -371,7 +371,8 @@ class Plugin(AardwolfBasePlugin):
 
     return ttext
 
-  def formatstatsheader(self):
+  @staticmethod
+  def formatstatsheader():
     """
     format the stats header
      |     DR   HR    Str Int Wis Dex Con Luc   Sav   HP   MN   MV     |
@@ -381,7 +382,8 @@ class Plugin(AardwolfBasePlugin):
                       'DR', 'HR', 'Str', 'Int', 'Wis',
                       'Dex', 'Con', 'Luc', 'Sav', 'HP', 'MN', 'MV')
 
-  def formatstats(self, stats):
+  @staticmethod
+  def formatstats(stats):
     """
     format all stats
      |     -    2     -   -   -   -   -   -     -     -    -    -      |
@@ -426,7 +428,8 @@ class Plugin(AardwolfBasePlugin):
                 colors['Mana'], stats['Mana'] or '-',
                 colors['Moves'], stats['Moves'] or '-')
 
-  def formatresist(self, resists, divider):
+  @staticmethod
+  def formatresist(resists, divider):
     """
     format resists
 
@@ -524,7 +527,8 @@ class Plugin(AardwolfBasePlugin):
 
     return ttext
 
-  def checkattr(self, item, attr):
+  @staticmethod
+  def checkattr(item, attr):
     """
     check for an attribute
     """

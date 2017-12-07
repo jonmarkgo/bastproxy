@@ -154,26 +154,30 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.load(self)
 
+  @staticmethod
   # get the flags name table
-  def api_itemflagsname(self):
+  def api_itemflagsname():
     """  get the flags name table
     """
     return ITEMFLAGSNAME
 
+  @staticmethod
   # get the flags table
-  def api_itemflags(self):
+  def api_itemflags():
     """  get the flags table
     """
     return ITEMFLAGS
 
+  @staticmethod
   # get the flags color table
-  def api_itemflagscolors(self):
+  def api_itemflagscolors():
     """  get the flags color table
     """
     return ITEMFLAGSCOLORS
 
+  @staticmethod
   # get the wear locations table
-  def api_wearlocs(self, rev=False):
+  def api_wearlocs(rev=False):
     """  get the wear locations table
     @Yrev@w  = if True, return the reversed table
     """
@@ -182,8 +186,9 @@ class Plugin(AardwolfBasePlugin):
 
     return WEARLOCS
 
+  @staticmethod
   # get the object types table
-  def api_objecttypes(self, rev=False):
+  def api_objecttypes(rev=False):
     """  get the object types table
     @Yrev@w  = if True, return the reversed table
     """

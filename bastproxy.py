@@ -88,7 +88,7 @@ from libs.api import API as BASEAPI
 import libs.argp as argp
 
 # import io so we can add the "send" functions to the api
-from libs import io
+from libs import io      # pylint: disable=unused-import
 
 sys.stderr = sys.stdout
 
