@@ -91,6 +91,9 @@ class API(object):
     """
     from plugins._baseplugin import BasePlugin
 
+    if not skipplugin:
+      skipplugin = []
+
     try:
       stack = inspect.stack()
     except IndexError:
@@ -104,9 +107,9 @@ class API(object):
         # TODO: there seems to be no way to detect static method call - it will
         #      be just a function call
         tcs = parentframe.f_locals['self']
-        if tcs != self and isinstance(tcs, BasePlugin) and tcs.sname != skipplugin:
+        if tcs != self and isinstance(tcs, BasePlugin) and tcs.sname not in skipplugin:
           return tcs.sname
-        if hasattr(tcs, 'plugin') and tcs.plugin.sname != skipplugin:
+        if hasattr(tcs, 'plugin') and tcs.plugin.sname not in skipplugin:
           return tcs.plugin.sname
 
     return None
