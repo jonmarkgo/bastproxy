@@ -201,14 +201,15 @@ class PersistentDictEvent(PersistentDict):
       oldvalue = self.plugin.api('setting.gets')(key)
     else:
       oldvalue = None
-    dict.__setitem__(self, key, val)
+    if oldvalue != val:
+      dict.__setitem__(self, key, val)
 
-    eventname = 'var_%s_%s' % (self.plugin.sname, key)
-    if not self.plugin.resetflag and key != '_version':
-      self.plugin.api('events.eraise')(eventname,
-                                       {'var':key,
-                                        'newvalue':self.plugin.api('setting.gets')(key),
-                                        'oldvalue':oldvalue})
+      eventname = 'var_%s_%s' % (self.plugin.sname, key)
+      if not self.plugin.resetflag and key != '_version':
+        self.plugin.api('events.eraise')(eventname,
+                                         {'var':key,
+                                          'newvalue':self.plugin.api('setting.gets')(key),
+                                          'oldvalue':oldvalue})
 
   def raiseall(self):
     """
