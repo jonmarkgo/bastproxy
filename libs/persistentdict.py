@@ -221,7 +221,7 @@ class PersistentDictEvent(PersistentDict):
         self.plugin.api('events.eraise')(eventname,
                                          {'var':i,
                                           'newvalue':self.plugin.api('setting.gets')(i),
-                                          'oldvalue':self.plugin.api('setting.gets')(i)})
+                                          'oldvalue':'__init__'})
 
   def sync(self):
     """
