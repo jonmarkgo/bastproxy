@@ -12,6 +12,8 @@ same function to the api.
 See the BasePlugin class
 """
 import inspect
+import sys
+import traceback
 
 def getargs(apif):
   """
@@ -78,6 +80,23 @@ class API(object):
     self.overload('api', 'detail', self.api_detail)
     self.overload('api', 'list', self.api_list)
     self.overload('api', 'callerplugin', self.api_callerplugin)
+    self.overload('api', 'callstack', self.api_callstack)
+
+  def api_callstack(self):
+    """
+    return a list of calls that form the stack
+    """
+    callstack = []
+    for _, frame in sys._current_frames().items():
+      for i in traceback.format_stack(frame)[:-1]:
+        if 'asyncore' in i or 'bastproxy.py' in i or 'api.callstack' in i:
+          continue
+        tlist = i.split('\n')
+        for tline in tlist:
+          if tline:
+            callstack.append(tline.rstrip())
+
+    return callstack
 
   def api_callerplugin(self, skipplugin=None):
     """
