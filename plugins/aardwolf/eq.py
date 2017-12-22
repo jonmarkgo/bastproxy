@@ -71,7 +71,7 @@ class EqContainer(object):
   a class to manipulate containers
   """
   def __init__(self, plugin, cid, cmd=None, cmdregex=None,
-               startregex=None, endregex=None):
+               startregex=None, endregex=None, refresh=False):
     #pylint: disable=too-many-arguments
     """
     init the class
@@ -99,6 +99,9 @@ class EqContainer(object):
                              beforef=self.databefore, afterf=self.dataafter)
 
     self.reset()
+
+    if refresh:
+      self.refresh()
 
   def __str__(self):
     """
@@ -221,7 +224,7 @@ class EqContainer(object):
         #self.api('send.msg')('invdata parsed item: %s' % titem)
         self.add(titem.serial)
         if titem.itype == 11 and titem.serial not in self.plugin.containers:
-          self.plugin.containers[titem.serial] = EqContainer(self.plugin, titem.serial)
+          self.plugin.containers[titem.serial] = EqContainer(self.plugin, titem.serial, refresh=True)
       except (IndexError, ValueError):
         self.api('send.msg')('incorrect invdata line: %s' % line)
         self.api('send.traceback')()
@@ -233,10 +236,6 @@ class EqContainer(object):
     """
     self.cmdqueue.cmddone(self.cid)
     self.needsrefresh = False
-    for container in self.plugin.containers:
-      if self.plugin.containers[container].needsrefresh:
-        self.plugin.containers[container].refresh()
-        break
 
   def build_header(self, args):
     """
@@ -488,7 +487,7 @@ class Worn(EqContainer):
         #self.api('send.msg')('invdata parsed item: %s' % titem)
         self.add(titem.serial, titem.wearslot)
         if titem.itype == 11 and titem.serial not in self.plugin.containers:
-          self.plugin.containers[titem.serial] = EqContainer(self.plugin, titem.serial)
+          self.plugin.containers[titem.serial] = EqContainer(self.plugin, titem.serial, refresh=True)
       except (IndexError, ValueError):
         self.api('send.msg')('incorrect invdata line: %s' % line)
         self.api('send.traceback')()
@@ -929,7 +928,6 @@ class Plugin(AardwolfBasePlugin):
         enabled=True,
         matchcolor=True)
 
-
     self.api('events.register')('trigger_dead', self.dead)
     self.api('events.register')('trigger_invitem', self.trigger_invitem)
     self.api('events.register')('trigger_invmon', self.invmon)
@@ -1216,14 +1214,15 @@ class Plugin(AardwolfBasePlugin):
     """
     run when an invitem is seen
     """
-    #self.api('send.msg')('invitem args: %s' % args)
+    #self.api('send.msg')('invitem: args: %s' % args)
     data = self.api('itemu.dataparse')(args['data'], 'eqdata')
     if data['serial'] in self.itemcache:
       self.itemcache[data['serial']].upditem(data)
+      self.api('send.msg')('invitem: item %s updated' % data['serial'])
     else:
       titem = Item(data, plugin=self)
       self.itemcache[titem.serial] = titem
-    #self.api('send.msg')('invitem parsed item: %s' % titem)
+      self.api('send.msg')('invitem: item %s added' % titem)
 
   def cmd_eq(self, args):
     """
@@ -1265,7 +1264,7 @@ class Plugin(AardwolfBasePlugin):
       self.api('send.error')('the invmon line has bad data: %s' % args['line'])
     #self.api('send.msg')('action: %s, item: %s' % (action, serial))
     if action == 1:
-    # Remove an item
+      # Remove an item
       if serial in self.containers['Worn'].items:
         self.containers['Worn'].remove(serial)
         self.containers['Inventory'].add(serial, place=0)
@@ -1275,7 +1274,7 @@ class Plugin(AardwolfBasePlugin):
         self.containers['Worn'].refresh()
         self.containers['Inventory'].refresh()
     elif action == 2:
-    # Wear an item
+      # Wear an item
       if serial in self.containers['Inventory'].items:
         self.containers['Inventory'].remove(serial)
         self.containers['Worn'].add(serial, location)
@@ -1289,26 +1288,29 @@ class Plugin(AardwolfBasePlugin):
       # 3 = Removed from inventory, 7 = consumed
       if serial in self.containers['Inventory'].items:
         titem = self.itemcache[serial]
-        #if titem.itype == 11:
-          #for item in self.containers[serial].items:
-            #del self.itemcache[item]
+        if titem.itype == 11:
+          if serial in self.containers:
+          #  for item in self.containers[serial].items:
+          #    del self.itemcache[item]
+            del self.containers[serial]
         self.containers['Inventory'].remove(serial)
         self.api('events.eraise')('inventory_removed', {'item':titem})
-        #del self.itemcache[serial]
+        del self.itemcache[serial]
       else:
         self.containers['Inventory'].refresh()
     elif action == 4:
-    # Added to inventory
-      try:
+      # Added to inventory
+      if serial in self.itemcache:
         self.containers['Inventory'].add(serial, place=0)
         titem = self.itemcache[serial]
         if titem.itype == 11:
-          self.containers[serial].refresh()
+          if serial not in self.containers:
+            self.containers[serial] = EqContainer(self, serial, refresh=True)
         self.api('events.eraise')('inventory_added', {'item':titem})
-      except KeyError:
+      else:
         self.containers['Inventory'].refresh()
     elif action == 5:
-    # Taken out of container
+      # Taken out of container
       try:
         self.containers[container].remove(serial)
         self.containers['Inventory'].add(serial)
@@ -1316,7 +1318,7 @@ class Plugin(AardwolfBasePlugin):
         self.containers[container].refresh()
         self.containers['Inventory'].refresh()
     elif action == 6:
-    # Put into container
+      # Put into container
       try:
         self.containers['Inventory'].remove(serial)
         self.containers[container].add(serial, place=0)
@@ -1324,13 +1326,13 @@ class Plugin(AardwolfBasePlugin):
         self.containers['Inventory'].refresh()
         self.containers[container].refresh()
     elif action == 9:
-    # put into vault
+      # put into vault
       self.containers['Vault'].add(serial)
     elif action == 10:
-    # take from vault
+      # take from vault
       self.containers['Vault'].remove(serial)
     elif action == 11:
-    # put into keyring
+      # put into keyring
       try:
         self.containers['Inventory'].remove(serial)
         self.containers['Keyring'].add(serial, place=0)
@@ -1338,7 +1340,7 @@ class Plugin(AardwolfBasePlugin):
         self.containers['Inventory'].refresh()
         self.containers['Keyring'].refresh()
     elif action == 12:
-    # take from keyring
+      # take from keyring
       try:
         self.containers['Keyring'].remove(serial)
         self.containers['Inventory'].add(serial, place=0)
