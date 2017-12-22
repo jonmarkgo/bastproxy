@@ -19,6 +19,7 @@ class Event(object):
     """
     execute the event
     """
+    self.timesfired = self.timesfired + 1
     self.func()
 
   def __str__(self):
