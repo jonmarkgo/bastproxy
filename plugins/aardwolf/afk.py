@@ -1,6 +1,7 @@
 """
 This plugin holds a afk plugin
 """
+from __future__ import print_function
 import time
 import re
 import copy
@@ -70,6 +71,19 @@ class Plugin(AardwolfBasePlugin):
     self.api('events.register')('client_disconnected',
                                 self.clientdisconnected)
     self.api('events.register')('watch_titleset', self._titlesetevent)
+
+    self.api('setting.change')('isafk', False)
+    self.api('events.register')('var_%s_isafk' % self.sname, self._isafk_changeevent)
+
+  def _isafk_changeevent(self, args=None):
+    """
+    do something after afk has been changed
+    """
+    afkflag = self.api('setting.gets')('isafk')
+    if afkflag:
+      self.enableafk()
+    else:
+      self.disableafk()
 
   def afterfirstactive(self, _=None):
     """
@@ -142,12 +156,6 @@ class Plugin(AardwolfBasePlugin):
     msg = []
     newafk = not self.api('setting.gets')('isafk')
     self.api('setting.change')('isafk', newafk)
-    if newafk:
-      self.enableafk()
-      msg.append('AFK mode is enabled')
-    else:
-      self.disableafk()
-      msg.append('AFK mode is disabled')
 
     return True, msg
 
@@ -155,7 +163,9 @@ class Plugin(AardwolfBasePlugin):
     """
     check for tells
     """
+    print('checkfortell: %s' % args)
     if args['data']['chan'] == 'tell':
+      print('found tell')
       tdata = copy.deepcopy(args['data'])
       tdata['timestamp'] = \
               time.strftime('%a %b %d %Y %H:%M:%S', time.localtime())
@@ -168,7 +178,6 @@ class Plugin(AardwolfBasePlugin):
     enable afk mode
     """
     afktitle = self.api('setting.gets')('afktitle')
-    self.api('setting.change')('isafk', True)
     self.api('events.register')('GMCP:comm.channel', self.checkfortell)
     self.api('send.execute')('title %s' % afktitle)
 
@@ -177,8 +186,7 @@ class Plugin(AardwolfBasePlugin):
     disable afk mode
     """
     proxy = self.api('managers.getm')('proxy')
-    if proxy.connected:
-      self.api('setting.change')('isafk', False)
+    if proxy and proxy.connected:
       lasttitle = self.api('setting.gets')('lasttitle')
       self.api('send.execute')('title %s' % lasttitle)
       try:
@@ -193,7 +201,6 @@ class Plugin(AardwolfBasePlugin):
       self.api('send.client')("@BYou have %s tells in the queue" % \
                 len(queue))
 
-
   def clientconnected(self, _):
     """
     if we have enabled triggers when there were no clients, disable them
@@ -201,8 +208,7 @@ class Plugin(AardwolfBasePlugin):
     proxy = self.api('managers.getm')('proxy')
     if proxy.clients:
       self.api('send.msg')('disabling afk mode')
-      self.disableafk()
-
+      self.api('setting.change')('isafk', False)
 
   def clientdisconnected(self, _):
     """
@@ -211,4 +217,4 @@ class Plugin(AardwolfBasePlugin):
     proxy = self.api('managers.getm')('proxy')
     if not proxy.clients:
       self.api('send.msg')('enabling afk mode')
-      self.enableafk()
+      self.api('setting.change')('isafk', True)
