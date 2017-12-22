@@ -37,6 +37,8 @@ class Plugin(BasePlugin):
                             'flag to profile functions')
     self.api('setting.add')('stacklen', 20, int,
                             '# of command traces kept')
+    self.api('setting.add')('cmdfuncstack', False, bool,
+                            'print the function stack in an echo')
 
     parser = argp.ArgumentParser(
         add_help=False,
@@ -49,6 +51,11 @@ class Plugin(BasePlugin):
         '-t', "--ptype",
         help="the type of profile to list, c for commands, f for functions",
         default='')
+    parser.add_argument(
+        '-c', "--callstack",
+        help="print callstack if available",
+        action="store_true",
+        default=False)
     self.api('commands.add')('show', self.cmd_show,
                              parser=parser)
 
@@ -78,13 +85,13 @@ class Plugin(BasePlugin):
       tmsg.append('  %s' % i['originalcommand'])
     return True, tmsg
 
-  def showcommand(self, item):
+  def showcommand(self, item, callstack=False):
     """
     find the command trace and format it
     """
     for i in self.commandtraces.items:
       if i['originalcommand'].startswith(item):
-        return True, [self.formatcommandstack(i)]
+        return True, [self.formatcommandstack(i, callstack)]
 
     return False, ['Could not find item: %s' % item]
 
@@ -97,7 +104,7 @@ class Plugin(BasePlugin):
 
     if args['ptype'] == 'c':
       if 'item' in args and args['item']:
-        return self.showcommand(args['item'])
+        return self.showcommand(args['item'], callstack=args['callstack'])
 
       return self.listcommands()
     elif args['ptype'] == 'f':
@@ -120,7 +127,7 @@ class Plugin(BasePlugin):
 
     return True, msg
 
-  def formatcommandstack(self, stack):
+  def formatcommandstack(self, stack, callstack=False):
     """
     format the command stack
     """
@@ -135,18 +142,25 @@ class Plugin(BasePlugin):
     msg.append('%-17s : %s' % ('Show in History', stack['showinhistory']))
     msg.append('%-17s : %s' % ('Added to History', stack['addedtohistory']))
 
-    msg.append('-------------- Stack --------------')
+    msg.append('-------------- Internal Stack --------------')
+    count = 0
     for i in stack['changes']:
+      count = count + 1
       if 'plugin' in i and i['plugin']:
         apicall = '%s.formatcmdtraceitem' % i['plugin']
         if self.api('api.has')(apicall):
           msg.append(self.api(apicall)(i))
           continue
 
-      msg.append("  %-15s :   %s - %s" % (i['plugin'].capitalize(), i['flag'],
-                                          i['data']))
+      msg.append("%-2s - %-15s :   %s - %s" % (count, i['plugin'].capitalize(), i['flag'],
+                                               i['data']))
+
+      if callstack and 'callstack' in i:
+        for line in i['callstack']:
+          msg.append("%-20s :   %s" % ("", line.replace("/home/endavis/src/games/bastproxy", "")))
 
     msg.append('-----------------------------------------------------')
+
 
     return '\n'.join(msg)
 
