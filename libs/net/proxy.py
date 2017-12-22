@@ -183,14 +183,16 @@ class Proxy(Telnet):
         trace['changes'].append({'flag':'Sent',
                                  'data':'"%s" to mud with raw: %s and datatype: %s' %
                                         (repr(datastr.strip()), raw, dtype),
-                                 'plugin':'proxy'})
+                                 'plugin':'proxy',
+                                 'callstack':self.api('api.callstack')()})
       Telnet.addtooutbuffer(self, datastr, raw)
     elif dtype == 'fromclient':
       if trace:
         trace['changes'].append({'flag':'Sent',
                                  'data':'"%s" to mud with raw: %s and datatype: %s' %
                                         (datastr.strip(), raw, dtype),
-                                 'plugin':'proxy'})
+                                 'plugin':'proxy',
+                                 'callstack':self.api('api.callstack')()})
       Telnet.addtooutbuffer(self, datastr, raw)
 
   def shutdown(self):
