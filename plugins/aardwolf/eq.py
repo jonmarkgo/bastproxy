@@ -892,11 +892,6 @@ class Plugin(AardwolfBasePlugin):
                              self.cmd_icache,
                              parser=parser)
 
-    self.api('triggers.add')('dead',
-                             r"^You die.$",
-                             enabled=True,
-                             group='dead')
-
     self.api('triggers.add')(
         'badinvdata1',
         r"^Syntax: invdata                - view all inv data.$",

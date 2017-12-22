@@ -872,10 +872,6 @@ class Plugin(AardwolfBasePlugin):
     self.api('commands.add')('mobs', self.cmd_mobs,
                              parser=parser, group='Stats')
 
-    self.api('triggers.add')('dead',
-                             "^You die.$",
-                             enabled=True, group='dead')
-
     self.api('events.register')('aard_quest_comp', self.questevent)
     self.api('events.register')('aard_quest_failed', self.questevent)
     self.api('events.register')('aard_cp_comp', self.cpevent)
