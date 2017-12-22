@@ -84,7 +84,9 @@ class Plugin(BasePlugin):
     self.api('events.register')('io_execute_event',
                                 self.checkline,
                                 prio=99)
-
+    self.api('events.register')('io_execute_event',
+                                self.checkline,
+                                prio=1)
     self.api('events.register')('plugin_%s_savestate' % self.sname, self._savestate)
 
   # get a variable
