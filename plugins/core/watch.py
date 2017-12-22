@@ -170,7 +170,7 @@ class Plugin(BasePlugin):
       event = self.api('events.gete')(self.watchcmds[watchname]['eventname'])
       plugin = self.watchcmds[watchname]['plugin']
       if event:
-        if event['pluginlist'] and not force:
+        if not event.isempty() and not force:
           self.api('send.msg')(
               'removewatch: watch %s for plugin %s has functions registered' % \
                       (watchname, plugin), secondary=plugin)

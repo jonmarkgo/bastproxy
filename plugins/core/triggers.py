@@ -173,7 +173,7 @@ class Plugin(BasePlugin):
 
     this function returns no values"""
     if not plugin:
-      plugin = self.api('api.callerplugin')(skipplugin=self.sname)
+      plugin = self.api('api.callerplugin')(skipplugin=[self.sname])
 
     if not plugin:
       print('could not add a trigger for triggername', triggername)
@@ -258,7 +258,7 @@ class Plugin(BasePlugin):
           self.triggers[triggername]['eventname'])
       plugin = self.triggers[triggername]['plugin']
       if event:
-        if event['pluginlist'] and not force:
+        if not event.isempty() and not force:
           self.api('send.msg')(
               'deletetrigger: trigger %s has functions registered' % triggername,
               secondary=plugin)
@@ -280,7 +280,7 @@ class Plugin(BasePlugin):
       return True
     else:
       if not plugin:
-        plugin = self.api('api.callerplugin')(skipplugin=self.sname)
+        plugin = self.api('api.callerplugin')(skipplugin=[self.sname])
       self.api('send.msg')('deletetrigger: trigger %s does not exist' % \
                         triggername, secondary=plugin)
       return False

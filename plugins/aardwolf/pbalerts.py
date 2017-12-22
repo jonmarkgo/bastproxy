@@ -75,8 +75,10 @@ class Plugin(AardwolfBasePlugin):
       self.api('events.register')(self.evmap[tevent]['event'],
                                   self.evmap[tevent]['function'])
     else:
-      self.api('events.unregister')(self.evmap[tevent]['event'],
-                                    self.evmap[tevent]['function'])
+      if self.api('events.isregistered')(self.evmap[tevent]['event'],
+                                         self.evmap[tevent]['function']):
+        self.api('events.unregister')(self.evmap[tevent]['event'],
+                                      self.evmap[tevent]['function'])
 
   def _gqdeclared(self, args):
     """
