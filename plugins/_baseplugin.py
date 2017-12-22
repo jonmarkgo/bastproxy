@@ -314,7 +314,8 @@ class BasePlugin(object):
     if we are connected do
     """
     self.api('send.msg')('baseplugin, firstactive')
-    self.api('events.unregister')('firstactive', self.afterfirstactive)
+    if self.api('events.isregistered')('firstactive', self.afterfirstactive):
+      self.api('events.unregister')('firstactive', self.afterfirstactive)
 
   # get the vaule of a setting
   def _api_settinggets(self, setting):
