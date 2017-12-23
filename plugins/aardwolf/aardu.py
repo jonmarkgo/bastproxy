@@ -125,15 +125,16 @@ class Plugin(AardwolfBasePlugin):
     self.api('api.add')('rewardtable', self.api_rewardtable)
     self.api('api.add')('parsedamageline', self.api_parsedamageline)
 
-    self.api('triggers.add')('dead',
-                             r"^You die.$",
-                             enabled=True,
-                             group='dead')
   def load(self):
     """
     load the plugins
     """
     AardwolfBasePlugin.load(self)
+
+    self.api('triggers.add')('dead',
+                             r"^You die.$",
+                             enabled=True,
+                             group='dead')
 
   # convert level, remort, tier, redos to the total levels
   def api_getactuallevel(self, level=None, remort=None,
