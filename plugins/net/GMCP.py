@@ -128,11 +128,9 @@ class Plugin(BasePlugin):
     this function returns no values
 
     Format: IAC SB GMCP <gmcp message text> IAC SE"""
-    self.api('events.eraise')(
-        'to_mud_event',
-        {'data':'%s%s%s%s%s%s' % \
-              (IAC, SB, GMCP, message.replace(IAC, IAC+IAC), IAC, SE),
-         'raw':True, 'dtype':GMCP})
+    self.api('send.mud')('%s%s%s%s%s%s' % \
+                (IAC, SB, GMCP, message.replace(IAC, IAC+IAC), IAC, SE),
+                            raw=True, dtype=GMCP)
 
   def gmcpdisconnect(self, _=None):
     """
@@ -197,11 +195,9 @@ class Plugin(BasePlugin):
       import json
       tdata = json.dumps(data)
       tpack = '%s %s' % (modname, tdata)
-      self.api('events.eraise')(
-          'to_client_event',
-          {'original':'%s%s%s%s%s%s' % \
-                (IAC, SB, GMCP, tpack.replace(IAC, IAC+IAC), IAC, SE),
-           'raw':True, 'dtype':GMCP})
+      self.api('send.client')('%s%s%s%s%s%s' % \
+                 (IAC, SB, GMCP, tpack.replace(IAC, IAC+IAC), IAC, SE),
+                              raw=True, dtype=GMCP)
 
   def gmcpfromserver(self, args):
     """
@@ -346,11 +342,9 @@ class SERVER(BaseTelnetOption):
       tdata['data'] = newdata
       tdata['module'] = modname
       tdata['server'] = self.telnetobj
-      self.api('events.eraise')(
-          'to_client_event',
-          {'original':'%s%s%s%s%s%s' % \
-                (IAC, SB, GMCP, sbdata.replace(IAC, IAC+IAC), IAC, SE),
-           'raw':True, 'dtype':GMCP})
+      self.api('send.client')('%s%s%s%s%s%s' % \
+                 (IAC, SB, GMCP, sbdata.replace(IAC, IAC+IAC), IAC, SE),
+                              raw=True, dtype=GMCP)
       self.api('events.eraise')('GMCP_raw', tdata)
 
 # Client

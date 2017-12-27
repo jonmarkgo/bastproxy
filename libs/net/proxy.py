@@ -78,11 +78,7 @@ class Proxy(Telnet):
             tconvertansi = self.api('colors.convertansi')(tosend)
           else:
             tconvertansi = tosend
-          self.api('events.eraise')('to_client_event',
-                                    {'original':tosend,
-                                     'dtype':'frommud',
-                                     'noansi':tnoansi,
-                                     'convertansi':tconvertansi})
+          self.api('send.client')(tosend, dtype='frommud')
 
   def addclient(self, client):
     """
@@ -145,10 +141,8 @@ class Proxy(Telnet):
     hand closing the connection
     """
     self.api('send.msg')('Disconnected from mud', 'net')
-    self.api('events.eraise')('to_client_event',
-                              {'original':self.api('colors.convertcolors')(
-                                  '@R#BP@w: The mud closed the connection'),
-                               'dtype':'fromproxy'})
+    self.api('send.client')(self.api('colors.convertcolors')(
+                                  '@R#BP@w: The mud closed the connection'))
     self.api('options.resetoptions')(self, True)
     Telnet.handle_close(self)
     self.connectedtime = None

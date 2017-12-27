@@ -101,11 +101,10 @@ class Plugin(BasePlugin):
     Format: IAC SB A102 <atcp message text> IAC SE
 
     this function returns no values"""
-    self.api('events.eraise')('to_mud_event',
-                              {'data':'%s%s%s%s%s%s' % \
+    self.api('send.mud')('%s%s%s%s%s%s' % \
                               (IAC, SB, A102, message.replace(IAC, IAC+IAC),
                                IAC, SE),
-                               'raw':True, 'dtype':A102})
+                               raw=True, dtype=A102)
 
   def a102disconnect(self, _=None):
     """
@@ -235,11 +234,10 @@ class SERVER(BaseTelnetOption):
       tdata['server'] = self.telnetobj
       self.telnetobj.msg('got %s,%s from server' % \
               (tdata['option'], tdata['flag']), level=2, mtype='A102')
-      self.api('events.eraise')('to_client_event',
-                                {'original':'%s%s%s%s%s%s' % \
+      self.api('send.client')('%s%s%s%s%s%s' % \
                                   (IAC, SB, A102,
                                    sbdata.replace(IAC, IAC+IAC), IAC, SE),
-                                 'raw':True, 'dtype':A102})
+                              raw=True, dtype=A102)
       self.api('events.eraise')('A102_from_server', tdata)
 
 # Client
