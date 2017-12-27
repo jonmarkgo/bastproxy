@@ -75,6 +75,7 @@ class SERVER(BaseTelnetOption):
     """
     self.telnetobj.msg('negotiating', mtype='MCCP2')
     self.zlib_decomp = zlib.decompressobj(15)
+    # decompress the raw queue
     if self.telnetobj.rawq:
       ind = self.telnetobj.rawq.find(SE)
       if not ind:
@@ -91,6 +92,7 @@ class SERVER(BaseTelnetOption):
       except Exception: # pylint: disable=broad-except
         self.telnetobj.handle_error()
 
+    # replace the readdatafromsocket function with one that decompresses the stream
     orig_readdatafromsocket = self.telnetobj.readdatafromsocket
     self.orig_readdatafromsocket = orig_readdatafromsocket
     def mccp_readdatafromsocket():
@@ -99,9 +101,10 @@ class SERVER(BaseTelnetOption):
       """
       # give the original func a chance to munge the data
       data = orig_readdatafromsocket()
-      # now do our work
+
       self.telnetobj.msg('decompressing', mtype='MCCP2')
 
+      # now do our work when returning the data
       return self.zlib_decomp.decompress(data)
 
     setattr(self.telnetobj, 'readdatafromsocket', mccp_readdatafromsocket)

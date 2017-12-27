@@ -311,9 +311,6 @@ class Plugin(BasePlugin):
     if eventname not in self.events:
       self.events[eventname] = EventContainer(self, eventname)
 
-    # print('api_register: eventname: %s - funcplugin: %s, funcname: %s' % \
-    #       (eventname, funcplugin, func.__name__))
-
     self.events[eventname].register(func, funcplugin, prio)
 
   # unregister a function from an event
@@ -326,8 +323,6 @@ class Plugin(BasePlugin):
       plugin        = the plugin this function is a part of
 
     this function returns no values"""
-    calledfrom = self.api('api.callerplugin')(skipplugin=['events'])
-
     if eventname in self.events:
       self.events[eventname].unregister(func)
     else:

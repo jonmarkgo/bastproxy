@@ -100,7 +100,8 @@ class ProxyIO(object):
   # write and format an error
   def _api_error(self, text, secondary=None):
     """  handle an error
-      @Ytext@w  = The error to handle
+      @Ytext@w      = The error to handle
+      @Ysecondary@w = Other datatypes to flag this data
 
     this function returns no values"""
     text = str(text)
