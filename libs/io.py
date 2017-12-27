@@ -123,17 +123,20 @@ class ProxyIO(object):
       pass
 
   # send text to the clients
-  def _api_client(self, text, raw=False, preamble=True):
+  def _api_client(self, text, raw=False, preamble=True, dtype='fromproxy'):
     """  handle a traceback
       @Ytext@w      = The text to send to the clients
-      @Yraw@w       = if True, don't convert colors
-      @Ypreamble@w  = if True, send the preamble
+      @Yraw@w       = if True, don't convert colors or add the preamble
+      @Ypreamble@w  = if True, send the preamble, defaults to True
+      @Ydtype@w     = datatype, defaults to "fromproxy"
 
     this function returns no values"""
-    if isinstance(text, basestring):
-      text = text.split('\n')
 
-    if not raw:
+    # if the data is from the proxy (internal) and not raw, add the preamble to each line
+    if not raw and dtype == 'fromproxy':
+      if isinstance(text, basestring):
+        text = text.split('\n')
+
       test = []
       for i in text:
         if preamble:
@@ -143,10 +146,11 @@ class ProxyIO(object):
         else:
           test.append(i)
       text = test
+      text = "\n".join(text)
 
     try:
-      self.api('events.eraise')('to_client_event', {'original':'\n'.join(text),
-                                                    'raw':raw, 'dtype':'fromproxy'})
+      self.api('events.eraise')('to_client_event', {'original':text,
+                                                    'raw':raw, 'dtype':dtype})
     except (NameError, TypeError, AttributeError):
       self.api('send.traceback')("couldn't send msg to client: %s" % '\n'.join(text))
 
@@ -238,18 +242,22 @@ class ProxyIO(object):
       self.currenttrace = None
 
   # send data directly to the mud
-  def _api_tomud(self, data):
+  def _api_tomud(self, data, raw=False, dtype='fromclient'):
     """ send data directly to the mud
 
     This does not go through the interpreter
       @Ydata@w     = the data to send
+      @Yraw@w      = don't do anything to this data
+      @Ydtype@w    = the datatype
 
     this function returns no values
     """
-    if data[-1] != '\n':
+
+    if not raw and data[-1] != '\n':
       data = "".join([data, '\n'])
     self.api('events.eraise')('to_mud_event',
                               {'data':data,
-                               'dtype':'fromclient'})
+                               'dtype':dtype,
+                               'raw':raw})
 
 IO = ProxyIO()
