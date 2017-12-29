@@ -153,7 +153,7 @@ class ProxyIO(object):
       self.api('events.eraise')('to_client_event', {'original':text,
                                                     'raw':raw, 'dtype':dtype})
     except (NameError, TypeError, AttributeError):
-      self.api('send.traceback')("couldn't send msg to client: %s" % '\n'.join(text))
+      self.api('send.traceback')("couldn't send msg to client: %s" % text)
 
   # execute a command through the interpreter, most data goes through this
   def _api_execute(self, command, fromclient=False, showinhistory=True):
