@@ -147,5 +147,5 @@ class Client(Telnet):
                                 (self.host, self.port), primary='net')
     self.api('managers.getm')('proxy').removeclient(self)
     self.api('events.eraise')('client_disconnected', {'client':self})
-    self.api('events.unregister')('to_client_event', self.addtooutbuffer)
+    self.api('events.unregister')('to_client_event', self.addtooutbufferevent)
     Telnet.handle_close(self)
