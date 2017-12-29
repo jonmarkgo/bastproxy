@@ -47,6 +47,7 @@ class BasePlugin(object):
     self.canreset = True
     self.resetflag = True
     self.api = API()
+    self.firstactiveprio = None
     self.loadedtime = time.time()
     self.savedir = os.path.join(self.api.BASEPATH, 'data',
                                 'plugins', self.sname)
@@ -297,9 +298,9 @@ class BasePlugin(object):
         if self.api('connect.firstactive')():
           self.afterfirstactive()
       else:
-        self.api('events.register')('firstactive', self.afterfirstactive)
+        self.api('events.register')('firstactive', self.afterfirstactive, prio=self.firstactiveprio)
     else:
-      self.api('events.register')('firstactive', self.afterfirstactive)
+      self.api('events.register')('firstactive', self.afterfirstactive, prio=self.firstactiveprio)
 
   def __disconnect(self, args=None):
     # pylint: disable=unused-argument

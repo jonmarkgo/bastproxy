@@ -104,6 +104,9 @@ class EventContainer(object):
     """
     register a function to this event container
     """
+    if not prio:
+      prio = 50
+
     if prio not in self.priod:
       self.priod[prio] = []
 

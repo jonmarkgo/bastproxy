@@ -26,6 +26,8 @@ class Plugin(AardwolfBasePlugin):
 
     self.api('api.add')('check', self.api_checkflag)
 
+    self.firstactiveprio = 1
+
     self.currentflags = {}
     self.cmdqueue = None
 
