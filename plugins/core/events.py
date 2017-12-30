@@ -184,8 +184,10 @@ class EventContainer(object):
     """
     self.numraised = self.numraised + 1
 
-    self.api('send.msg')('event %s: %s' % (self.name, self),
-                         secondary=calledfrom)
+    if self.name != 'global_timer':
+      self.api('send.msg')('event %s raised by %s with args %s' % \
+                             (self.name, calledfrom, nargs),
+                           secondary=calledfrom)
     keys = self.priod.keys()
     if keys:
       keys.sort()
@@ -343,7 +345,7 @@ class Plugin(BasePlugin):
       self.events[event].removeplugin(plugin)
 
   # raise an event, args vary
-  def api_eraise(self, eventname, args=None):
+  def api_eraise(self, eventname, args=None, calledfrom=None):
     # pylint: disable=too-many-nested-blocks
     """  raise an event with args
     @Yeventname@w   = The event to raise
@@ -353,15 +355,19 @@ class Plugin(BasePlugin):
     if not args:
       args = {}
 
-    calledfrom = self.api('api.callerplugin')(skipplugin=['events'])
+    if not calledfrom:
+      calledfrom = self.api('api.callerplugin')(skipplugin=['events'])
+
+    if not calledfrom:
+      print('event %s raised with unknown caller' % eventname)
 
     nargs = args.copy()
     nargs['eventname'] = eventname
-    if eventname in self.events:
-      self.numglobalraised += 1
-      nargs = self.events[eventname].eraise(nargs, calledfrom)
-    else:
-      pass
+    if eventname not in self.events:
+      self.events[eventname] = EventContainer(self, eventname)
+
+    self.numglobalraised += 1
+    nargs = self.events[eventname].eraise(nargs, calledfrom)
 
     return nargs
 
