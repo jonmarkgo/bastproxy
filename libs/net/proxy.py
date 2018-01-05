@@ -56,20 +56,40 @@ class Proxy(Telnet):
           self.api('send.msg')('converted %s to %s' % (repr(tosend),
                                                        tconvertansi),
                                'ansi')
-        newdata = self.api('events.eraise')('from_mud_event',
-                                            {'original':tosend,
-                                             'dtype':'frommud',
-                                             'noansi':tnoansi,
-                                             'convertansi':tconvertansi})
+        trace = {}
+        trace['dtype'] = 'frommud'
+        trace['original'] = tosend
+        trace['changes'] = []
 
+        data = {'original':tosend,
+                'data':tosend,
+                'dtype':'frommud',
+                'noansi':tnoansi,
+                'convertansi':tconvertansi,
+                'trace':trace}
+
+        self.api('events.eraise')('muddata_trace_started', data,
+                                  calledfrom='proxy')
+
+        # this event can be used to transform the data
+        newdata = self.api('events.eraise')('from_mud_event',
+                                            data,
+                                            calledfrom="proxy")
+
+        self.api('events.eraise')('muddata_trace_finished', data,
+                                  calledfrom='proxy')
+
+        # use the original key in the returned dictionary
+        # TODO: make this so that it uses a key just named data
         if 'original' in newdata:
           tosend = newdata['original']
 
+        # omit the data if it has been flagged
         if 'omit' in newdata and newdata['omit']:
           tosend = None
 
         if tosend != None:
-          #data cannot be transformed here
+          #data cannot be transformed here, it goes straight to the client
           if self.api('api.has')('colors.stripansi'):
             tnoansi = self.api('colors.stripansi')(tosend)
           else:

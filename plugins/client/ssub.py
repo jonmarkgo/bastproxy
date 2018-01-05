@@ -91,9 +91,16 @@ class Plugin(BasePlugin):
     if dtype != 'fromproxy':
       for mem in self._substitutes.keys():
         if mem in data:
-          data = data.replace(mem,
+          ndata = data.replace(mem,
                               self.api('colors.convertcolors')(
                                   self._substitutes[mem]['sub']))
+          if ndata != data:
+            args['trace']['changes'].append({'flag':'Modify',
+                                  'data':'changed "%s" to "%s"' % \
+                                      (data, ndata),
+                                  'plugin':self.sname,
+                                  'eventname':args['eventname']})
+            data = ndata
       args['original'] = data
       return args
 

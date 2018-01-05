@@ -88,6 +88,9 @@ class Plugin(BasePlugin):
 
     self.api('events.register')('plugin_unloaded', self.pluginunloaded)
 
+    self.api('events.register')('from_mud_event',
+                                self.checktrigger, prio=1)
+
   def enablechange(self, args):
     """
     setup the plugin on setting change
@@ -486,16 +489,30 @@ class Plugin(BasePlugin):
     self.api('send.msg')('trigger raiseevent returned: %s' % tdat)
     if tdat and 'newline' in tdat:
       self.api('send.msg')('changing line from trigger')
-      origargs['original'] = self.api('colors.convertcolors')(tdat['newline'])
-    if tdat and 'omit' in tdat and tdat['omit']:
-      origargs['omit'] = True
-    if triggername in self.triggers and self.triggers[triggername]['omit']:
-      origargs['original'] = ''
+      ndata = self.api('colors.convertcolors')(tdat['newline'])
+      origargs['trace']['changes'].append({'flag':'Modify',
+                                           'data':'trigger "%s% changed "%s" to "%s"' % \
+                                              (triggername, origargs['original'], ndata),
+                                           'plugin':self.sname})
+      origargs['original'] = ndata
+
+    if (tdat and 'omit' in tdat and tdat['omit']) or \
+       (triggername in self.triggers and self.triggers[triggername]['omit']):
+      plugin = self.sname
+      if triggername in self.triggers:
+        plugin = self.triggers[triggername]['plugin']
+      origargs['trace']['changes'].append({'flag':'Omit',
+                                           'data':'by trigger "%s" added by plugin "%s"' % \
+                                              (triggername,
+                                               plugin),
+                                           'plugin':self.sname,})
+      origargs['original'] = ""
       origargs['omit'] = True
     time2 = time.time()
     self.api('send.msg')('raisetrigger: %s - %0.3f ms' % \
               (triggername, (time2-time1)*1000.0), secondary='timing')
-    return
+
+    return origargs
 
   def cmd_list(self, args):
     """
