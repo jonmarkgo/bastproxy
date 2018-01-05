@@ -265,7 +265,8 @@ class Plugin(AardwolfBasePlugin):
     state = self.api('GMCP.getv')('char.status.state')
     if state == 3:
       self.api('send.msg')('refreshing skills')
-      self.api('events.unregister')('GMCP:char.status', self.checkskills)
+      if self.api('events.isregistered')('GMCP:char.status', self.checkskills):
+        self.api('events.unregister')('GMCP:char.status', self.checkskills)
       self.api('A102.toggle')('SPELLUPTAGS', True)
       self.api('A102.toggle')('SKILLGAINTAGS', True)
       self.api('A102.toggle')('QUIETTAGS', False)
