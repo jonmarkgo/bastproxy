@@ -77,17 +77,11 @@ class SERVER(BaseTelnetOption):
     self.zlib_decomp = zlib.decompressobj(15)
     # decompress the raw queue
     if self.telnetobj.rawq:
-      ind = self.telnetobj.rawq.find(SE)
-      if not ind:
-        ind = 0
-      else:
-        ind = ind + 1
       self.telnetobj.msg('converting rawq in handleopt',
                          mtype='MCCP2')
       try:
-        tempraw = self.telnetobj.rawq[:ind]
-        rawq = self.zlib_decomp.decompress(self.telnetobj.rawq[ind:])
-        self.telnetobj.rawq = "".join([tempraw, rawq])
+        rawq = self.zlib_decomp.decompress(self.telnetobj.rawq)
+        self.telnetobj.rawq = rawq
         self.telnetobj.process_rawq()
       except Exception: # pylint: disable=broad-except
         self.telnetobj.handle_error()
