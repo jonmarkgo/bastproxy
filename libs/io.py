@@ -260,7 +260,7 @@ class ProxyIO(object):
     this function returns no values
     """
 
-    if not raw and data[-1] != '\n':
+    if not raw and data and data[-1] != '\n':
       data = "".join([data, '\n'])
     self.api('events.eraise')('to_mud_event',
                               {'data':data,
