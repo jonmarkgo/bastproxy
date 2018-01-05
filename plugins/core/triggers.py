@@ -59,12 +59,9 @@ class Plugin(BasePlugin):
     """
     BasePlugin.load(self)
 
-    self.api('setting.add')('useorig', 'True', bool,
-                            'use the original chktrigger function to check triggers')
     self.api('setting.add')('enabled', 'True', bool,
                             'enable triggers')
     self.api('events.register')('var_%s_echo' % self.sname, self.enablechange)
-    self.api('events.register')('var_%s_useorig' % self.sname, self.functionchange)
 
     parser = argp.ArgumentParser(add_help=False,
                                  description='get details of a trigger')
@@ -102,21 +99,6 @@ class Plugin(BasePlugin):
     else:
       self.api('events.unregister')('from_mud_event',
                                     self.checktrigger)
-
-  def functionchange(self, args):
-    """
-    register the correct check trigger function
-    """
-    print("on function change")
-    useorig = args['newvalue']
-
-    if useorig:
-      self.api('events.register')('from_mud_event',
-                                  self.checktrigger_old, prio=1)
-    else:
-      self.api('events.register')('from_mud_event',
-                                  self.checktrigger_big, prio=1)
-
 
   def pluginunloaded(self, args):
     """
@@ -354,67 +336,6 @@ class Plugin(BasePlugin):
     """
     check a line of text from the mud to see if it matches any triggers
     called whenever the from_mud_event is raised
-    """
-    if self.api('setting.gets')('useorig'):
-      return self.checktrigger_old(args)
-
-    return self.checktrigger_big(args)
-
-  def checktrigger_old(self, args):
-    """
-    This function goes through each trigger and checks
-    """
-    time1 = time.time()
-    self.api('send.msg')('checktrigger: %s started' % (args), secondary='timing')
-    data = args['noansi']
-    colordata = args['convertansi']
-
-    self.raisetrigger('beall',
-                      {'line':data, 'triggername':'all'},
-                      args)
-
-    if data == '':
-      self.raisetrigger('emptyline',
-                        {'line':'', 'triggername':'emptyline'},
-                        args)
-    else:
-      triggers = sorted(self.triggers,
-                        key=lambda item: self.triggers[item]['priority'])
-      enabledt = [trig for trig in triggers if self.triggers[trig]['enabled']]
-      for i in enabledt:
-        if i in self.triggers:
-          trigre = self.triggers[i]['compiled']
-          if 'matchcolor' in self.triggers[i] \
-              and self.triggers[i]['matchcolor']:
-            mat = trigre.match(colordata)
-          else:
-            mat = trigre.match(data)
-          if mat:
-            targs = mat.groupdict()
-            if 'argtypes' in self.triggers[i]:
-              for arg in self.triggers[i]['argtypes']:
-                if arg in targs:
-                  targs[arg] = self.triggers[i]['argtypes'][arg](targs[arg])
-            targs['line'] = data
-            targs['colorline'] = colordata
-            targs['triggername'] = i
-            self.triggers[i]['hits'] = self.triggers[i]['hits'] + 1
-            args = self.raisetrigger(i, targs, args)
-            if i in self.triggers:
-              if self.triggers[i]['stopevaluating']:
-                break
-
-    self.raisetrigger('all', {'line':data, 'triggername':'all'}, args)
-    time2 = time.time()
-    self.api('send.msg')('%s: %0.3f ms' % \
-              ('checktrigger', (time2-time1)*1000.0), secondary='timing')
-    return args
-
-  def checktrigger_big(self, args):
-    # pylint: disable=too-many-nested-blocks,too-many-branches
-    """
-    This function uses one big regex to check a line and then
-    goes through the match groups
     """
     time1 = time.time()
     self.api('send.msg')('checktrigger: %s started' % (args), secondary='timing')
