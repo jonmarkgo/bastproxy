@@ -59,4 +59,4 @@ class Plugin(AardwolfBasePlugin):
     AardwolfBasePlugin.afterfirstactive(self)
 
     self.api('send.msg')('requesting room')
-    self.api('GMCP.sendpacket')('request room')
+    self.api('GMCP.sendmud')('request room')

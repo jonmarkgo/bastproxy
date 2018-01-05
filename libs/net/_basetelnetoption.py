@@ -7,14 +7,15 @@ class BaseTelnetOption(object):
   """
   a base class for a telnet object
   """
-  def __init__(self, telnetobj, option):
+  def __init__(self, telnetobj, option, plugin):
     """
     initalize the instance
     """
-    self.api = API()
+    tapi = API()
     self.telnetobj = telnetobj
     self.option = option
     self.telnetobj.option_handlers[ord(self.option)] = self
+    self.plugin = tapi('plugins.getp')(plugin)
     #self.telnetobj.debug_types.append(self.option)
 
   def onconnect(self):

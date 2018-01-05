@@ -46,7 +46,7 @@ class SERVER(BaseTelnetOption):
     """
     initialize the instance
     """
-    BaseTelnetOption.__init__(self, telnetobj, TTYPE)
+    BaseTelnetOption.__init__(self, telnetobj, TTYPE, SNAME)
     #self.telnetobj.debug_types.append('TTYPE')
 
   def handleopt(self, command, sbdata):
@@ -71,7 +71,7 @@ class CLIENT(BaseTelnetOption):
     """
     initialize the instance
     """
-    BaseTelnetOption.__init__(self, telnetobj, TTYPE)
+    BaseTelnetOption.__init__(self, telnetobj, TTYPE, SNAME)
     #self.telnetobj.debug_types.append('TTYPE')
     self.telnetobj.msg('sending IAC WILL TTYPE', mtype='TTYPE')
     self.telnetobj.addtooutbuffer("".join([IAC, DO, TTYPE]), True)

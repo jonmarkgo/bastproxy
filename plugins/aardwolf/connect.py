@@ -68,16 +68,16 @@ class Plugin(BasePlugin):
     """
     proxy = self.api('managers.getm')('proxy')
     if proxy.connected:
-      self.api('GMCP.sendpacket')("request room")
-      self.api('GMCP.sendpacket')("request quest")
-      self.api('GMCP.sendpacket')("request char")
+      self.api('GMCP.sendmud')("request room")
+      self.api('GMCP.sendmud')("request quest")
+      self.api('GMCP.sendmud')("request char")
 
   def enablemods(self, _=None):
     """
     enable modules for aardwolf
     """
-    self.api('GMCP.sendpacket')("rawcolor on")
-    self.api('GMCP.sendpacket')("group on")
+    self.api('GMCP.sendmud')("rawcolor on")
+    self.api('GMCP.sendmud')("group on")
     self.api('GMCP.togglemodule')('Char', True)
     self.api('GMCP.togglemodule')('Room', True)
     self.api('GMCP.togglemodule')('Comm', True)
@@ -115,6 +115,7 @@ class Plugin(BasePlugin):
                                       self._connect_return)
         self.api('send.mud')('look')
         self.api('send.mud')('map')
+        self.api('send.mud')('')
         self.connected = True
         self.firstactive = True
         self.sentquest = False
@@ -143,7 +144,7 @@ class Plugin(BasePlugin):
        or self.api('GMCP.getv')('char.worth.gold') is None:
 
       if not self.sentchar:
-        self.api('GMCP.sendpacket')("request char")
+        self.api('GMCP.sendmud')("request char")
         self.sentchar = True
 
       return False
@@ -157,7 +158,7 @@ class Plugin(BasePlugin):
     if self.api('GMCP.getv')('room.info.num') is None:
       if not self.sentroom:
         self.sentroom = True
-        self.api('GMCP.sendpacket')("request room")
+        self.api('GMCP.sendmud')("request room")
 
       return False
 
@@ -170,7 +171,7 @@ class Plugin(BasePlugin):
     if self.api('GMCP.getv')('comm.quest.action') is None:
       if not self.sentquest:
         self.sentquest = True
-        self.api('GMCP.sendpacket')("request quest")
+        self.api('GMCP.sendmud')("request quest")
 
       return False
 

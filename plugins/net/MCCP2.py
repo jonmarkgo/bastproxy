@@ -46,7 +46,7 @@ class SERVER(BaseTelnetOption):
     """
     initialize the instance
     """
-    BaseTelnetOption.__init__(self, telnetobj, MCCP2)
+    BaseTelnetOption.__init__(self, telnetobj, MCCP2, SNAME)
     #self.telnetobj.debug_types.append('MCCP2')
     self.orig_readdatafromsocket = None
     self.zlib_decomp = None
@@ -128,8 +128,7 @@ class CLIENT(BaseTelnetOption):
     """
     initialize the instance
     """
-    BaseTelnetOption.__init__(self, telnetobj, MCCP2)
-    #self.telnetobj.debug_types.append('MCCP2')
+    BaseTelnetOption.__init__(self, telnetobj, MCCP2, SNAME)
     self.orig_convert_outdata = None
     self.zlib_comp = None
     self.telnetobj.msg('sending IAC WILL MCCP2', mtype='MCCP2')
