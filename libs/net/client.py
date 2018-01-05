@@ -103,7 +103,7 @@ class Client(Telnet):
           self.state = CONNECTED
           self.viewonly = False
           proxy.addclient(self)
-          self.api('events.eraise')('client_connected', {'client':self})
+          self.api('events.eraise')('client_connected', {'client':self}, calledfrom="client")
           self.api('send.client')("%s - %s: Client Connected" % \
                                       (self.host, self.port))
         elif vpw and data == vpw:
@@ -116,7 +116,7 @@ class Client(Telnet):
                   '@R#BP@W: @GYou are connected in view mode@w')})
           proxy.addclient(self)
           self.api('events.eraise')('client_connected_view',
-                                    {'client':self})
+                                    {'client':self}, calledfrom="client")
           self.api('send.client')(
               "%s - %s: Client Connected (View Mode)" % \
                   (self.host, self.port))
@@ -146,6 +146,6 @@ class Client(Telnet):
     self.api('send.msg')("%s - %s: Client Disconnected" % \
                                 (self.host, self.port), primary='net')
     self.api('managers.getm')('proxy').removeclient(self)
-    self.api('events.eraise')('client_disconnected', {'client':self})
+    self.api('events.eraise')('client_disconnected', {'client':self}, calledfrom="client")
     self.api('events.unregister')('to_client_event', self.addtooutbufferevent)
     Telnet.handle_close(self)

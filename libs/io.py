@@ -151,7 +151,8 @@ class ProxyIO(object):
 
     try:
       self.api('events.eraise')('to_client_event', {'original':text,
-                                                    'raw':raw, 'dtype':dtype})
+                                                    'raw':raw, 'dtype':dtype},
+                                calledfrom="io")
     except (NameError, TypeError, AttributeError):
       self.api('send.traceback')("couldn't send msg to client: %s" % text)
 
@@ -182,7 +183,8 @@ class ProxyIO(object):
         self.currenttrace['fromclient'] = True
         self.currenttrace['internal'] = False
 
-      self.api('events.eraise')('io_execute_trace_started', self.currenttrace)
+      self.api('events.eraise')('io_execute_trace_started', self.currenttrace,
+                                calledfrom="io")
 
     if command == '\r\n':
       self.api('send.msg')('sending %s (cr) to the mud' % repr(command),
@@ -190,7 +192,8 @@ class ProxyIO(object):
       self.api('events.eraise')('to_mud_event', {'data':command,
                                                  'dtype':'fromclient',
                                                  'showinhistory':showinhistory,
-                                                 'trace':self.currenttrace})
+                                                 'trace':self.currenttrace},
+                                calledfrom="io")
     else:
 
       command = command.strip()
@@ -208,7 +211,8 @@ class ProxyIO(object):
                                              'fromclient':fromclient,
                                              'internal':not fromclient,
                                              'showinhistory':showinhistory,
-                                             'trace':self.currenttrace})
+                                             'trace':self.currenttrace},
+                           calledfrom="io")
 
         if 'fromdata' in newdata:
           tcommand = newdata['fromdata']
@@ -236,10 +240,12 @@ class ProxyIO(object):
                                       {'data':tcommand,
                                        'dtype':'fromclient',
                                        'showinhistory':showinhistory,
-                                       'trace':self.currenttrace})
+                                       'trace':self.currenttrace},
+                                      calledfrom="io")
 
     if newtrace:
-      self.api('events.eraise')('io_execute_trace_finished', self.currenttrace)
+      self.api('events.eraise')('io_execute_trace_finished', self.currenttrace,
+                                calledfrom="io")
       self.currenttrace = None
 
   # send data directly to the mud
@@ -259,6 +265,7 @@ class ProxyIO(object):
     self.api('events.eraise')('to_mud_event',
                               {'data':data,
                                'dtype':dtype,
-                               'raw':raw})
+                               'raw':raw},
+                              calledfrom="io")
 
 IO = ProxyIO()

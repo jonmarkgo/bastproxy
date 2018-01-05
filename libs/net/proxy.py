@@ -154,7 +154,7 @@ class Proxy(Telnet):
     self.doconnect(mudhost, mudport)
     self.connectedtime = time.localtime()
     self.api('send.msg')('Connected to mud', 'net')
-    self.api('events.eraise')('mudconnect', {})
+    self.api('events.eraise')('mudconnect', {}, calledfrom="proxy")
 
   def handle_close(self):
     """
@@ -166,7 +166,7 @@ class Proxy(Telnet):
     self.api('options.resetoptions')(self, True)
     Telnet.handle_close(self)
     self.connectedtime = None
-    self.api('events.eraise')('muddisconnect', {})
+    self.api('events.eraise')('muddisconnect', {}, calledfrom="proxy")
 
   def addtooutbuffer(self, data, raw=False):
     """
@@ -215,7 +215,7 @@ class Proxy(Telnet):
     """
     API.shutdown = True
     self.api('send.msg')('Proxy: shutdown started', primary='net')
-    self.api('events.eraise')('shutdown', {})
+    self.api('events.eraise')('shutdown', {}, calledfrom="proxy")
     for client in self.clients:
       client.handle_close()
     self.api('send.msg')('Proxy: shutdown finished', primary='net')
