@@ -82,18 +82,31 @@ class API(object):
     self.overload('api', 'callerplugin', self.api_callerplugin)
     self.overload('api', 'callstack', self.api_callstack)
 
-  def api_callstack(self):
+  def api_callstack(self, ignores=None):
     """
-    return a list of calls that form the stack
+    return a list of function calls that form the stack
+    Example:
+    ['  File "bastproxy.py", line 280, in <module>',
+     '    main()',
+     '  File "bastproxy.py", line 253, in main',
+     '    start(listen_port)',
+     '  File "/home/endavis/src/games/bastproxy/bp/libs/event.py", line 60, in new_func',
+     '    return func(*args, **kwargs)',
+     '  File "/home/endavis/src/games/bastproxy/bp/libs/net/proxy.py", line 63, in handle_read',
+     "    'convertansi':tconvertansi})", '
     """
+    if ignores is None:
+      ignores = []
     callstack = []
     for _, frame in sys._current_frames().items():
       for i in traceback.format_stack(frame)[:-1]:
-        if 'asyncore' in i or 'bastproxy.py' in i or 'api.callstack' in i:
+        if True in [tstr in i for tstr in ignores]:
           continue
         tlist = i.split('\n')
         for tline in tlist:
           if tline:
+            if self.BASEPATH:
+              tline = tline.replace(self.BASEPATH + "/", "")
             callstack.append(tline.rstrip())
 
     return callstack
@@ -127,10 +140,12 @@ class API(object):
         #      be just a function call
         tcs = parentframe.f_locals['self']
         if tcs != self and isinstance(tcs, BasePlugin) and tcs.sname not in skipplugin:
-          return tcs.sname
-        if hasattr(tcs, 'plugin') and tcs.plugin.sname not in skipplugin:
+            return tcs.sname
+        if hasattr(tcs, 'plugin') and isinstance(tcs.plugin, BasePlugin) \
+                and tcs.plugin.sname not in skipplugin:
           return tcs.plugin.sname
 
+    del stack
     return None
 
   # add a function to the api
