@@ -19,13 +19,9 @@ class Client(Telnet):
     """
     init the class
     """
-    Telnet.__init__(self, sock=sock)
-    self.host = host
-    self.port = port
-    self.api = API()
+    Telnet.__init__(self, host=host, port=port, sock=sock)
     self.ttype = 'Client'
     self.connectedtime = None
-    self.supports = {}
     self.pwtries = 0
     self.banned = False
     self.viewonly = False

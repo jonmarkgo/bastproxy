@@ -16,9 +16,6 @@ class Proxy(Telnet):
     """
     Telnet.__init__(self)
 
-    self.username = None
-    self.password = None
-    self.api = API()
     self.lastmsg = ''
     self.clients = []
     self.vclients = []
@@ -39,7 +36,11 @@ class Proxy(Telnet):
     data = self.getdata()
     if data:
       ndata = "".join([self.lastmsg, data])
+
+      # don't care about \r
       alldata = ndata.replace("\r", "")
+
+      # split on \n
       ndatal = alldata.split('\n')
       self.lastmsg = ndatal[-1]
       for i in ndatal[:-1]:
