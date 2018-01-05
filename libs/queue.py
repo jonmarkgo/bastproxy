@@ -13,6 +13,7 @@ class SimpleQueue(object):
     """
     self.len = length
     self.items = []
+    self.snapshot = None
 
   def isempty(self):
     """
@@ -39,3 +40,15 @@ class SimpleQueue(object):
     return the size of the queue
     """
     return len(self.items)
+
+  def takesnapshot(self):
+    """
+    take a snapshot of the current queue
+    """
+    self.snapshot = self.items[:]
+
+  def getsnapshot(self):
+    """
+    return the current snapshot
+    """
+    return self.snapshot
