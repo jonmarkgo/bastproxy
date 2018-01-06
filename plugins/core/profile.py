@@ -173,7 +173,6 @@ class Plugin(BasePlugin):
     """
     format the command stack
     """
-    print(stack)
     msg = ['------------------- Muddata Trace -------------------']
     msg.append('%-17s : %s' % ('Original', stack['trace']['original']))
 
