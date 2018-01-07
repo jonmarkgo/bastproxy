@@ -412,7 +412,7 @@ class Plugin(BasePlugin):
       self.api('send.msg')('changing line from trigger')
       ndata = self.api('colors.convertcolors')(tdat['newline'])
       origargs['trace']['changes'].append({'flag':'Modify',
-                                           'data':'trigger "%s% changed "%s" to "%s"' % \
+                                           'data':'trigger "%s" changed "%s" to "%s"' % \
                                               (triggername, origargs['original'], ndata),
                                            'plugin':self.sname})
       origargs['original'] = ndata
