@@ -298,9 +298,11 @@ class BasePlugin(object):
         if self.api('connect.firstactive')():
           self.afterfirstactive()
       else:
-        self.api('events.register')('firstactive', self.afterfirstactive, prio=self.firstactiveprio)
+        self.api('events.register')('firstactive', self.afterfirstactive,
+                                    prio=self.firstactiveprio)
     else:
-      self.api('events.register')('firstactive', self.afterfirstactive, prio=self.firstactiveprio)
+      self.api('events.register')('firstactive', self.afterfirstactive,
+                                    prio=self.firstactiveprio)
 
   def __disconnect(self, args=None):
     # pylint: disable=unused-argument
