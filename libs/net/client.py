@@ -69,8 +69,6 @@ class Client(Telnet):
     """
     handle a read
     """
-    mud = self.api('managers.getm')('mud')
-
     if not self.connected:
       return
     Telnet.handle_read(self)
@@ -97,8 +95,6 @@ class Client(Telnet):
           self.api('send.msg')('Successful password from %s : %s' % \
                                             (self.host, self.port), 'net')
           self.state = CONNECTED
-          self.viewonly = False
-          mud.addclient(self)
           self.api('events.eraise')('client_connected', {'client':self},
                                     calledfrom="client")
           self.api('send.client')("%s - %s: Client Connected" % \
@@ -111,7 +107,6 @@ class Client(Telnet):
           self.addtooutbufferevent(
               {'original':self.api('colors.convertcolors')(
                   '@R#BP@W: @GYou are connected in view mode@w')})
-          mud.addclient(self)
           self.api('events.eraise')('client_connected_view',
                                     {'client':self}, calledfrom="client")
           self.api('send.client')(
@@ -125,9 +120,8 @@ class Client(Telnet):
                     '@R#BP@w: @RYou have been BANNED for 10 minutes:@w'),
                  'dtype':'passwd'})
             self.api('send.msg')('%s has been banned.' % self.host, 'net')
-            mud.removeclient(self)
-            mud.addbanned(self.host)
-            self.close()
+            self.api('clients.addbanned')(self.host)
+            self.handle_close()
           else:
             self.addtooutbufferevent(
                 {'original':self.api('colors.convertcolors')(
@@ -142,7 +136,6 @@ class Client(Telnet):
                                 (self.host, self.port))
     self.api('send.msg')("%s - %s: Client Disconnected" % \
                                 (self.host, self.port), primary='net')
-    self.api('managers.getm')('mud').removeclient(self)
     self.api('events.eraise')('client_disconnected', {'client':self}, calledfrom="client")
     self.api('events.unregister')('to_client_event', self.addtooutbufferevent)
     Telnet.handle_close(self)

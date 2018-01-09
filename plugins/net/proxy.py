@@ -57,10 +57,6 @@ class Plugin(BasePlugin):
                              self.cmd_info,
                              shelp='list proxy info')
 
-    self.api('commands.add')('clients',
-                             self.cmd_clients,
-                             shelp='list clients that are connected')
-
     self.api('commands.add')('disconnect',
                              self.cmd_disconnect,
                              shelp='disconnect from the mud')
@@ -134,46 +130,22 @@ class Plugin(BasePlugin):
       else:
         tmsg.append(template % ('Mud', 'disconnected'))
 
+    clients = self.api('clients.getall')()
+
+    aclients = clients['active']
+    vclients = clients['view']
+
     tmsg.append('')
     tmsg.append('@B-----------------   Clients  ----------------@w')
-    tmsg.append(template % ('Clients', len(proxy.clients)))
-    tmsg.append(template % ('View Clients', len(proxy.vclients)))
+    tmsg.append(template % ('Clients', len(aclients)))
+    tmsg.append(template % ('View Clients', len(vclients)))
     tmsg.append('-------------------------')
-    _, nmsg = self.api('commands.run')('proxy', 'clients', '')
+
+    _, nmsg = self.api('commands.run')('clients', 'show', '')
+
     del nmsg[0]
     del nmsg[0]
     tmsg.extend(nmsg)
-    return True, tmsg
-
-
-  def cmd_clients(self, args):
-    # pylint: disable=unused-argument
-    """
-    show all clients
-    """
-    proxy = self.api('managers.getm')('proxy')
-    clientformat = '%-6s %-17s %-7s %-17s %-s'
-    tmsg = ['']
-    if proxy:
-
-      tmsg.append('')
-      tmsg.append(clientformat % ('Type', 'Host', 'Port',
-                                  'Client', 'Connected'))
-      tmsg.append('@B' + 60 * '-')
-      for i in proxy.clients:
-        ttime = self.api('utils.timedeltatostring')(
-            i.connectedtime,
-            time.localtime())
-
-        tmsg.append(clientformat % ('Active', i.host[:17], i.port,
-                                    i.ttype[:17], ttime))
-      for i in proxy.vclients:
-        ttime = self.api('utils.timedeltatostring')(
-            i.connectedtime,
-            time.localtime())
-        tmsg.append(clientformat % ('View', i.host[:17], i.port,
-                                    i.ttype[:17], ttime))
-
     return True, tmsg
 
   def cmd_disconnect(self, args=None):

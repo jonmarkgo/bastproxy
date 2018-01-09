@@ -97,50 +97,6 @@ class Mud(Telnet):
             tconvertansi = tosend
           self.api('send.client')(tosend, dtype='frommud')
 
-  def addclient(self, client):
-    """
-    add a client
-
-    required:
-      client - the client to add
-    """
-    if client.viewonly:
-      self.vclients.append(client)
-    else:
-      self.clients.append(client)
-
-  def removeclient(self, client):
-    """
-    remove a client
-
-    required:
-      client - the client to remove
-    """
-    if client in self.clients:
-      self.clients.remove(client)
-    elif client in self.vclients:
-      self.vclients.remove(client)
-
-  def addbanned(self, clientip):
-    """
-    add a banned client
-
-    required
-      clientip - the client ip to ban
-    """
-    self.banned[clientip] = time.time()
-
-  def checkbanned(self, clientip):
-    """
-    check if a client is banned
-
-    required
-      clientip - the client ip to check
-    """
-    if clientip in self.banned:
-      return True
-    return False
-
   def connectmud(self, mudhost, mudport):
     """
     connect to the mud

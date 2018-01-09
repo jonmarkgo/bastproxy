@@ -159,10 +159,10 @@ class Listener(asyncore.dispatcher):
 
     try:
       ipaddress = source_addr[0]
-      if self.proxy.checkbanned(ipaddress):
+      if API('clients.checkbanned')(ipaddress):
         API('send.msg')("HOST: %s is banned" % ipaddress, 'net')
         client_connection.close()
-      elif len(self.proxy.clients) == 5:
+      elif API('clients.numconnected') == 5:
         API('send.msg')(
             "Only 5 clients can be connected at the same time", 'net')
         client_connection.close()
