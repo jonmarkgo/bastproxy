@@ -191,12 +191,12 @@ class Plugin(BasePlugin):
     """
     this function is called when we receive an a102 option from the client
     """
-    proxy = self.api('managers.getm')('proxy')
+    mud = self.api('managers.getm')('mud')
     data = args['data']
     option = ord(data[0])
     mstate = ord(data[1])
     mstate = bool(mstate)
-    if not proxy.connected:
+    if not mud.connected:
       self.a102optionqueue.append({'option':option, 'toggle':mstate})
     else:
       self.a102toggleoption(option, mstate)

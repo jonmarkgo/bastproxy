@@ -134,7 +134,7 @@ class Listener(asyncore.dispatcher):
     self.set_reuse_addr()
     self.bind(("", listen_port))
     self.listen(50)
-    self.proxy = None
+    self.mud = None
     self.clients = []
     API('send.msg')("Listener bound on: %s" % listen_port, 'startup')
     API('events.eraise')('proxy_ready', calledfrom='proxy')
@@ -149,11 +149,11 @@ class Listener(asyncore.dispatcher):
     """
     accept a new client
     """
-    if not self.proxy:
-      from libs.net.proxy import Proxy
+    if not self.mud:
+      from libs.net.mud import Mud
 
       # do proxy stuff here
-      self.proxy = Proxy()
+      self.mud = Mud()
 
     client_connection, source_addr = self.accept()
 

@@ -3,10 +3,9 @@ This file holds the class that connects to the mud
 """
 import time
 from libs.net.telnetlib import Telnet
-from libs.api import API
 
 
-class Proxy(Telnet):
+class Mud(Telnet):
   """
   This class is for the proxy that connects to the mud
   """
@@ -17,15 +16,12 @@ class Proxy(Telnet):
     Telnet.__init__(self)
 
     self.lastmsg = ''
-    self.clients = []
-    self.vclients = []
     self.ttype = 'BastProxy'
-    self.banned = {}
     self.connectedtime = None
     self.api('events.register')('to_mud_event', self.addtooutbuffer,
                                 prio=99)
     self.api('options.prepareserver')(self)
-    self.api('managers.add')('proxy', self)
+    self.api('managers.add')('mud', self)
 
   def handle_read(self):
     """
@@ -75,7 +71,7 @@ class Proxy(Telnet):
         # this event can be used to transform the data
         newdata = self.api('events.eraise')('from_mud_event',
                                             data,
-                                            calledfrom="proxy")
+                                            calledfrom="mud")
 
         self.api('events.eraise')('muddata_trace_finished', data,
                                   calledfrom='proxy')
@@ -155,7 +151,7 @@ class Proxy(Telnet):
     self.doconnect(mudhost, mudport)
     self.connectedtime = time.localtime()
     self.api('send.msg')('Connected to mud', 'net')
-    self.api('events.eraise')('mudconnect', {}, calledfrom="proxy")
+    self.api('events.eraise')('mudconnect', {}, calledfrom="mud")
 
   def handle_close(self):
     """
@@ -163,11 +159,11 @@ class Proxy(Telnet):
     """
     self.api('send.msg')('Disconnected from mud', 'net')
     self.api('send.client')(self.api('colors.convertcolors')(
-                                  '@R#BP@w: The mud closed the connection'))
+        '@R#BP@w: The mud closed the connection'))
     self.api('options.resetoptions')(self, True)
     Telnet.handle_close(self)
     self.connectedtime = None
-    self.api('events.eraise')('muddisconnect', {}, calledfrom="proxy")
+    self.api('events.eraise')('muddisconnect', {}, calledfrom="mud")
 
   def addtooutbuffer(self, data, raw=False):
     """

@@ -291,9 +291,9 @@ class BasePlugin(object):
     # go through each variable and raise var_%s_changed
     self.settingvalues.raiseall()
 
-    proxy = self.api('managers.getm')('proxy')
+    mud = self.api('managers.getm')('mud')
 
-    if proxy and proxy.connected:
+    if mud and mud.connected:
       if self.api('api.has')('connect.firstactive'):
         if self.api('connect.firstactive')():
           self.afterfirstactive()

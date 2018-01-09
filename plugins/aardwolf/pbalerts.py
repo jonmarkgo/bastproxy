@@ -84,10 +84,10 @@ class Plugin(AardwolfBasePlugin):
     """
     send a pushbullet note that a gq has been declared
     """
-    proxy = self.api('managers.getm')('proxy')
+    mud = self.api('managers.getm')('mud')
     times = time.asctime(time.localtime())
     msg = '%s:%s - A GQuest has been declared for levels %s to %s. (%s)' % \
-            (proxy.host, proxy.port,
+            (mud.host, mud.port,
              args['lowlev'], args['highlev'], times)
     self.api('pb.note')('New GQuest', msg)
 
@@ -95,30 +95,30 @@ class Plugin(AardwolfBasePlugin):
     """
     send an pushbullet note that it is time to quest
     """
-    proxy = self.api('managers.getm')('proxy')
+    mud = self.api('managers.getm')('mud')
     times = time.asctime(time.localtime())
     msg = '%s:%s - Time to quest! (%s)' % \
-            (proxy.host, proxy.port, times)
+            (mud.host, mud.port, times)
     self.api('pb.note')('Quest Time', msg)
 
   def _iceage(self, _=None):
     """
     send an pushbullet note that an iceage approaches
     """
-    proxy = self.api('managers.getm')('proxy')
+    mud = self.api('managers.getm')('mud')
     times = time.asctime(time.localtime())
     msg = '%s:%s - An ice age approaches! (%s)' % \
-            (proxy.host, proxy.port, times)
+            (mud.host, mud.port, times)
     self.api('pb.note')('Ice Age', msg)
 
   def _reboot(self, _=None):
     """
     send an pushbullet note that Aardwolf is rebooting
     """
-    proxy = self.api('managers.getm')('proxy')
+    mud = self.api('managers.getm')('mud')
     times = time.asctime(time.localtime())
     msg = '%s:%s - Aardwolf is rebooting (%s)' % \
-            (proxy.host, proxy.port, times)
+            (mud.host, mud.port, times)
     self.api('pb.note')('Reboot', msg)
 
   def _daily(self, _=None):
@@ -126,8 +126,8 @@ class Plugin(AardwolfBasePlugin):
     send a pushbullet note when daily blessing is available
     """
     self.api('send.msg')('got daily blessing event')
-    proxy = self.api('managers.getm')('proxy')
+    mud = self.api('managers.getm')('mud')
     times = time.asctime(time.localtime())
     msg = '%s:%s - Daily blessing is available (%s)' % \
-            (proxy.host, proxy.port, times)
+            (mud.host, mud.port, times)
     self.api('pb.note')('Daily Blessing', msg)

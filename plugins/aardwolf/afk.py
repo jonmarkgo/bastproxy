@@ -185,8 +185,8 @@ class Plugin(AardwolfBasePlugin):
     """
     disable afk mode
     """
-    proxy = self.api('managers.getm')('proxy')
-    if proxy and proxy.connected:
+    mud = self.api('managers.getm')('mud')
+    if mud and mud.connected:
       lasttitle = self.api('setting.gets')('lasttitle')
       self.api('send.execute')('title %s' % lasttitle)
       try:

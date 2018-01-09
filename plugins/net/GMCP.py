@@ -132,7 +132,7 @@ class Plugin(BasePlugin):
     Format: IAC SB GMCP <gmcp message text> IAC SE"""
     self.api('send.mud')('%s%s%s%s%s%s' % \
                 (IAC, SB, GMCP, message.replace(IAC, IAC+IAC), IAC, SE),
-                            raw=True, dtype=GMCP)
+                         raw=True, dtype=GMCP)
 
   def gmcpdisconnect(self, _=None):
     """
@@ -266,7 +266,7 @@ class Plugin(BasePlugin):
     """
     handle gmcp data from the client
     """
-    proxy = self.api('managers.getm')('proxy')
+    mud = self.api('managers.getm')('mud')
     data = args['data']
     if 'core.supports.set' in data.lower():
       mods = data[data.find("[")+1:data.find("]")].split(',')
@@ -277,7 +277,7 @@ class Plugin(BasePlugin):
 
         toggle = bool(toggle)
 
-        if not proxy.connected:
+        if not mud.connected:
           self.gmcpmodqueue.append({'modname':modname, 'toggle':toggle})
         else:
           self.api('GMCP.togglemodule')(modname, toggle)
@@ -286,7 +286,7 @@ class Plugin(BasePlugin):
       # ascii codes, we also turn on group and leave it on
       return
     else:
-      if not proxy.connected:
+      if not mud.connected:
         if data not in self.gmcpqueue:
           self.gmcpqueue.append(data)
       else:
@@ -351,7 +351,7 @@ class SERVER(BaseTelnetOption):
       # pass it through to the client
       self.plugin.api('send.client')('%s%s%s%s%s%s' % \
                  (IAC, SB, GMCP, sbdata.replace(IAC, IAC+IAC), IAC, SE),
-                              raw=True, dtype=GMCP)
+                                     raw=True, dtype=GMCP)
 
       # raise it for internal use
       self.plugin.api('events.eraise')('GMCP_raw', tdata)
@@ -382,4 +382,4 @@ class CLIENT(BaseTelnetOption):
       self.telnetobj.options[ord(GMCP)] = True
     elif command in [SE, SB]:
       self.plugin.api('events.eraise')('GMCP_from_client',
-                                {'data': sbdata, 'client':self.telnetobj})
+                                       {'data': sbdata, 'client':self.telnetobj})

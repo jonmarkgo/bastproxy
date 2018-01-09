@@ -50,8 +50,8 @@ class Plugin(BasePlugin):
     self.api('events.register')('GMCP:server-enabled', self.enablemods)
 
     state = self.api('GMCP.getv')('char.status.state')
-    proxy = self.api('managers.getm')('proxy')
-    if state == 3 and proxy and proxy.connected:
+    mud = self.api('managers.getm')('mud')
+    if state == 3 and mud and mud.connected:
       self.enablemods()
       self.clientconnected()
 
@@ -66,8 +66,8 @@ class Plugin(BasePlugin):
     """
     do stuff when a client connects
     """
-    proxy = self.api('managers.getm')('proxy')
-    if proxy.connected:
+    mud = self.api('managers.getm')('mud')
+    if mud.connected:
       self.api('GMCP.sendmud')("request room")
       self.api('GMCP.sendmud')("request quest")
       self.api('GMCP.sendmud')("request char")
@@ -104,8 +104,8 @@ class Plugin(BasePlugin):
     """
     send the firstactive event
     """
-    proxy = self.api('managers.getm')('proxy')
-    if proxy and proxy.connected:
+    mud = self.api('managers.getm')('mud')
+    if mud and mud.connected:
       state = self.api('GMCP.getv')('char.status.state')
       if state == 3:
         self.api('events.unregister')('GMCP:char', self._check)

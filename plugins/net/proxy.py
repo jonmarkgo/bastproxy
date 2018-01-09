@@ -109,7 +109,7 @@ class Plugin(BasePlugin):
     show info about the proxy
     """
     template = "%-15s : %s"
-    proxy = self.api('managers.getm')('proxy')
+    mud = self.api('managers.getm')('mud')
     tmsg = ['']
     started = time.strftime(self.api.timestring, self.api.starttime)
     uptime = self.api('utils.timedeltatostring')(
@@ -121,16 +121,16 @@ class Plugin(BasePlugin):
     tmsg.append(template % ('Uptime', uptime))
     tmsg.append('')
     tmsg.append('@B-------------------   Mud  ------------------@w')
-    if proxy:
-      if proxy.connectedtime:
+    if mud:
+      if mud.connectedtime:
         tmsg.append(template % ('Connected',
                                 time.strftime(self.api.timestring,
-                                              proxy.connectedtime)))
+                                              mud.connectedtime)))
         tmsg.append(template % ('Uptime', self.api('utils.timedeltatostring')(
-            proxy.connectedtime,
+            mud.connectedtime,
             time.localtime())))
-        tmsg.append(template % ('Host', proxy.host))
-        tmsg.append(template % ('Port', proxy.port))
+        tmsg.append(template % ('Host', mud.host))
+        tmsg.append(template % ('Port', mud.port))
       else:
         tmsg.append(template % ('Mud', 'disconnected'))
 
@@ -181,8 +181,8 @@ class Plugin(BasePlugin):
     """
     disconnect from the mud
     """
-    proxy = self.api('managers.getm')('proxy')
-    proxy.handle_close()
+    mud = self.api('managers.getm')('mud')
+    mud.handle_close()
 
     return True, ['Attempted to close the connection to the mud']
 
@@ -191,12 +191,12 @@ class Plugin(BasePlugin):
     """
     disconnect from the mud
     """
-    proxy = self.api('managers.getm')('proxy')
-    if proxy.connected:
-      return True, ['The proxy is currently connected']
+    mud = self.api('managers.getm')('mud')
+    if mud.connected:
+      return True, ['The proxy is currently connected to the mud']
 
-    proxy.connectmud(self.api('setting.gets')('mudhost'),
-                     self.api('setting.gets')('mudport'))
+    mud.connectmud(self.api('setting.gets')('mudhost'),
+                   self.api('setting.gets')('mudport'))
 
     return True, ['Connecting to the mud']
 
@@ -222,10 +222,10 @@ class Plugin(BasePlugin):
     """
     check for mud settings
     """
-    proxy = self.api('managers.getm')('proxy')
+    mud = self.api('managers.getm')('mud')
     tmsg = []
     divider = '@R------------------------------------------------@w'
-    if not proxy.connected:
+    if not mud.connected:
       if not self.api('setting.gets')('mudhost'):
         tmsg.append(divider)
         tmsg.append('Please set the mudhost through the net plugin.')

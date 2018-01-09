@@ -49,10 +49,10 @@ class Plugin(AardwolfBasePlugin):
     """
     send an email that a gq has been declared
     """
-    proxy = self.api('managers.getm')('proxy')
+    mud = self.api('managers.getm')('mud')
     times = time.asctime(time.localtime())
     msg = '%s:%s - A GQuest has been declared for levels %s to %s. (%s)' % (
-        proxy.host, proxy.port,
+        mud.host, mud.port,
         args['lowlev'], args['highlev'], times)
     email = self.api('setting.gets')('email')
     if email:
@@ -65,10 +65,10 @@ class Plugin(AardwolfBasePlugin):
     """
     send an email that it is time to quest
     """
-    proxy = self.api('managers.getm')('proxy')
+    mud = self.api('managers.getm')('mud')
     times = time.asctime(time.localtime())
     msg = '%s:%s - Time to quest! (%s)' % (
-        proxy.host, proxy.port, times)
+        mud.host, mud.port, times)
     email = self.api('setting.gets')('email')
     if email:
       self.api('mail.send')('Quest Time', msg,
@@ -80,10 +80,10 @@ class Plugin(AardwolfBasePlugin):
     """
     send an email that an iceage approaches
     """
-    proxy = self.api('managers.getm')('proxy')
+    mud = self.api('managers.getm')('mud')
     times = time.asctime(time.localtime())
     msg = '%s:%s - An ice age approaches! (%s)' % (
-        proxy.host, proxy.port, times)
+        mud.host, mud.port, times)
     email = self.api('setting.gets')('email')
     if email:
       self.api('mail.send')('Ice Age', msg,
@@ -95,10 +95,10 @@ class Plugin(AardwolfBasePlugin):
     """
     send an email that Aardwolf is rebooting
     """
-    proxy = self.api('managers.getm')('proxy')
+    mud = self.api('managers.getm')('mud')
     times = time.asctime(time.localtime())
     msg = '%s:%s - Aardwolf is rebooting (%s)' % (
-        proxy.host, proxy.port, times)
+        mud.host, mud.port, times)
     email = self.api('setting.gets')('email')
     if email:
       self.api('mail.send')('Reboot', msg,

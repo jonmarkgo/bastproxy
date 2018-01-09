@@ -69,7 +69,7 @@ class Client(Telnet):
     """
     handle a read
     """
-    proxy = self.api('managers.getm')('proxy')
+    mud = self.api('managers.getm')('mud')
 
     if not self.connected:
       return
@@ -98,8 +98,9 @@ class Client(Telnet):
                                             (self.host, self.port), 'net')
           self.state = CONNECTED
           self.viewonly = False
-          proxy.addclient(self)
-          self.api('events.eraise')('client_connected', {'client':self}, calledfrom="client")
+          mud.addclient(self)
+          self.api('events.eraise')('client_connected', {'client':self},
+                                    calledfrom="client")
           self.api('send.client')("%s - %s: Client Connected" % \
                                       (self.host, self.port))
         elif vpw and data == vpw:
@@ -110,7 +111,7 @@ class Client(Telnet):
           self.addtooutbufferevent(
               {'original':self.api('colors.convertcolors')(
                   '@R#BP@W: @GYou are connected in view mode@w')})
-          proxy.addclient(self)
+          mud.addclient(self)
           self.api('events.eraise')('client_connected_view',
                                     {'client':self}, calledfrom="client")
           self.api('send.client')(
@@ -124,8 +125,8 @@ class Client(Telnet):
                     '@R#BP@w: @RYou have been BANNED for 10 minutes:@w'),
                  'dtype':'passwd'})
             self.api('send.msg')('%s has been banned.' % self.host, 'net')
-            proxy.removeclient(self)
-            proxy.addbanned(self.host)
+            mud.removeclient(self)
+            mud.addbanned(self.host)
             self.close()
           else:
             self.addtooutbufferevent(
@@ -141,7 +142,7 @@ class Client(Telnet):
                                 (self.host, self.port))
     self.api('send.msg')("%s - %s: Client Disconnected" % \
                                 (self.host, self.port), primary='net')
-    self.api('managers.getm')('proxy').removeclient(self)
+    self.api('managers.getm')('mud').removeclient(self)
     self.api('events.eraise')('client_disconnected', {'client':self}, calledfrom="client")
     self.api('events.unregister')('to_client_event', self.addtooutbufferevent)
     Telnet.handle_close(self)

@@ -285,8 +285,8 @@ class Plugin(AardwolfBasePlugin):
     """
     check to cast the next spell
     """
-    proxy = self.api('managers.getm')('proxy')
-    if not proxy:
+    mud = self.api('managers.getm')('mud')
+    if not mud or not mud.connected:
       return False
     self.api('send.msg')('waiting type: %s' % \
                       type(self.api('setting.gets')('waiting')))
