@@ -137,7 +137,7 @@ class Listener(asyncore.dispatcher):
     self.mud = None
     self.clients = []
     API('send.msg')("Listener bound on: %s" % listen_port, 'startup')
-    API('events.eraise')('proxy_ready', calledfrom='proxy')
+    API('events.eraise')('proxy_ready', calledfrom='listener')
 
   def handle_error(self):
     """
@@ -202,7 +202,7 @@ def start(listen_port):
   except KeyboardInterrupt:
     pass
 
-  API('send.msg')("Shutting down...", primary='net')
+  API('send.msg')("asyncore loop broken", primary='net')
 
 
 def main():
@@ -247,9 +247,7 @@ def main():
     except KeyboardInterrupt:
       pass
 
-    proxy = API('managers.getm')('proxy')
-    if proxy:
-      proxy.shutdown()
+    API('proxy.shutdown')()
 
   else:
     os.close(0)
@@ -267,7 +265,7 @@ def main():
         pass
       sys.exit(0)
 
-  API('send.msg')("Shutdown finished", primary='net')
+  API('send.msg')("exiting main function", primary='net')
 
 if __name__ == "__main__":
   main()

@@ -809,6 +809,12 @@ class PluginMgr(BasePlugin):
 
     return stats
 
+  def shutdown(self, args=None):
+    """
+    do tasks on shutdown
+    """
+    self.savestate()
+
   # save all plugins
   def savestate(self):
     """
@@ -881,3 +887,5 @@ class PluginMgr(BasePlugin):
     self.api('commands.default')('list', self.sname)
 
     self.api('timers.add')('save', self.savestate, 60, nodupe=True, log=False)
+
+    self.api('events.register')('proxy_shutdown', self.shutdown)

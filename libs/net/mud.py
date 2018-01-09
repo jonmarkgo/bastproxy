@@ -161,14 +161,3 @@ class Mud(Telnet):
                                  'plugin':'proxy',
                                  'callstack':self.api('api.callstack')()})
       Telnet.addtooutbuffer(self, datastr, raw)
-
-  def shutdown(self):
-    """
-    shutdown the proxy
-    """
-    API.shutdown = True
-    self.api('send.msg')('Proxy: shutdown started', primary='net')
-    self.api('events.eraise')('shutdown', {}, calledfrom="proxy")
-    for client in self.clients:
-      client.handle_close()
-    self.api('send.msg')('Proxy: shutdown finished', primary='net')

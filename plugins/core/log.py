@@ -71,12 +71,14 @@ class Plugin(BasePlugin):
     self.api('log.adddtype')('default')
     self.api('log.adddtype')('frommud')
     self.api('log.adddtype')('startup')
+    self.api('log.adddtype')('shutdown')
     self.api('log.adddtype')('error')
 
     self.api('log.client')('error')
     self.api('log.console')('error')
     self.api('log.console')('default')
     self.api('log.console')('startup')
+    self.api('log.console')('shutdown')
 
     #self.api('log.file')('default')
 

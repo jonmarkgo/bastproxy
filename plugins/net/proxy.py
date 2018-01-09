@@ -35,6 +35,7 @@ class Plugin(BasePlugin):
     self.mudpw = None
 
     self.api('api.add')('restart', self.api_restart)
+    self.api('api.add')('shutdown', self.api_shutdown)
 
   def load(self):
     """
@@ -172,15 +173,22 @@ class Plugin(BasePlugin):
 
     return True, ['Connecting to the mud']
 
-  def cmd_shutdown(self, args):
+  def api_shutdown(self):
+    """
+    shutdown the proxy
+    """
+    self.api.shutdown = True
+    self.api('send.msg')('Proxy: shutdown started', secondary='shutdown')
+    self.api('send.client')('Shutting down bastproxy')
+    self.api('events.eraise')('proxy_shutdown')
+    self.api('send.msg')('Proxy: shutdown finished', secondary='shutdown')
+
+  def cmd_shutdown(self, args=None):
     # pylint: disable=unused-argument
     """
     shutdown the proxy
     """
-    proxy = self.api('managers.getm')('proxy')
-    self.api('plugins.savestate')()
-    self.api('send.client')('Shutting down bastproxy')
-    proxy.shutdown()
+    raise KeyboardInterrupt
 
   def cmd_restart(self, args):
     # pylint: disable=unused-argument
@@ -255,8 +263,7 @@ class Plugin(BasePlugin):
 
     plistener = self.api('managers.getm')('listener')
     plistener.close()
-    proxy = self.api('managers.getm')('proxy')
-    proxy.shutdown()
+    self.api('proxy.shutdown')()
 
     time.sleep(5)
 
