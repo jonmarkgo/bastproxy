@@ -124,7 +124,7 @@ class ProxyIO(object):
       pass
 
   # send text to the clients
-  def _api_client(self, text, raw=False, preamble=True, dtype='fromproxy'):
+  def _api_client(self, text, raw=False, preamble=True, dtype='fromproxy', client=None):
     """  handle a traceback
       @Ytext@w      = The text to send to the clients
       @Yraw@w       = if True, don't convert colors or add the preamble
@@ -151,7 +151,8 @@ class ProxyIO(object):
 
     try:
       self.api('events.eraise')('to_client_event', {'original':text,
-                                                    'raw':raw, 'dtype':dtype},
+                                                    'raw':raw, 'dtype':dtype,
+                                                    'client':client},
                                 calledfrom="io")
     except (NameError, TypeError, AttributeError):
       self.api('send.traceback')("couldn't send msg to client: %s" % text)

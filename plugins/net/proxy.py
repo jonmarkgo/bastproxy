@@ -234,7 +234,7 @@ class Plugin(BasePlugin):
       tmsg.insert(0, divider)
 
     if tmsg:
-      self.api('send.client')(tmsg)
+      self.api('send.client')(tmsg, client=args['client'])
 
     return True
 

@@ -5,7 +5,6 @@ this module holds the proxy client class
 """
 import time
 
-from libs.api import API
 from libs.net.telnetlib import Telnet
 
 PASSWORD = 0
@@ -20,6 +19,7 @@ class Client(Telnet):
     init the class
     """
     Telnet.__init__(self, host=host, port=port, sock=sock)
+
     self.ttype = 'Client'
     self.connectedtime = None
     self.pwtries = 0
@@ -44,6 +44,9 @@ class Client(Telnet):
     """
     this function adds to the output buffer
     """
+    if 'client' in args and args['client'] and args['client'] != self:
+      return
+
     outbuffer = args['original']
     dtype = None
     raw = False
