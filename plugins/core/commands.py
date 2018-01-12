@@ -534,9 +534,11 @@ class Plugin(BasePlugin):
       if 'sname' in args:
         sname = args['sname']
       else:
+        callstack = self.api('api.callstack')()
         self.api('send.error')(
             'Function is not part of a plugin class: cmd %s from plugin %s' % \
                   (cmdname, calledfrom), secondary=calledfrom)
+        self.api('send.error')("\n".join(callstack).strip())
         return
 
     if 'parser' in args:
