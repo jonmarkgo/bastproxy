@@ -112,7 +112,7 @@ class Plugin(BasePlugin):
       tmsg.append('%-3s : %s' % (i, items[i]['trace']['original']))
     return True, tmsg
 
-  def showchangedmuddata(self, item, callstack=False):
+  def showchangedmuddata(self, item, callstack=False): # pylint: disable=unused-argument
     """
     find the changed muddata and print it
     """
@@ -123,7 +123,7 @@ class Plugin(BasePlugin):
 
     try:
       titem = snapshot[item]
-      return True, [self.formatmuddatastack(titem, callstack)]
+      return True, [self.formatmuddatastack(titem)]
     except IndexError:
       return False, ['Could not find item: %s' % item]
 
@@ -169,7 +169,7 @@ class Plugin(BasePlugin):
 
     return True, msg
 
-  def formatmuddatastack(self, stack, callstack=False):
+  def formatmuddatastack(self, stack):
     """
     format the command stack
     """

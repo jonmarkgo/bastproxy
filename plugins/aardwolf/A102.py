@@ -106,7 +106,7 @@ class Plugin(BasePlugin):
     self.api('send.mud')('%s%s%s%s%s%s' % \
                               (IAC, SB, A102, message.replace(IAC, IAC+IAC),
                                IAC, SE),
-                               raw=True, dtype=A102)
+                         raw=True, dtype=A102)
 
   def a102disconnect(self, _=None):
     """
@@ -239,7 +239,7 @@ class SERVER(BaseTelnetOption):
       self.plugin.api('send.client')('%s%s%s%s%s%s' % \
                                   (IAC, SB, A102,
                                    sbdata.replace(IAC, IAC+IAC), IAC, SE),
-                              raw=True, dtype=A102)
+                                     raw=True, dtype=A102)
       self.plugin.api('events.eraise')('A102_from_server', tdata)
 
 # Client

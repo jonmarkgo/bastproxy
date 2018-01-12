@@ -8,7 +8,7 @@ import traceback
 import re
 from libs.api import API
 
-class ProxyIO(object):
+class ProxyIO(object):  # pylint: disable=too-few-public-methods
   """
   class for IO in the proxy
     APIs for this class
@@ -124,7 +124,7 @@ class ProxyIO(object):
       pass
 
   # send text to the clients
-  def _api_client(self, text, raw=False, preamble=True, dtype='fromproxy', client=None):
+  def _api_client(self, text, raw=False, preamble=True, dtype='fromproxy', client=None):  # pylint: disable=too-many-arguments
     """  handle a traceback
       @Ytext@w      = The text to send to the clients
       @Yraw@w       = if True, don't convert colors or add the preamble
@@ -158,7 +158,7 @@ class ProxyIO(object):
       self.api('send.traceback')("couldn't send msg to client: %s" % text)
 
   # execute a command through the interpreter, most data goes through this
-  def _api_execute(self, command, fromclient=False, showinhistory=True):
+  def _api_execute(self, command, fromclient=False, showinhistory=True): # pylint: disable=too-many-branches
     """  execute a command through the interpreter
     It will first check to see if it is an internal command, and then
     send to the mud if not.
@@ -213,7 +213,7 @@ class ProxyIO(object):
                                              'internal':not fromclient,
                                              'showinhistory':showinhistory,
                                              'trace':self.currenttrace},
-                           calledfrom="io")
+                                            calledfrom="io")
 
         if 'fromdata' in newdata:
           tcommand = newdata['fromdata']

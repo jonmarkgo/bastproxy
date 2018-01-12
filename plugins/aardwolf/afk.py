@@ -75,7 +75,7 @@ class Plugin(AardwolfBasePlugin):
     self.api('setting.change')('isafk', False)
     self.api('events.register')('var_%s_isafk' % self.sname, self._isafk_changeevent)
 
-  def _isafk_changeevent(self, args=None):
+  def _isafk_changeevent(self, args=None): # pylint: disable=unused-argument
     """
     do something after afk has been changed
     """

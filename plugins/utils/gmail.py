@@ -147,8 +147,7 @@ X-Mailer: My-Mail
         server.login(self.api('setting.gets')('username'), self.password)
         server.sendmail(self.api('setting.gets')('from'), mailto, mhead)
         server.quit()
-        os._exit(os.EX_OK)
-
+        os._exit(os.EX_OK) # pylint: disable=protected-access
 
     except:
       server = '%s:%s' % (self.api('setting.gets')('server'),

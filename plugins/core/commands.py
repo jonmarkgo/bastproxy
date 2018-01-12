@@ -251,7 +251,7 @@ class Plugin(BasePlugin):
       args, dummy = cmd['parser'].parse_known_args(targs)
     except argp.ArgumentError, exc:
       tmsg = []
-      tmsg.append('Error: %s' % exc.errormsg)
+      tmsg.append('Error: %s' % exc.errormsg) # pylint: disable=no-member
       tmsg.extend(cmd['parser'].format_help().split('\n'))
       self.api('send.client')('\n'.join(
           self.formatretmsg(tmsg,
@@ -260,7 +260,7 @@ class Plugin(BasePlugin):
       if 'trace' in data:
         data['trace']['changes'].append(
             {'flag': 'Error',
-             'data':'%s - error parsing args: %s' % (commandran, exc.errormsg),
+             'data':'%s - error parsing args: %s' % (commandran, exc.errormsg), # pylint: disable=no-member
              'plugin':self.sname})
       return retval
 

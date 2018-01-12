@@ -386,7 +386,7 @@ class Telnet(asyncore.dispatcher):
     """
     self.option_callback = callback
 
-  def handle_subdata(self, data):
+  def handle_subdata(self, data): # pylint: disable=too-many-branches,too-many-statements
     """
     handle data that has an IAC in it
     """

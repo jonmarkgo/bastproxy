@@ -25,7 +25,7 @@ PRIORITY = 3
 
 AUTOLOAD = True
 
-class EFunc(object):
+class EFunc(object): # pylint: disable=too-few-public-methods
   """
   a basic event class
   """

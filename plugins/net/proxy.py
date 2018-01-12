@@ -87,8 +87,7 @@ class Plugin(BasePlugin):
     self.mudpw = ssc('mudpw', self, desc='Mud Password')
 
 
-  def sendusernameandpw(self, args):
-    # pylint: disable=unused-argument
+  def sendusernameandpw(self, args): # pylint: disable=unused-argument
     """
     if username and password are set, then send them when the proxy
     connects to the mud
@@ -149,8 +148,7 @@ class Plugin(BasePlugin):
     tmsg.extend(nmsg)
     return True, tmsg
 
-  def cmd_disconnect(self, args=None):
-    # pylint: disable=unused-argument
+  def cmd_disconnect(self, args=None): # pylint: disable=unused-argument
     """
     disconnect from the mud
     """
@@ -159,8 +157,7 @@ class Plugin(BasePlugin):
 
     return True, ['Attempted to close the connection to the mud']
 
-  def cmd_connect(self, args=None):
-    # pylint: disable=unused-argument
+  def cmd_connect(self, args=None): # pylint: disable=unused-argument
     """
     disconnect from the mud
     """
@@ -183,22 +180,19 @@ class Plugin(BasePlugin):
     self.api('events.eraise')('proxy_shutdown')
     self.api('send.msg')('Proxy: shutdown finished', secondary='shutdown')
 
-  def cmd_shutdown(self, args=None):
-    # pylint: disable=unused-argument
+  def cmd_shutdown(self, args=None): # pylint: disable=unused-argument,no-self-use
     """
     shutdown the proxy
     """
     raise KeyboardInterrupt
 
-  def cmd_restart(self, args):
-    # pylint: disable=unused-argument
+  def cmd_restart(self, args): # pylint: disable=unused-argument
     """
     restart the proxy
     """
     self.api('proxy.restart')()
 
-  def client_connected(self, args):
-    # pylint: disable=unused-argument
+  def client_connected(self, args): # pylint: disable=unused-argument
     """
     check for mud settings
     """
@@ -269,8 +263,7 @@ class Plugin(BasePlugin):
 
     os.execv(executable, args)
 
-  def listenportchange(self, args):
-    # pylint: disable=unused-argument
+  def listenportchange(self, args): # pylint: disable=unused-argument
     """
     restart when the listen port changes
     """

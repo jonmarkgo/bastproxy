@@ -225,7 +225,7 @@ class Plugin(AardwolfBasePlugin):
 
     self.addmessage(''.join(msg))
 
-  def levelgain(self, args):
+  def levelgain(self, args): # pylint: disable=too-many-branches,too-many-statements
     """
     handle a level or pup gain
     """
@@ -329,7 +329,7 @@ class Plugin(AardwolfBasePlugin):
 
     self.msgs = []
 
-  def statreport(self, tminutes=None):
+  def statreport(self, tminutes=None): # pylint: disable=too-many-locals,too-many-statements
     """
     return a report of stats for a # of minutes
     """

@@ -53,7 +53,7 @@ class Plugin(AardwolfBasePlugin):
 
     self.api('events.register')('aard_mobkill', self.mobkill)
 
-  def mobkill(self, args=None):
+  def mobkill(self, args=None): # pylint: disable=too-many-locals
     """
     handle a mob kill
     """

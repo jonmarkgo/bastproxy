@@ -138,7 +138,7 @@ class Plugin(BasePlugin):
                                 prio=2)
     self.api('events.register')('plugin_%s_savestate' % self.sname, self._savestate)
 
-  def checkalias(self, args):
+  def checkalias(self, args): # pylint: disable=too-many-branches
     """
     this function finds aliases in client input
     """

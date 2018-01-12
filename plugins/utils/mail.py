@@ -120,7 +120,7 @@ X-Mailer: My-Mail
 %s""" % (senddate,
          self.api('setting.gets')('from'), mailto, subject, msg)
 
-      oldchild = signal.get_signal(signal.SIGCHLD)
+      oldchild = signal.getsignal(signal.SIGCHLD)
 
       try:
         signal.signal(signal.SIGCHLD, signal.SIG_IGN)
@@ -135,8 +135,7 @@ X-Mailer: My-Mail
           server.login(self.api('setting.gets')('username'), self.password)
           server.sendmail(self.api('setting.gets')('from'), mailto, mhead)
           server.quit()
-          os._exit(os.EX_OK)
-
+          os._exit(os.EX_OK) # pylint: disable=protected-access
 
       except:
         server = '%s:%s' % (self.api('setting.gets')('server'),
@@ -148,7 +147,7 @@ X-Mailer: My-Mail
         server.sendmail(self.api('setting.gets')('from'), mailto, mhead)
         server.quit()
 
-    if signal.get_signal(signal.SIGCHLD) != oldchild:
+    if signal.getsignal(signal.SIGCHLD) != oldchild:
       signal.signal(signal.SIGCHLD, oldchild)
 
   def checkpassword(self, _):

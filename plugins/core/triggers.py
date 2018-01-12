@@ -140,7 +140,7 @@ class Plugin(BasePlugin):
     return "t_" + name
 
   # add a trigger
-  def api_addtrigger(self, triggername, regex, plugin=None, **kwargs):
+  def api_addtrigger(self, triggername, regex, plugin=None, **kwargs): # pylint: disable=too-many-branches
     """  add a trigger
     @Ytriggername@w   = The trigger name
     @Yregex@w    = the regular expression that matches this trigger
@@ -332,7 +332,7 @@ class Plugin(BasePlugin):
       for i in self.triggergroups[triggroup]:
         self.api('triggers.toggle')(i, flag)
 
-  def checktrigger(self, args):
+  def checktrigger(self, args): # pylint: disable=too-many-branches
     """
     check a line of text from the mud to see if it matches any triggers
     called whenever the from_mud_event is raised
@@ -346,7 +346,7 @@ class Plugin(BasePlugin):
                       {'line':data, 'triggername':'all'},
                       args)
 
-    if data == '':
+    if data == '': # pylint: disable=too-many-nested-blocks
       self.raisetrigger('emptyline',
                         {'line':'', 'triggername':'emptyline'},
                         args)
@@ -422,11 +422,11 @@ class Plugin(BasePlugin):
       plugin = self.sname
       if triggername in self.triggers:
         plugin = self.triggers[triggername]['plugin']
-      origargs['trace']['changes'].append({'flag':'Omit',
-                                           'data':'by trigger "%s" added by plugin "%s"' % \
-                                              (triggername,
-                                               plugin),
-                                           'plugin':self.sname,})
+      origargs['trace']['changes'].append(
+          {'flag':'Omit',
+           'data':'by trigger "%s" added by plugin "%s"' % \
+              (triggername, plugin),
+           'plugin':self.sname,})
       origargs['original'] = ""
       origargs['omit'] = True
     time2 = time.time()

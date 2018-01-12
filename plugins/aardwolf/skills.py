@@ -44,7 +44,7 @@ STYPE[2] = 'skill'
 FAILTARG = {0:'self', 1:'other'}
 
 
-class Plugin(AardwolfBasePlugin):
+class Plugin(AardwolfBasePlugin): # pylint: disable=too-many-public-methods
   """
   a plugin manage info about spells and skills
   """
@@ -270,7 +270,7 @@ class Plugin(AardwolfBasePlugin):
       self.api('A102.toggle')('SPELLUPTAGS', True)
       self.api('A102.toggle')('SKILLGAINTAGS', True)
       self.api('A102.toggle')('QUIETTAGS', False)
-      if len(self.skills) == 0:
+      if len(self.skills) == 0: # pylint: disable=len-as-condition
         self.cmd_refresh({})
       else:
         self.resetskills()

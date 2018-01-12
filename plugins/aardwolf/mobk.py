@@ -44,7 +44,7 @@ def addtodamage(tdam, damtable):
   return damtable
 
 
-class Plugin(AardwolfBasePlugin):
+class Plugin(AardwolfBasePlugin): # pylint: disable=too-many-public-methods
   """
   a plugin to handle aardwolf cp events
   """
@@ -57,7 +57,7 @@ class Plugin(AardwolfBasePlugin):
     self.reset_kill()
     self.mobdamcache = {}
 
-  def load(self):
+  def load(self): # pylint: disable=too-many-statements
     """
     load the plugins
     """
@@ -229,7 +229,7 @@ class Plugin(AardwolfBasePlugin):
     self.kill_info['starttime'] = None
     self.kill_info['finishtime'] = None
 
-  def mobnone(self, args=None):
+  def mobnone(self, args=None): # pylint: disable=unused-argument
     """
     reset the mob name
     """

@@ -83,6 +83,7 @@ class API(object):
     self.overload('api', 'callstack', self.api_callstack)
 
   def api_callstack(self, ignores=None):
+    # pylint: disable=line-too-long
     """
     return a list of function calls that form the stack
     Example:
@@ -95,6 +96,7 @@ class API(object):
      '  File "/home/endavis/src/games/bastproxy/bp/libs/net/proxy.py", line 63, in handle_read',
      "    'convertansi':tconvertansi})", '
     """
+    # pylint: enable=line-too-long
     if ignores is None:
       ignores = []
     callstack = []

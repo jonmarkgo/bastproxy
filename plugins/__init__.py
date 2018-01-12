@@ -809,14 +809,14 @@ class PluginMgr(BasePlugin):
 
     return stats
 
-  def shutdown(self, args=None):
+  def shutdown(self, args=None): # pylint: disable=unused-argument
     """
     do tasks on shutdown
     """
     self.savestate()
 
   # save all plugins
-  def savestate(self):
+  def savestate(self, args=None): # pylint: disable=unused-argument
     """
     save all plugins
     """

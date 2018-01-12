@@ -178,7 +178,7 @@ class Plugin(AardwolfBasePlugin):
     """
     self.nextspell()
 
-  def _skillfail(self, args):
+  def _skillfail(self, args): # pylint: disable=too-many-branches
     """
     catch a skill fail event
     """
@@ -293,13 +293,14 @@ class Plugin(AardwolfBasePlugin):
     self.api('send.msg')('currentstatus = %s' % \
                       self.api('GMCP.getv')('char.status.state'))
 
+    # pylint: disable=too-many-boolean-expressions
     if self.api('setting.gets')('nomoves') \
         or self.api('setting.gets')('nomana') \
         or self.api('setting.gets')('nocast') \
         or self.api('setting.gets')('waiting') != -1 \
         or not self.api('setting.gets')('enabled') \
         or not self.api('skills.isuptodate')() or \
-       self.api('GMCP.getv')('char.status.state') != 3:
+        self.api('GMCP.getv')('char.status.state') != 3:
       self.api('send.msg')('checked returned False')
       return False
 
@@ -396,7 +397,7 @@ class Plugin(AardwolfBasePlugin):
     """
     msg = []
     match = args['match']
-    if len(self.spellups['sorder']) > 0:
+    if self.spellups['sorder']:
       msg.append('%-3s - %-30s : %2s %2s %2s %2s  %-2s  %-2s' % \
                     ('Num', 'Name', 'A', 'P', 'B', 'D', 'NP', 'NL'))
       msg.append('@B' + '-'* 60)

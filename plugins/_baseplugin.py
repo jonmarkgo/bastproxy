@@ -12,13 +12,11 @@ import libs.argp as argp
 from libs.persistentdict import PersistentDictEvent
 from libs.api import API
 
-class BasePlugin(object):
-  # pylint: disable=too-many-instance-attributes
+class BasePlugin(object): # pylint: disable=too-many-instance-attributes
   """
   a base class for plugins
   """
-  def __init__(self, name, sname, modpath, basepath, fullimploc):
-    # pylint: disable=too-many-arguments
+  def __init__(self, name, sname, modpath, basepath, fullimploc): # pylint: disable=too-many-arguments
     """
     initialize the instance
     The following things should not be done in __init__ in a plugin
@@ -212,8 +210,7 @@ class BasePlugin(object):
 
     self.settingvalues.sync()
 
-  def _cmd_inspect(self, args):
-    # pylint: disable=too-many-branches
+  def _cmd_inspect(self, args): # pylint: disable=too-many-branches
     """
     show the plugin as it currently is in memory
     """
@@ -283,8 +280,7 @@ class BasePlugin(object):
 
     return True, tmsg
 
-  def __afterload(self, args):
-    # pylint: disable=unused-argument
+  def __afterload(self, args): # pylint: disable=unused-argument
     """
     do something after the load function is run
     """
@@ -302,10 +298,9 @@ class BasePlugin(object):
                                     prio=self.firstactiveprio)
     else:
       self.api('events.register')('firstactive', self.afterfirstactive,
-                                    prio=self.firstactiveprio)
+                                  prio=self.firstactiveprio)
 
-  def __disconnect(self, args=None):
-    # pylint: disable=unused-argument
+  def __disconnect(self, args=None): # pylint: disable=unused-argument
     """
     re-register to firstactive on disconnect
     """
@@ -373,8 +368,7 @@ class BasePlugin(object):
 
     return stats
 
-  def _cmd_stats(self, args=None):
-    # pylint: disable=unused-argument
+  def _cmd_stats(self, args=None): # pylint: disable=unused-argument
     """
     @G%(name)s@w - @B%(cmdname)s@w
     show stats, memory, profile, etc.. for this plugin
@@ -457,8 +451,7 @@ class BasePlugin(object):
         msg = ['plugin setting %s does not exist' % var]
     return False, msg
 
-  def _cmd_save(self, args):
-    # pylint: disable=unused-argument
+  def _cmd_save(self, args): # pylint: disable=unused-argument
     """
     @G%(name)s@w - @B%(cmdname)s@w
     save plugin state

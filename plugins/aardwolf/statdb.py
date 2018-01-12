@@ -53,7 +53,7 @@ def dbcreate(sqldb, plugin, **kwargs):
   create the statdb class, this is needed because the Sqldb baseclass
   can be reloaded since it is a plugin
   """
-  class Statdb(sqldb):
+  class Statdb(sqldb): # pylint: disable=too-many-public-methods
     """
     a class to manage a sqlite database for aardwolf events
     """
@@ -287,7 +287,7 @@ def dbcreate(sqldb, plugin, **kwargs):
       tstat = None
       rows = self.api('%s.select' % self.plugin.sname)(
           'SELECT * FROM stats WHERE milestone = "current"')
-      if len(rows) > 0 and stat in rows[0]:
+      if len(rows) > 0 and stat in rows[0]: # pylint: disable=len-as-condition
         tstat = rows[0][stat]
       return tstat
 
@@ -340,7 +340,7 @@ def dbcreate(sqldb, plugin, **kwargs):
       trows = self.api('%s.select' % self.plugin.sname)(
           'SELECT * FROM stats WHERE milestone = "%s"' \
                                                             % milestone)
-      if len(trows) > 0:
+      if len(trows) > 0: # pylint: disable=len-as-condition
         self.api('send.client')('@RMilestone %s already exists' % \
                                                 milestone)
         return -1
@@ -368,7 +368,7 @@ def dbcreate(sqldb, plugin, **kwargs):
       trows = self.api('%s.select' % self.plugin.sname)(
           'SELECT * FROM stats WHERE milestone = "%s"' % milestone)
 
-      if len(trows) == 0:
+      if len(trows) == 0: # pylint: disable=len-as-condition
         return None
 
       return trows[0]
@@ -775,7 +775,7 @@ def dbcreate(sqldb, plugin, **kwargs):
   return Statdb(plugin, **kwargs)
 
 
-class Plugin(AardwolfBasePlugin):
+class Plugin(AardwolfBasePlugin): # pylint: disable=too-many-public-methods
   """
   a plugin to catch aardwolf stats and add them to a database
   """
@@ -982,7 +982,7 @@ class Plugin(AardwolfBasePlugin):
         msg.append('%-15s %-15s %-15s' % (items[0], items[1], items[2]))
         items = []
 
-    if len(items) > 0:
+    if len(items) > 0: # pylint: disable=len-as-condition
       if len(items) == 1:
         msg.append('%-15s' % items[0])
       elif len(items) == 2:
@@ -1141,7 +1141,7 @@ class Plugin(AardwolfBasePlugin):
 
     return True, msg
 
-  def cmd_quests(self, args=None):
+  def cmd_quests(self, args=None): # pylint: disable=too-many-statements
     """
     show quest stats
     """
@@ -1245,7 +1245,7 @@ class Plugin(AardwolfBasePlugin):
 
     if int(count) > 0:
       lastitems = self.statdb.getlast('quests', int(count))
-      if len(lastitems) > 0:
+      if len(lastitems) > 0: # pylint: disable=len-as-condition
         msg.append('')
         msg.append("@G%-6s %-2s %-2s %-2s %-2s %-2s %-2s %-3s" \
                       " %-2s %-2s %-2s %-2s %-4s %-3s   %s" % \
@@ -1277,7 +1277,7 @@ class Plugin(AardwolfBasePlugin):
 
     return True, msg
 
-  def show_level(self, args):
+  def show_level(self, args): # pylint: disable=too-many-locals,too-many-statements
     """
     show info for a specific level in the database
     """
@@ -1363,7 +1363,7 @@ class Plugin(AardwolfBasePlugin):
 
     return True, msg
 
-  def cmd_levels(self, args=None):
+  def cmd_levels(self, args=None): # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     """
     show level stats
     """
@@ -1481,7 +1481,7 @@ class Plugin(AardwolfBasePlugin):
     if int(count) > 0:
       lastitems = self.statdb.getlast('levels', int(count))
 
-      if len(lastitems) > 0:
+      if len(lastitems) > 0: # pylint: disable=len-as-condition
         msg.append('')
         msg.append("@G%-6s %-3s %2s %2s %2s %-2s %-2s %-2s" \
                      " %-2s %-1s %-1s %-1s %-1s %-1s %-1s   %s" % \
@@ -1573,7 +1573,7 @@ class Plugin(AardwolfBasePlugin):
 
     return True, msg
 
-  def cmd_cps(self, args=None):
+  def cmd_cps(self, args=None): # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     """
     show cp stats
     """
@@ -1679,7 +1679,7 @@ class Plugin(AardwolfBasePlugin):
           'SELECT cp_id, count(*) as mobcount from cpmobs group by cp_id',
           'cp_id')
 
-      if len(lastitems) > 0:
+      if len(lastitems) > 0: # pylint: disable=len-as-condition
         msg.append('')
         msg.append("@G%-6s %-12s %-2s %-2s %-2s %-2s %-2s %6s %-4s  %s" % \
                     ("ID", "Lvl", "QP", "BN", "TP", "TN",
@@ -1760,7 +1760,7 @@ class Plugin(AardwolfBasePlugin):
 
     return True, msg
 
-  def cmd_gqs(self, args=None):
+  def cmd_gqs(self, args=None): # pylint: disable=too-many-locals,too-many-statements
     """
     show gq stats
     """
@@ -1880,7 +1880,7 @@ class Plugin(AardwolfBasePlugin):
           'SELECT gq_id, SUM(num) as mobcount from gqmobs group by gq_id',
           'gq_id')
 
-      if len(lastitems) > 0:
+      if len(lastitems) > 0: # pylint: disable=len-as-condition
         msg.append('')
         msg.append("@G%-6s %-12s %-2s %-2s %-2s %-2s %-2s %6s %-4s  %s" % \
                     ("ID", "Lvl", "QP", "QM", "TP",
@@ -1905,7 +1905,7 @@ class Plugin(AardwolfBasePlugin):
 
     return True, msg
 
-  def cmd_mobs(self, args=None):
+  def cmd_mobs(self, args=None): # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     """
     show mobs stats
     """

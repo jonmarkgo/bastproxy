@@ -17,6 +17,7 @@ AUTOLOAD = False
 DETAILS_RE = r'^\{(?P<header>.*)\}(?P<data>.*)$'
 DETAILS_REC = re.compile(DETAILS_RE)
 
+# pylint: disable=too-many-public-methods
 class Plugin(AardwolfBasePlugin):
   """
   a plugin to handle equipment identification, id and invdetails
@@ -160,12 +161,14 @@ class Plugin(AardwolfBasePlugin):
       self.affectmods = False
     self.nonotes = False
 
-  def identifyline(self, args):
+  def identifyline(self, args): # pylint: disable=too-many-branches
     """
     parse an identify line, we only want a couple of things that don't
     appear in invdetails: Keywords, Found, Material, Leads, Affect Mods and
     any item notes
     """
+    nonotes = ['Portal', 'Capacity', 'Weapon Type', 'Spells',
+               'Food', 'Drink', 'Heal Rate', 'Temporary Effects']
     data = args['data']
     if 'Keywords' in data:
       item = data.split(' : ')[1]
@@ -207,10 +210,7 @@ class Plugin(AardwolfBasePlugin):
       for i in tlist:
         if i:
           self.currentitem['affectmod'].append(i.strip())
-    elif 'Mods' in data or 'Portal' in data or 'Capacity' in data or \
-         'Weapon Type' in data or 'Spells' in data or \
-           'Food' in data or 'Drink' in data or 'Heal Rate' in data or \
-             'Temporary Effects' in data:
+    elif True in [i in data for i in nonotes]:
       self.nonotes = True
     elif self.pastkeywords and not self.nonotes:
       if args['line'][2] != ' ':
@@ -322,7 +322,9 @@ class Plugin(AardwolfBasePlugin):
 
     return ttext
 
-  def formatdoubleline(self, linename, linecolour, data, linename2, data2):
+
+  def formatdoubleline(self, linename, linecolour, data, # pylint: disable=too-many-arguments
+                       linename2, data2):
     """
     format a double data line
      | Worth      : 20                       Weight : 4                |
@@ -342,7 +344,7 @@ class Plugin(AardwolfBasePlugin):
     return printstring % (linecolour, linename, data,
                           linecolour, linename2, data2)
 
-  def formatspecialline(self, linename, linecolour, data,
+  def formatspecialline(self, linename, linecolour, data, # pylint: disable=too-many-arguments
                         linename2='', data2=''):
     """
     format a special text line
@@ -538,7 +540,7 @@ class Plugin(AardwolfBasePlugin):
     return False
 
   # format an item
-  def api_formatitem(self, serial):
+  def api_formatitem(self, serial): # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     """  format an item
     @Yserial@w    = the serial # if the item to identify
 

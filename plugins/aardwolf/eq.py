@@ -224,7 +224,9 @@ class EqContainer(object):
         #self.api('send.msg')('invdata parsed item: %s' % titem)
         self.add(titem.serial)
         if titem.itype == 11 and titem.serial not in self.plugin.containers:
-          self.plugin.containers[titem.serial] = EqContainer(self.plugin, titem.serial, refresh=True)
+          self.plugin.containers[titem.serial] = EqContainer(self.plugin,
+                                                             titem.serial,
+                                                             refresh=True)
       except (IndexError, ValueError):
         self.api('send.msg')('incorrect invdata line: %s' % line)
         self.api('send.traceback')()
@@ -487,7 +489,9 @@ class Worn(EqContainer):
         #self.api('send.msg')('invdata parsed item: %s' % titem)
         self.add(titem.serial, titem.wearslot)
         if titem.itype == 11 and titem.serial not in self.plugin.containers:
-          self.plugin.containers[titem.serial] = EqContainer(self.plugin, titem.serial, refresh=True)
+          self.plugin.containers[titem.serial] = EqContainer(self.plugin,
+                                                             titem.serial,
+                                                             refresh=True)
       except (IndexError, ValueError):
         self.api('send.msg')('incorrect invdata line: %s' % line)
         self.api('send.traceback')()
@@ -1173,7 +1177,7 @@ class Plugin(AardwolfBasePlugin):
     item = self.find_item(args['item'])
 
     destination = None
-    if len(args['otherargs']) == 0:
+    if len(args['otherargs']) == 0: # pylint: disable=len-as-condition
       if item in self.itemcache and self.itemcache[item].checkattr('origcontainer'):
         destination = self.itemcache[item].origcontainer
         if destination != self.itemcache[item].curcontainer:
@@ -1184,7 +1188,7 @@ class Plugin(AardwolfBasePlugin):
       destination = self.find_item(args['otherargs'][0])
 
     if item in self.itemcache and destination in self.itemcache and \
-            len(args['otherargs']) != 0:
+            len(args['otherargs']) != 0: # pylint: disable=len-as-condition
       self.api_putincontainer(item, destination)
 
     else:

@@ -95,10 +95,10 @@ class Plugin(BasePlugin):
     """
     import pushbullet module
     """
-    global pushbullet
+    global pushbullet # pylint: disable=global-statement,invalid-name
     if not pushbullet:
       try:
-        import pushbullet
+        import pushbullet # pylint: disable=redefined-outer-name
       except ImportError:
         self.api('send.error')(
             'Please install pushbullet.py with "pip(2) install pushbullet.py"')
@@ -144,7 +144,7 @@ class Plugin(BasePlugin):
     else:
       rval = pbc.push_note(title, body)
 
-    pbc._session.close()
+    pbc._session.close() # pylint: disable=protected-access
 
     if 'error' in rval:
       self.api('send.error')('Pushbullet send failed with %s' % rval)
@@ -190,7 +190,7 @@ class Plugin(BasePlugin):
     else:
       rval = pbc.push_link(title, url)
 
-    pbc._session.close()
+    pbc._session.close() # pylint: disable=protected-access
 
     if 'error' in rval:
       self.api('send.error')('Pushbullet send failed with %s' % rval)
