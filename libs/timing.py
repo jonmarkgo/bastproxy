@@ -46,7 +46,7 @@ class Timing(object):
     else:
       self.enabled = bool(tbool)
 
-  def starttimer(self, timername, args):
+  def starttimer(self, timername, args=None):
     """
     start a timer
     """
@@ -57,9 +57,9 @@ class Timing(object):
       self.timing[timername]['plugin'] = plugin
       self.api('send.msg')('%-20s : started - from plugin %s with args %s' % \
                             (timername, plugin, args),
-                           primary=plugin, secondary='timing')
+                           primary=plugin, secondary=['timing'])
 
-  def finishtimer(self, timername, args):
+  def finishtimer(self, timername, args=None):
     """
     finish a timer
     """
@@ -70,7 +70,8 @@ class Timing(object):
                              (timername,
                               (timerfinish - self.timing[timername]['start']) * 1000.0,
                               args),
-                             primary=self.timing[timername]['plugin'], secondary='timing')
+                             primary=self.timing[timername]['plugin'],
+                             secondary=['timing'])
         del self.timing[timername]
       else:
         plugin = self.api('api.callerplugin')()
