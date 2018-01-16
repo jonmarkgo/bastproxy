@@ -52,6 +52,7 @@ class Plugin(BasePlugin):
     self.api('api.add')('togglegroup', self.api_togglegroup)
     self.api('api.add')('toggleomit', self.api_toggleomit)
     self.api('api.add')('removeplugin', self.api_removeplugin)
+    self.api('api.add')('update', self.api_update)
 
   def load(self):
     """
@@ -138,6 +139,46 @@ class Plugin(BasePlugin):
     get a unique name for a trigger
     """
     return "t_" + name
+
+  def api_update(self, triggername, trigger):
+    """
+    update a trigger without deleting it
+    """
+    if triggername not in self.triggers:
+      self.api('send.msg')('triggers.update could not find triggger %s' % trigger)
+      return False
+
+    for i in trigger:
+      oldval = self.triggers[triggername][i]
+      newval = trigger[i]
+      self.triggers[triggername][i] = newval
+      if i == 'regex':
+        try:
+          self.triggers[triggername]['compiled'] = re.compile(
+              self.triggers[triggername]['regex'])
+        except Exception:  # pylint: disable=broad-except
+          self.api('send.traceback')(
+              'Could not compile regex for trigger: %s : %s' % \
+                  (triggername, self.triggers[triggername]['regex']))
+          return False
+
+        self.triggers[triggername]['nonamedgroups'] = \
+                    re.sub(r"\?P\<.*?\>", "",
+                           self.triggers[triggername]['regex'])
+        self.api('send.msg')('converted %s to %s' % \
+                                (self.triggers[triggername]['regex'],
+                                 self.triggers[triggername]['nonamedgroups']))
+
+        del self.regexlookup[oldval]
+        self.regexlookup[self.triggers[triggername]['regex']] = triggername
+
+        self.rebuildregexes()
+
+      if i == 'group':
+        self.triggergroups[oldval].remove(triggername)
+        if self.triggers[triggername]['group'] not in self.triggergroups:
+          self.triggergroups[self.triggers[triggername]['group']] = []
+        self.triggergroups[self.triggers[triggername]['group']].append(triggername)
 
   # add a trigger
   def api_addtrigger(self, triggername, regex, plugin=None, **kwargs): # pylint: disable=too-many-branches
