@@ -4,7 +4,6 @@ this plugin creates a command queue
 see the aardwolf eq plugin for examples of how to use it
 """
 import re
-from timeit import default_timer
 
 from plugins._baseplugin import BasePlugin
 
@@ -73,8 +72,7 @@ class CmdQueue(object):
       self.cmds[cmdtype]['beforef']()
 
     self.currentcmd = cmdt
-    self.starttime = default_timer()
-    self.plugin.api('send.msg')('cmd: %s - started' % (cmd), secondary=['cmdq', 'timing'])
+    self.plugin.api('timep.start')('cmd_%s' % self.currentcmd['cmd'])
     self.plugin.api('send.execute')(cmd)
 
   def checkinqueue(self, cmd):
@@ -98,10 +96,8 @@ class CmdQueue(object):
       if cmdtype in self.cmds and self.cmds[cmdtype]['afterf']:
         self.plugin.api('send.msg')('running afterf: %s' % cmdtype)
         self.cmds[cmdtype]['afterf']()
-      finishtime = default_timer()
-      self.plugin.api('send.msg')('cmd: %s - took %0.3f ms' % \
-              (self.currentcmd['cmd'], (finishtime - self.starttime)*1000.0),
-                                  secondary=['cmdq', 'timing'])
+
+      self.plugin.api('timep.finish')('cmd_%s' % self.currentcmd['cmd'])
       self.currentcmd = {}
       self.sendnext()
 
