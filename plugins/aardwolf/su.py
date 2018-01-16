@@ -127,9 +127,7 @@ class Plugin(AardwolfBasePlugin):
     self.api('events.register')('skills_affected_update', self.nextspell)
     self.api('events.register')('aard_skill_gain', self.skillgain)
     self.api('events.register')('plugin_%s_savestate' % self.sname, self._savestate)
-
-    if self.api('skills.isuptodate')():
-      self._charstatus()
+    self.api('events.register')('skills_uptodate', self.nextspell)
 
   def skillgain(self, args=None):
     """

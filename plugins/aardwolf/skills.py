@@ -2,11 +2,9 @@
 This plugin handles slist from Aardwolf
 """
 import time
-import os
 import copy
 from plugins.aardwolf._aardwolfbaseplugin import AardwolfBasePlugin
 import libs.argp as argp
-from libs.persistentdict import PersistentDict
 
 NAME = 'Aardwolf Skills'
 SNAME = 'skills'
@@ -43,8 +41,383 @@ STYPE[2] = 'skill'
 
 FAILTARG = {0:'self', 1:'other'}
 
+class Skills(object):
+  """
+  a class to hold skills and recoveries
+  """
+  def __init__(self, plugin):
+    """
+    init the class
+    """
+    self.plugin = plugin
+    self.skills = {}
+    self.api = self.plugin.api
+    self.recoveries = {}
+    self.skillsnamelookup = {}
+    self.recoveriesnamelookup = {}
+    self.isuptodatef = False
+    self.firstrefresh = True
+    self.slist = SList(self.plugin)
 
-class Plugin(AardwolfBasePlugin): # pylint: disable=too-many-public-methods
+  def setuptodate(self):
+    """
+    set the up to date flag
+    """
+    self.isuptodatef = True
+    self.api('events.eraise')('skills_uptodate')
+
+  def count(self):
+    """
+    return the count of skills
+    """
+    return len(self.skills)
+
+  def reset(self):
+    """
+    reset skills and recoveries
+    """
+    self.skills = {}
+    self.recoveries = {}
+    self.skillsnamelookup = {}
+    self.recoveriesnamelookup = {}
+
+  def refresh(self):
+    """
+    refresh all data
+    """
+    self.api('send.msg')("refreshing skills with 'slist noprompt'")
+    self.slist.cmdqueue.addtoqueue('slist', 'noprompt')
+    self.slist.cmdqueue.addtoqueue('slist', 'spellup noprompt')
+
+  def resetaffected(self):
+    """
+    reset affected data
+    """
+    for i in self.skills:
+      self.skills[i]['duration'] = 0
+    for i in self.recoveries:
+      self.recoveries[i]['duration'] = 0
+
+  def refreshaffected(self):
+    """
+    refresh affected data
+    """
+    self.api('send.msg')("refreshing affected with 'slist affected noprompt'")
+    self.slist.cmdqueue.addtoqueue('slist', 'affected noprompt')
+
+  def refreshlearned(self):
+    """
+    refresh learned data
+    """
+    self.api('send.msg')("refreshing learned with 'slist learned noprompt'")
+    self.slist.cmdqueue.addtoqueue('slist', 'learned noprompt')
+
+  def getitem(self, ttype, idnum):
+    """
+    get an item
+    """
+    tidnum = -1
+    if ttype == 'skill':
+      maint = self.skills
+      lookupt = self.skillsnamelookup
+    elif ttype == 'recovery':
+      maint = self.recoveries
+      lookupt = self.recoveriesnamelookup
+    else:
+      return None
+
+    name = idnum
+
+    try:
+      tidnum = int(idnum)
+    except ValueError:
+      pass
+
+    item = None
+    if tidnum >= 1:
+      if tidnum in maint:
+        item = copy.deepcopy(maint[tidnum])
+      else:
+        self.api('send.msg')('did not find %s for %s' % (ttype, tidnum))
+
+    if not item and name:
+      tlist = self.api('utils.checklistformatch')(name,
+                                                  lookupt)
+      if len(tlist) == 1:
+        item = copy.deepcopy(maint[lookupt[tlist[0]]])
+
+    return item
+
+  def getskill(self, tsn):
+    """
+    get a skill by sn or name
+    """
+    item = self.getitem('skill', tsn)
+
+    if item:
+      item['recovery'] = self.getitem('recovery', item['recovery'])
+
+    return item
+
+  def addskill(self, args):
+    """
+    add a skill
+    """
+    skillnum = args['sn']
+    name = args['name']
+    target = args['target']
+    if args['duration'] != 0:
+      duration = time.mktime(time.localtime()) + args['duration']
+    else:
+      duration = 0
+    percent = args['pct']
+    recovery = args['rcvy']
+    stype = args['type']
+
+    if skillnum not in self.skills:
+      self.skills[skillnum] = {}
+
+    self.skills[skillnum]['name'] = name
+    self.skills[skillnum]['target'] = TARGET[target]
+    self.skills[skillnum]['duration'] = duration
+    self.skills[skillnum]['percent'] = percent
+    self.skills[skillnum]['recovery'] = recovery
+    self.skills[skillnum]['type'] = STYPE[stype]
+    self.skills[skillnum]['sn'] = skillnum
+    self.skills[skillnum]['spellup'] = False
+
+    self.skillsnamelookup[name] = skillnum
+
+  def flagspellup(self, skillnum):
+    """
+    flag a spell as a spellup
+    """
+    self.skills[skillnum]['spellup'] = True
+
+  def updateduration(self, skillnum, duration):
+    """
+    update the duration on a spell
+    """
+    if duration > 0:
+      self.skills[skillnum]['duration'] = time.mktime(time.localtime()) + duration
+    else:
+      self.skills[skillnum]['duration'] = 0
+
+  def updatepercent(self, skillnum, percent):
+    """
+    update the percent on a spell
+    """
+    self.skills[skillnum]['percent'] = percent
+
+  def getspellups(self):
+    """
+    return a list of spellup spells
+    """
+    sus = [x for x in self.skills.values() if x['spellup']]
+    return sus
+
+  def getrecovery(self, tsn):
+    """
+    get a skill by sn or name
+    """
+    return self.getitem('recovery', tsn)
+
+  def addrecovery(self, args):
+    """
+    add a recovery
+    """
+    recnum = args['sn']
+    name = args['name']
+    if args['duration'] != 0:
+      duration = time.mktime(time.localtime()) + args['duration']
+    else:
+      duration = 0
+
+    if recnum not in self.recoveries:
+      self.recoveries[recnum] = {}
+
+    self.recoveries[recnum]['name'] = name
+    self.recoveries[recnum]['duration'] = duration
+    self.recoveries[recnum]['sn'] = recnum
+
+    self.recoveriesnamelookup[name] = recnum
+
+  def updaterecoveryduration(self, recnum, duration):
+    """
+    update a duration on a recovery
+    """
+    if duration > 0:
+      self.recoveries[recnum]['duration'] = time.mktime(time.localtime()) + duration
+    else:
+      self.recoveries[recnum]['duration'] = 0
+
+class SList(object):
+  """
+  a class to manipulate containers
+  """
+  def __init__(self, plugin, cid="slist", cmd=None, cmdregex=None,  #pylint: disable=too-many-arguments
+               startregex=None, endregex=None, refresh=False):
+    """
+    init the class
+    """
+    ## cmd = command to send to get data
+    ## cmdregex = regex that matches command
+    ## startregex = the line to match to start collecting data
+    ## endregex = the line to match to end collecting data
+    self.cid = cid
+    self.cmd = cmd or r"slist"
+    self.cmdregex = cmdregex or r"^slist\s((?P<type>.*)\s)?noprompt$"
+    self.startregex = startregex or r"\{spellheaders\s((?P<type>.*)\s)?noprompt\}"
+    self.endregex = endregex or r"\{/recoveries\}"
+    self.plugin = plugin
+    self.api = self.plugin.api
+    self.cmdqueue = self.api('cmdq.baseclass')()(self)
+    self.data = {}
+    self.current = None
+    self.data['recoveries'] = {}
+    self.data['skills'] = {}
+    self.refreshf = refresh
+
+    self._dump_shallow_attrs = ['plugin', 'api', 'cmdqueue']
+
+    self.cmdqueue.addcmdtype(self.cid, self.cmd, self.cmdregex,
+                             beforef=self.databefore, afterf=self.dataafter)
+
+    self.api('triggers.add')('cmd_%s_start' % self.cid,
+                             self.startregex,
+                             enabled=False, group='cmd_%s' % self.cid,
+                             omit=True)
+
+    self.api('triggers.add')('cmd_%s_end' % self.cid,
+                             self.endregex,
+                             enabled=False, group='cmd_%s' % self.cid,
+                             omit=True)
+
+    self.api('triggers.add')('cmd_%s_spellh_spellline' % self.cid,
+                             r"^(?P<sn>\d+),(?P<name>.+),(?P<target>\d+)," \
+                               r"(?P<duration>\d+),(?P<pct>\d+)," \
+                               r"(?P<rcvy>-?\d+),(?P<type>\d+)$",
+                             group='cmd_%s' % self.cid, enabled=False, omit=True,
+                             argtypes={'sn':int, 'target':int, 'duration':int,
+                                       'pct':int, 'rcvy':int, 'type':int})
+
+    self.api('triggers.add')('cmd_%s_recov_noprompt' % self.cid,
+                             r"^\{recoveries\s((?P<type>.*)\s)?noprompt\}$",
+                             group='cmd_%s' % self.cid, enabled=False, omit=True)
+
+    self.api('triggers.add')('cmd_%s_spellh_recovline' % self.cid,
+                             r"^(?P<sn>\d+),(?P<name>.+),(?P<duration>\d+)$",
+                             group='cmd_%s', enabled=False, omit=True,
+                             argtypes={'sn':int, 'duration':int})
+
+  def databefore(self):
+    """
+    this will be called before the command
+    """
+    self.api('events.register')('trigger_cmd_%s_start' % self.cid, self.datastart)
+
+    self.api('events.register')('trigger_cmd_%s_spellh_spellline' % self.cid,
+                                self.spellline)
+    self.api('events.register')('trigger_cmd_%s_recov_noprompt' % self.cid,
+                                self.recovnoprompt)
+
+    self.api('triggers.togglegroup')('cmd_%s' % self.cid, True)
+
+  def datastart(self, args): # pylint: disable=unused-argument
+    """
+    found beginning of data for this container
+    """
+    self.api('send.msg')('CMD - %s: found start %s' % (self.cid, self.startregex))
+    self.api('send.msg')('current type = %s' % args['type'])
+    self.current = args['type']
+    # change the endregex to handle specific subcommands
+    if not self.current:
+      # got "slist noprompt"
+      # reset skills
+      self.plugin.skills.reset()
+      self.api('triggers.update')('cmd_%s_end' % self.cid, {'regex':r"\{/recoveries\}"})
+    elif self.current == 'affected':
+      # affected
+      self.plugin.skills.resetaffected()
+      self.api('triggers.update')('cmd_%s_end' % self.cid, {'regex':r"\{/recoveries\}"})
+    else:
+      # learned, spellup
+      self.api('triggers.update')('cmd_%s_end' % self.cid, {'regex':r"\{/spellheaders\}"})
+
+    self.api('events.register')('trigger_cmd_%s_end' % self.cid, self.dataend)
+
+  def spellline(self, args):
+    """
+    parse a spell line
+    """
+    if self.current == 'affected':
+      self.plugin.skills.updateduration(args['sn'], args['duration'])
+    elif self.current == 'learned':
+      self.plugin.skills.updatepercent(args['sn'], args['pct'])
+    elif self.current == 'spellup':
+      self.plugin.skills.flagspellup(args['sn'])
+    else:
+      self.plugin.skills.addskill(args)
+
+  def recovnoprompt(self, args): # pylint: disable=unused-argument
+    """
+    change triggers when {recoveries noprompt} seen
+    """
+    self.api('events.unregister')('trigger_cmd_%s_spellh_spellline' % self.cid,
+                                  self.spellline)
+    self.api('events.unregister')('trigger_cmd_%s_recov_noprompt' % self.cid,
+                                  self.recovnoprompt)
+
+    self.api('events.register')('trigger_cmd_%s_spellh_recovline' % self.cid,
+                                self.recovline)
+
+  def recovline(self, args):
+    """
+    parse a recovery line
+    """
+    if self.current == 'affected':
+      self.plugin.skills.updaterecoveryduration(args['sn'], args['duration'])
+    elif self.current == 'learned':
+      # should never get this
+      self.api('send.error')('got learned in recoveries, should never happen')
+    elif self.current == 'spellup':
+      # should never get this
+      self.api('send.error')('got spellup in recoveries, should never happen')
+    else:
+      self.plugin.skills.addrecovery(args)
+
+  def dataend(self, args): #pylint: disable=unused-argument
+    """
+    found end of data for this container
+    """
+    self.api('send.msg')('CMD - %s: found end %s' % (self.cid, self.endregex))
+    self.cmdqueue.cmddone(self.cid)
+    if self.current == 'spellup' and not self.plugin.skills.isuptodatef:
+      self.plugin.skills.setuptodate()
+
+  def dataafter(self):
+    """
+    this will be called after the command
+    """
+    self.api('events.unregister')('trigger_cmd_%s_start' % self.cid, self.datastart)
+    self.api('events.unregister')('trigger_cmd_%s_end' % self.cid, self.dataend)
+
+    if self.api('events.isregistered')('trigger_cmd_%s_spellh_spellline' % self.cid,
+                                       self.spellline):
+      self.api('events.unregister')('trigger_cmd_%s_spellh_spellline' % self.cid,
+                                    self.spellline)
+    if self.api('events.isregistered')('trigger_cmd_%s_recov_noprompt' % self.cid,
+                                       self.recovnoprompt):
+      self.api('events.unregister')('trigger_cmd_%s_recov_noprompt' % self.cid,
+                                    self.recovnoprompt)
+    if self.api('events.isregistered')('trigger_cmd_%s_spellh_recovline' % self.cid,
+                                       self.recovline):
+      self.api('events.unregister')('trigger_cmd_%s_spellh_recovline' % self.cid,
+                                    self.recovline)
+
+    self.api('triggers.togglegroup')('cmd_%s' % self.cid, False)
+
+class Plugin(AardwolfBasePlugin):
   """
   a plugin manage info about spells and skills
   """
@@ -53,42 +426,31 @@ class Plugin(AardwolfBasePlugin): # pylint: disable=too-many-public-methods
     initialize the instance
     """
     AardwolfBasePlugin.__init__(self, *args, **kwargs)
-    self.saveskillfile = os.path.join(self.savedir, 'skills.txt')
-    self.skills = PersistentDict(self.saveskillfile, 'c')
-    self.skillsnamelookup = {}
-    for i in self.skills:
-      self.skillsnamelookup[self.skills[i]['name']] = i
 
-    self.saverecovfile = os.path.join(self.savedir, 'recoveries.txt')
-    self.recoveries = PersistentDict(self.saverecovfile, 'c')
-    self.recoveriesnamelookup = {}
-    for i in self.recoveries:
-      self.recoveriesnamelookup[self.recoveries[i]['name']] = i
-
-    self.current = ''
-    self.isuptodatef = False
-
-    self.cmdqueue = None
+    self.skills = None
 
     self.api('dependency.add')('cmdq')
 
-    self.api('api.add')('gets', self.api_getskill)
-    self.api('api.add')('isspellup', self.api_isspellup)
-    self.api('api.add')('getspellups', self.api_getspellups)
-    self.api('api.add')('sendcmd', self.api_sendcmd)
-    self.api('api.add')('isaffected', self.api_isaffected)
+    self.api('api.add')('gets', self._api_getskill)
+    self.api('api.add')('getr', self._api_getrecovery)
+    self.api('api.add')('isspellup', self._api_isspellup)
+    self.api('api.add')('getspellups', self._api_getspellups)
+    self.api('api.add')('sendcmd', self._api_sendcmd)
+    self.api('api.add')('isaffected', self._api_isaffected)
     self.api('api.add')('isblockedbyrecovery',
-                        self.api_isblockedbyrecovery)
-    self.api('api.add')('ispracticed', self.api_ispracticed)
-    self.api('api.add')('canuse', self.api_canuse)
-    self.api('api.add')('isuptodate', self.api_isuptodate)
-    self.api('api.add')('isbad', self.api_isbad)
+                        self._api_isblockedbyrecovery)
+    self.api('api.add')('ispracticed', self._api_ispracticed)
+    self.api('api.add')('canuse', self._api_canuse)
+    self.api('api.add')('isuptodate', self._api_isuptodate)
+    self.api('api.add')('isbad', self._api_isbad)
 
   def load(self):
     """
     load the plugins
     """
     AardwolfBasePlugin.load(self)
+
+    self.skills = Skills(self)
 
     self.api('send.msg')('running load function of skills')
 
@@ -104,72 +466,31 @@ class Plugin(AardwolfBasePlugin): # pylint: disable=too-many-public-methods
     self.api('commands.add')('lu', self.cmd_lu,
                              parser=parser)
 
-    self.api('triggers.add')('spellh_noprompt',
-                             r"^\{spellheaders noprompt\}$",
-                             group='slist', enabled=False, omit=True)
-    self.api('triggers.add')('spellh_spellup_noprompt',
-                             r"^\{spellheaders spellup noprompt\}$",
-                             group='slist', enabled=False, omit=True)
-    self.api('triggers.add')('spellh_affected_noprompt',
-                             r"^\{spellheaders affected noprompt\}$",
-                             group='slist', enabled=False, omit=True)
-    self.api('triggers.add')('spellh_spellline',
-                             r"^(?P<sn>\d+),(?P<name>.+),(?P<target>\d+)," \
-                               r"(?P<duration>\d+),(?P<pct>\d+)," \
-                               r"(?P<rcvy>-?\d+),(?P<type>\d+)$",
-                             group='spellhead', enabled=False, omit=True)
-    self.api('triggers.add')('spellh_end_noprompt',
-                             r"^\{/spellheaders\}$",
-                             group='spellhead', enabled=False, omit=True)
     self.api('triggers.add')('affoff',
-                             r"^\{affoff\}(?P<sn>\d+)$")
+                             r"^\{affoff\}(?P<sn>\d+)$",
+                             argtypes={'sn':int})
     self.api('triggers.add')('affon',
-                             r"^\{affon\}(?P<sn>\d+),(?P<duration>\d+)$")
-    self.api('triggers.add')('recov_noprompt',
-                             r"^\{recoveries noprompt\}$",
-                             group='slist', enabled=False, omit=True)
-    self.api('triggers.add')('recov_affected_noprompt',
-                             r"^\{recoveries affected noprompt\}$",
-                             group='slist', enabled=False, omit=True)
-    self.api('triggers.add')('spellh_recovline',
-                             r"^(?P<sn>\d+),(?P<name>.+),(?P<duration>\d+)$",
-                             group='recoveries', enabled=False, omit=True)
-    self.api('triggers.add')('recov_end_noprompt',
-                             r"^\{/recoveries\}$",
-                             group='recoveries', enabled=False, omit=True)
+                             r"^\{affon\}(?P<sn>\d+),(?P<duration>\d+)$",
+                             argtypes={'sn':int, 'duration':int})
     self.api('triggers.add')('recoff',
-                             r"^\{recoff\}(?P<sn>\d+)$")
+                             r"^\{recoff\}(?P<sn>\d+)$",
+                             argtypes={'sn':int})
     self.api('triggers.add')('recon',
-                             r"^\{recon\}(?P<sn>\d+),(?P<duration>\d+)$")
+                             r"^\{recon\}(?P<sn>\d+),(?P<duration>\d+)$",
+                             argtypes={'sn':int, 'duration':int})
     self.api('triggers.add')('skillgain',
-                             r"^\{skillgain\}(?P<sn>\d+),(?P<percent>\d+)$")
+                             r"^\{skillgain\}(?P<sn>\d+),(?P<percent>\d+)$",
+                             argtypes={'sn':int, 'percent':int})
     self.api('triggers.add')('skillfail',
                              r"^\{sfail\}(?P<sn>\d+),(?P<target>\d+)," \
-                               r"(?P<reason>\d+),(?P<recovery>-?\d+)$")
+                               r"(?P<reason>\d+),(?P<recovery>-?\d+)$",
+                             argtypes={'sn':int, 'target':int,
+                                       'reason':int, 'recovery':int})
 
-    self.api('events.register')('trigger_spellh_noprompt',
-                                self.skillstart)
-    self.api('events.register')('trigger_spellh_spellup_noprompt',
-                                self.skillstart)
-    self.api('events.register')('trigger_spellh_affected_noprompt',
-                                self.skillstart)
-    self.api('events.register')('trigger_spellh_spellline',
-                                self.skillline)
-    self.api('events.register')('trigger_spellh_end_noprompt',
-                                self.skillend)
     self.api('events.register')('trigger_affoff', self.affoff)
     self.api('events.register')('trigger_affon', self.affon)
-    self.api('events.register')('trigger_recov_noprompt',
-                                self.recovstart)
-    self.api('events.register')('trigger_recov_affected_noprompt',
-                                self.recovstart)
-    self.api('events.register')('trigger_spellh_recovline',
-                                self.recovline)
-    self.api('events.register')('trigger_recov_end_noprompt',
-                                self.recovend)
     self.api('events.register')('trigger_recoff', self.recoff)
     self.api('events.register')('trigger_recon', self.recon)
-
     self.api('events.register')('trigger_skillgain', self.skillgain)
     self.api('events.register')('trigger_skillfail', self.skillfail)
 
@@ -177,28 +498,6 @@ class Plugin(AardwolfBasePlugin): # pylint: disable=too-many-public-methods
 
     self.api('events.register')('aard_level_tier', self.cmd_refresh)
     self.api('events.register')('aard_level_remort', self.cmd_refresh)
-
-
-    self.cmdqueue = self.api('cmdq.baseclass')()(self)
-    self.cmdqueue.addcmdtype('slist', 'slist', r"^slist\s*(.*)$",
-                             beforef=self.slistbefore, afterf=self.slistafter)
-
-    self.api('events.register')('plugin_%s_savestate' % self.sname, self._savestate)
-
-    self.checkskills()
-
-  def slistbefore(self):
-    """
-    stuff to do before doing slist command
-    """
-    self.api('triggers.togglegroup')('slist', True)
-
-  def slistafter(self):
-    """
-    stuff to do after doing slist command
-    """
-    self.savestate()
-    self.api('triggers.togglegroup')('slist', False)
 
   def afterfirstactive(self, _=None):
     """
@@ -208,11 +507,11 @@ class Plugin(AardwolfBasePlugin): # pylint: disable=too-many-public-methods
     self.checkskills()
 
   # check if the spells/skills list is up to date
-  def api_isuptodate(self):
+  def _api_isuptodate(self):
     """
     return True if we have seen affected or all spells refresh
     """
-    return self.isuptodatef
+    return self.skills.isuptodatef
 
   def cmd_lu(self, args):
     """
@@ -247,18 +546,15 @@ class Plugin(AardwolfBasePlugin): # pylint: disable=too-many-public-methods
 
     return True, msg
 
-  def cmd_refresh(self, _=None):
+  def cmd_refresh(self, args=None): # pylint: disable=unused-argument
     """
     refresh spells and skills
     """
-    self.skills.clear()
-    self.recoveries.clear()
-    self.cmdqueue.addtoqueue('slist', 'noprompt')
-    self.cmdqueue.addtoqueue('slist', 'spellup noprompt')
+    self.skills.refresh()
     msg = ['Refreshing spells and skills']
     return True, msg
 
-  def checkskills(self, _=None):
+  def checkskills(self, args=None): # pylint: disable=unused-argument
     """
     check to see if we have spells
     """
@@ -270,246 +566,122 @@ class Plugin(AardwolfBasePlugin): # pylint: disable=too-many-public-methods
       self.api('A102.toggle')('SPELLUPTAGS', True)
       self.api('A102.toggle')('SKILLGAINTAGS', True)
       self.api('A102.toggle')('QUIETTAGS', False)
-      if len(self.skills) == 0: # pylint: disable=len-as-condition
-        self.cmd_refresh({})
-      else:
-        self.resetskills()
-        self.cmdqueue.addtoqueue('slist', 'affected noprompt')
+      if self.skills.count() == 0:
+        self.cmd_refresh()
+      elif not self.api('skills.isuptodate')():
+        self.api('send.msg')('refreshing affected in checkskills')
+        self.skills.resetaffected()
+        self.skills.refreshaffected()
 
   def resetskills(self):
     """
     reset the skills
     """
-    for i in self.skills:
-      self.skills[i]['duration'] = 0
-    for i in self.recoveries:
-      self.recoveries[i]['duration'] = 0
+    self.skills.reset()
 
   def skillgain(self, args):
     """
     handle a skillgain tag
     """
-    spellnum = int(args['sn'])
-    pct = int(args['percent'])
-    if spellnum in self.skills:
-      self.skills[spellnum]['percent'] = pct
-      self.api('events.eraise')('aard_skill_gain',
-                                {'sn':spellnum, 'percent':pct})
+    self.skills.updatepercent(args['sn'], args['percent'])
+    self.api('events.eraise')('aard_skill_gain',
+                              {'sn':args['sn'], 'percent':args['percent']})
 
   def skillfail(self, args):
     """
     raise an event when we fail a skill/spell
     """
-    spellnum = int(args['sn'])
-    reason = FAILREASON[int(args['reason'])]
-    ndict = {'sn':spellnum, 'reason':reason,
-             'target':FAILTARG[int(args['target'])],
-             'recovery':int(args['recovery'])}
-    if reason == 'dontknow' and self.skills[spellnum]['percent'] > 0:
+    skillnum = args['sn']
+    skill = self.api('skills.gets')(skillnum)
+    reason = FAILREASON[args['reason']]
+    ndict = {'sn':skillnum, 'reason':reason,
+             'target':FAILTARG[args['target']],
+             'recovery':args['recovery']}
+    if reason == 'dontknow' and skill['percent'] > 0:
       self.api('send.msg')('refreshing spells because of an unlearned spell')
-      self.cmd_refresh({})
+      self.cmd_refresh()
     self.api('send.msg')('raising skillfail: %s' % ndict)
-    self.api('events.eraise')('skill_fail_%s' % args['sn'], ndict)
+    self.api('events.eraise')('skill_fail_%s' % skillnum, ndict)
     self.api('events.eraise')('skill_fail', ndict)
 
   def affoff(self, args):
     """
     set the affect to off for spell that wears off
     """
-    spellnum = int(args['sn'])
-    if spellnum in self.skills:
-      self.skills[spellnum]['duration'] = 0
-      self.savestate()
-      self.api('events.eraise')('aard_skill_affoff_%s' % spellnum,
-                                {'sn':spellnum})
-      self.api('events.eraise')('aard_skill_affoff', {'sn':spellnum})
+    skillnum = args['sn']
+    self.skills.updateduration(skillnum, 0)
+    skill = self.api('skills.gets')(skillnum)
+    if skill:
+      self.api('events.eraise')('aard_skill_affoff_%s' % skillnum,
+                                {'sn':skillnum})
+      self.api('events.eraise')('aard_skill_affoff', {'sn':skillnum})
 
   def affon(self, args):
     """
     set the spell's duration when we see an affon
     """
-    spellnum = int(args['sn'])
-    duration = int(args['duration'])
-    if spellnum in self.skills:
-      self.skills[spellnum]['duration'] = time.mktime(time.localtime()) + \
-                                                        duration
-      self.savestate()
-      self.api('events.eraise')('aard_skill_affon_%s' % spellnum,
-                                {'sn':spellnum,
-                                 'duration':self.skills[spellnum]['duration']})
+    skillnum = args['sn']
+    duration = args['duration']
+    self.skills.updateduration(skillnum, duration)
+    skill = self.api('skills.gets')(skillnum)
+    if skill:
+      self.api('events.eraise')('aard_skill_affon_%s' % skillnum,
+                                {'sn':skillnum,
+                                 'duration':skill['duration']})
       self.api('events.eraise')('aard_skill_affon',
-                                {'sn':spellnum,
-                                 'duration':self.skills[spellnum]['duration']})
-
-  def recovstart(self, args):
-    """
-    show that the trigger fired
-    """
-    if 'triggername' in args \
-        and args['triggername'] == 'trigger_recov_affected_noprompt':
-      self.current = 'affected'
-    else:
-      self.current = ''
-    self.api('triggers.togglegroup')('recoveries', True)
-
-  def recovline(self, args):
-    """
-    parse a recovery line
-    """
-    spellnum = int(args['sn'])
-    name = args['name']
-    if int(args['duration']) != 0:
-      duration = time.mktime(time.localtime()) + int(args['duration'])
-    else:
-      duration = 0
-
-    if spellnum not in self.recoveries:
-      self.recoveries[spellnum] = {}
-
-    self.recoveries[spellnum]['name'] = name
-    self.recoveries[spellnum]['duration'] = duration
-    self.recoveries[spellnum]['sn'] = spellnum
-
-    self.recoveriesnamelookup[name] = spellnum
-
-  def recovend(self, _=None):
-    """
-    reset current when seeing a spellheaders ending
-    """
-    self.api('triggers.togglegroup')('recoveries', False)
-    if self.current == '' or self.current == 'affected':
-      self.isuptodatef = True
-      self.api('send.msg')('sending skills_affected_update')
-      self.api('events.eraise')('skills_affected_update', {})
-    self.cmdqueue.cmddone('slist')
+                                {'sn':skillnum,
+                                 'duration':skill['duration']})
 
   def recoff(self, args):
     """
     set the affect to off for spell that wears off
     """
-    spellnum = int(args['sn'])
-    if spellnum in self.recoveries:
-      self.recoveries[spellnum]['duration'] = 0
-      self.savestate()
-      self.api('events.eraise')('aard_skill_recoff', {'sn':spellnum})
+    skillnum = args['sn']
+    self.skills.updaterecoveryduration(skillnum, 0)
+    recovery = self.api('skills.getr')(skillnum)
+    if recovery:
+      self.api('events.eraise')('aard_skill_recoff_%s' % skillnum,
+                                {'sn':skillnum})
+      self.api('events.eraise')('aard_skill_recoff', {'sn':skillnum})
 
   def recon(self, args):
     """
     set the spell's duration when we see an affon
     """
-    spellnum = int(args['sn'])
-    duration = int(args['duration'])
-    if spellnum in self.recoveries:
-      self.recoveries[spellnum]['duration'] = \
-                        time.mktime(time.localtime()) + duration
-      self.savestate()
+    skillnum = args['sn']
+    duration = args['duration']
+    self.skills.updaterecoveryduration(skillnum, duration)
+    recovery = self.api('skills.getr')(skillnum)
+    if recovery:
+      self.api('events.eraise')('aard_skill_recon_%s' % skillnum,
+                                {'sn':skillnum,
+                                 'duration':recovery['duration']})
       self.api('events.eraise')('aard_skill_recon',
-                                {'sn':spellnum,
-                                 'duration':self.recoveries[spellnum]['duration']})
+                                {'sn':skillnum,
+                                 'duration':recovery['duration']})
 
-  def skillstart(self, args):
-    """
-    show that the trigger fired
-    """
-    if 'triggername' in args \
-        and args['triggername'] == 'spellh_spellup_noprompt':
-      self.current = 'spellup'
-    elif 'triggername' in args \
-        and args['triggername'] == 'spellh_affected_noprompt':
-      self.current = 'affected'
-    else:
-      self.current = ''
-    self.api('triggers.togglegroup')('spellhead', True)
-
-  def skillline(self, args):
-    """
-    parse spell lines
-    """
-    spellnum = int(args['sn'])
-    name = args['name']
-    target = int(args['target'])
-    if int(args['duration']) != 0:
-      duration = time.mktime(time.localtime()) + int(args['duration'])
-    else:
-      duration = 0
-    percent = int(args['pct'])
-    recovery = int(args['rcvy'])
-    stype = int(args['type'])
-
-    if spellnum not in self.skills:
-      self.skills[spellnum] = {}
-
-    self.skills[spellnum]['name'] = name
-    self.skills[spellnum]['target'] = TARGET[target]
-    self.skills[spellnum]['duration'] = duration
-    self.skills[spellnum]['percent'] = percent
-    self.skills[spellnum]['recovery'] = recovery
-    self.skills[spellnum]['type'] = STYPE[stype]
-    self.skills[spellnum]['sn'] = spellnum
-    if 'spellup' not in self.skills[spellnum]:
-      self.skills[spellnum]['spellup'] = False
-    if self.current == 'spellup':
-      self.skills[spellnum]['spellup'] = True
-
-    self.skillsnamelookup[name] = spellnum
-
-  def skillend(self, _=None):
-    """
-    reset current when seeing a spellheaders ending
-    """
-    self.api('triggers.togglegroup')('spellhead', False)
-    self.savestate()
-    if self.current:
-      evname = 'aard_skill_ref_%s' % self.current
-    else:
-      evname = 'aard_skill_ref'
-    self.api('events.eraise')(evname, {})
-    self.current = ''
-
-  # get a spell/skill by number
-  def api_getskill(self, tsn):
+  # get a spell/skill by number or name
+  def _api_getskill(self, tsn):
     """
     get a skill
     """
     #self.api('send.msg')('looking for %s' % tsn)
-    spellnum = -1
-    name = tsn
-    try:
-      spellnum = int(tsn)
-    except ValueError:
-      pass
+    return self.skills.getskill(tsn)
 
-    tskill = None
-    if spellnum >= 1:
-      #self.api('send.msg')('%s >= 0' % spellnum)
-      if spellnum in self.skills:
-        #self.api('send.msg')('found spellnum')
-        tskill = copy.deepcopy(self.skills[spellnum])
-        #tskill = self.skills[spellnum]
-      else:
-        self.api('send.msg')('did not find skill for %s' % spellnum)
-
-    if not tskill and name:
-      #self.api('send.msg')('trying name')
-      tlist = self.api('utils.checklistformatch')(name,
-                                                  self.skillsnamelookup.keys())
-      if len(tlist) == 1:
-        tskill = copy.deepcopy(self.skills[self.skillsnamelookup[tlist[0]]])
-
-    if tskill:
-      if tskill['recovery'] and tskill['recovery'] != -1:
-        tskill['recovery'] = copy.deepcopy(self.recoveries[tskill['recovery']])
-      else:
-        tskill['recovery'] = None
-
-    return tskill
+  # get a recovery by number or name
+  def _api_getrecovery(self, tsn):
+    """
+    get a skill
+    """
+    #self.api('send.msg')('looking for %s' % tsn)
+    return self.skills.getrecovery(tsn)
 
   # send the command to active a skill/spell
-  def api_sendcmd(self, spellnum):
+  def _api_sendcmd(self, skillnum):
     """
     send the command to activate a skill/spell
     """
-    skill = self.api('skills.gets')(spellnum)
+    skill = self.api('skills.gets')(skillnum)
     if skill:
       if skill['type'] == 'spell':
         self.api('send.msg')('casting %s' % skill['name'])
@@ -520,34 +692,34 @@ class Plugin(AardwolfBasePlugin): # pylint: disable=too-many-public-methods
         self.api('send.execute')(name)
 
   # check if a skill/spell can be used
-  def api_canuse(self, spellnum):
+  def _api_canuse(self, skillnum):
     """
     return True if the spell can be used
     """
-    if self.api('skills.isaffected')(spellnum) \
-        or self.api('skills.isblockedbyrecovery')(spellnum) \
-        or not self.api('skills.ispracticed')(spellnum):
+    if self.api('skills.isaffected')(skillnum) \
+        or self.api('skills.isblockedbyrecovery')(skillnum) \
+        or not self.api('skills.ispracticed')(skillnum):
       return False
 
     return True
 
   # check if a skill/spell is a spellup
-  def api_isspellup(self, spellnum):
+  def _api_isspellup(self, skillnum):
     """
     return True for a spellup, else return False
     """
-    spellnum = int(spellnum)
-    if spellnum in self.skills:
-      return self.skills[spellnum]['spellup']
+    skill = self.api('skills.gets')(skillnum)
+    if skill:
+      return skill['spellup']
 
     return False
 
   # check if a skill/spell is bad
-  def api_isbad(self, spellnum):
+  def _api_isbad(self, skillnum):
     """
     return True for a bad spell, False for a good spell
     """
-    skill = self.api('skill.gets')(spellnum)
+    skill = self.api('skill.gets')(skillnum)
     if (skill['target'] == 'attack' or skill['target'] == 'special') and \
           not skill['spellup']:
       return True
@@ -555,22 +727,22 @@ class Plugin(AardwolfBasePlugin): # pylint: disable=too-many-public-methods
     return False
 
   # check if a skill/spell is active
-  def api_isaffected(self, spellnum):
+  def _api_isaffected(self, skillnum):
     """
     return True for a spellup, else return False
     """
-    skill = self.api('skills.gets')(spellnum)
+    skill = self.api('skills.gets')(skillnum)
     if skill:
       return skill['duration'] > 0
 
     return False
 
   # check if a skill/spell is blocked by a recovery
-  def api_isblockedbyrecovery(self, spellnum):
+  def _api_isblockedbyrecovery(self, skillnum):
     """
     check to see if a spell/skill is blocked by a recovery
     """
-    skill = self.api('skills.gets')(spellnum)
+    skill = self.api('skills.gets')(skillnum)
     if skill:
       if 'recovery' in skill and skill['recovery'] and \
           skill['recovery']['duration'] > 0:
@@ -579,11 +751,11 @@ class Plugin(AardwolfBasePlugin): # pylint: disable=too-many-public-methods
     return False
 
   # check if a skill/spell is practiced
-  def api_ispracticed(self, spellnum):
+  def _api_ispracticed(self, skillnum):
     """
     is the spell learned
     """
-    skill = self.api('skills.gets')(spellnum)
+    skill = self.api('skills.gets')(skillnum)
     if skill:
       if skill['percent'] > 10:
         return True
@@ -591,16 +763,8 @@ class Plugin(AardwolfBasePlugin): # pylint: disable=too-many-public-methods
     return False
 
   # get the list of spellup spells/skills
-  def api_getspellups(self):
+  def _api_getspellups(self):
     """
     return a list of spellup spells
     """
-    sus = [x for x in self.skills.values() if x['spellup']]
-    return sus
-
-  def _savestate(self, _=None):
-    """
-    save states
-    """
-    self.skills.sync()
-    self.recoveries.sync()
+    return self.skills.getspellups()
