@@ -437,8 +437,7 @@ class Worn(EqContainer):
     """
     self.api('send.execute')('remove %s' % (serial))
 
-  def put(self, serial, location=None):
-    #pylint: disable=arguments-differ
+  def put(self, serial, location=None): #pylint: disable=arguments-differ
     """
     put an item into container
     """

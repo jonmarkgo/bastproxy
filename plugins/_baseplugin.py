@@ -307,7 +307,7 @@ class BasePlugin(object): # pylint: disable=too-many-instance-attributes
     self.api('send.msg')('baseplugin, disconnect')
     self.api('events.register')('firstactive', self.afterfirstactive)
 
-  def afterfirstactive(self, _=None):
+  def afterfirstactive(self, args=None): # pylint: disable=unused-argument
     """
     if we are connected do
     """

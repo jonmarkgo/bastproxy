@@ -20,8 +20,7 @@ class CmdQueue(object):
   """
   a class to manage commands
   """
-  def __init__(self, plugin, **kwargs):
-    # pylint: disable=unused-argument
+  def __init__(self, plugin, **kwargs): # pylint: disable=unused-argument
     """
     initialize the class
     """
