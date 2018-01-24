@@ -33,12 +33,43 @@ class Plugin(BasePlugin):
     self.api('api.add')('cmdstart', self._api_commandstart)
     self.api('api.add')('cmdfinish', self._api_commandfinish)
     self.api('api.add')('addcmdtype', self._api_addcmdtype)
+    self.api('api.add')('rmvcmdtype', self._api_rmvcmdtype)
+    self.api('api.add')('removeplugin', self.api_removeplugin)
 
   def load(self):
     """
     load the plugins
     """
     BasePlugin.load(self)
+
+    self.api('events.register')('plugin_unloaded', self.pluginunloaded)
+
+  def pluginunloaded(self, args):
+    """
+    a plugin was unloaded
+    """
+    self.api('%s.removeplugin' % self.sname)(args['name'])
+
+  # remove all triggers related to a plugin
+  def api_removeplugin(self, plugin):
+    """  remove all commands related to a plugin
+    @Yplugin@w   = The plugin name
+
+    this function returns no values"""
+    self.api('send.msg')('removing data for plugin %s' % plugin,
+                         secondary=plugin)
+    for i in self.cmds.keys():
+      if self.cmds[i]['plugin'] == plugin:
+        self.api('%s.rmvcmdtype' % self.sname)(i)
+
+  def _api_rmvcmdtype(self, cmdtype):
+    """
+    remove a command
+    """
+    if cmdtype in self.cmds:
+      del self.cmds[cmdtype]
+    else:
+      self.api('send.msg')('could not delete command type: %s' % cmdtype)
 
   # start a command
   def _api_commandstart(self, cmdtype):
@@ -56,10 +87,13 @@ class Plugin(BasePlugin):
     """
     beforef = None
     afterf = None
+    plugin = self.api('api.callerplugin')(skipplugin=[self.sname])
     if 'beforef' in kwargs:
       beforef = kwargs['beforef']
     if 'afterf' in kwargs:
       afterf = kwargs['afterf']
+    if 'plugin' in kwargs:
+      plugin = kwargs['plugin']
     if cmdtype not in self.cmds:
       self.cmds[cmdtype] = {}
       self.cmds[cmdtype]['cmd'] = cmd
@@ -68,6 +102,7 @@ class Plugin(BasePlugin):
       self.cmds[cmdtype]['beforef'] = beforef
       self.cmds[cmdtype]['afterf'] = afterf
       self.cmds[cmdtype]['ctype'] = cmdtype
+      self.cmds[cmdtype]['plugin'] = plugin
 
   def sendnext(self):
     """
