@@ -32,8 +32,6 @@ class Plugin(AardwolfBasePlugin):
     self.cpinfotimer = {}
     self.nextdeath = False
 
-    self.cmdqueue = None
-
     self.api('dependency.add')('cmdq')
 
   def load(self):
@@ -42,10 +40,8 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.load(self)
 
-    self.cmdqueue = self.api('cmdq.baseclass')()(self)
-
-    self.cmdqueue.addcmdtype('cpcheck', 'campaign check', "^campaign check$",
-                             beforef=self.cpcheckbefore, afterf=self.cpcheckafter)
+    self.api('cmdq.addcmdtype')('cpcheck', 'campaign check', "^campaign check$",
+                                beforef=self.cpcheckbefore, afterf=self.cpcheckafter)
 
     parser = argp.ArgumentParser(add_help=False,
                                  description='show cp info')
@@ -156,7 +152,7 @@ class Plugin(AardwolfBasePlugin):
     msg = []
     if self.cpinfo['oncp']:
       msg.append('Refreshing cp mobs')
-      self.cmdqueue.addtoqueue('cpcheck', '')
+      self.api('cmdq.addtoqueue')('cpcheck', '')
     else:
       msg.append('You are not on a cp')
 
@@ -169,6 +165,7 @@ class Plugin(AardwolfBasePlugin):
     self.mobsleft = []
     self.cpinfotimer = {}
     self.api('triggers.togglegroup')('cpcheck', True)
+    self.api('cmdq.cmdstart')('cpcheck')
 
   def cpcheckafter(self):
     """
@@ -182,7 +179,7 @@ class Plugin(AardwolfBasePlugin):
     do something on connect
     """
     AardwolfBasePlugin.afterfirstactive(self)
-    self.cmdqueue.addtoqueue('cpcheck', '')
+    self.api('cmdq.addtoqueue')('cpcheck', '')
 
   def _cpreset(self):
     """
@@ -212,7 +209,7 @@ class Plugin(AardwolfBasePlugin):
     """
     self.api('send.msg')('cpnew: %s' % args)
     self._cpreset()
-    self.cmdqueue.addtoqueue('cpcheck', '')
+    self.api('cmdq.addtoqueue')('cpcheck', '')
 
   def _cpnone(self, _=None):
     """
@@ -226,7 +223,7 @@ class Plugin(AardwolfBasePlugin):
     self.api('triggers.togglegroup')('cprew', False)
     self.api('triggers.togglegroup')('cpdone', False)
     self.cpinfotimer = {}
-    self.cmdqueue.cmddone('cpcheck')
+    self.api('cmdq.cmdfinish')('cpcheck')
 
   def _cptime(self, _=None):
     """
@@ -245,7 +242,7 @@ class Plugin(AardwolfBasePlugin):
     self.api('events.eraise')('aard_cp_mobsleft',
                               copy.deepcopy({'mobsleft':self.mobsleft}))
 
-    self.cmdqueue.cmddone('cpcheck')
+    self.api('cmdq.cmdfinish')('cpcheck')
 
   def _cpneedtolevel(self, _=None):
     """
@@ -372,7 +369,7 @@ class Plugin(AardwolfBasePlugin):
                                 copy.deepcopy({'mobsleft':self.mobsleft}))
     else:
       self.api('send.msg')("BP CP: could not find mob: %s" % args['name'])
-      self.cmdqueue.addtoqueue('cpcheck', '')
+      self.api('cmdq.addtoqueue')('cpcheck', '')
 
   def _savestate(self, _=None):
     """

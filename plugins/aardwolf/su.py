@@ -123,9 +123,9 @@ class Plugin(AardwolfBasePlugin):
     self.api('events.register')('aard_skill_affon', self._affon)
     self.api('events.register')('aard_skill_affoff', self._affoff)
     self.api('events.register')('aard_skill_recoff', self._recoff)
-    self.api('events.register')('su_enabled', self.enabledchange)
-    self.api('events.register')('skills_affected_update', self.nextspell)
     self.api('events.register')('aard_skill_gain', self.skillgain)
+    self.api('events.register')('var_su_enabled', self.enabledchange)
+    self.api('events.register')('skills_affected_update', self.nextspell)
     self.api('events.register')('plugin_%s_savestate' % self.sname, self._savestate)
     self.api('events.register')('skills_uptodate', self.nextspell)
 

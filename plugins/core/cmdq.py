@@ -9,34 +9,48 @@ from plugins._baseplugin import BasePlugin
 
 NAME = 'Command Queue'
 SNAME = 'cmdq'
-PURPOSE = 'Hold a Cmd Queue baseclass'
+PURPOSE = 'Queue commands to the mud'
 AUTHOR = 'Bast'
 VERSION = 1
 
 AUTOLOAD = True
 
-class CmdQueue(object):
+class Plugin(BasePlugin):
   """
-  a class to manage commands
+  a plugin to handle the base sqldb
   """
-  def __init__(self, plugin, **kwargs): # pylint: disable=unused-argument
-    """
-    initialize the class
-    """
-    self.plugin = plugin
-    self.currentcmd = {}
-
-    self.starttime = None
+  def __init__(self, *args, **kwargs):
+    BasePlugin.__init__(self, *args, **kwargs)
 
     self.queue = []
-
     self.cmds = {}
+    self.currentcmd = {}
 
-    self._dump_shallow_attrs = ['plugin']
+    self.reloaddependents = True
 
-    self.plugin.api('events.register')('muddisconnect', self.resetqueue)
+    # self.api('api.add')('baseclass', self.api_baseclass)
+    self.api('api.add')('addtoqueue', self._api_addtoqueue)
+    self.api('api.add')('cmdstart', self._api_commandstart)
+    self.api('api.add')('cmdfinish', self._api_commandfinish)
+    self.api('api.add')('addcmdtype', self._api_addcmdtype)
 
-  def addcmdtype(self, cmdtype, cmd, regex, **kwargs):
+  def load(self):
+    """
+    load the plugins
+    """
+    BasePlugin.load(self)
+
+  # start a command
+  def _api_commandstart(self, cmdtype):
+    """
+    tell the queue a command has started
+    """
+    if self.currentcmd and cmdtype != self.currentcmd['ctype']:
+      self.api('send.error')("got command start for %s and it's not the current cmd: %s" \
+                                % (cmdtype, self.currentcmd['ctype']))
+    self.api('timep.start')('cmd_%s' % cmdtype)
+
+  def _api_addcmdtype(self, cmdtype, cmd, regex, **kwargs):
     """
     add a command type
     """
@@ -59,21 +73,20 @@ class CmdQueue(object):
     """
     send the next command
     """
-    self.plugin.api('send.msg')('checking queue')
+    self.api('send.msg')('checking queue')
     if not self.queue or self.currentcmd:
       return
 
     cmdt = self.queue.pop(0)
     cmd = cmdt['cmd']
     cmdtype = cmdt['ctype']
-    self.plugin.api('send.msg')('sending cmd: %s (%s)' % (cmd, cmdtype))
+    self.api('send.msg')('sending cmd: %s (%s)' % (cmd, cmdtype))
 
     if cmdtype in self.cmds and self.cmds[cmdtype]['beforef']:
       self.cmds[cmdtype]['beforef']()
 
     self.currentcmd = cmdt
-    self.plugin.api('timep.start')('cmd_%s' % self.currentcmd['cmd'])
-    self.plugin.api('send.execute')(cmd)
+    self.api('send.execute')(cmd)
 
   def checkinqueue(self, cmd):
     """
@@ -85,26 +98,27 @@ class CmdQueue(object):
 
     return False
 
-  def cmddone(self, cmdtype):
+  def _api_commandfinish(self, cmdtype):
     """
     tell the queue that a command has finished
     """
-    self.plugin.api('send.msg')('running cmddone: %s' % cmdtype)
+    self.api('send.msg')('running cmddone: %s' % cmdtype)
     if not self.currentcmd:
       return
     if cmdtype == self.currentcmd['ctype']:
       if cmdtype in self.cmds and self.cmds[cmdtype]['afterf']:
-        self.plugin.api('send.msg')('running afterf: %s' % cmdtype)
+        self.api('send.msg')('running afterf: %s' % cmdtype)
         self.cmds[cmdtype]['afterf']()
 
-      self.plugin.api('timep.finish')('cmd_%s' % self.currentcmd['cmd'])
+      self.api('timep.finish')('cmd_%s' % self.currentcmd['ctype'])
       self.currentcmd = {}
       self.sendnext()
 
-  def addtoqueue(self, cmdtype, arguments=''):
+  def _api_addtoqueue(self, cmdtype, arguments=''):
     """
     add a command to the queue
     """
+    plugin = self.api('api.callerplugin')(skipplugin=['cmdq'])
     cmd = self.cmds[cmdtype]['cmd']
     if arguments:
       cmd = cmd + ' ' + str(arguments)
@@ -112,8 +126,8 @@ class CmdQueue(object):
             ('cmd' in self.currentcmd and self.currentcmd['cmd'] == cmd):
       return
     else:
-      self.plugin.api('send.msg')('added %s to queue' % cmd)
-      self.queue.append({'cmd':cmd, 'ctype':cmdtype})
+      self.api('send.msg')('added %s to queue' % cmd, secondary=[plugin])
+      self.queue.append({'cmd':cmd, 'ctype':cmdtype, 'plugin':plugin})
       if not self.currentcmd:
         self.sendnext()
 
@@ -122,28 +136,3 @@ class CmdQueue(object):
     reset the queue
     """
     self.queue = []
-
-class Plugin(BasePlugin):
-  """
-  a plugin to handle the base sqldb
-  """
-  def __init__(self, *args, **kwargs):
-    BasePlugin.__init__(self, *args, **kwargs)
-
-    self.reloaddependents = True
-
-    self.api('api.add')('baseclass', self.api_baseclass)
-
-  def load(self):
-    """
-    load the plugins
-    """
-    BasePlugin.load(self)
-
-  # return the cmdq baseclass
-  def api_baseclass(self):
-    # pylint: disable=no-self-use
-    """
-    return the cmdq baseclass
-    """
-    return CmdQueue

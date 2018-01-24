@@ -57,7 +57,6 @@ class Skills(object):
     self.recoveriesnamelookup = {}
     self.isuptodatef = False
     self.firstrefresh = True
-    self.slist = SList(self.plugin)
 
   def setuptodate(self):
     """
@@ -86,8 +85,8 @@ class Skills(object):
     refresh all data
     """
     self.api('send.msg')("refreshing skills with 'slist noprompt'")
-    self.slist.cmdqueue.addtoqueue('slist', 'noprompt')
-    self.slist.cmdqueue.addtoqueue('slist', 'spellup noprompt')
+    self.api('cmdq.addtoqueue')('slist', 'noprompt')
+    self.api('cmdq.addtoqueue')('slist', 'spellup noprompt')
 
   def resetaffected(self):
     """
@@ -103,14 +102,14 @@ class Skills(object):
     refresh affected data
     """
     self.api('send.msg')("refreshing affected with 'slist affected noprompt'")
-    self.slist.cmdqueue.addtoqueue('slist', 'affected noprompt')
+    self.api('cmdq.addtoqueue')('slist', 'affected noprompt')
 
   def refreshlearned(self):
     """
     refresh learned data
     """
     self.api('send.msg')("refreshing learned with 'slist learned noprompt'")
-    self.slist.cmdqueue.addtoqueue('slist', 'learned noprompt')
+    self.api('cmdq.addtoqueue')('slist', 'learned noprompt')
 
   def getitem(self, ttype, idnum):
     """
@@ -251,12 +250,11 @@ class Skills(object):
     else:
       self.recoveries[recnum]['duration'] = 0
 
-class SList(object):
+class SListCmd(object):
   """
   a class to manipulate containers
   """
-  def __init__(self, plugin, cid="slist", cmd=None, cmdregex=None,  #pylint: disable=too-many-arguments
-               startregex=None, endregex=None, refresh=False):
+  def __init__(self, plugin):
     """
     init the class
     """
@@ -264,24 +262,19 @@ class SList(object):
     ## cmdregex = regex that matches command
     ## startregex = the line to match to start collecting data
     ## endregex = the line to match to end collecting data
-    self.cid = cid
-    self.cmd = cmd or r"slist"
-    self.cmdregex = cmdregex or r"^slist\s((?P<type>.*)\s)?noprompt$"
-    self.startregex = startregex or r"\{spellheaders\s((?P<type>.*)\s)?noprompt\}"
-    self.endregex = endregex or r"\{/recoveries\}"
+    self.cid = "slist"
+    self.cmd = "slist"
+    self.cmdregex = r"^slist\s((?P<type>.*)\s)?noprompt$"
+    self.startregex = r"\{spellheaders\s((?P<type>.*)\s)?noprompt\}"
+    self.endregex = r"\{/recoveries\}"
     self.plugin = plugin
     self.api = self.plugin.api
-    self.cmdqueue = self.api('cmdq.baseclass')()(self)
-    self.data = {}
     self.current = None
-    self.data['recoveries'] = {}
-    self.data['skills'] = {}
-    self.refreshf = refresh
 
-    self._dump_shallow_attrs = ['plugin', 'api', 'cmdqueue']
+    self._dump_shallow_attrs = ['plugin', 'api']
 
-    self.cmdqueue.addcmdtype(self.cid, self.cmd, self.cmdregex,
-                             beforef=self.databefore, afterf=self.dataafter)
+    self.api('cmdq.addcmdtype')(self.cid, self.cmd, self.cmdregex,
+                                beforef=self.databefore, afterf=self.dataafter)
 
     self.api('triggers.add')('cmd_%s_start' % self.cid,
                              self.startregex,
@@ -297,7 +290,7 @@ class SList(object):
                              r"^(?P<sn>\d+),(?P<name>.+),(?P<target>\d+)," \
                                r"(?P<duration>\d+),(?P<pct>\d+)," \
                                r"(?P<rcvy>-?\d+),(?P<type>\d+)$",
-                             group='cmd_%s' % self.cid, enabled=False, omit=True,
+                             group='cmd_%s_spells' % self.cid, enabled=False, omit=True,
                              argtypes={'sn':int, 'target':int, 'duration':int,
                                        'pct':int, 'rcvy':int, 'type':int})
 
@@ -307,7 +300,8 @@ class SList(object):
 
     self.api('triggers.add')('cmd_%s_spellh_recovline' % self.cid,
                              r"^(?P<sn>\d+),(?P<name>.+),(?P<duration>\d+)$",
-                             group='cmd_%s', enabled=False, omit=True,
+                             group='cmd_%s_recoveries' % self.cid,
+                             enabled=False, omit=True,
                              argtypes={'sn':int, 'duration':int})
 
   def databefore(self):
@@ -322,13 +316,15 @@ class SList(object):
                                 self.recovnoprompt)
 
     self.api('triggers.togglegroup')('cmd_%s' % self.cid, True)
+    self.api('triggers.togglegroup')('cmd_%s_spells' % self.cid, True)
 
   def datastart(self, args): # pylint: disable=unused-argument
     """
-    found beginning of data for this container
+    found beginning of data for slist
     """
     self.api('send.msg')('CMD - %s: found start %s' % (self.cid, self.startregex))
     self.api('send.msg')('current type = %s' % args['type'])
+    self.api('cmdq.cmdstart')(self.cid)
     self.current = args['type']
     # change the endregex to handle specific subcommands
     if not self.current:
@@ -363,6 +359,9 @@ class SList(object):
     """
     change triggers when {recoveries noprompt} seen
     """
+    self.api('triggers.togglegroup')('cmd_%s_spells' % self.cid, False)
+    self.api('triggers.togglegroup')('cmd_%s_recoveries' % self.cid, True)
+
     self.api('events.unregister')('trigger_cmd_%s_spellh_spellline' % self.cid,
                                   self.spellline)
     self.api('events.unregister')('trigger_cmd_%s_recov_noprompt' % self.cid,
@@ -391,7 +390,7 @@ class SList(object):
     found end of data for this container
     """
     self.api('send.msg')('CMD - %s: found end %s' % (self.cid, self.endregex))
-    self.cmdqueue.cmddone(self.cid)
+    self.api('cmdq.cmdfinish')(self.cid)
     if self.current == 'spellup' and not self.plugin.skills.isuptodatef:
       self.plugin.skills.setuptodate()
 
@@ -416,6 +415,8 @@ class SList(object):
                                     self.recovline)
 
     self.api('triggers.togglegroup')('cmd_%s' % self.cid, False)
+    self.api('triggers.togglegroup')('cmd_%s_spells' % self.cid, False)
+    self.api('triggers.togglegroup')('cmd_%s_revoveries' % self.cid, False)
 
 class Plugin(AardwolfBasePlugin):
   """
@@ -428,6 +429,7 @@ class Plugin(AardwolfBasePlugin):
     AardwolfBasePlugin.__init__(self, *args, **kwargs)
 
     self.skills = None
+    self.slistcmd = None
 
     self.api('dependency.add')('cmdq')
 
@@ -451,6 +453,7 @@ class Plugin(AardwolfBasePlugin):
     AardwolfBasePlugin.load(self)
 
     self.skills = Skills(self)
+    self.slistcmd = SListCmd(self)
 
     self.api('send.msg')('running load function of skills')
 

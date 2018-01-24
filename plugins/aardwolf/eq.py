@@ -88,15 +88,14 @@ class EqContainer(object):
     self.endregex = endregex or r"\{/invdata\}"
     self.plugin = plugin
     self.api = self.plugin.api
-    self.cmdqueue = self.plugin.cmdqueue
     self.itemcache = self.plugin.itemcache
     self.needsrefresh = True
     self.items = []
 
-    self._dump_shallow_attrs = ['plugin', 'api', 'cmdqueue', 'itemcache']
+    self._dump_shallow_attrs = ['plugin', 'api', 'itemcache']
 
-    self.cmdqueue.addcmdtype(self.cid, self.cmd, self.cmdregex,
-                             beforef=self.databefore, afterf=self.dataafter)
+    self.api('cmdq.addcmdtype')(self.cid, self.cmd, self.cmdregex,
+                                beforef=self.databefore, afterf=self.dataafter)
 
     self.reset()
 
@@ -156,7 +155,7 @@ class EqContainer(object):
     refresh data
     """
     self.api('send.msg')('refreshing %s' % self.cid)
-    self.cmdqueue.addtoqueue(self.cid, '')
+    self.api('cmdq.addtoqueue')(self.cid, '')
 
   def databefore(self):
     """
@@ -208,6 +207,7 @@ class EqContainer(object):
     found beginning of data for this container
     """
     self.api('send.msg')('found {invdata}: %s' % args)
+    self.api('cmdq.cmdstart')(self.cid)
     self.reset()
 
   def dataline(self, args):
@@ -236,7 +236,7 @@ class EqContainer(object):
     """
     found end of data for this container
     """
-    self.cmdqueue.cmddone(self.cid)
+    self.api('cmdq.cmdfinish')(self.cid)
     self.needsrefresh = False
 
   def build_header(self, args):
@@ -776,8 +776,6 @@ class Plugin(AardwolfBasePlugin):
 
     self.queue = []
 
-    self.cmdqueue = None
-
     self._dump_shallow_attrs.append('itemcache')
 
     self.api('dependency.add')('aardwolf.itemu')
@@ -935,8 +933,6 @@ class Plugin(AardwolfBasePlugin):
     self.api('events.register')('trigger_invitem', self.trigger_invitem)
     self.api('events.register')('trigger_invmon', self.invmon)
 
-    self.cmdqueue = self.api('cmdq.baseclass')()(self)
-
     self.containers['Inventory'] = Inventory(self)
     self.containers['Worn'] = Worn(self)
     self.containers['Keyring'] = Keyring(self)
@@ -988,7 +984,8 @@ class Plugin(AardwolfBasePlugin):
     """
     #self.itemcache = {}
 
-    self.cmdqueue.resetqueue()
+    # TODO: a way to remove certain commands from the cmd queue
+    #self.cmdqueue.resetqueue()
 
     for container in self.containers:
       self.containers[container].refresh()
