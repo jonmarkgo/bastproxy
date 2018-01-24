@@ -1,6 +1,7 @@
 """
 This plugin highlights cp/gq/quest mobs in scan
 """
+import copy
 import libs.argp as argp
 from plugins.aardwolf._aardwolfbaseplugin import AardwolfBasePlugin
 
@@ -63,7 +64,7 @@ class AFlags(object):
     """
     create a snapshot of the current affects
     """
-    self.snapshots[name] = self.currentflags[:]
+    self.snapshots[name] = copy.deepcopy(self.currentflags)
 
 
 class AFlagsCmd(object):
@@ -167,8 +168,8 @@ class AFlagsCmd(object):
     self.api('cmdq.cmdfinish')('aflags')
     self.plugin.aflags.snapshot('Before')
     removed = set(self.plugin.aflags.snapshots['Before']) - \
-                set(self.plugin.aflags.current)
-    added = set(self.plugin.aflags.current) - \
+                set(self.plugin.aflags.currentflags)
+    added = set(self.plugin.aflags.currentflags) - \
                set(self.plugin.aflags.snapshots['Before'])
     self.plugin.api('events.eraise')('affect_diff',
                                      args={'added':added,
