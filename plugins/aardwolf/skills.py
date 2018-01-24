@@ -50,13 +50,12 @@ class Skills(object):
     init the class
     """
     self.plugin = plugin
-    self.skills = {}
     self.api = self.plugin.api
+    self.skills = {}
     self.recoveries = {}
     self.skillsnamelookup = {}
     self.recoveriesnamelookup = {}
     self.isuptodatef = False
-    self.firstrefresh = True
 
   def setuptodate(self):
     """
@@ -75,16 +74,19 @@ class Skills(object):
     """
     reset skills and recoveries
     """
+    self.api('send.msg')('resetting skills')
     self.skills = {}
     self.recoveries = {}
     self.skillsnamelookup = {}
     self.recoveriesnamelookup = {}
+    self.isuptodatef = False
 
   def refresh(self):
     """
     refresh all data
     """
-    self.api('send.msg')("refreshing skills with 'slist noprompt'")
+    self.api('send.msg')(
+        "refreshing skills with 'slist noprompt' and 'slist leanred noprompt'")
     self.api('cmdq.addtoqueue')('slist', 'noprompt')
     self.api('cmdq.addtoqueue')('slist', 'spellup noprompt')
 
@@ -137,7 +139,7 @@ class Skills(object):
       if tidnum in maint:
         item = copy.deepcopy(maint[tidnum])
       else:
-        self.api('send.msg')('did not find %s for %s' % (ttype, tidnum))
+        self.api('send.msg')('did not find %s %s' % (ttype, tidnum))
 
     if not item and name:
       tlist = self.api('utils.checklistformatch')(name,
@@ -162,6 +164,7 @@ class Skills(object):
     """
     add a skill
     """
+    self.api('send.msg')('adding skill' % args)
     skillnum = args['sn']
     name = args['name']
     target = args['target']
@@ -318,7 +321,7 @@ class SListCmd(object):
     self.api('triggers.togglegroup')('cmd_%s' % self.cid, True)
     self.api('triggers.togglegroup')('cmd_%s_spells' % self.cid, True)
 
-  def datastart(self, args): # pylint: disable=unused-argument
+  def datastart(self, args):
     """
     found beginning of data for slist
     """
@@ -327,7 +330,7 @@ class SListCmd(object):
     self.api('cmdq.cmdstart')(self.cid)
     self.current = args['type']
     # change the endregex to handle specific subcommands
-    if not self.current:
+    if self.current is None:
       # got "slist noprompt"
       # reset skills
       self.plugin.skills.reset()
@@ -387,7 +390,7 @@ class SListCmd(object):
 
   def dataend(self, args): #pylint: disable=unused-argument
     """
-    found end of data for this container
+    found end of data for the slist command
     """
     self.api('send.msg')('CMD - %s: found end %s' % (self.cid, self.endregex))
     self.api('cmdq.cmdfinish')(self.cid)
@@ -569,12 +572,8 @@ class Plugin(AardwolfBasePlugin):
       self.api('A102.toggle')('SPELLUPTAGS', True)
       self.api('A102.toggle')('SKILLGAINTAGS', True)
       self.api('A102.toggle')('QUIETTAGS', False)
-      if self.skills.count() == 0:
+      if self.skills.count() == 0 or not self.api('skills.isuptodate'):
         self.cmd_refresh()
-      elif not self.api('skills.isuptodate')():
-        self.api('send.msg')('refreshing affected in checkskills')
-        self.skills.resetaffected()
-        self.skills.refreshaffected()
 
   def resetskills(self):
     """
