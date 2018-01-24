@@ -114,7 +114,7 @@ class EventContainer(object):
 
     if eventfunc not in self.priod[prio]:
       self.priod[prio].append(eventfunc)
-      self.api('send.msg')('%s - add %s with prio %s' \
+      self.api('send.msg')('%s - register function %s with prio %s' \
               % (self.name, eventfunc, prio), secondary=eventfunc.funcplugin)
       return True
 
@@ -127,7 +127,7 @@ class EventContainer(object):
     for prio in self.priod:
       if func in self.priod[prio]:
         eventfunc = self.priod[prio][self.priod[prio].index(func)]
-        self.api('send.msg')('%s - remove %s with prio %s' \
+        self.api('send.msg')('%s - unregister function %s with prio %s' \
               % (self.name, eventfunc, prio), secondary=eventfunc.funcplugin)
         self.priod[prio].remove(eventfunc)
         return True
