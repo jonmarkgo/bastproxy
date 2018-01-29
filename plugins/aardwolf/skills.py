@@ -164,7 +164,7 @@ class Skills(object):
     """
     add a skill
     """
-    self.api('send.msg')('adding skill' % args)
+    self.api('send.msg')('adding skill : %s' % args)
     skillnum = args['sn']
     name = args['name']
     target = args['target']
@@ -396,6 +396,7 @@ class SListCmd(object):
     self.api('cmdq.cmdfinish')(self.cid)
     if self.current == 'spellup' and not self.plugin.skills.isuptodatef:
       self.plugin.skills.setuptodate()
+    self.current = None
 
   def dataafter(self):
     """
@@ -419,7 +420,7 @@ class SListCmd(object):
 
     self.api('triggers.togglegroup')('cmd_%s' % self.cid, False)
     self.api('triggers.togglegroup')('cmd_%s_spells' % self.cid, False)
-    self.api('triggers.togglegroup')('cmd_%s_revoveries' % self.cid, False)
+    self.api('triggers.togglegroup')('cmd_%s_recoveries' % self.cid, False)
 
 class Plugin(AardwolfBasePlugin):
   """
@@ -565,7 +566,7 @@ class Plugin(AardwolfBasePlugin):
     check to see if we have spells
     """
     state = self.api('GMCP.getv')('char.status.state')
-    if state == 3:
+    if state == 3 and self.api('connect.firstactive')():
       self.api('send.msg')('refreshing skills')
       if self.api('events.isregistered')('GMCP:char.status', self.checkskills):
         self.api('events.unregister')('GMCP:char.status', self.checkskills)
