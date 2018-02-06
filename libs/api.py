@@ -113,6 +113,45 @@ class API(object):
 
     return callstack
 
+  def api_pluginstack(self, skipplugin=None):
+    """
+    return a list of all plugins in the call stack
+    """
+    from plugins._baseplugin import BasePlugin
+
+    if not skipplugin:
+      skipplugin = []
+
+    try:
+      stack = inspect.stack()
+    except IndexError:
+      return None
+
+    plugins = []
+
+    for ifr in stack[1:]:
+      parentframe = ifr[0]
+
+      if 'self' in parentframe.f_locals:
+        # I don't know any way to detect call from the object method
+        # TODO: there seems to be no way to detect static method call - it will
+        #      be just a function call
+        tcs = parentframe.f_locals['self']
+        if tcs != self and isinstance(tcs, BasePlugin) and tcs.sname not in skipplugin:
+          if tcs.sname not in plugins:
+            plugins.append(tcs.sname)
+        if hasattr(tcs, 'plugin') and isinstance(tcs.plugin, BasePlugin) \
+                and tcs.plugin.sname not in skipplugin:
+          if tcs.plugin.sname not in plugins:
+            plugins.append(tcs.plugin.sname)
+
+    del stack
+
+    if 'plugins' in plugins:
+      del plugins[plugins.index('plugins')]
+
+    return plugins
+
   def api_callerplugin(self, skipplugin=None):
     """
     check to see if the caller is a plugin, if so return the plugin object

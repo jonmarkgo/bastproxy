@@ -48,6 +48,8 @@ class ProxyIO(object):  # pylint: disable=too-few-public-methods
     tags = []
     plugin = self.api('api.callerplugin')()
 
+    tags.extend(self.api('api.pluginstack')())
+
     if not isinstance(secondary, list):
       tags.append(secondary)
     else:
