@@ -81,6 +81,7 @@ class API(object):
     self.overload('api', 'detail', self.api_detail)
     self.overload('api', 'list', self.api_list)
     self.overload('api', 'callerplugin', self.api_callerplugin)
+    self.overload('api', 'pluginstack', self.api_pluginstack)
     self.overload('api', 'callstack', self.api_callstack)
 
   def api_callstack(self, ignores=None):
