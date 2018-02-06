@@ -495,8 +495,7 @@ class Worn(EqContainer):
         self.api('send.msg')('incorrect invdata line: %s' % line)
         self.api('send.traceback')()
 
-  def build_wornitem(self, item, wearloc, args):
-    #pylint: disable=too-many-branches
+  def build_wornitem(self, item, wearloc, args): #pylint: disable=too-many-branches
     """
     build the output of a worn item
     """
@@ -750,8 +749,7 @@ class Vault(EqContainer):
 
     return msg
 
-class Plugin(AardwolfBasePlugin):
-  #pylint: disable=too-many-public-methods
+class Plugin(AardwolfBasePlugin): #pylint: disable=too-many-public-methods
   """
   a plugin to handle equipment related actions
   invmon, eqdata, inv
@@ -977,8 +975,7 @@ class Plugin(AardwolfBasePlugin):
 
     return results
 
-  def cmd_refresh(self, args):
-    #pylint: disable=unused-argument
+  def cmd_refresh(self, args): #pylint: disable=unused-argument
     """
     refresh eq
     """
@@ -1196,8 +1193,7 @@ class Plugin(AardwolfBasePlugin):
 
     return True, []
 
-  def checkvaliditem(self, item):
-    #pylint: disable=no-self-use
+  def checkvaliditem(self, item): #pylint: disable=no-self-use
     """
     check to see if an item is valid
     """
@@ -1250,8 +1246,7 @@ class Plugin(AardwolfBasePlugin):
 
     return True, ["container %s does not exist" % container]
 
-  def invmon(self, args):
-    #pylint: disable=too-many-branches,too-many-statements
+  def invmon(self, args): # pylint: disable=too-many-branches,too-many-statements
     """
     do the appropriate action when seeing an invmon message
     """
