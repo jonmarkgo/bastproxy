@@ -3,7 +3,6 @@ This plugin handles internal triggers for the proxy
 """
 from __future__ import print_function
 import sys
-import time
 try:
   import regex as re
 except ImportError:
@@ -378,8 +377,6 @@ class Plugin(BasePlugin):
     check a line of text from the mud to see if it matches any triggers
     called whenever the from_mud_event is raised
     """
-    time1 = time.time()
-    self.api('send.msg')('checktrigger: %s started' % (args), secondary='timing')
     data = args['noansi']
     colordata = args['convertansi']
 
@@ -433,18 +430,12 @@ class Plugin(BasePlugin):
           self.api('send.error')('line %s matched multiple triggers %s' % (data, matches))
 
     self.raisetrigger('all', {'line':data, 'triggername':'all'}, args)
-    time2 = time.time()
-    self.api('send.msg')('%s: %s - finished %0.3f ms' % \
-              ('checktrigger', args, (time2-time1)*1000.0), secondary='timing')
     return args
 
   def raisetrigger(self, triggername, args, origargs):
     """
     raise a trigger event
     """
-    time1 = time.time()
-    self.api('send.msg')('raisetrigger: %s started %s' % (triggername, args),
-                         secondary='timing')
     try:
       eventname = self.triggers[triggername]['eventname']
     except KeyError:
@@ -475,9 +466,6 @@ class Plugin(BasePlugin):
            'plugin':self.sname,})
       origargs['original'] = ""
       origargs['omit'] = True
-    time2 = time.time()
-    self.api('send.msg')('raisetrigger: %s - %0.3f ms' % \
-              (triggername, (time2-time1)*1000.0), secondary='timing')
 
     return origargs
 
