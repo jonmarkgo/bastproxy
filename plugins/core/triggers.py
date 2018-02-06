@@ -395,6 +395,7 @@ class Plugin(BasePlugin):
       colormatch = self.regex['color'].match(colordata)
       noncolormatch = self.regex['noncolor'].match(data)
       if colormatch or noncolormatch:
+        matches = []
         triggers = sorted(self.uniquelookup,
                           key=lambda item: self.uniquelookup[item]['priority'])
         enabledt = [trig for trig in triggers if self.uniquelookup[trig]['enabled']]
@@ -414,6 +415,7 @@ class Plugin(BasePlugin):
                 match = self.uniquelookup[trig]['compiled'].match(data)
             if match:
               targs = match.groupdict()
+              matches.append(trig)
               if 'argtypes' in self.uniquelookup[trig]:
                 for arg in self.uniquelookup[trig]['argtypes']:
                   if arg in targs:
@@ -426,6 +428,9 @@ class Plugin(BasePlugin):
               if trig in self.uniquelookup:
                 if self.uniquelookup[trig]['stopevaluating']:
                   break
+
+        if len(matches) > 1:
+          self.api('send.error')('line %s matched multiple triggers %s' % (data, matches))
 
     self.raisetrigger('all', {'line':data, 'triggername':'all'}, args)
     time2 = time.time()
