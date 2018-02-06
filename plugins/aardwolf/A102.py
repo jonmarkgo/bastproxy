@@ -254,7 +254,6 @@ class CLIENT(BaseTelnetOption):
     BaseTelnetOption.__init__(self, telnetobj, A102, SNAME)
     self.telnetobj.msg('sending IAC WILL A102', mtype='A102')
     self.telnetobj.addtooutbuffer(IAC + WILL + A102, True)
-    self.cmdqueue = []
 
   def handleopt(self, command, sbdata):
     """

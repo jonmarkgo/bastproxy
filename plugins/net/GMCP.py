@@ -369,7 +369,6 @@ class CLIENT(BaseTelnetOption):
     #self.telnetobj.debug_types.append('GMCP')
     self.telnetobj.msg('sending IAC WILL GMCP', mtype='GMCP')
     self.telnetobj.addtooutbuffer("".join([IAC, WILL, GMCP]), True)
-    self.cmdqueue = []
 
   def handleopt(self, command, sbdata):
     """
