@@ -401,7 +401,10 @@ class Plugin(AardwolfBasePlugin):
       msg.append('@B' + '-'* 60)
       for i in self.spellups['sorder']:
         skill = self.api('skills.gets')(i)
-        if not match or match in skill['name']:
+        if not skill:
+          msg.append('%-3s: please check the skills plugin' % \
+                         (self.spellups['sorder'].index(i)))
+        elif not match or match in skill['name']:
           msg.append('%-3s - %-30s : %2s %2s %2s %2s  %-2s  %-2s' % \
                       (self.spellups['sorder'].index(i),
                        skill['name'],
