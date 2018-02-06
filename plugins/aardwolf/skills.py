@@ -57,11 +57,11 @@ class Skills(object):
     self.recoveriesnamelookup = {}
     self.isuptodatef = False
 
-  def setuptodate(self):
+  def setuptodate(self, flag=True):
     """
     set the up to date flag
     """
-    self.isuptodatef = True
+    self.isuptodatef = flag
     self.api('events.eraise')('skills_uptodate')
 
   def count(self):
@@ -505,6 +505,14 @@ class Plugin(AardwolfBasePlugin):
 
     self.api('events.register')('aard_level_tier', self.cmd_refresh)
     self.api('events.register')('aard_level_remort', self.cmd_refresh)
+
+    self.api('events.register')('muddisconnect', self.skillsdisconnect)
+
+  def skillsdisconnect(self, args=None):
+    """
+    set the isuptodate flag to False and clear skills
+    """
+    self.skills.reset()
 
   def afterfirstactive(self, _=None):
     """
