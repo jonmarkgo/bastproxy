@@ -55,6 +55,7 @@ class Plugin(BasePlugin):
     self.currentlogs = {}
     self.colors = {}
 
+    self.filenametemplate = '%a-%b-%d-%Y.log'
     #self.sendtofile['default'] = {
                                 #'logdir':os.path.join(self.logdir, 'default'),
                                 #'file':'%a-%b-%d-%Y.log', 'timestamp':True
@@ -67,21 +68,62 @@ class Plugin(BasePlugin):
     self.api('api.add')('console', self.api_toggletoconsole)
     self.api('api.add')('file', self.api_toggletofile)
     self.api('api.add')('client', self.api_toggletoclient)
+    self.api('api.add')('writefile', self.api_writefile)
 
+    # add some default datatypes
     self.api('log.adddtype')('default')
     self.api('log.adddtype')('frommud')
     self.api('log.adddtype')('startup')
     self.api('log.adddtype')('shutdown')
     self.api('log.adddtype')('error')
 
+    # log some datatypes by default
     self.api('log.client')('error')
     self.api('log.console')('error')
     self.api('log.console')('default')
     self.api('log.console')('startup')
     self.api('log.console')('shutdown')
 
-    #self.api('log.file')('default')
+  def api_writefile(self, dtype, data, stripcolor=False):
+    """
+    write directly to a file
+    """
+    if dtype not in self.sendtofile:
+      self.api('%s.file' % self.sname)(dtype)
 
+    if stripcolor and self.api('api.has')('colors.stripansi'):
+      data = self.api('colors.stripansi')(data)
+
+    tfile = os.path.join(self.logdir, dtype,
+                          time.strftime(self.sendtofile[dtype]['file'],
+                                        time.localtime()))
+    if not os.path.exists(os.path.join(self.logdir, dtype)):
+      os.makedirs(os.path.join(self.logdir, dtype, 'archive'))
+    if (dtype not in self.currentlogs) or \
+      (dtype in self.currentlogs and not self.currentlogs[dtype]):
+      self.currentlogs[dtype] = {}
+      self.currentlogs[dtype]['filename'] = tfile
+      self.currentlogs[dtype]['fhandle'] = None
+    elif tfile != self.currentlogs[dtype]['filename']:
+      self.archivelog(dtype)
+      self.currentlogs[dtype]['filename'] = tfile
+
+    if not self.currentlogs[dtype]['fhandle']:
+      self.currentlogs[dtype]['fhandle'] = \
+                      open(self.currentlogs[dtype]['filename'], 'a')
+
+    if self.sendtofile[dtype]['timestamp']:
+      tstring = '%s : ' % \
+            (time.strftime(self.api.timestring, time.localtime()))
+      data = tstring + data
+
+    if self.api('api.has')('colors.stripansi'):
+      self.currentlogs[dtype]['fhandle'].write(
+          self.api('colors.stripansi')(data) + '\n')
+    else:
+      self.currentlogs[dtype]['fhandle'].write(data + '\n')
+    self.currentlogs[dtype]['fhandle'].flush()
+    return True
 
   # add a datatype to the log
   def api_adddtype(self, datatype):
@@ -154,40 +196,8 @@ class Plugin(BasePlugin):
     send a message to a log file
     """
     #print('logging', dtype)
-    if stripcolor and self.api('api.has')('colors.stripansi'):
-      msg = self.api('colors.stripansi')(msg)
-
     if dtype in self.sendtofile and self.sendtofile[dtype]['file']:
-      tfile = os.path.join(self.logdir, dtype,
-                           time.strftime(self.sendtofile[dtype]['file'],
-                                         time.localtime()))
-      if not os.path.exists(os.path.join(self.logdir, dtype)):
-        os.makedirs(os.path.join(self.logdir, dtype, 'archive'))
-      if (dtype not in self.currentlogs) or \
-        (dtype in self.currentlogs and not self.currentlogs[dtype]):
-        self.currentlogs[dtype] = {}
-        self.currentlogs[dtype]['filename'] = tfile
-        self.currentlogs[dtype]['fhandle'] = None
-      elif tfile != self.currentlogs[dtype]['filename']:
-        self.archivelog(dtype)
-        self.currentlogs[dtype]['filename'] = tfile
-
-      if not self.currentlogs[dtype]['fhandle']:
-        self.currentlogs[dtype]['fhandle'] = \
-                        open(self.currentlogs[dtype]['filename'], 'a')
-
-      if self.sendtofile[dtype]['timestamp']:
-        tstring = '%s : ' % \
-              (time.strftime(self.api.timestring, time.localtime()))
-        msg = tstring + msg
-
-      if self.api('api.has')('colors.stripansi'):
-        self.currentlogs[dtype]['fhandle'].write(
-            self.api('colors.stripansi')(msg) + '\n')
-      else:
-        self.currentlogs[dtype]['fhandle'].write(msg + '\n')
-      self.currentlogs[dtype]['fhandle'].flush()
-      return True
+      return self.api('%s.writefile'% self.sname)(dtype, msg, stripcolor)
 
     return False
 
@@ -286,9 +296,7 @@ class Plugin(BasePlugin):
         self.currentlogs[datatype]['fhandle'] = None
       del self.sendtofile[datatype]
     else:
-      tfile = '%a-%b-%d-%Y.log'
-
-      self.sendtofile[datatype] = {'file':tfile,
+      self.sendtofile[datatype] = {'file':self.filenametemplate,
                                    'timestamp':timestamp}
       self.api('send.msg')('setting %s to log to %s' % \
                       (datatype, self.sendtofile[datatype]['file']),
@@ -313,9 +321,7 @@ class Plugin(BasePlugin):
         del self.sendtofile[dtype]
         tmsg.append('removing %s from logging' % dtype)
       else:
-        tfile = '%a-%b-%d-%Y.log'
-
-        self.sendtofile[dtype] = {'file':tfile,
+        self.sendtofile[dtype] = {'file':self.filenametemplate,
                                   'logdir':os.path.join(self.logdir, dtype),
                                   'timestamp':timestamp}
         tmsg.append('setting %s to log to %s' % \
