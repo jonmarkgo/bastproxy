@@ -94,6 +94,8 @@ class API(object):
       self('api.add')('api', 'callerplugin', self.api_callerplugin)
     if not self('api.has')('api.pluginstack'):
       self('api.add')('api', 'pluginstack', self.api_pluginstack)
+    if not self('api.has')('api.callstack'):
+      self('api.add')('api', 'callstack', self.api_callstack)
 
 
   def api_callstack(self, ignores=None):
