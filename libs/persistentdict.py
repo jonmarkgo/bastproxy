@@ -4,7 +4,6 @@ it saves the dict to a file
 """
 import pickle
 import json
-import csv
 import os
 import shutil
 import stat
@@ -16,11 +15,13 @@ def convert(tinput):
   converts input to ascii (utf-8)
   """
   if isinstance(tinput, dict):
-    return {convert(key): convert(value) for key, value in tinput.iteritems()}
+    return {convert(key): convert(value) for key, value in tinput.items()}
   elif isinstance(tinput, list):
     return [convert(element) for element in tinput]
-  elif isinstance(tinput, unicode):
-    return tinput.encode('utf-8')
+  elif isinstance(tinput, str):
+    return tinput
+  elif isinstance(tinput, bytes):
+    return str(tinput)
 
   return tinput
 
@@ -50,7 +51,7 @@ class PersistentDict(dict):
   Write to disk is delayed until close or sync (similar to gdbm's fast mode).
 
   Input file format is automatically discovered.
-  Output file format is selectable between pickle, json, and csv.
+  Output file format is selectable between pickle and json
   All three serialization formats are backed by fast C implementations.
 
   '''
@@ -68,7 +69,7 @@ class PersistentDict(dict):
     # None or an octal triple like 0644
     self.mode = (stat.S_IWUSR | stat.S_IRUSR) or mode
 
-    # 'csv', 'json', or 'pickle'
+    # json', or 'pickle'
     self.format = tformat
     self.filename = filename
     self.pload()
@@ -82,15 +83,13 @@ class PersistentDict(dict):
       return
     filename = self.filename
     tempname = filename + '.tmp'
-    fileobj = open(tempname, 'wb' if self.format == 'pickle' else 'w')
     try:
-      self.dump(fileobj)
+      self.dump(tempname)
     except Exception:
       os.remove(tempname)
       raise
     finally:
-      fileobj.close()
-    shutil.move(tempname, self.filename)    # atomic commit
+      shutil.move(tempname, self.filename)    # atomic commit
     if self.mode is not None:
       os.chmod(self.filename, self.mode)
 
@@ -112,19 +111,16 @@ class PersistentDict(dict):
     """
     self.close()
 
-  def dump(self, fileobj):
+  def dump(self, filename):
     """
     dump the file
     """
-    if self.format == 'csv':
-      csv.writer(fileobj).writerows(self.items())
-    elif self.format == 'json':
-      try:
-        json.dump(self, fileobj, separators=(',', ':'), skipkeys=True)
-      except TypeError:
-        self.api('send.traceback')('Could not save object')
+    if self.format == 'json':
+      with open(filename, mode='w', encoding='utf-8') as f:
+        json.dump(self, f, separators=(',', ':'), skipkeys=True, indent=2)
     elif self.format == 'pickle':
-      pickle.dump(dict(self), fileobj, 2)
+      with open(filename, 'wb') as f:
+        pickle.dump(dict(self), f, 2)
     else:
       raise NotImplementedError('Unknown format: ' + repr(self.format))
 
@@ -134,29 +130,32 @@ class PersistentDict(dict):
     """
     # try formats from most restrictive to least restrictive
     if self.flag != 'n' and os.access(self.filename, os.R_OK):
-      fileobj = open(self.filename, 'rb' if self.format == 'pickle' else 'r')
-      with fileobj:
-        self.load(fileobj)
+      self.load()
 
-  def load(self, fileobj):
+  def load(self):
     """
     load the dictionary
     """
-    for loader in (pickle.load, json.load, csv.reader):
-      fileobj.seek(0)
-      try:
-        if loader == json.load:
-          tstuff = loader(fileobj, object_hook=convert)
-          nstuff = convertkeystoint(tstuff)
-          return self.update(nstuff)
+    tstuff = {}
+    if not os.path.exists(self.filename):
+      return
+    try:
+      if self.format == 'pickle':
+        with open(self.filename, 'rb') as f:
+          tstuff = pickle.load(f)
+      elif self.format == 'json':
+        with open(self.filename, 'r', encoding='utf-8') as f:
+          tstuff = json.load(f, object_hook=convert)
 
-        return self.update(loader(fileobj))
-      except Exception:  # pylint: disable=broad-except
-        #if not ('log' in self.filename):
-        #  api('send.traceback')("Error when loading %s" % loader)
-        #else:
-        #  pass
-        pass
+      nstuff = convertkeystoint(tstuff)
+      return self.update(nstuff)
+
+    except Exception:  # pylint: disable=broad-except
+      #if 'log' not in self.filename:
+      self.api('send.traceback')("Error when loading %s" % loader)
+      #else:
+      #  pass
+
     raise ValueError('File not in a supported format')
 
   def __setitem__(self, key, val):
@@ -174,7 +173,7 @@ class PersistentDict(dict):
     """
     override update
     """
-    for k, val in dict(*args, **kwargs).iteritems():
+    for k, val in dict(*args, **kwargs).items():
       self[k] = val
 
   def __deepcopy__(self, memo):
