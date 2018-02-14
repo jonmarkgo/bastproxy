@@ -136,7 +136,7 @@ class ProxyIO(object):  # pylint: disable=too-few-public-methods
 
     # if the data is from the proxy (internal) and not raw, add the preamble to each line
     if not raw and dtype == 'fromproxy':
-      if isinstance(text, basestring):
+      if isinstance(text, str):
         text = text.split('\n')
 
       test = []

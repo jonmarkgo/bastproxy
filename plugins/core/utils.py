@@ -211,7 +211,7 @@ class Plugin(BasePlugin):
       return False
     elif val == 1 or val == '1':
       return True
-    elif isinstance(val, basestring):
+    elif isinstance(val, str):
       val = val.lower()
       if val == 'false' or val == 'no':
         return False
@@ -317,7 +317,7 @@ class Plugin(BasePlugin):
     for i in tlist:
       if fnmatch.fnmatch(i, match):
         tdict['front'].append(i)
-      elif isinstance(i, basestring) and sarg in i:
+      elif isinstance(i, str) and sarg in i:
         tdict['part'].append(i)
 
     if tdict['front']:

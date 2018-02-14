@@ -148,7 +148,7 @@ class PluginMgr(BasePlugin):
     """  get a loaded plugin instance
     @Ypluginname@w  = the plugin to get"""
 
-    if isinstance(pluginname, basestring):
+    if isinstance(pluginname, str):
       if pluginname in self.loadedpluginsd:
         return self.loadedpluginsd[pluginname]['plugin']
       if pluginname in self.pluginlookupbysname:
