@@ -529,7 +529,7 @@ class Plugin(BasePlugin):
                 (cmdname, calledfrom), secondary=calledfrom)
       return
     try:
-      sname = func.im_self.sname
+      sname = func.__self__.sname
     except AttributeError:
       if 'sname' in args:
         sname = args['sname']
@@ -565,7 +565,7 @@ class Plugin(BasePlugin):
 
 
     try:
-      lname = func.im_self.name
+      lname = func.__self__.name
       args['lname'] = lname
     except AttributeError:
       pass

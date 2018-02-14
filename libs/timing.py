@@ -13,7 +13,7 @@ def timeit(func):
     """
     the wrapper to time a function
     """
-    tname = '%s' % (func.func_name)
+    tname = '%s' % (func.__name__)
     TIMING.starttimer(tname, arg)
     res = func(*arg)
     TIMING.finishtimer(tname, arg)

@@ -271,7 +271,7 @@ class Plugin(BasePlugin):
     returns an Event instance"""
     plugin = None
     try:
-      plugin = func.im_self
+      plugin = func.__self__
     except AttributeError:
       plugin = None
 

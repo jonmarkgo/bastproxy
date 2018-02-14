@@ -304,7 +304,7 @@ class Plugin(BasePlugin):
     else:
       prio = kwargs['prio']
     try:
-      funcplugin = func.im_self.sname
+      funcplugin = func.__self__.sname
     except AttributeError:
       funcplugin = self.api('api.callerplugin')(skipplugin=['events'])
     if not funcplugin and 'plugin' in kwargs:
