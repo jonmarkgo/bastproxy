@@ -11,7 +11,10 @@ same function to the api.
 
 See the BasePlugin class
 """
+from __future__ import print_function
 import inspect
+import sys
+import traceback
 
 def getargs(apif):
   """
@@ -52,6 +55,8 @@ class API(object):
   # a dictionary of managers that could not be made into plugins
   MANAGERS = {}
 
+  starttime = ''
+
   def __init__(self):
     """
     initialize the class
@@ -65,16 +70,141 @@ class API(object):
     # The command seperator is |
     self.splitre = r'(?<=[^\|])\|(?=[^\|])'
 
-    # overloaded functions
-    self.overload('managers', 'add', self.addmanager)
-    self.overload('managers', 'getm', self.getmanager)
-    self.overload('api', 'add', self.add)
-    self.overload('api', 'overload', self.overload)
-    self.overload('api', 'remove', self.remove)
-    self.overload('api', 'getchildren', self.api_getchildren)
-    self.overload('api', 'has', self.api_has)
-    self.overload('api', 'detail', self.api_detail)
-    self.overload('api', 'list', self.api_list)
+    # added functions
+    if not self.api_has('api.has'):
+      self.add('api', 'has', self.api_has)
+    if not self('api.has')('api.add'):
+      self.add('api', 'add', self.add)
+    if not self('api.has')('api.overload'):
+      self('api.add')('api', 'overload', self.overload)
+
+    if not self('api.has')('managers.add'):
+      self('api.add')('managers', 'add', self.addmanager)
+    if not self('api.has')('managers.getm'):
+      self('api.add')('managers', 'getm', self.getmanager)
+    if not self('api.has')('api.remove'):
+      self('api.add')('api', 'remove', self.remove)
+    if not self('api.has')('api.getchildren'):
+      self('api.add')('api', 'getchildren', self.api_getchildren)
+    if not self('api.has')('api.detail'):
+      self('api.add')('api', 'detail', self.api_detail)
+    if not self('api.has')('api.list'):
+      self('api.add')('api', 'list', self.api_list)
+    if not self('api.has')('api.callerplugin'):
+      self('api.add')('api', 'callerplugin', self.api_callerplugin)
+    if not self('api.has')('api.pluginstack'):
+      self('api.add')('api', 'pluginstack', self.api_pluginstack)
+    if not self('api.has')('api.callstack'):
+      self('api.add')('api', 'callstack', self.api_callstack)
+
+
+  def api_callstack(self, ignores=None):
+    # pylint: disable=line-too-long
+    """
+    return a list of function calls that form the stack
+    Example:
+    ['  File "bastproxy.py", line 280, in <module>',
+     '    main()',
+     '  File "bastproxy.py", line 253, in main',
+     '    start(listen_port)',
+     '  File "/home/endavis/src/games/bastproxy/bp/libs/event.py", line 60, in new_func',
+     '    return func(*args, **kwargs)',
+     '  File "/home/endavis/src/games/bastproxy/bp/libs/net/proxy.py", line 63, in handle_read',
+     "    'convertansi':tconvertansi})", '
+    """
+    # pylint: enable=line-too-long
+    if ignores is None:
+      ignores = []
+    callstack = []
+
+    for _, frame in sys._current_frames().items(): # pylint: disable=protected-access
+      for i in traceback.format_stack(frame)[:-1]:
+        if True in [tstr in i for tstr in ignores]:
+          continue
+        tlist = i.split('\n')
+        for tline in tlist:
+          if tline:
+            if self.BASEPATH:
+              tline = tline.replace(self.BASEPATH + "/", "")
+            callstack.append(tline.rstrip())
+
+    return callstack
+
+  def api_pluginstack(self, skipplugin=None):
+    """
+    return a list of all plugins in the call stack
+    """
+    from plugins._baseplugin import BasePlugin
+
+    if not skipplugin:
+      skipplugin = []
+
+    try:
+      stack = inspect.stack()
+    except IndexError:
+      return None
+
+    plugins = []
+
+    for ifr in stack[1:]:
+      parentframe = ifr[0]
+
+      if 'self' in parentframe.f_locals:
+        # I don't know any way to detect call from the object method
+        # TODO: there seems to be no way to detect static method call - it will
+        #      be just a function call
+        tcs = parentframe.f_locals['self']
+        if tcs != self and isinstance(tcs, BasePlugin) and tcs.sname not in skipplugin:
+          if tcs.sname not in plugins:
+            plugins.append(tcs.sname)
+        if hasattr(tcs, 'plugin') and isinstance(tcs.plugin, BasePlugin) \
+                and tcs.plugin.sname not in skipplugin:
+          if tcs.plugin.sname not in plugins:
+            plugins.append(tcs.plugin.sname)
+
+    del stack
+
+    if 'plugins' in plugins:
+      del plugins[plugins.index('plugins')]
+
+    return plugins
+
+  def api_callerplugin(self, skipplugin=None):
+    """
+    check to see if the caller is a plugin, if so return the plugin object
+
+    this is so plugins can figure out who gave them data and keep up with it.
+
+    it will return the first plugin found when going through the stack
+       it checks for a BasePlugin instance of self
+       if it doesn't find that, it checks for an attribute of plugin
+    """
+    from plugins._baseplugin import BasePlugin
+
+    if not skipplugin:
+      skipplugin = []
+
+    try:
+      stack = inspect.stack()
+    except IndexError:
+      return None
+
+    for ifr in stack[1:]:
+      parentframe = ifr[0]
+
+      if 'self' in parentframe.f_locals:
+        # I don't know any way to detect call from the object method
+        # TODO: there seems to be no way to detect static method call - it will
+        #      be just a function call
+        tcs = parentframe.f_locals['self']
+        if tcs != self and isinstance(tcs, BasePlugin) and tcs.sname not in skipplugin:
+          return tcs.sname
+        if hasattr(tcs, 'plugin') and isinstance(tcs.plugin, BasePlugin) \
+                and tcs.plugin.sname not in skipplugin:
+          return tcs.plugin.sname
+
+    del stack
+    return None
 
   # add a function to the api
   def add(self, toplevel, name, function):
@@ -88,12 +218,11 @@ class API(object):
     this function returns no values"""
 
     ## do some magic to get plugin this was added from
+    fullapi = toplevel + '.' + name
+    if fullapi in self.__class__.api:
+      self.get('send.error')('api.add - %s already exists' % fullapi)
 
-    if toplevel not in self.__class__.api:
-      self.__class__.api[toplevel] = {}
-
-    if name not in self.__class__.api[toplevel]:
-      self.__class__.api[toplevel][name] = function
+    self.__class__.api[fullapi] = function
 
   # overload a function in the api
   def overload(self, toplevel, name, function):
@@ -105,16 +234,17 @@ class API(object):
     the function is added as toplevel.name into the overloaded api
 
     this function returns no values"""
+    fullapi = toplevel + '.' + name
     try:
-      ofunc = self.get(toplevel + '.' + name)
+      ofunc = self.get(fullapi)
       function.__doc__ = ofunc.__doc__
     except AttributeError:
       pass
 
-    if toplevel not in self.overloadedapi:
-      self.overloadedapi[toplevel] = {}
+    if fullapi in self.overloadedapi:
+      self.get('send.error')('api.overload - %s already exists' % fullapi)
 
-    self.overloadedapi[toplevel][name] = function
+    self.overloadedapi[fullapi] = function
 
   # get a manager
   def getmanager(self, name):
@@ -124,8 +254,8 @@ class API(object):
     this function returns the manager instance"""
     if name in self.MANAGERS:
       return self.MANAGERS[name]
-    else:
-      return None
+
+    return None
 
   # add a manager
   def addmanager(self, name, manager):
@@ -145,19 +275,18 @@ class API(object):
     if toplevel in self.__class__.api:
       del self.__class__.api[toplevel]
 
-  def get(self, apiname, toplevelapi=False):
+  def get(self, apiname, nooverload=False):
     """
     get an api function
     """
-    toplevel, name = apiname.split('.')
-    if not toplevelapi:
+    if not nooverload:
       try:
-        return self.overloadedapi[toplevel][name]
+        return self.overloadedapi[apiname]
       except KeyError:
         pass
 
     try:
-      return self.api[toplevel][name]
+      return self.api[apiname]
     except KeyError:
       pass
 
@@ -207,7 +336,7 @@ class API(object):
       name, cmdname = apiname.split('.')
       tdict = {'name':name, 'cmdname':cmdname, 'apiname':apiname}
       try:
-        apia = self.get(apiname, True)
+        apia = self.get(apiname, nooverload=True)
       except AttributeError:
         pass
 
@@ -246,7 +375,8 @@ class API(object):
         args = getargs(apif)
 
         tmsg.append('@G%s@w(%s)' % (apiname, args))
-        tmsg.append(apif.__doc__ % tdict)
+        if apif.__doc__:
+          tmsg.append(apif.__doc__ % tdict)
 
         tmsg.append('')
         if apiapath:
@@ -264,15 +394,13 @@ class API(object):
     """
     apilist = {}
 
-    if toplevel in self.api:
-      apilist[toplevel] = {}
-      for k in self.api[toplevel]:
-        apilist[toplevel][k] = True
-    if toplevel in self.overloadedapi:
-      if toplevel not in apilist:
-        apilist[toplevel] = {}
-      for k in self.overloadedapi[toplevel]:
-        apilist[toplevel][k] = True
+    for i in self.api:
+      if toplevel in i:
+        apilist[i] = True
+
+    for i in self.overloadedapi:
+      if toplevel in i:
+        apilist[i] = True
 
     return apilist
 
@@ -283,15 +411,11 @@ class API(object):
     apilist = {}
     for i in self.api:
       if i not in apilist:
-        apilist[i] = {}
-      for k in self.api[i]:
-        apilist[i][k] = True
+        apilist[i] = True
 
     for i in self.overloadedapi:
       if i not in apilist:
-        apilist[i] = {}
-      for k in self.overloadedapi[i]:
-        apilist[i][k] = True
+        apilist[i] = True
 
     return apilist
 
@@ -309,16 +433,17 @@ class API(object):
 
     tkeys = apilist.keys()
     tkeys.sort()
+    toplevels = []
     for i in tkeys:
-      tmsg.append('@G%-10s@w' % i)
-      tkeys2 = apilist[i].keys()
-      tkeys2.sort()
-      for k in tkeys2:
-        apif = self.get('%s.%s' % (i, k))
-        comments = inspect.getcomments(apif)
-        if comments:
-          comments = comments.strip()
-        tmsg.append('  @G%-15s@w : %s' % (k, comments))
+      toplevel, therest = i.split('.', 1)
+      if toplevel not in toplevels:
+        toplevels.append(toplevel)
+        tmsg.append('@G%-10s@w' % toplevel)
+      apif = self.get(i)
+      comments = inspect.getcomments(apif)
+      if comments:
+        comments = comments.strip()
+      tmsg.append('  @G%-15s@w : %s' % (therest, comments))
 
     return tmsg
 
@@ -326,52 +451,63 @@ def test():
   """
   do some testing for the api
   """
-  def testapi():
+  # some generic description
+  def testapi(msg):
     """
     a test api
     """
-    print 'testapi'
-
-  def testover():
-    """
-    a test overloaded api
-    """
-    print 'testover'
+    return msg
 
   api = API()
   api.add('test', 'api', testapi)
   api.add('test', 'over', testapi)
-  print 'test.api', api('test.api')()
-  print 'test.over', api('test.over')()
-  print 'dict api.api', api.api
-  api.overload('over', 'api', testover)
-  print 'dict api.overloadedapi', api.overloadedapi
-  print 'over.api', api('over.api')()
-  api.overload('test', 'over', testover)
-  print 'test.over', api('test.over')()
-  print 'test.api', api('test.api')()
-  print 'api.has', api('api.has')('test.over')
-  print 'api.has', api('api.has')('test.over2')
-  print 'dict api.api', api.api
-  print 'dict api.overloadapi', api.overloadedapi
-  #print 'test.three', api.test.three()
+  api.add('test', 'some.api', testapi)
+  print('test.api', api('test.api')('called test.api'))
+  print('test.over', api('test.over')('called test.over'))
+  print('test.some.api', api('test.some.api')('called test.some.api'))
+  print('dict api.api', api.api)
+  api.overload('over', 'api', testapi)
+  print('dict api.overloadedapi', api.overloadedapi)
+  print('over.api', api('over.api')('called over.api'))
+  api.overload('test', 'over', testapi)
+  print('test.over', api('test.over')('called test.over'))
+  print('test.api', api('test.api')('called test.api'))
+  print('api.has test.over', api('api.has')('test.over'))
+  print('api.has test.over2', api('api.has')('test.over2'))
+  print('api.has test.some.api', api('api.has')('test.some.api'))
+  print('dict api.api', api.api)
+  print('dict api.overloadapi', api.overloadedapi)
+  print('dict api.api', api.api)
+  print('dict api.overloadapi', api.overloadedapi)
+
+  print('\n'.join(api.api_list(toplevel="test")))
+  print('--------------------')
+  print('\n'.join(api.api_list()))
+  print('--------------------')
+  print('\n'.join(api.api_detail('api.add')))
+  print('--------------------')
 
   api2 = API()
-  print 'api2 test.api', api2('test.api')()
-  print 'api2 test.over', api2('test.over')()
-  print 'api2 dict api.api', api2.api
-  api2.overload('over', 'api', testover)
-  print 'api2 dict api.overloadedapi', api2.overloadedapi
-  print 'api2 over.api', api2('over.api')()
-  api2.overload('test', 'over', testover)
-  print 'api2 dict api.api', api2.api
-  print 'api2 dict api.overloadapi', api2.overloadedapi
-  print 'api2 test.over', api2('test.over')()
-  print 'api2 test.api', api2('test.api')()
-  print 'api_has', api2.api_has('test.three')
-  print 'test.three', api2('test.three')()
-  print "doesn't exist", api2('test.four')()
+  print('api2 test.api', api2('test.api')('called test.api'))
+  print('api2 test.over', api2('test.over')('called test.api'))
+  print('api2 dict api.api', api2.api)
+  api2.overload('over', 'api', testapi)
+  print('api2 dict api.overloadedapi', api2.overloadedapi)
+  print('api2 over.api', api2('over.api')('called over.api'))
+  api2.overload('test', 'over', testapi)
+  print('api2 dict api.api', api2.api)
+  print('api2 dict api.overloadapi', api2.overloadedapi)
+  print('api2 test.over', api2('test.over')('called test.over'))
+  print('api2 test.api', api2('test.api')('called est.api'))
+  print('api_has test.three', api2.api_has('test.three'))
+  try:
+    print('test.three', api2('test.three')('called test.three'))
+  except AttributeError:
+    print('test.three was not in the api')
+  try:
+    print("doesn't exist", api2('test.four')('called test.four'))
+  except AttributeError:
+    print('test.four was not in the api')
 
 if __name__ == '__main__':
   test()
-

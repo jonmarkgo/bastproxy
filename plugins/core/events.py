@@ -4,18 +4,17 @@ This plugin handles events.
 
 ## Using
 ### Registering an event from a plugin
- * ```self.api.get('events.register')(eventname, function)```
+ * ```self.api('events.register')(eventname, function)```
 
 ### Unregistering an event
- * ```self.api.get('events.unregister')(eventname, function)```
+ * ```self.api('events.unregister')(eventname, function)```
 
 ### Raising an event
- * ```self.api.get('events.eraise')(eventname, argtable)```
+ * ```self.api('events.eraise')(eventname, argdictionary)```
 """
-import argparse
-import time
+from __future__ import print_function
+import libs.argp as argp
 from plugins._baseplugin import BasePlugin
-from libs.timing import timeit
 
 NAME = 'Event Handler'
 SNAME = 'events'
@@ -25,6 +24,184 @@ VERSION = 1
 PRIORITY = 3
 
 AUTOLOAD = True
+
+class EFunc(object): # pylint: disable=too-few-public-methods
+  """
+  a basic event class
+  """
+  def __init__(self, func, funcplugin):
+    """
+    init the class
+    """
+    self.funcplugin = funcplugin
+    self.timesexecuted = 0
+    self.func = func
+    self.name = func.__name__
+
+  def execute(self, args):
+    """
+    execute the event
+    """
+    self.timesexecuted = self.timesexecuted + 1
+    return self.func(args)
+
+  def __str__(self):
+    """
+    return a string representation of the function
+    """
+    return '%-10s : %-15s' % (self.name, self.funcplugin)
+
+  def __eq__(self, other):
+    """
+    check equality between two event functions
+    """
+    if callable(other):
+      if other == self.func:
+        return True
+    try:
+      if self.func == other.func:
+        return True
+    except AttributeError:
+      return False
+
+    return False
+
+class EventContainer(object):
+  """
+  a container of functions for an event
+  """
+  def __init__(self, plugin, name):
+    """
+    init the class
+    """
+    self.name = name
+    self.priod = {}
+    self.plugin = plugin
+    self.api = self.plugin.api
+    self.numraised = 0
+
+  def isregistered(self, func):
+    """
+    check if a function is registered to this event
+    """
+    for prio in self.priod:
+      if func in self.priod[prio]:
+        return True
+
+    return False
+
+  def isempty(self):
+    """
+    check if an event has no functions registered
+    """
+    for prio in self.priod:
+      if self.priod[prio]:
+        return False
+
+    return True
+
+  def register(self, func, funcplugin, prio=50):
+    """
+    register a function to this event container
+    """
+    if not prio:
+      prio = 50
+
+    if prio not in self.priod:
+      self.priod[prio] = []
+
+    eventfunc = EFunc(func, funcplugin)
+
+    if eventfunc not in self.priod[prio]:
+      self.priod[prio].append(eventfunc)
+      self.api('send.msg')('%s - register function %s with prio %s' \
+              % (self.name, eventfunc, prio), secondary=eventfunc.funcplugin)
+      return True
+
+    return False
+
+  def unregister(self, func):
+    """
+    unregister a function from this event container
+    """
+    for prio in self.priod:
+      if func in self.priod[prio]:
+        eventfunc = self.priod[prio][self.priod[prio].index(func)]
+        self.api('send.msg')('%s - unregister function %s with prio %s' \
+              % (self.name, eventfunc, prio), secondary=eventfunc.funcplugin)
+        self.priod[prio].remove(eventfunc)
+        return True
+
+    self.api('send.error')('Could not find function %s in event %s' % \
+                              (func.__name__, self.name))
+    return False
+
+  def removeplugin(self, plugin):
+    """
+    remove all functions related to a plugin
+    """
+    removel = []
+    for prio in self.priod:
+      for eventfunc in self.priod[prio]:
+        if eventfunc.funcplugin == plugin:
+          removel.append(eventfunc)
+
+    for eventf in removel:
+      self.api('events.unregister')(self.name, eventf.func)
+
+  def detail(self):
+    """
+    format a detail of the event
+    """
+    tmsg = []
+    tmsg.append('%-13s : %s' % ('Event', self.name))
+    tmsg.append('%-13s : %s' % ('Raised', self.numraised))
+    tmsg.append('@B' + self.api('utils.center')('Registrations', '-', 60))
+    tmsg.append('%-4s : %-15s - %-s' % ('prio',
+                                        'plugin',
+                                        'function name'))
+    tmsg.append('@B' + '-' * 60)
+    funcmsg = []
+    tkeys = self.priod.keys()
+    tkeys.sort()
+    for prio in tkeys:
+      for eventfunc in self.priod[prio]:
+        funcmsg.append('%-4s : %-15s - %-s' % (prio,
+                                               eventfunc.funcplugin,
+                                               eventfunc.name))
+
+    if not funcmsg:
+      tmsg.append('None')
+    else:
+      tmsg.extend(funcmsg)
+    tmsg.append('')
+
+    return tmsg
+
+  def eraise(self, nargs, calledfrom):
+    """
+    raise this event
+    """
+    self.numraised = self.numraised + 1
+
+    if self.name != 'global_timer':
+      self.api('send.msg')('event %s raised by %s with args %s' % \
+                             (self.name, calledfrom, nargs),
+                           secondary=calledfrom)
+    keys = self.priod.keys()
+    if keys:
+      keys.sort()
+      for prio in keys:
+        for eventfunc in self.priod[prio][:]:
+          try:
+            tnargs = eventfunc.execute(nargs)
+            if tnargs:
+              nargs = tnargs
+          except Exception:  # pylint: disable=broad-except
+            self.api('send.traceback')(
+                "error when calling function for event %s" % self.name)
+
+    return nargs
 
 class Plugin(BasePlugin):
   """
@@ -37,46 +214,50 @@ class Plugin(BasePlugin):
 
     self.canreload = False
 
+    self.numglobalraised = 0
+    self.eventstats = {}
+
     self.events = {}
     self.pluginlookup = {}
 
-    self.api.get('api.add')('register', self.api_register)
-    self.api.get('api.add')('unregister', self.api_unregister)
-    self.api.get('api.add')('eraise', self.api_eraise)
-    self.api.get('api.add')('removeplugin', self.api_removeplugin)
-    self.api.get('api.add')('gete', self.api_getevent)
-    self.api.get('api.add')('detail', self.api_detail)
+    self.api('api.add')('register', self.api_register)
+    self.api('api.add')('unregister', self.api_unregister)
+    self.api('api.add')('eraise', self.api_eraise)
+    self.api('api.add')('isregistered', self.api_isregistered)
+    self.api('api.add')('removeplugin', self.api_removeplugin)
+    self.api('api.add')('gete', self.api_getevent)
+    self.api('api.add')('detail', self.api_detail)
 
   def load(self):
     """
     load the module
     """
     BasePlugin.load(self)
-    self.api.get('events.register')('log_plugin_loaded', self.logloaded)
-    self.api.get('events.eraise')('event_plugin_loaded', {})
+    self.api('events.register')('log_plugin_loaded', self.logloaded)
+    self.api('events.eraise')('event_plugin_loaded', {})
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='get details of an event')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='get details of an event')
     parser.add_argument('event',
                         help='the event name to get details for',
                         default=[],
                         nargs='*')
-    self.api.get('commands.add')('detail',
-                                 self.cmd_detail,
-                                 parser=parser)
+    self.api('commands.add')('detail',
+                             self.cmd_detail,
+                             parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='list events and the ' \
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='list events and the ' \
                                                   'plugins registered with them')
     parser.add_argument('match',
                         help='list only events that have this argument in their name',
                         default='',
                         nargs='?')
-    self.api.get('commands.add')('list',
-                                 self.cmd_list,
-                                 parser=parser)
+    self.api('commands.add')('list',
+                             self.cmd_list,
+                             parser=parser)
 
-    self.api.get('events.register')('plugin_unloaded', self.pluginunloaded)
+    self.api('events.register')('plugin_unloaded', self.pluginunloaded, prio=10)
 
   def pluginunloaded(self, args):
     """
@@ -91,31 +272,25 @@ class Plugin(BasePlugin):
     """  return an event
     @Yeventname@w   = the event to return
 
-    this function returns a dictionary of format
-      pluginslist = list of plugins that use this event
-      funclist = a dictionary of funcnames, with their plugin,
-              function name, and prio as values in a dictionary
+    this function returns an EventContainer object
     """
-    pluginlist = []
-    funcdict = {}
     if eventname in self.events:
-      for prio in self.events[eventname]:
-        for func in self.events[eventname][prio]:
-          try:
-            plugin = func.im_self.sname
-          except AttributeError:
-            plugin = 'Unknown'
-          if plugin not in pluginlist:
-            pluginlist.append(plugin)
-          funcdict[func] = {}
-          funcdict[func]['name'] = func.__name__
-          funcdict[func]['priority'] = prio
-          funcdict[func]['plugin'] = plugin
+      return self.events[eventname]
 
-      return {'pluginlist':pluginlist, 'funcdict':funcdict}
+    return None
 
-    else:
-      return {}
+  def api_isregistered(self, eventname, func):
+    """  check if a function is registered to an event
+    @Yeventname@w   = the event to check
+    @Yfunc@w        = the function to check for
+
+    this function returns True if found, False otherwise
+    """
+    #print('isregistered')
+    if eventname in self.events:
+      return self.events[eventname].isregistered(func)
+
+    return False
 
   # register a function with an event
   def api_register(self, eventname, func, **kwargs):
@@ -132,29 +307,16 @@ class Plugin(BasePlugin):
     else:
       prio = kwargs['prio']
     try:
-      plugin = func.im_self.sname
+      funcplugin = func.im_self.sname
     except AttributeError:
-      plugin = ''
-    if not plugin and 'plugin' in kwargs:
-      plugin = kwargs['plugin']
+      funcplugin = self.api('api.callerplugin')(skipplugin=['events'])
+    if not funcplugin and 'plugin' in kwargs:
+      funcplugin = kwargs['plugin']
 
     if eventname not in self.events:
-      self.events[eventname] = {}
-    if prio not in self.events[eventname]:
-      self.events[eventname][prio] = []
-    if self.events[eventname][prio].count(func) == 0:
-      self.events[eventname][prio].append(func)
-      self.api.get('send.msg')(
-          'adding function %s (plugin: %s) to event %s' \
-              % (func, plugin, eventname), secondary=plugin)
-    if plugin:
-      if plugin not in self.pluginlookup:
-        self.pluginlookup[plugin] = {}
-        self.pluginlookup[plugin]['events'] = {}
+      self.events[eventname] = EventContainer(self, eventname)
 
-      if func not in self.pluginlookup[plugin]['events']:
-        self.pluginlookup[plugin]['events'][func] = []
-      self.pluginlookup[plugin]['events'][func].append(eventname)
+    self.events[eventname].register(func, funcplugin, prio)
 
   # unregister a function from an event
   def api_unregister(self, eventname, func, **kwargs):
@@ -166,46 +328,24 @@ class Plugin(BasePlugin):
       plugin        = the plugin this function is a part of
 
     this function returns no values"""
-    try:
-      plugin = func.im_self.sname
-    except AttributeError:
-      plugin = ''
-    if not self.events[eventname]:
-      return
-    keys = self.events[eventname].keys()
-    if keys:
-      keys.sort()
-      for i in keys:
-        if self.events[eventname][i].count(func) == 1:
-          self.api.get('send.msg')('removing function %s from event %s' % \
-              (func, eventname), secondary=plugin)
-          self.events[eventname][i].remove(func)
-          if len(self.events[eventname][i]) == 0:
-            del self.events[eventname][i]
-
-      if plugin and plugin in self.pluginlookup:
-        if func in self.pluginlookup[plugin]['events'] \
-            and eventname in self.pluginlookup[plugin]['events'][func]:
-          self.pluginlookup[plugin]['events'][func].remove(eventname)
+    if eventname in self.events:
+      self.events[eventname].unregister(func)
+    else:
+      self.api('send.error')('could not find event %s' % (eventname))
 
   # remove all registered functions that are specific to a plugin
   def api_removeplugin(self, plugin):
     """  remove all registered functions that are specific to a plugin
     @Yplugin@w   = The plugin to remove events for
     this function returns no values"""
-    self.api.get('send.msg')('removing plugin %s' % plugin,
-                             secondary=plugin)
-    if plugin and plugin in self.pluginlookup:
-      tkeys = self.pluginlookup[plugin]['events'].keys()
-      for func in tkeys:
-        events = list(self.pluginlookup[plugin]['events'][func])
-        for event in events:
-          self.api.get('events.unregister')(event, func)
+    self.api('send.msg')('removing plugin %s' % plugin,
+                         secondary=plugin)
 
-      self.pluginlookup[plugin]['events'] = {}
+    for event in self.events:
+      self.events[event].removeplugin(plugin)
 
   # raise an event, args vary
-  def api_eraise(self, eventname, args=None):
+  def api_eraise(self, eventname, args=None, calledfrom=None):
     # pylint: disable=too-many-nested-blocks
     """  raise an event with args
     @Yeventname@w   = The event to raise
@@ -214,55 +354,21 @@ class Plugin(BasePlugin):
     this function returns no values"""
     if not args:
       args = {}
-    calledfrom = self.api('utils.funccallerplugin')()
 
-    if eventname != 'global_timer':
-      self.api.get('send.msg')('raiseevent %s' % eventname, secondary=calledfrom)
+    if not calledfrom:
+      calledfrom = self.api('api.callerplugin')(skipplugin=['events'])
+
+    if not calledfrom:
+      print('event %s raised with unknown caller' % eventname)
+
     nargs = args.copy()
     nargs['eventname'] = eventname
-    if eventname in self.events:
-      self.api('send.msg')('event %s: %s' % (eventname, self.events[eventname]),
-                           secondary=calledfrom)
-      keys = self.events[eventname].keys()
-      self.api('send.msg')('event %s: keys %s' % (eventname, keys), secondary=calledfrom)
-      if keys:
-        keys.sort()
-        for k in keys:
-          for i in self.events[eventname][k][:]:
-            try:
-              try:
-                plugin = i.im_self.sname
-              except AttributeError:
-                plugin = ''
-              if eventname != 'global_timer':
-                self.api.get('send.msg')(
-                    'event %s : calling function %s (%s) with args %s' % \
-                        (eventname, i.__name__, plugin or 'Unknown', nargs),
-                    secondary=[plugin, calledfrom])
-                time1 = time.time()
-                self.api.get('send.msg')(
-                  'event %s : calling function %s (%s) with args %s' % \
-                  (eventname, i.__name__, plugin or 'Unknown', nargs), 'timing')
-              tnargs = i(nargs)
-              if eventname != 'global_timer':
-                time2 = time.time()
-                self.api('send.msg')(
-                  'event %s : calling function %s (%s) with args %s - %0.3f ms' % \
-                (eventname, i.__name__, plugin or 'Unknown', nargs,
-                  (time2-time1)*1000.0), 'timing')
-                self.api.get('send.msg')(
-                    'event %s : function %s (%s) returned %s' % \
-                      (eventname, i.__name__, plugin or 'Unknown', tnargs),
-                    secondary=[plugin, calledfrom])
-              if tnargs:
-                nargs = tnargs
-            except Exception:  # pylint: disable=broad-except
-              self.api.get('send.traceback')(
-                  "error when calling function for event %s" % eventname)
-    else:
-      pass
-      #self.api.get('send.msg')('nothing to process for %s' % eventname)
-    #self.api.get('send.msg')('returning', nargs)
+    if eventname not in self.events:
+      self.events[eventname] = EventContainer(self, eventname)
+
+    self.numglobalraised += 1
+    nargs = self.events[eventname].eraise(nargs, calledfrom)
+
     return nargs
 
   # get the details of an event
@@ -272,23 +378,11 @@ class Plugin(BasePlugin):
 
     this function returns a list of strings for the info"""
     tmsg = []
-    eventstuff = self.api.get('events.gete')(eventname)
 
-    tmsg.append('%-13s : %s' % ('Event', eventname))
-    tmsg.append('@B' + self.api.get('utils.center')('Registrations', '-', 60))
-    tmsg.append('%-4s : %-15s - %-s' % ('prio',
-                                        'plugin',
-                                        'function name'))
-    tmsg.append('@B' + '-' * 60)
-    if not eventstuff:
-      tmsg.append('None')
+    if eventname in self.events:
+      tmsg.extend(self.events[eventname].detail())
     else:
-      for func in eventstuff['funcdict']:
-        eventfunc = eventstuff['funcdict'][func]
-        tmsg.append('%-4s : %-15s - %-s' % (eventfunc['priority'],
-                                            eventfunc['plugin'],
-                                            eventfunc['name']))
-    tmsg.append('')
+      tmsg.append('Event %s does not exist' % eventname)
     return tmsg
 
   def cmd_detail(self, args):
@@ -299,9 +393,9 @@ class Plugin(BasePlugin):
         @Yeventname@w  = the eventname to get info for
     """
     tmsg = []
-    if len(args['event']) > 0:
+    if args['event']:
       for eventname in args['event']:
-        tmsg.extend(self.api.get('events.detail')(eventname))
+        tmsg.extend(self.api('events.detail')(eventname))
         tmsg.append('')
     else:
       tmsg.append('Please provide an event name')
@@ -318,16 +412,35 @@ class Plugin(BasePlugin):
     match = args['match']
     for name in self.events:
       if not match or match in name:
-        if len(self.events[name]) > 0:
+        if self.events[name]:
           tmsg.append(name)
 
     return True, tmsg
 
-  def logloaded(self, args):
+  def logloaded(self, args=None):
     # pylint: disable=unused-argument
     """
     initialize the event log types
     """
-    self.api.get('log.adddtype')(self.sname)
-    #self.api.get('log.console')(self.sname)
+    self.api('log.adddtype')(self.sname)
+    #self.api('log.console')(self.sname)
 
+  def summarystats(self, args=None):
+    # pylint: disable=unused-argument
+    """
+    return a one line stats summary
+    """
+    return self.summarytemplate % ("Events", "Total: %d   Raised: %d" % \
+                                    (len(self.events), self.numglobalraised))
+
+  def getstats(self):
+    """
+    return stats for events
+    """
+    stats = BasePlugin.getstats(self)
+    stats['Events'] = {}
+    stats['Events']['showorder'] = ['Total', 'Raised']
+    stats['Events']['Total'] = len(self.events)
+    stats['Events']['Raised'] = self.numglobalraised
+
+    return stats

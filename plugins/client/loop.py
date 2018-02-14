@@ -6,8 +6,8 @@ This plugin loops commands for a specified number of times
    will get all from 1.corpse, 2.corpse, 3.corpse, etc.
 
 """
-import argparse
 from string import Template
+import libs.argp as argp
 from plugins._baseplugin import BasePlugin
 
 #these 5 are required
@@ -38,8 +38,8 @@ class Plugin(BasePlugin):
     """
     BasePlugin.load(self)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='loop a command')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='loop a command')
     parser.add_argument('cmd',
                         help='the command to run',
                         default='',
@@ -48,11 +48,11 @@ class Plugin(BasePlugin):
                         "--count",
                         help="how many times to execute the command",
                         default=1)
-    self.api.get('commands.add')('cmd',
-                                 self.cmd_loop,
-                                 parser=parser)
+    self.api('commands.add')('cmd',
+                             self.cmd_loop,
+                             parser=parser)
 
-    self.api.get('commands.default')('loop')
+    self.api('commands.default')('cmd')
 
   def cmd_loop(self, args):
     """
@@ -62,14 +62,14 @@ class Plugin(BasePlugin):
     count = int(args['count'])
     if count < 1 or count > 50:
       return True, ['Count has to be between 1 and 50']
+
     if args['cmd']:
       templ = Template(args['cmd'])
       for i in xrange(1, count + 1):
         datan = templ.safe_substitute({'num':i, 'count':i})
-        self.api.get('send.msg')('sending cmd: %s' % datan)
-        self.api.get('send.execute')(datan)
+        self.api('send.msg')('sending cmd: %s' % datan)
+        self.api('send.execute')(datan)
       return True, ['"%s" was sent %s times' % (args['cmd'], count)]
-    else:
-      tmsg.append("@RPlease include all arguments@w")
-      return False, tmsg
 
+    tmsg.append("@RPlease include all arguments@w")
+    return False, tmsg

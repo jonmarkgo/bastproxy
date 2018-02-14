@@ -31,10 +31,20 @@ optional arguments:
 ```
 
 ### Connecting
- * Connect a client to the listen_port above on the host the proxy is running,
+  * Connect a client to the listen_port above on the host the proxy is running,
       and then login with the password
-  * Default Port: 9999
-  * Default Password: "defaultpass"
+   * Default Port: 9999
+     * to set a different port after logging in ```#bp.proxy.set listenport portnum```
+   * Default Password: "defaultpass"
+     * to set a different password after loggin in ```#bp.proxy.proxypw "new password"```
+   * Setting up the mud to connect to
+     * to set the mud server ```#bp.proxy.set mudhost some.server```
+     * to set the mud port ```#bp.proxy.set mudport portnum```
+   * Setting up autologin
+     * to set the user ```#bp.proxy.set username user```
+     * to set the password ```#bp.proxy.mudpw password```
+   * Connecting to the mud
+     * ```#bp.proxy.connect```
 
 ### Help
   * Use the following commands to get help
@@ -70,20 +80,22 @@ optional arguments:
      * 2nd argument = 'this is the second argument'
 """
 import asyncore
-import argparse
 import os
 import sys
 import socket
-#import signal
+import time
 from libs.api import API as BASEAPI
+import libs.argp as argp
 
-# import io so we can get the "send" functions added to the api
-from libs import io # pylint: disable=unused-import
+# import io so we can add the "send" functions to the api
+from libs import io      # pylint: disable=unused-import
 
 sys.stderr = sys.stdout
 
 API = BASEAPI()
+BASEAPI.starttime = time.localtime()
 BASEAPI.loading = True
+
 
 def setuppaths():
   """
@@ -105,6 +117,7 @@ def setuppaths():
   except OSError:
     pass
 
+
 class Listener(asyncore.dispatcher):
   """
   This is the class that listens for new clients
@@ -121,9 +134,10 @@ class Listener(asyncore.dispatcher):
     self.set_reuse_addr()
     self.bind(("", listen_port))
     self.listen(50)
-    self.proxy = None
+    self.mud = None
     self.clients = []
     API('send.msg')("Listener bound on: %s" % listen_port, 'startup')
+    API('events.eraise')('proxy_ready', calledfrom='listener')
 
   def handle_error(self):
     """
@@ -135,21 +149,20 @@ class Listener(asyncore.dispatcher):
     """
     accept a new client
     """
-    if not self.proxy:
-      from libs.net.proxy import Proxy
+    if not self.mud:
+      from libs.net.mud import Mud
 
       # do proxy stuff here
-      self.proxy = Proxy()
-      API('managers.add')('proxy', self.proxy)
+      self.mud = Mud()
 
     client_connection, source_addr = self.accept()
 
     try:
       ipaddress = source_addr[0]
-      if self.proxy.checkbanned(ipaddress):
+      if API('clients.checkbanned')(ipaddress):
         API('send.msg')("HOST: %s is banned" % ipaddress, 'net')
         client_connection.close()
-      elif len(self.proxy.clients) == 5:
+      elif API('clients.numconnected') == 5:
         API('send.msg')(
             "Only 5 clients can be connected at the same time", 'net')
         client_connection.close()
@@ -157,14 +170,15 @@ class Listener(asyncore.dispatcher):
         API('send.msg')("Accepted connection from %s : %s" %
                         (source_addr[0], source_addr[1]), 'net')
 
-        #client keeps up with itself
+        # client keeps up with itself
         from libs.net.client import Client
         Client(client_connection, source_addr[0], source_addr[1])
 
     # catch everything because we don't want to exit if we can't connect a
     # client
-    except Exception: # pylint: disable=broad-except
+    except Exception:   # pylint: disable=broad-except
       API('send.traceback')('Error handling client')
+
 
 def start(listen_port):
   """
@@ -174,20 +188,22 @@ def start(listen_port):
   """
   API('managers.add')('listener', Listener(listen_port))
 
-  #if getattr(signal, 'SIGCHLD', None) is not None:
-   # signal.signal(signal.SIGCHLD, signal.SIG_IGN)
-
   try:
     while True:
 
       asyncore.loop(timeout=.25, count=1)
-     # check our timer event
-      API('events.eraise')('global_timer', {})
+
+      if API.shutdown:
+        break
+
+      # check our timer event
+      API('events.eraise')('global_timer', {}, calledfrom="globaltimer")
 
   except KeyboardInterrupt:
     pass
 
-  API('send.msg')("Shutting down...", 'shutdown')
+  API('send.msg')("asyncore loop broken", primary='net')
+
 
 def main():
   """
@@ -195,7 +211,7 @@ def main():
   """
   setuppaths()
 
-  parser = argparse.ArgumentParser(description='A python mud proxy')
+  parser = argp.ArgumentParser(description='A python mud proxy')
   parser.add_argument('-p', "--port",
                       help="the port for the proxy to listen on",
                       default=9999)
@@ -229,8 +245,10 @@ def main():
     try:
       start(listen_port)
     except KeyboardInterrupt:
-      proxy = API('managers.getm')('proxy')
-      proxy.shutdown()
+      pass
+
+    API('proxy.shutdown')()
+
   else:
     os.close(0)
     os.close(1)
@@ -247,7 +265,7 @@ def main():
         pass
       sys.exit(0)
 
+  API('send.msg')("exiting main function", primary='net')
 
 if __name__ == "__main__":
   main()
-

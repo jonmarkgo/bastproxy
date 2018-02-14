@@ -23,14 +23,14 @@ AUTOLOAD = False
 
 # a table of class abbreviations
 CLASSABB = {
-  'mag':'mage',
-  'thi':'thief',
-  'pal':'paladin',
-  'war':'warrior',
-  'psi':'psionicist',
-  'cle':'cleric',
-  'ran':'ranger',
-  }
+    'mag':'mage',
+    'thi':'thief',
+    'pal':'paladin',
+    'war':'warrior',
+    'psi':'psionicist',
+    'cle':'cleric',
+    'ran':'ranger',
+}
 
 # the reverse of CLASSABB
 CLASSABBREV = {}
@@ -39,72 +39,72 @@ for classn in CLASSABB:
 
 # a table of rewards
 REWARDTABLE = {
-        'quest':'qp',
-        'training':'trains',
-        'gold':'gold',
-        'trivia':'tp',
-        'practice':'pracs',
-    }
+    'quest':'qp',
+    'training':'trains',
+    'gold':'gold',
+    'trivia':'tp',
+    'practice':'pracs',
+}
 
 # a table of damages
 DAMAGES = [
-  'misses',
-  'tickles',
-  'bruises',
-  'scratches',
-  'grazes',
-  'nicks',
-  'scars',
-  'hits',
-  'injures',
-  'wounds',
-  'mauls',
-  'maims',
-  'mangles',
-  'mars',
-  'LACERATES',
-  'DECIMATES',
-  'DEVASTATES',
-  'ERADICATES',
-  'OBLITERATES',
-  'EXTIRPATES',
-  'INCINERATES',
-  'MUTILATES',
-  'DISEMBOWELS',
-  'MASSACRES',
-  'DISMEMBERS',
-  'RENDS',
-  '- BLASTS -',
-  '-= DEMOLISHES =-',
-  '** SHREDS **',
-  '**** DESTROYS ****',
-  '***** PULVERIZES *****',
-  '-=- VAPORIZES -=-',
-  '<-==-> ATOMIZES <-==->',
-  '<-:-> ASPHYXIATES <-:->',
-  '<-*-> RAVAGES <-*->',
-  '<>*<> FISSURES <>*<>',
-  '<*><*> LIQUIDATES <*><*>',
-  '<*><*><*> EVAPORATES <*><*><*>',
-  '<-=-> SUNDERS <-=->',
-  '<=-=><=-=> TEARS INTO <=-=><=-=>',
-  '<->*<=> WASTES <=>*<->',
-  '<-+-><-*-> CREMATES <-*-><-+->',
-  '<*><*><*><*> ANNIHILATES <*><*><*><*>',
-  '<--*--><--*--> IMPLODES <--*--><--*-->',
-  '<-><-=-><-> EXTERMINATES <-><-=-><->',
-  '<-==-><-==-> SHATTERS <-==-><-==->',
-  '<*><-:-><*> SLAUGHTERS <*><-:-><*>',
-  '<-*-><-><-*-> RUPTURES <-*-><-><-*->',
-  '<-*-><*><-*-> NUKES <-*-><*><-*->',
-  '-<[=-+-=]<:::<>:::> GLACIATES <:::<>:::>[=-+-=]>-',
-  '<-=-><-:-*-:-><*--*> METEORITES <*--*><-:-*-:-><-=->',
-  '<-:-><-:-*-:-><-*-> SUPERNOVAS <-*-><-:-*-:-><-:->',
-  'does UNSPEAKABLE things to',
-  'does UNTHINKABLE things to',
-  'does UNIMAGINABLE things to',
-  'does UNBELIEVABLE things to',
-  'pimpslaps'
+    'misses',
+    'tickles',
+    'bruises',
+    'scratches',
+    'grazes',
+    'nicks',
+    'scars',
+    'hits',
+    'injures',
+    'wounds',
+    'mauls',
+    'maims',
+    'mangles',
+    'mars',
+    'LACERATES',
+    'DECIMATES',
+    'DEVASTATES',
+    'ERADICATES',
+    'OBLITERATES',
+    'EXTIRPATES',
+    'INCINERATES',
+    'MUTILATES',
+    'DISEMBOWELS',
+    'MASSACRES',
+    'DISMEMBERS',
+    'RENDS',
+    '- BLASTS -',
+    '-= DEMOLISHES =-',
+    '** SHREDS **',
+    '**** DESTROYS ****',
+    '***** PULVERIZES *****',
+    '-=- VAPORIZES -=-',
+    '<-==-> ATOMIZES <-==->',
+    '<-:-> ASPHYXIATES <-:->',
+    '<-*-> RAVAGES <-*->',
+    '<>*<> FISSURES <>*<>',
+    '<*><*> LIQUIDATES <*><*>',
+    '<*><*><*> EVAPORATES <*><*><*>',
+    '<-=-> SUNDERS <-=->',
+    '<=-=><=-=> TEARS INTO <=-=><=-=>',
+    '<->*<=> WASTES <=>*<->',
+    '<-+-><-*-> CREMATES <-*-><-+->',
+    '<*><*><*><*> ANNIHILATES <*><*><*><*>',
+    '<--*--><--*--> IMPLODES <--*--><--*-->',
+    '<-><-=-><-> EXTERMINATES <-><-=-><->',
+    '<-==-><-==-> SHATTERS <-==-><-==->',
+    '<*><-:-><*> SLAUGHTERS <*><-:-><*>',
+    '<-*-><-><-*-> RUPTURES <-*-><-><-*->',
+    '<-*-><*><-*-> NUKES <-*-><*><-*->',
+    '-<[=-+-=]<:::<>:::> GLACIATES <:::<>:::>[=-+-=]>-',
+    '<-=-><-:-*-:-><*--*> METEORITES <*--*><-:-*-:-><-=->',
+    '<-:-><-:-*-:-><-*-> SUPERNOVAS <-*-><-:-*-:-><-:->',
+    'does UNSPEAKABLE things to',
+    'does UNTHINKABLE things to',
+    'does UNIMAGINABLE things to',
+    'does UNBELIEVABLE things to',
+    'pimpslaps'
 ]
 
 # the reverse of DAMAGES
@@ -119,11 +119,11 @@ class Plugin(AardwolfBasePlugin):
   def __init__(self, *args, **kwargs):
     AardwolfBasePlugin.__init__(self, *args, **kwargs)
 
-    self.api.get('api.add')('getactuallevel', self.api_getactuallevel)
-    self.api.get('api.add')('convertlevel', self.api_convertlevel)
-    self.api.get('api.add')('classabb', self.api_classabb)
-    self.api.get('api.add')('rewardtable', self.api_rewardtable)
-    self.api.get('api.add')('parsedamageline', self.api_parsedamageline)
+    self.api('api.add')('getactuallevel', self.api_getactuallevel)
+    self.api('api.add')('convertlevel', self.api_convertlevel)
+    self.api('api.add')('classabb', self.api_classabb)
+    self.api('api.add')('rewardtable', self.api_rewardtable)
+    self.api('api.add')('parsedamageline', self.api_parsedamageline)
 
   def load(self):
     """
@@ -131,9 +131,14 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.load(self)
 
+    self.api('triggers.add')('dead',
+                             r"^You die.$",
+                             enabled=True,
+                             group='dead')
+
   # convert level, remort, tier, redos to the total levels
   def api_getactuallevel(self, level=None, remort=None,
-                                      tier=None, redos=None):
+                         tier=None, redos=None):
     """  convert level, remort, tier, redos to the total levels
     @Ylevel@w  = the level, defaults to GMCP value
     @Yremort@w  = the # of remorts, default to GMCP value
@@ -141,18 +146,19 @@ class Plugin(AardwolfBasePlugin):
     @Yredos@w  = the # of redos, default to GMCP value
 
     this function returns the total levels"""
-    level = level or self.api.get('GMCP.getv')('char.status.level') or 0
-    remort = remort or self.api.get('GMCP.getv')('char.base.remorts') or 0
-    tier = tier or self.api.get('GMCP.getv')('char.base.tier') or 0
-    redos = int(redos or self.api.get('GMCP.getv')('char.base.redos') or 0)
+    level = level or self.api('GMCP.getv')('char.status.level') or 0
+    remort = remort or self.api('GMCP.getv')('char.base.remorts') or 0
+    tier = tier or self.api('GMCP.getv')('char.base.tier') or 0
+    redos = int(redos or self.api('GMCP.getv')('char.base.redos') or 0)
     if redos == 0:
       return (tier * 7 * 201) + ((remort - 1) * 201) + level
-    else:
-      return (tier * 7 * 201) + (redos * 7 * 201) + \
+
+    return (tier * 7 * 201) + (redos * 7 * 201) + \
                                   ((remort - 1) * 201) + level
 
+  @staticmethod
   # parse an Aardwolf damage line
-  def api_parsedamageline(self, line):
+  def api_parsedamageline(line):
     """  parse an Aardwolf damage line from combat
     @Yline@w  = the line to parse
 
@@ -165,7 +171,7 @@ class Plugin(AardwolfBasePlugin):
     ddict = {}
     tsplit = line.split(' ')
     ddict['hits'] = 1
-    thits = re.match('^\[(?P<hits>\d*)\]', tsplit[0])
+    thits = re.match(r'^\[(?P<hits>\d*)\]', tsplit[0])
     if thits:
       ddict['hits'] = int(thits.groupdict()['hits'])
       del tsplit[0]
@@ -174,7 +180,7 @@ class Plugin(AardwolfBasePlugin):
       del tsplit[0]
 
     ddict['damage'] = 0
-    tdam = re.match('^\[(?P<damage>\d*)\]', tsplit[-1])
+    tdam = re.match(r'^\[(?P<damage>\d*)\]', tsplit[-1])
     if tdam:
       ddict['damage'] = int(tdam.groupdict()['damage'])
       del tsplit[-1]
@@ -182,7 +188,7 @@ class Plugin(AardwolfBasePlugin):
     nline = ' '.join(tsplit)
     for i in DAMAGES:
       if i in nline:
-        regex = '^(?P<damtype>.*) (%s) (?P<enemy>.*)[!|\.]$' % re.escape(i)
+        regex = r'^(?P<damtype>.*) (%s) (?P<enemy>.*)[!|\.]$' % re.escape(i)
         mat = re.match(regex, nline)
         if mat:
           ddict['damtype'] = mat.groupdict()['damtype']
@@ -192,8 +198,9 @@ class Plugin(AardwolfBasePlugin):
 
     return ddict
 
+  @staticmethod
   # convert a level to redos, tier, remort, level
-  def api_convertlevel(self, level):
+  def api_convertlevel(level):
     """  convert a level to redos, tier, remort, level
     @Ylevel@w  = the level to convert
 
@@ -219,8 +226,9 @@ class Plugin(AardwolfBasePlugin):
     return {'tier':int(tier), 'redos':int(redos),
             'remort':int(remort), 'level':int(alevel)}
 
+  @staticmethod
   # get the Class abbreviations table
-  def api_classabb(self, rev=False):
+  def api_classabb(rev=False):
     """  get the class abbreviations
     @Yrev@w  = if True, return the reversed table
 
@@ -232,11 +240,12 @@ class Plugin(AardwolfBasePlugin):
         'mage' : 'mag'"""
     if rev:
       return CLASSABB
-    else:
-      return CLASSABBREV
 
+    return CLASSABBREV
+
+  @staticmethod
   # get the reward table
-  def api_rewardtable(self):
+  def api_rewardtable():
     """  get the reward table
     @Yrev@w  = if True, return the reversed table
 

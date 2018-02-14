@@ -14,8 +14,8 @@ for an example of using this plugin
 """
 import os
 import stat
-import argparse
 
+import libs.argp as argp
 from plugins._baseplugin import BasePlugin
 
 NAME = 'Secret Setting Class'
@@ -52,15 +52,15 @@ class SSC(object):
 
     self.api('api.add')(self.ssname, self.getss)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='set the %s' % self.desc)
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='set the %s' % self.desc)
     parser.add_argument('value',
                         help=self.desc,
                         default='',
                         nargs='?')
     self.api('commands.add')(self.ssname,
                              self.cmd_setssc,
-                             history=False,
+                             showinhistory=False,
                              parser=parser)
 
 
@@ -93,8 +93,8 @@ class SSC(object):
       sscfile.write(args['value'])
       os.chmod(filen, stat.S_IRUSR | stat.S_IWUSR)
       return True, ['%s saved' % self.desc]
-    else:
-      return True, ['Please enter the %s' % self.desc]
+
+    return True, ['Please enter the %s' % self.desc]
 
 class Plugin(BasePlugin):
   """

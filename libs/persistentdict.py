@@ -21,8 +21,8 @@ def convert(tinput):
     return [convert(element) for element in tinput]
   elif isinstance(tinput, unicode):
     return tinput.encode('utf-8')
-  else:
-    return tinput
+
+  return tinput
 
 def convertkeystoint(tdict):
   """
@@ -149,8 +149,8 @@ class PersistentDict(dict):
           tstuff = loader(fileobj, object_hook=convert)
           nstuff = convertkeystoint(tstuff)
           return self.update(nstuff)
-        else:
-          return self.update(loader(fileobj))
+
+        return self.update(loader(fileobj))
       except Exception:  # pylint: disable=broad-except
         #if not ('log' in self.filename):
         #  api('send.traceback')("Error when loading %s" % loader)
@@ -198,17 +198,30 @@ class PersistentDictEvent(PersistentDict):
     key = convert(key)
     val = convert(val)
     if key in self:
-      oldvalue = self[key]
+      oldvalue = self.plugin.api('setting.gets')(key)
     else:
       oldvalue = None
-    dict.__setitem__(self, key, val)
+    if oldvalue != val:
+      dict.__setitem__(self, key, val)
 
-    eventname = 'var_%s_%s' % (self.plugin.sname, key)
-    if not self.plugin.resetflag and key != '_version':
-      self.plugin.api('events.eraise')(eventname,
-                                       {'var':key,
-                                        'newvalue':val,
-                                        'oldvalue':oldvalue})
+      eventname = 'var_%s_%s' % (self.plugin.sname, key)
+      if not self.plugin.resetflag and key != '_version':
+        self.plugin.api('events.eraise')(eventname,
+                                         {'var':key,
+                                          'newvalue':self.plugin.api('setting.gets')(key),
+                                          'oldvalue':oldvalue})
+
+  def raiseall(self):
+    """
+    go through and raise a var_<plugin>_<variable> for each variable
+    """
+    for i in self:
+      eventname = 'var_%s_%s' % (self.plugin.sname, i)
+      if not self.plugin.resetflag and i != '_version':
+        self.plugin.api('events.eraise')(eventname,
+                                         {'var':i,
+                                          'newvalue':self.plugin.api('setting.gets')(i),
+                                          'oldvalue':'__init__'})
 
   def sync(self):
     """

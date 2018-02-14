@@ -1,7 +1,7 @@
 """
 This plugin shows and clears errors seen during plugin execution
 """
-import argparse
+import libs.argp as argp
 from plugins._baseplugin import BasePlugin
 
 NAME = 'Error Plugin'
@@ -35,21 +35,40 @@ class Plugin(BasePlugin):
     """
     BasePlugin.load(self)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='show errors')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='show errors')
     parser.add_argument('number',
                         help='list the last <number> errors',
                         default='-1',
                         nargs='?')
-    self.api.get('commands.add')('show',
-                                 self.cmd_show,
-                                 parser=parser)
+    self.api('commands.add')('show',
+                             self.cmd_show,
+                             parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='clear errors')
-    self.api.get('commands.add')('clear',
-                                 self.cmd_clear,
-                                 parser=parser)
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='clear errors')
+    self.api('commands.add')('clear',
+                             self.cmd_clear,
+                             parser=parser)
+
+    self.api('events.register')('proxy_ready', self.proxy_ready)
+
+  # show all errors that happened during startup
+  def proxy_ready(self, _=None):
+    """
+    show all errors that happened during startup
+    """
+    errors = self.api('errors.gete')()
+
+    msg = ['The following errors happened during startup:']
+    if errors:
+      for i in errors:
+        msg.append('')
+        msg.append('Time: %s' % i['timestamp'])
+        msg.append('Error: %s' % i['msg'])
+
+      self.api('send.error')('\n'.join(msg))
+
 
   # add an error to the list
   def api_adderror(self, timestamp, error):
@@ -93,9 +112,9 @@ class Plugin(BasePlugin):
       msg.append('Please specify a number')
       return False, msg
 
-    errors = self.api.get('errors.gete')()
+    errors = self.api('errors.gete')()
 
-    if len(errors) == 0:
+    if not errors:
       msg.append('There are no errors')
     else:
       if args and number > 0:
@@ -117,7 +136,6 @@ class Plugin(BasePlugin):
     """
     clear errors
     """
-    self.api.get('errors.clear')()
+    self.api('errors.clear')()
 
     return True, ['Errors cleared']
-

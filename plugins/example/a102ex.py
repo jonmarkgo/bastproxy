@@ -1,3 +1,4 @@
+# pylint: disable=line-too-long
 """
 This plugin is an example plugin to show how to use the aardwolf 102
 telnet options
@@ -9,6 +10,7 @@ telnet options
 
  see the [Aardwolf Blog](http://www.aardwolf.com/blog/2008/07/10/telnet-negotiation-control-mud-client-interaction/)
 """
+# pylint: enable=line-too-long
 from plugins._baseplugin import BasePlugin
 
 NAME = 'Aard102 Example'
@@ -35,18 +37,17 @@ class Plugin(BasePlugin):
     """
     BasePlugin.load(self)
 
-    self.api.get('events.register')('A102', self.test)
-    self.api.get('events.register')('A102:101', self.test101)
+    self.api('events.register')('A102', self.test)
+    self.api('events.register')('A102:101', self.test101)
 
   def test(self, args):
     """
     show we got an a102 event
     """
-    self.api.get('send.client')('@RGot A102: %s' % args)
+    self.api('send.client')('@RGot A102: %s' % args)
 
   def test101(self, args):
     """
     show we got an a102:101 event
     """
-    self.api.get('send.client')('@RGot A102:101: %s' % args)
-
+    self.api('send.client')('@RGot A102:101: %s' % args)

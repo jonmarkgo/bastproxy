@@ -5,7 +5,6 @@ this module holds the proxy client class
 """
 import time
 
-from libs.api import API
 from libs.net.telnetlib import Telnet
 
 PASSWORD = 0
@@ -19,20 +18,17 @@ class Client(Telnet):
     """
     init the class
     """
-    Telnet.__init__(self, sock=sock)
-    self.host = host
-    self.port = port
-    self.api = API()
+    Telnet.__init__(self, host=host, port=port, sock=sock)
+
     self.ttype = 'Client'
     self.connectedtime = None
-    self.supports = {}
     self.pwtries = 0
     self.banned = False
     self.viewonly = False
 
     if sock:
       self.connected = True
-      self.connectedtime = time.mktime(time.localtime())
+      self.connectedtime = time.localtime()
 
     self.api('events.register')('to_client_event',
                                 self.addtooutbufferevent, prio=99)
@@ -48,6 +44,9 @@ class Client(Telnet):
     """
     this function adds to the output buffer
     """
+    if 'client' in args and args['client'] and args['client'] != self:
+      return
+
     outbuffer = args['original']
     dtype = None
     raw = False
@@ -60,22 +59,19 @@ class Client(Telnet):
     if outbuffer != None:
       if (dtype == 'fromproxy' or dtype == 'frommud') \
             and self.state == CONNECTED:
-        outbuffer = outbuffer + '\r\n'
+        outbuffer = "".join([outbuffer, '\r\n'])
         Telnet.addtooutbuffer(self, outbuffer, raw)
       elif len(dtype) == 1 and ord(dtype) in self.options \
             and self.state == CONNECTED:
         Telnet.addtooutbuffer(self, outbuffer, raw)
       elif dtype == 'passwd' and self.state == PASSWORD:
-        outbuffer = outbuffer + '\r\n'
+        outbuffer = "".join([outbuffer, '\r\n'])
         Telnet.addtooutbuffer(self, outbuffer, raw)
 
   def handle_read(self):
     """
     handle a read
     """
-
-    proxy = self.api('managers.getm')('proxy')
-
     if not self.connected:
       return
     Telnet.handle_read(self)
@@ -89,7 +85,7 @@ class Client(Telnet):
               {'todata':self.api('colors.convertcolors')(
                   '@R#BP@w: @RYou are in view mode!@w')})
         else:
-          if len(data) > 0:
+          if data:
             self.api('send.execute')(data, fromclient=True)
 
       elif self.state == PASSWORD:
@@ -102,9 +98,8 @@ class Client(Telnet):
           self.api('send.msg')('Successful password from %s : %s' % \
                                             (self.host, self.port), 'net')
           self.state = CONNECTED
-          self.viewonly = False
-          proxy.addclient(self)
-          self.api('events.eraise')('client_connected', {'client':self})
+          self.api('events.eraise')('client_connected', {'client':self},
+                                    calledfrom="client")
           self.api('send.client')("%s - %s: Client Connected" % \
                                       (self.host, self.port))
         elif vpw and data == vpw:
@@ -115,9 +110,8 @@ class Client(Telnet):
           self.addtooutbufferevent(
               {'original':self.api('colors.convertcolors')(
                   '@R#BP@W: @GYou are connected in view mode@w')})
-          proxy.addclient(self)
           self.api('events.eraise')('client_connected_view',
-                                    {'client':self})
+                                    {'client':self}, calledfrom="client")
           self.api('send.client')(
               "%s - %s: Client Connected (View Mode)" % \
                   (self.host, self.port))
@@ -129,9 +123,8 @@ class Client(Telnet):
                     '@R#BP@w: @RYou have been BANNED for 10 minutes:@w'),
                  'dtype':'passwd'})
             self.api('send.msg')('%s has been banned.' % self.host, 'net')
-            proxy.removeclient(self)
-            proxy.addbanned(self.host)
-            self.close()
+            self.api('clients.addbanned')(self.host)
+            self.handle_close()
           else:
             self.addtooutbufferevent(
                 {'original':self.api('colors.convertcolors')(
@@ -144,8 +137,10 @@ class Client(Telnet):
     """
     self.api('send.client')("%s - %s: Client Disconnected" % \
                                 (self.host, self.port))
-    self.api('managers.getm')('proxy').removeclient(self)
-    self.api('events.eraise')('client_disconnected', {'client':self})
-    self.api('events.unregister')('to_client_event', self.addtooutbuffer)
+    self.api('send.msg')("%s - %s: Client Disconnected" % \
+                                (self.host, self.port), primary='net')
+    self.api('events.eraise')('client_disconnected', {'client':self}, calledfrom="client")
+    self.api('events.unregister')('to_client_event', self.addtooutbufferevent)
+    while self.outbuffer:
+      self.handle_write()
     Telnet.handle_close(self)
-

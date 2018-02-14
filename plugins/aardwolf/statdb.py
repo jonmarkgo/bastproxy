@@ -11,7 +11,7 @@ This plugin holds a stat database and collects the following:
 """
 import copy
 import time
-import argparse
+import libs.argp as argp
 from plugins.aardwolf._aardwolfbaseplugin import AardwolfBasePlugin
 
 NAME = 'StatDB'
@@ -53,7 +53,7 @@ def dbcreate(sqldb, plugin, **kwargs):
   create the statdb class, this is needed because the Sqldb baseclass
   can be reloaded since it is a plugin
   """
-  class Statdb(sqldb):
+  class Statdb(sqldb): # pylint: disable=too-many-public-methods
     """
     a class to manage a sqlite database for aardwolf events
     """
@@ -63,11 +63,13 @@ def dbcreate(sqldb, plugin, **kwargs):
       """
       sqldb.__init__(self, plugin, **kwargs)
 
-      self.version = 15
+      self.version = 17
 
       self.versionfuncs[13] = self.addrarexp_v13
       self.versionfuncs[14] = self.addnoexp_v14
       self.versionfuncs[15] = self.addextendedgq_v15
+      self.versionfuncs[16] = self.addhardcoreopk_v16
+      self.versionfuncs[17] = self.addlevelbattlelearntrains_v17
 
       self.addtable('stats', """CREATE TABLE stats(
             stat_id INTEGER NOT NULL PRIMARY KEY autoincrement,
@@ -98,6 +100,7 @@ def dbcreate(sqldb, plugin, **kwargs):
             redos INT default 0
           );""", keyfield='stat_id')
 
+#
       self.addtable('quests', """CREATE TABLE quests(
             quest_id INTEGER NOT NULL PRIMARY KEY autoincrement,
             starttime INT default 0,
@@ -110,9 +113,11 @@ def dbcreate(sqldb, plugin, **kwargs):
             daily INT default 0,
             totqp INT default 0,
             gold INT default 0,
-            tier INT default 0,
+            tierqp INT default 0,
             mccp INT default 0,
             lucky INT default 0,
+            opk INT default 0,
+            hardcore INT default 0,
             tp INT default 0,
             trains INT default 0,
             pracs INT default 0,
@@ -143,7 +148,8 @@ def dbcreate(sqldb, plugin, **kwargs):
             pracs INT default 0,
             trains INT default 0,
             bonustrains INT default 0,
-            blessingtrains INT default 0
+            blessingtrains INT default 0,
+            battlelearntrains INT default 0
           )""", keyfield='level_id')
 
       self.addtable('campaigns', """CREATE TABLE campaigns(
@@ -241,9 +247,11 @@ def dbcreate(sqldb, plugin, **kwargs):
         self.addtostat('triviapoints', questinfo['tp'])
         self.addtostat('totaltrivia', questinfo['tp'])
 
+      questinfo = self.checkdictforcolumns('quests', questinfo)
+
       stmt = self.converttoinsert('quests', keynull=True)
-      rowid, result = self.api('%s.modify' % self.plugin.sname)(stmt, questinfo)
-      self.api.get('send.msg')('added quest: %s' % rowid)
+      rowid, _ = self.api('%s.modify' % self.plugin.sname)(stmt, questinfo)
+      self.api('send.msg')('added quest: %s' % rowid)
       return rowid
 
     def remove(self, table, rownumber):
@@ -255,11 +263,11 @@ def dbcreate(sqldb, plugin, **kwargs):
       if retval:
         if table == 'campaigns':
           stmt = "DELETE FROM cpmobs where cp_id=%s;" % (rownumber)
-          rowid, result = self.api('%s.modify' % self.plugin.sname)(stmt)
+          self.api('%s.modify' % self.plugin.sname)(stmt)
 
         elif table == 'gquests':
           stmt = "DELETE FROM gqmobs where gq_id=%s;" % (rownumber)
-          rowid, result = self.api('%s.modify' % self.plugin.sname)(stmt)
+          self.api('%s.modify' % self.plugin.sname)(stmt)
 
       return retval, msg
 
@@ -268,9 +276,9 @@ def dbcreate(sqldb, plugin, **kwargs):
       set a stat
       """
       stmt = 'update stats set %s=%s where milestone = "current"' % (
-                                                        stat, value)
-      rowid, result = self.api('%s.modify' % self.plugin.sname)(stmt)
-      self.api.get('send.msg')('set %s to %s' % (stat, value))
+          stat, value)
+      self.api('%s.modify' % self.plugin.sname)(stmt)
+      self.api('send.msg')('set %s to %s' % (stat, value))
 
     def getstat(self, stat):
       """
@@ -278,8 +286,8 @@ def dbcreate(sqldb, plugin, **kwargs):
       """
       tstat = None
       rows = self.api('%s.select' % self.plugin.sname)(
-                  'SELECT * FROM stats WHERE milestone = "current"')
-      if len(rows) > 0 and stat in rows[0]:
+          'SELECT * FROM stats WHERE milestone = "current"')
+      if len(rows) > 0 and stat in rows[0]: # pylint: disable=len-as-condition
         tstat = rows[0][stat]
       return tstat
 
@@ -293,7 +301,7 @@ def dbcreate(sqldb, plugin, **kwargs):
       if self.checkcolumnexists('stats', stat):
         stmt = "UPDATE stats SET %s = %s + %s WHERE milestone = 'current'" \
             % (stat, stat, add)
-        rowid, result = self.api('%s.modify' % self.plugin.sname)(stmt)
+        self.api('%s.modify' % self.plugin.sname)(stmt)
 
     def savewhois(self, whoisinfo):
       """
@@ -306,19 +314,19 @@ def dbcreate(sqldb, plugin, **kwargs):
         whoisinfo['milestone'] = 'current'
         whoisinfo['time'] = 0
         stmt = self.converttoupdate('stats', 'milestone', nokey)
-        rowid, result = self.api('%s.modify' % self.plugin.sname)(stmt,
-                                                                  whoisinfo)
+        self.api('%s.modify' % self.plugin.sname)(stmt,
+                                                  whoisinfo)
       else:
         whoisinfo['milestone'] = 'current'
         whoisinfo['totaltrivia'] = 0
         whoisinfo['time'] = 0
         stmt = self.converttoinsert('stats', True)
-        rowid, result = self.api('%s.modify' % self.plugin.sname)(stmt,
-                                                                  whoisinfo)
+        self.api('%s.modify' % self.plugin.sname)(stmt,
+                                                  whoisinfo)
         #add a milestone here
         self.addmilestone('start')
 
-      self.api.get('send.msg')('updated stats')
+      self.api('send.msg')('updated stats')
       # add classes here
       self.addclasses(whoisinfo['classes'])
 
@@ -330,25 +338,25 @@ def dbcreate(sqldb, plugin, **kwargs):
         return
 
       trows = self.api('%s.select' % self.plugin.sname)(
-                          'SELECT * FROM stats WHERE milestone = "%s"' \
+          'SELECT * FROM stats WHERE milestone = "%s"' \
                                                             % milestone)
-      if len(trows) > 0:
-        self.api.get('send.client')('@RMilestone %s already exists' % \
+      if len(trows) > 0: # pylint: disable=len-as-condition
+        self.api('send.client')('@RMilestone %s already exists' % \
                                                 milestone)
         return -1
 
       stats = self.api('%s.select' % self.plugin.sname)(
-                        'SELECT * FROM stats WHERE milestone = "current"')
+          'SELECT * FROM stats WHERE milestone = "current"')
       tstats = stats[0]
 
       if tstats:
         tstats['milestone'] = milestone
         tstats['time'] = time.time()
         stmt = self.converttoinsert('stats', True)
-        rowid, result = self.api('%s.modify' % self.plugin.sname)(stmt, tstats)
+        rowid, _ = self.api('%s.modify' % self.plugin.sname)(stmt, tstats)
 
-        self.api.get('send.msg')('inserted milestone %s with rowid: %s' % (
-                                              milestone, rowid))
+        self.api('send.msg')('inserted milestone %s with rowid: %s' % (
+            milestone, rowid))
         return rowid
 
       return -1
@@ -360,18 +368,18 @@ def dbcreate(sqldb, plugin, **kwargs):
       trows = self.api('%s.select' % self.plugin.sname)(
           'SELECT * FROM stats WHERE milestone = "%s"' % milestone)
 
-      if len(trows) == 0:
+      if len(trows) == 0: # pylint: disable=len-as-condition
         return None
-      else:
-        return trows[0]
+
+      return trows[0]
 
     def addclasses(self, classes):
       """
       add classes from whois
       """
       stmt = 'UPDATE CLASSES SET REMORT = :remort WHERE class = :class'
-      rowid, result = self.api('%s.modifymany' % self.plugin.sname)(stmt,
-                                                                    classes)
+      self.api('%s.modifymany' % self.plugin.sname)(stmt,
+                                                    classes)
 
     def getclasses(self):
       """
@@ -379,7 +387,7 @@ def dbcreate(sqldb, plugin, **kwargs):
       """
       classes = []
       tclasses = self.api('%s.select' % self.plugin.sname)(
-                      'SELECT * FROM classes ORDER by remort ASC')
+          'SELECT * FROM classes ORDER by remort ASC')
       for i in tclasses:
         if i['remort'] != -1:
           classes.append(i['class'])
@@ -390,26 +398,26 @@ def dbcreate(sqldb, plugin, **kwargs):
       """
       initialize the class table
       """
-      classabb = self.api.get('aardu.classabb')()
+      classabb = self.api('aardu.classabb')()
       classes = []
       for i in classabb:
         classes.append({'class':i})
       stmt = "INSERT INTO classes VALUES (:class, -1)"
-      rowid, result = self.api('%s.modifymany' % self.plugin.sname)(stmt,
-                                                                    classes)
+      self.api('%s.modifymany' % self.plugin.sname)(stmt,
+                                                    classes)
 
     def resetclasses(self):
       """
       reset the class table
       """
-      classabb = self.api.get('aardu.classabb')()
+      classabb = self.api('aardu.classabb')()
       classes = []
       for i in classabb:
         classes.append({'class':i})
       stmt = """UPDATE classes SET remort = -1
                       WHERE class = :class"""
-      rowid, result = self.api('%s.modifymany' % self.plugin.sname)(stmt,
-                                                                    classes)
+      self.api('%s.modifymany' % self.plugin.sname)(stmt,
+                                                    classes)
 
     def savecp(self, cpinfo):
       """
@@ -424,15 +432,17 @@ def dbcreate(sqldb, plugin, **kwargs):
         self.addtostat('triviapoints', cpinfo['tp'])
         self.addtostat('totaltrivia', cpinfo['tp'])
 
+      cpinfo = self.checkdictforcolumns('campaigns', cpinfo)
+
       stmt = self.converttoinsert('campaigns', keynull=True)
-      rowid, result = self.api('%s.modify' % self.plugin.sname)(stmt, cpinfo)
-      self.api.get('send.msg')('added cp: %s' % rowid)
+      rowid, _ = self.api('%s.modify' % self.plugin.sname)(stmt, cpinfo)
+      self.api('send.msg')('added cp: %s' % rowid)
 
       for i in cpinfo['mobs']:
         i['cp_id'] = rowid
       stmt2 = self.converttoinsert('cpmobs', keynull=True)
-      rowid, result = self.api('%s.modifymany' % self.plugin.sname)(stmt2,
-                                                              cpinfo['mobs'])
+      self.api('%s.modifymany' % self.plugin.sname)(stmt2,
+                                                    cpinfo['mobs'])
 
     def savegq(self, gqinfo):
       """
@@ -445,15 +455,17 @@ def dbcreate(sqldb, plugin, **kwargs):
       if gqinfo['won'] == 1:
         self.addtostat('gquestswon', 1)
 
+      gqinfo = self.checkdictforcolumns('gquests', gqinfo)
+
       stmt = self.converttoinsert('gquests', keynull=True)
-      rowid, result = self.api('%s.modify' % self.plugin.sname)(stmt, gqinfo)
-      self.api.get('send.msg')('added gq: %s' % rowid)
+      rowid, _ = self.api('%s.modify' % self.plugin.sname)(stmt, gqinfo)
+      self.api('send.msg')('added gq: %s' % rowid)
 
       for i in gqinfo['mobs']:
         i['gq_id'] = rowid
       stmt2 = self.converttoinsert('gqmobs', keynull=True)
-      rowid, result = self.api('%s.modifymany' % self.plugin.sname)(stmt2,
-                                                              gqinfo['mobs'])
+      self.api('%s.modifymany' % self.plugin.sname)(stmt2,
+                                                    gqinfo['mobs'])
 
     def savelevel(self, levelinfo, first=False):
       """
@@ -476,14 +488,17 @@ def dbcreate(sqldb, plugin, **kwargs):
           levelinfo['level'] = self.getstat('totallevels')
 
       levelinfo['finishtime'] = -1
+
+      levelinfo = self.checkdictforcolumns('levels', levelinfo)
+
       stmt = self.converttoinsert('levels', keynull=True)
-      rowid, result = self.api('%s.modify' % self.plugin.sname)(stmt,
-                                                                levelinfo)
-      self.api.get('send.msg')('inserted level %s' % rowid)
+      rowid, _ = self.api('%s.modify' % self.plugin.sname)(stmt,
+                                                           levelinfo)
+      self.api('send.msg')('inserted level %s' % rowid)
       if rowid > 1:
         stmt2 = "UPDATE levels SET finishtime = %s WHERE level_id = %d" % (
-                      levelinfo['starttime'], int(rowid) - 1)
-        nrowid, result = self.api('%s.modify' % self.plugin.sname)(stmt2)
+            levelinfo['starttime'], int(rowid) - 1)
+        self.api('%s.modify' % self.plugin.sname)(stmt2)
 
       if levelinfo['type'] == 'level':
         self.addmilestone(str(levelinfo['totallevels']))
@@ -496,11 +511,12 @@ def dbcreate(sqldb, plugin, **kwargs):
       """
       self.addtostat('totaltrivia', killinfo['tp'])
       self.addtostat('monsterskilled', 1)
-      if not killinfo['name']:
-        killinfo['name'] = 'Unknown'
+
+      killinfo = self.checkdictforcolumns('mobkills', killinfo)
+
       stmt = self.converttoinsert('mobkills', keynull=True)
-      rowid, result = self.api('%s.modify' % self.plugin.sname)(stmt, killinfo)
-      self.api.get('send.msg')('inserted mobkill: %s' % rowid)
+      rowid, _ = self.api('%s.modify' % self.plugin.sname)(stmt, killinfo)
+      self.api('send.msg')('inserted mobkill: %s' % rowid)
 
     def addrarexp_v13(self):
       """
@@ -636,11 +652,11 @@ def dbcreate(sqldb, plugin, **kwargs):
           )""")
       cur.close()
 
-      for gq in oldgqt:
-        if gq['completed'] == 1:
-          gq['extended'] = 1
+      for gqd in oldgqt:
+        if gqd['completed'] == 1:
+          gqd['extended'] = 1
         else:
-          gq['extended'] = 0
+          gqd['extended'] = 0
 
       cur = self.dbconn.cursor()
       stmt2 = """INSERT INTO gquests VALUES (:gq_id, :starttime, :finishtime,
@@ -649,10 +665,117 @@ def dbcreate(sqldb, plugin, **kwargs):
       cur.executemany(stmt2, oldgqt)
       cur.close()
 
+    def addhardcoreopk_v16(self):
+      """
+      add noexp to each mobkill
+      """
+      if not self.checktableexists('quests'):
+        return
+
+      olditems = self.select('SELECT * FROM quests ORDER BY quest_id ASC')
+
+      cur = self.dbconn.cursor()
+      cur.execute('DROP TABLE IF EXISTS quests;')
+      cur.close()
+      self.close()
+
+      self.open()
+      cur = self.dbconn.cursor()
+
+      cur.execute("""CREATE TABLE quests(
+            quest_id INTEGER NOT NULL PRIMARY KEY autoincrement,
+            starttime INT default 0,
+            finishtime INT default 0,
+            mobname TEXT default "Unknown",
+            mobarea TEXT default "Unknown",
+            mobroom TEXT default "Unknown",
+            qp INT default 0,
+            double INT default 0,
+            daily INT default 0,
+            totqp INT default 0,
+            gold INT default 0,
+            tierqp INT default 0,
+            mccp INT default 0,
+            lucky INT default 0,
+            opk INT default 0,
+            hardcore INT default 0,
+            tp INT default 0,
+            trains INT default 0,
+            pracs INT default 0,
+            level INT default -1,
+            failed INT default 0
+          );""")
+      cur.close()
+
+      for item in olditems:
+        item['tierqp'] = item['tier']
+        item['opk'] = 0
+        item['hardcore'] = 0
+
+      cur = self.dbconn.cursor()
+      stmt2 = """INSERT INTO quests VALUES (:quest_id, :starttime, :finishtime,
+                    :mobname, :mobarea, :mobroom, :qp, :double, :daily, :totqp,
+                    :gold, :tierqp, :mccp, :lucky, :opk, :hardcore, :tp,
+                    :trains, :pracs, :level, :failed)"""
+      cur.executemany(stmt2, olditems)
+      cur.close()
+
+    def addlevelbattlelearntrains_v17(self):
+      """
+      add battle learning trains to the level table
+      """
+      if not self.checktableexists('levels'):
+        return
+
+      olditems = self.select('SELECT * FROM levels ORDER BY level_id ASC')
+
+      cur = self.dbconn.cursor()
+      cur.execute('DROP TABLE IF EXISTS levels;')
+      cur.close()
+      self.close()
+
+      self.open()
+      cur = self.dbconn.cursor()
+
+      cur.execute("""CREATE TABLE levels(
+            level_id INTEGER NOT NULL PRIMARY KEY autoincrement,
+            type TEXT default "level",
+            level INT default -1,
+            str INT default 0,
+            int INT default 0,
+            wis INT default 0,
+            dex INT default 0,
+            con INT default 0,
+            luc INT default 0,
+            starttime INT default -1,
+            finishtime INT default -1,
+            hp INT default 0,
+            mp INT default 0,
+            mv INT default 0,
+            pracs INT default 0,
+            trains INT default 0,
+            bonustrains INT default 0,
+            blessingtrains INT default 0,
+            battlelearntrains INT default 0
+          )""")
+
+      cur.close()
+
+      for item in olditems:
+        item['battlelearntrains'] = 0
+
+      cur = self.dbconn.cursor()
+      stmt2 = """INSERT INTO levels VALUES (:level_id, :type, :level,
+                    :str, :int, :wis, :dex, :con, :luc,
+                    :starttime, :finishtime, :hp, :mp, :mv, :pracs,
+                    :trains, :bonustrains, :blessingtrains, :battlelearntrains)"""
+      cur.executemany(stmt2, olditems)
+      cur.close()
+
   return Statdb(plugin, **kwargs)
 
 
-class Plugin(AardwolfBasePlugin):
+class Plugin(AardwolfBasePlugin): # pylint: disable=too-many-public-methods
   """
   a plugin to catch aardwolf stats and add them to a database
   """
@@ -662,13 +785,13 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.__init__(self, *args, **kwargs)
 
-    self.api.get('dependency.add')('sqldb')
-    self.api.get('dependency.add')('aardwolf.whois')
-    self.api.get('dependency.add')('aardwolf.level')
-    self.api.get('dependency.add')('aardwolf.mobk')
-    self.api.get('dependency.add')('aardwolf.cp')
-    self.api.get('dependency.add')('aardwolf.gq')
-    self.api.get('dependency.add')('aardwolf.quest')
+    self.api('dependency.add')('sqldb')
+    self.api('dependency.add')('aardwolf.whois')
+    self.api('dependency.add')('aardwolf.level')
+    self.api('dependency.add')('aardwolf.mobk')
+    self.api('dependency.add')('aardwolf.cp')
+    self.api('dependency.add')('aardwolf.gq')
+    self.api('dependency.add')('aardwolf.quest')
 
     self.statdb = None
 
@@ -680,103 +803,99 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.load(self)
 
-    self.statdb = dbcreate(self.api.get('sqldb.baseclass')(), self,
+    self.statdb = dbcreate(self.api('sqldb.baseclass')(), self,
                            dbname='stats', dbdir=self.savedir)
 
-    self.api.get('setting.add')('backupstart', '0000', 'miltime',
-                      'the time for a db backup, ex. 1200 or 2000')
-    self.api.get('setting.add')('backupinterval', '4h', 'timelength',
-                      'the interval to backup the db, default every 4 hours')
+    self.api('setting.add')('backupstart', '0000', 'miltime',
+                            'the time for a db backup, ex. 1200 or 2000')
+    self.api('setting.add')('backupinterval', '4h', 'timelength',
+                            'the interval to backup the db, default every 4 hours')
 
-    parser = argparse.ArgumentParser(add_help=False,
-                 description='list milestones')
-    self.api.get('commands.add')('list', self.cmd_list,
-                                parser=parser, group='Milestones')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='list milestones')
+    self.api('commands.add')('list', self.cmd_list,
+                             parser=parser, group='Milestones')
 
-    parser = argparse.ArgumentParser(add_help=False,
-                 description='compare milestones')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='compare milestones')
     parser.add_argument('milestone1', help='the first milestone',
                         default='', nargs='?')
     parser.add_argument('milestone2', help='the second milestone',
                         default='', nargs='?')
-    self.api.get('commands.add')('comp', self.cmd_comp,
-                                parser=parser, group='Milestones')
+    self.api('commands.add')('comp', self.cmd_comp,
+                             parser=parser, group='Milestones')
 
-    parser = argparse.ArgumentParser(add_help=False,
-                 description='show quests stats')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='show quests stats')
     parser.add_argument('count', help='the number of quests to show',
                         default=0, nargs='?')
     parser.add_argument('-n', "--number",
-          help="show info for level number",
-              default='')
-    self.api.get('commands.add')('quests', self.cmd_quests,
-                                parser=parser, group='Stats')
+                        help="show info for level number",
+                        default='')
+    self.api('commands.add')('quests', self.cmd_quests,
+                             parser=parser, group='Stats')
 
-    parser = argparse.ArgumentParser(add_help=False,
-                 description='show level stats')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='show level stats')
     parser.add_argument('count', help='the number of levels to show',
                         default=0, nargs='?')
     parser.add_argument('-n', "--number",
-          help="show info for level number",
-              default='')
-    self.api.get('commands.add')('levels', self.cmd_levels,
-                                parser=parser, group='Stats')
+                        help="show info for level number",
+                        default='')
+    self.api('commands.add')('levels', self.cmd_levels,
+                             parser=parser, group='Stats')
 
-    parser = argparse.ArgumentParser(add_help=False,
-                 description='show cp stats')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='show cp stats')
     parser.add_argument('count', help='the number of cps to show',
                         default=0, nargs='?')
     parser.add_argument('-n', "--number",
-          help="show info for cp number",
-              default='')
-    self.api.get('commands.add')('cps', self.cmd_cps,
-                                parser=parser, group='Stats')
+                        help="show info for cp number",
+                        default='')
+    self.api('commands.add')('cps', self.cmd_cps,
+                             parser=parser, group='Stats')
 
-    parser = argparse.ArgumentParser(add_help=False,
-                 description='show gq stats')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='show gq stats')
     parser.add_argument('count', help='the number of gqs to show',
                         default=0, nargs='?')
     parser.add_argument('-n', "--number",
-          help="show info for gq number",
-              default='')
-    self.api.get('commands.add')('gqs', self.cmd_gqs,
-                                parser=parser, group='Stats')
+                        help="show info for gq number",
+                        default='')
+    self.api('commands.add')('gqs', self.cmd_gqs,
+                             parser=parser, group='Stats')
 
-    parser = argparse.ArgumentParser(add_help=False,
-                 description='show mob stats')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='show mob stats')
     parser.add_argument('count', help='the number of mobkills to show',
                         default=0, nargs='?')
-    self.api.get('commands.add')('mobs', self.cmd_mobs,
-                                parser=parser, group='Stats')
+    self.api('commands.add')('mobs', self.cmd_mobs,
+                             parser=parser, group='Stats')
 
-    self.api.get('triggers.add')('dead',
-      "^You die.$",
-      enabled=True, group='dead')
+    self.api('events.register')('aard_quest_comp', self.questevent)
+    self.api('events.register')('aard_quest_failed', self.questevent)
+    self.api('events.register')('aard_cp_comp', self.cpevent)
+    self.api('events.register')('aard_cp_failed', self.cpevent)
+    self.api('events.register')('aard_whois', self.whoisevent)
+    self.api('events.register')('aard_level_gain', self.levelevent)
+    self.api('events.register')('aard_level_hero', self.heroevent)
+    self.api('events.register')('aard_level_superhero', self.heroevent)
+    self.api('events.register')('aard_level_remort', self.heroevent)
+    self.api('events.register')('aard_level_tier', self.heroevent)
+    self.api('events.register')('aard_mobkill', self.mobkillevent)
+    self.api('events.register')('aard_gq_completed', self.gqevent)
+    self.api('events.register')('aard_gq_done', self.gqevent)
+    self.api('events.register')('aard_gq_won', self.gqevent)
+    self.api('events.register')('GMCP:char.status', self.checkstats)
+    self.api('events.register')('var_statdb_backupstart', self.changetimer)
+    self.api('events.register')('var_statdb_backupinternval',
+                                self.changetimer)
 
-    self.api.get('events.register')('aard_quest_comp', self.questevent)
-    self.api.get('events.register')('aard_quest_failed', self.questevent)
-    self.api.get('events.register')('aard_cp_comp', self.cpevent)
-    self.api.get('events.register')('aard_cp_failed', self.cpevent)
-    self.api.get('events.register')('aard_whois', self.whoisevent)
-    self.api.get('events.register')('aard_level_gain', self.levelevent)
-    self.api.get('events.register')('aard_level_hero', self.heroevent)
-    self.api.get('events.register')('aard_level_superhero', self.heroevent)
-    self.api.get('events.register')('aard_level_remort', self.heroevent)
-    self.api.get('events.register')('aard_level_tier', self.heroevent)
-    self.api.get('events.register')('aard_mobkill', self.mobkillevent)
-    self.api.get('events.register')('aard_gq_completed', self.gqevent)
-    self.api.get('events.register')('aard_gq_done', self.gqevent)
-    self.api.get('events.register')('aard_gq_won', self.gqevent)
-    self.api.get('events.register')('GMCP:char.status', self.checkstats)
-    self.api.get('events.register')('var_statdb_backupstart', self.changetimer)
-    self.api.get('events.register')('var_statdb_backupinternval',
-                                    self.changetimer)
+    self.api('events.register')('trigger_dead', self.dead)
 
-    self.api.get('events.register')('trigger_dead', self.dead)
-
-    self.api.get('timers.add')('stats_backup', self.backupdb,
-                              self.api.get('setting.gets')('backupinterval'),
-                              time=self.api.get('setting.gets')('backupstart'))
+    self.api('timers.add')('stats_backup', self.backupdb,
+                           self.api('setting.gets')('backupinterval'),
+                           time=self.api('setting.gets')('backupstart'))
 
   def movestatdb_version2(self):
     """
@@ -804,11 +923,11 @@ class Plugin(AardwolfBasePlugin):
     """
     do something when the reportminutes changes
     """
-    backupinterval = self.api.get('setting.gets')('backupinterval')
-    backupstart = self.api.get('setting.gets')('backupstart')
-    self.api.get('timers.remove')('stats_backup')
-    self.api.get('timers.add')('stats_backup', self.backupdb,
-                               backupinterval, time=backupstart)
+    backupinterval = self.api('setting.gets')('backupinterval')
+    backupstart = self.api('setting.gets')('backupstart')
+    self.api('timers.remove')('stats_backup')
+    self.api('timers.add')('stats_backup', self.backupdb,
+                           backupinterval, time=backupstart)
 
   def backupdb(self):
     """
@@ -828,20 +947,20 @@ class Plugin(AardwolfBasePlugin):
     """
     check to see if we have stats
     """
-    state = self.api.get('GMCP.getv')('char.status.state')
+    state = self.api('GMCP.getv')('char.status.state')
     if state == 3:
-      self.api.get('events.unregister')('GMCP:char.status', self.checkstats)
+      self.api('events.unregister')('GMCP:char.status', self.checkstats)
       if not self.statdb.getstat('monsterskilled'):
-        self.api.get('send.execute')('whois')
+        self.api('send.execute')('whois')
 
-  def cmd_list(self, args=None):
+  def cmd_list(self, _=None):
     """
     list milestones
     """
     msg = []
     milest = self.statdb.select('SELECT milestone FROM stats')
     levels = self.statdb.select(
-      "SELECT MIN(totallevels) as MIN, MAX(totallevels) as MAX FROM stats " \
+        "SELECT MIN(totallevels) as MIN, MAX(totallevels) as MAX FROM stats " \
                 "WHERE stats.totallevels == stats.milestone")
 
     maxlev = 0
@@ -863,7 +982,7 @@ class Plugin(AardwolfBasePlugin):
         msg.append('%-15s %-15s %-15s' % (items[0], items[1], items[2]))
         items = []
 
-    if len(items) > 0:
+    if len(items) > 0: # pylint: disable=len-as-condition
       if len(items) == 1:
         msg.append('%-15s' % items[0])
       elif len(items) == 2:
@@ -882,7 +1001,7 @@ class Plugin(AardwolfBasePlugin):
 
     tformat = "%-17s %-15s %-15s %-10s"
     msg.append(tformat % ('Milestone', milestone1['milestone'],
-                            milestone2['milestone'], 'Difference'))
+                          milestone2['milestone'], 'Difference'))
 
     msg.append('@g' + '-' * 60)
 
@@ -892,7 +1011,7 @@ class Plugin(AardwolfBasePlugin):
       milestone1['time'] = time.time()
     else:
       milestone1['dates'] = time.strftime('%x',
-                                           time.localtime(milestone1['time']))
+                                          time.localtime(milestone1['time']))
       milestone1['times'] = time.strftime('%X',
                                           time.localtime(milestone1['time']))
 
@@ -902,9 +1021,9 @@ class Plugin(AardwolfBasePlugin):
       milestone2['time'] = time.time()
     else:
       milestone2['dates'] = time.strftime('%x',
-                                        time.localtime(milestone2['time']))
+                                          time.localtime(milestone2['time']))
       milestone2['times'] = time.strftime('%X',
-                                        time.localtime(milestone2['time']))
+                                          time.localtime(milestone2['time']))
 
     if milestone2['time'] < milestone1['time']:
       tmp1 = milestone1
@@ -913,19 +1032,19 @@ class Plugin(AardwolfBasePlugin):
       milestone1 = tmp2
       milestone2 = tmp1
 
-    datediff = self.api.get('utils.formattime')(
-                                      milestone2['time'] - milestone1['time'])
+    datediff = self.api('utils.formattime')(
+        milestone2['time'] - milestone1['time'])
 
     msg.append(tformat % ('Date', milestone1['dates'],
-                                milestone2['dates'], datediff))
+                          milestone2['dates'], datediff))
     msg.append(tformat % ('Time', milestone1['times'],
-                                milestone2['times'], ''))
+                          milestone2['times'], ''))
 
     msg.append('@g' + '-' * 60)
 
     for i in FIELDSTOCOMP:
       msg.append(tformat % (i, milestone1[i], milestone2[i],
-                                  milestone2[i] - milestone1[i]))
+                            milestone2[i] - milestone1[i]))
     return msg
 
 
@@ -957,13 +1076,15 @@ class Plugin(AardwolfBasePlugin):
 
     return True, msg
 
-  def _format_row(self, rowname, data1, data2, datacolor="@W",
-                    headercolor="@C"):
+  @staticmethod
+  def _format_row(rowname, data1, data2, datacolor="@W",
+                  headercolor="@C"):
     """
     format a row of data
     """
     lstr = '%s%-14s : %s%-12s %s%-12s' % (headercolor, rowname,
-      datacolor, data1, datacolor, data2)
+                                          datacolor, data1,
+                                          datacolor, data2)
 
     return lstr
 
@@ -984,9 +1105,10 @@ class Plugin(AardwolfBasePlugin):
     div = '@B' + '-' * linelen
 
     msg.append("@G%-6s %-2s %-2s %-2s %-2s %-3s" \
-                    " %-2s %-2s %-2s %-2s %-4s %-3s   %s" % ("ID", "QP",
-                    "MC", "TR", "LK", "DBL", "TL", "TP", "TN",
-                    "PR", "Gold", "Lvl",  "Time"))
+                " %-2s %-2s %-2s %-2s %-4s %-3s   %s" % \
+                   ("ID", "QP", "MC", "TR", "LK",
+                    "DBL", "TL", "TP", "TN",
+                    "PR", "Gold", "Lvl", "Time"))
     msg.append(div)
 
     dbl = ''
@@ -995,20 +1117,19 @@ class Plugin(AardwolfBasePlugin):
     if int(questinfo['daily']) == 1:
       dbl = dbl + 'E'
 
-    leveld = self.api.get('aardu.convertlevel')(questinfo['level'])
+    leveld = self.api('aardu.convertlevel')(questinfo['level'])
 
-    ttime = self.api.get('utils.formattime')(questinfo['finishtime'] - \
+    ttime = self.api('utils.formattime')(questinfo['finishtime'] - \
                                               questinfo['starttime'])
     if int(questinfo['failed']) == 1:
       ttime = 'Failed'
     msg.append("%-6s %2s %2s %2s %2s %3s" \
-                  " %2s %2s %2s %2s %4s %3s %8s" % (
-                  questinfo['quest_id'], questinfo['qp'],
-                  questinfo['mccp'], questinfo['tier'], questinfo['lucky'],
-                  dbl, questinfo['totqp'], questinfo['tp'],
-                  questinfo['trains'], questinfo['pracs'], questinfo['gold'],
-                  leveld['level'],  ttime))
-
+                  " %2s %2s %2s %2s %4s %3s %8s" % \
+                    (questinfo['quest_id'], questinfo['qp'],
+                     questinfo['mccp'], questinfo['tierqp'], questinfo['lucky'],
+                     dbl, questinfo['totqp'], questinfo['tp'],
+                     questinfo['trains'], questinfo['pracs'], questinfo['gold'],
+                     leveld['level'], ttime))
 
     msg.append(div)
 
@@ -1020,7 +1141,7 @@ class Plugin(AardwolfBasePlugin):
 
     return True, msg
 
-  def cmd_quests(self, args=None):
+  def cmd_quests(self, args=None): # pylint: disable=too-many-statements
     """
     show quest stats
     """
@@ -1046,13 +1167,17 @@ class Plugin(AardwolfBasePlugin):
     tqrow = self.statdb.select(
         """SELECT AVG(finishtime - starttime) as avetime,
                       SUM(qp) as qp,
-                      SUM(tier) as tier,
-                      AVG(tier) as tierave,
-                      SUM(mccp) as mccp,
-                      AVG(mccp) as mccpave,
-                      SUM(lucky) as lucky,
                       AVG(qp) as qpquestave,
+                      AVG(tierqp) as tierqpave,
+                      SUM(tierqp) as tierqp,
+                      AVG(mccp) as mccpave,
+                      SUM(mccp) as mccp,
                       AVG(lucky) as luckyave,
+                      SUM(lucky) as lucky,
+                      AVG(opk) as opkave,
+                      SUM(opk) as opk,
+                      AVG(hardcore) as hardcoreave,
+                      SUM(hardcore) as hardcore,
                       SUM(tp) as tp,
                       AVG(tp) as tpave,
                       SUM(trains) as trains,
@@ -1066,10 +1191,10 @@ class Plugin(AardwolfBasePlugin):
                       AVG(gold) as avegold FROM quests where failed = 0""")
     stats = tqrow[0]
     tfrow = self.statdb.select(
-            "SELECT COUNT(*) as failedindb FROM quests where failed != 0")
+        "SELECT COUNT(*) as failedindb FROM quests where failed != 0")
     stats.update(tfrow[0])
     tsrow = self.statdb.select(
-         """SELECT qpearned, questscomplete, questsfailed,
+        """SELECT qpearned, questscomplete, questsfailed,
             totallevels FROM stats WHERE milestone = 'current'""")
     stats.update(tsrow[0])
     stats['indb'] = stats['failedindb'] + stats['qindb']
@@ -1077,51 +1202,56 @@ class Plugin(AardwolfBasePlugin):
     msg.append(self._format_row('DB Stats', 'Total', 'In DB', '@G', '@G'))
     msg.append(div)
     msg.append(self._format_row("Quests",
-              stats['questscomplete'] + stats['questsfailed'],
-              stats['indb']))
+                                stats['questscomplete'] + stats['questsfailed'],
+                                stats['indb']))
     msg.append(self._format_row("Quests Comp",
-              stats['questscomplete'], stats['qindb']))
+                                stats['questscomplete'], stats['qindb']))
     msg.append(self._format_row("Quests Failed",
-              stats['questsfailed'], stats['failedindb']))
+                                stats['questsfailed'], stats['failedindb']))
     msg.append('')
     msg.append(self._format_row("QP Stats", "Total", "Average", '@G', '@G'))
     msg.append(div)
     msg.append(self._format_row("Overall QP", stats['qpearned'],
-        format_float(stats['qplevelave'], "/level")))
+                                format_float(stats['qplevelave'], "/level")))
     msg.append(self._format_row("Quest QP", stats['qp'],
-        format_float(stats['qpquestave'], "/quest")))
+                                format_float(stats['qpquestave'], "/quest")))
     msg.append(self._format_row("MCCP", stats['mccp'],
-        format_float(stats['mccpave'], "/quest")))
+                                format_float(stats['mccpave'], "/quest")))
     msg.append(self._format_row("Lucky", stats['lucky'],
-        format_float(stats['luckyave'], "/quest")))
-    msg.append(self._format_row("Tier", stats['tier'],
-        format_float(stats['tierave'], "/quest")))
+                                format_float(stats['luckyave'], "/quest")))
+    msg.append(self._format_row("Tier", stats['tierqp'],
+                                format_float(stats['tierqpave'], "/quest")))
+    msg.append(self._format_row("OPK", stats['opk'],
+                                format_float(stats['opkave'], "/quest")))
+    msg.append(self._format_row("Hardcore", stats['hardcore'],
+                                format_float(stats['hardcoreave'], "/quest")))
     msg.append(self._format_row("QP Per Quest", "",
-        format_float(stats['dboverallave'], "/quest")))
+                                format_float(stats['dboverallave'], "/quest")))
     msg.append(self._format_row("Gold",
-          self.api.get('utils.readablenumber')(stats['gold'], 2),
-          "%d/quest" % stats['avegold']))
+                                self.api('utils.readablenumber')(stats['gold'], 2),
+                                "%d/quest" % stats['avegold']))
     msg.append(self._format_row("Time", "",
-                        self.api.get('utils.formattime')(stats['avetime'])))
+                                self.api('utils.formattime')(stats['avetime'])))
     msg.append('')
     msg.append(self._format_row("Bonus Rewards", "Total",
-                              "Average", '@G', '@G'))
+                                "Average", '@G', '@G'))
     msg.append(div)
     msg.append(self._format_row("TP", stats['tp'],
-        format_float(stats['tpave'], "/quest")))
+                                format_float(stats['tpave'], "/quest")))
     msg.append(self._format_row("Trains", stats['trains'],
-        format_float(stats['trainsave'], "/quest")))
+                                format_float(stats['trainsave'], "/quest")))
     msg.append(self._format_row("Pracs", stats['pracs'],
-        format_float(stats['pracsave'], "/quest")))
+                                format_float(stats['pracsave'], "/quest")))
 
     if int(count) > 0:
       lastitems = self.statdb.getlast('quests', int(count))
-      if len(lastitems) > 0:
+      if len(lastitems) > 0: # pylint: disable=len-as-condition
         msg.append('')
-        msg.append("@G%-6s %-2s %-2s %-2s %-2s %-3s" \
-                        " %-2s %-2s %-2s %-2s %-4s %-3s   %s" % ("ID", "QP",
-                        "MC", "TR", "LK", "DBL", "TL", "TP", "TN",
-                        "PR", "Gold", "Lvl",  "Time"))
+        msg.append("@G%-6s %-2s %-2s %-2s %-2s %-2s %-2s %-3s" \
+                      " %-2s %-2s %-2s %-2s %-4s %-3s   %s" % \
+                        ("ID", "QP", "MC", "TR", "LK",
+                         "PK", "HC", "DBL", "TL", "TP", "TN",
+                         "PR", "Gold", "Lvl", "Time"))
         msg.append(div)
 
         for item in lastitems:
@@ -1131,23 +1261,23 @@ class Plugin(AardwolfBasePlugin):
           if int(item['daily']) == 1:
             dbl = dbl + 'E'
 
-          leveld = self.api.get('aardu.convertlevel')(item['level'])
+          leveld = self.api('aardu.convertlevel')(item['level'])
 
-          ttime = self.api.get('utils.formattime')(item['finishtime'] - \
+          ttime = self.api('utils.formattime')(item['finishtime'] - \
                                                     item['starttime'])
           if int(item['failed']) == 1:
             ttime = 'Failed'
-          msg.append("%-6s %2s %2s %2s %2s %3s" \
-                        " %2s %2s %2s %2s %4s %3s %8s" % (
-                        item['quest_id'], item['qp'],
-                        item['mccp'], item['tier'], item['lucky'],
-                        dbl, item['totqp'], item['tp'],
-                        item['trains'], item['pracs'], item['gold'],
-                        leveld['level'],  ttime))
+          msg.append("%-6s %2s %2s %2s %2s %2s %2s %3s" \
+                        " %2s %2s %2s %2s %4s %3s %8s" % \
+                         (item['quest_id'], item['qp'],
+                          item['mccp'], item['tierqp'], item['lucky'], item['opk'],
+                          item['hardcore'], dbl, item['totqp'], item['tp'],
+                          item['trains'], item['pracs'], item['gold'],
+                          leveld['level'], ttime))
 
     return True, msg
 
-  def show_level(self, args):
+  def show_level(self, args): # pylint: disable=too-many-locals,too-many-statements
     """
     show info for a specific level in the database
     """
@@ -1163,61 +1293,77 @@ class Plugin(AardwolfBasePlugin):
     if levelinfo:
       levelinfo = levelinfo[0]
 
-    msg.append("@G%-6s %-3s %2s %2s %-2s %-2s %-2s" \
-                  " %-2s %-1s %-1s %-1s %-1s %-1s %-1s   %s" % ("ID", "Lvl",
-                  "TR", "BT", "PR", "HP", "MN", "MV", "S",
-                  "I", "W", "C",  "D", "L", "Time"))
-    msg.append(div)
-
     bonus = 0
     if int(levelinfo['bonustrains']) > 0:
       bonus = bonus + int(levelinfo['bonustrains'])
     if int(levelinfo['blessingtrains']) > 0:
       bonus = bonus + int(levelinfo['blessingtrains'])
+    if int(levelinfo['battlelearntrains'] > 0):
+      bonus = bonus + int(levelinfo['battlelearntrains'])
 
-    leveld = self.api.get('aardu.convertlevel')(levelinfo['level'])
+    leveld = self.api('aardu.convertlevel')(levelinfo['level'])
+    levels = 're%st%sr%sl%s' % (leveld['redos'], leveld['tier'],
+                                leveld['remort'], leveld['level'])
 
     if levelinfo['finishtime'] != '-1' and levelinfo['starttime'] != '-1':
-      ttime = self.api.get('utils.formattime')(levelinfo['finishtime'] - \
+      ttime = self.api('utils.formattime')(levelinfo['finishtime'] - \
                                                 levelinfo['starttime'])
     else:
       ttime = ''
 
-    msg.append("%-6s %-3s %2s %2s %-2s %-2s %-2s" \
-                " %-2s %-1s %-1s %-1s %-1s %-1s %-1s   %s" % (
-                levelinfo['level_id'], leveld['level'], levelinfo['trains'],
-                bonus, levelinfo['pracs'], levelinfo['hp'], levelinfo['mp'],
-                levelinfo['mv'], levelinfo['str'], levelinfo['int'],
-                levelinfo['wis'], levelinfo['con'], levelinfo['dex'],
-                levelinfo['luc'], ttime))
+    if levelinfo['type'] == 'level':
+      ltype = 'lev'
+    else:
+      ltype = 'pup'
+
+    msg.append("@G%-6s %-5s %-7s %-s" % ("ID", "Type", "TotLvl", "Actual"))
+    msg.append("%-6s %-5s %-7s %-s" % (levelinfo['level_id'], ltype, levelinfo['level'],
+                                       levels))
+
+    msg.append("@G%-6s %2s %2s %-2s %-2s " % ("", "HP", "MN", "MV", "PR"))
+    msg.append("%-6s %2s %2s %-2s %-2s" % ("", levelinfo['hp'], levelinfo['mp'],
+                                           levelinfo['mv'], levelinfo['pracs']))
+
+    msg.append("@G%-6s %-2s %-2s %-2s %-2s" % ("", "TR", "BO", "BL", "BT"))
+    msg.append("%-6s %-2s %-2s %-2s %-2s" % ("", levelinfo['trains'],
+                                             levelinfo['bonustrains'],
+                                             levelinfo['blessingtrains'],
+                                             levelinfo['battlelearntrains']))
+
+    msg.append("@G%-6s %-1s %-1s %-1s %-1s %-1s %-1s" % \
+                ("", "S", "I", "W", "C", "D", "L"))
+    msg.append("%-6s %-1s %-1s %-1s %-1s %-1s %-1s" % \
+                ("", levelinfo['str'], levelinfo['int'],
+                 levelinfo['wis'], levelinfo['con'], levelinfo['dex'],
+                 levelinfo['luc']))
 
     stmt = "SELECT count(*) as count, AVG(totalxp) as average FROM " \
-          "mobkills where time > %d and time < %d and xp > 0" % \
-            (levelinfo['starttime'], levelinfo['finishtime'])
-    tst = self.api.get('statdb.select')(stmt)
+             "mobkills where time > %d and time < %d and xp > 0" % \
+              (levelinfo['starttime'], levelinfo['finishtime'])
+    tst = self.api('statdb.select')(stmt)
     count = tst[0]['count']
     ave = tst[0]['average']
-
-    print count
-    print ave
 
     if count > 0 and ave > 0:
       msg.append(div)
       length = levelinfo['finishtime'] - levelinfo['starttime']
-      tmsg = '@G%s@w mobs killed' % count
+      if ttime:
+        tmsg = "It took %s with " % ttime
+      else:
+        tmsg = ""
+      tmsg = tmsg + '@G%s@w mobs killed' % count
       tmsg = tmsg + ' (@G%02.02f@w xp/mob)' % (ave)
-      perlevel = self.api.get('GMCP.getv')('char.base.perlevel')
+      perlevel = self.api('GMCP.getv')('char.base.perlevel')
       if length and perlevel:
-        expmin = self.api.get('GMCP.getv')('char.base.perlevel')/(length/60)
+        expmin = self.api('GMCP.getv')('char.base.perlevel')/(length/60)
         tmsg = tmsg + ' @G%02d@w xp/min' % (expmin)
 
       msg.append(tmsg)
-
-    msg.append(div)
+      msg.append(div)
 
     return True, msg
 
-  def cmd_levels(self, args=None):
+  def cmd_levels(self, args=None): # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     """
     show level stats
     """
@@ -1256,7 +1402,8 @@ class Plugin(AardwolfBasePlugin):
              SELECT AVG(trains) as avetrains,
                     AVG(bonustrains) as avebonustrains,
                     AVG(blessingtrains) as aveblessingtrains,
-                    SUM(trains + bonustrains + blessingtrains) as totaltrains,
+                    AVG(battlelearntrains) as avebattlelearntrains,
+                    SUM(trains + bonustrains + blessingtrains + battlelearntrains) as totaltrains,
                     SUM(pracs) as totalpracs,
                     COUNT(*) as indb
                     FROM levels where type = 'level' and trains > 0
@@ -1273,7 +1420,8 @@ class Plugin(AardwolfBasePlugin):
              SELECT AVG(trains) as avetrains,
                     AVG(bonustrains) as avebonustrains,
                     AVG(blessingtrains) as aveblessingtrains,
-                    SUM(trains + bonustrains + blessingtrains) as totaltrains,
+                    AVG(battlelearntrains) as avebattlelearntrains,
+                    SUM(trains + bonustrains + blessingtrains + battlelearntrains) as totaltrains,
                     COUNT(*) as indb
                     FROM levels where type = 'pup'
                     """)
@@ -1288,42 +1436,43 @@ class Plugin(AardwolfBasePlugin):
     msg.append(self._format_row('Type', 'Levels', 'Pups', '@G', '@G'))
     msg.append(div)
     msg.append(self._format_row("Total Overall",
-                levels['totallevels'], pups['powerupsall']))
+                                levels['totallevels'], pups['powerupsall']))
     msg.append(self._format_row("Total In DB",
-                levels['indb'], pups['indb']))
+                                levels['indb'], pups['indb']))
     msg.append(self._format_row("Total Trains",
-                levels['totaltrains'] or "", pups['totaltrains'] or ""))
+                                levels['totaltrains'] or 0, pups['totaltrains'] or 0))
 
-    lavet = format_float(levels['avetrains'])
-    pavet = format_float(pups['avetrains'])
-    msg.append(self._format_row("Ave Trains",
-                lavet or "", pavet or ""))
+    trainitems = [
+        ['Ave Trains', 'avetrains'],
+        ['Ave Bon Trains', 'avebonustrains'],
+        ['Ave Bls Trains', 'aveblessingtrains'],
+        ['Ave BaL Trains', 'avebattlelearntrains'],
+    ]
 
-    lbavet = format_float(levels['avebonustrains'])
-    pbavet = format_float(pups['avebonustrains'])
-    msg.append(self._format_row("Ave Bon Trains",
-                lbavet or "", pbavet or ""))
-
-    ldavet = format_float(levels['aveblessingtrains'])
-    pdavet = format_float(pups['aveblessingtrains'])
-    msg.append(self._format_row("Ave Bls Trains",
-                ldavet or "", pdavet or ""))
-
-    latave = float(lavet) + float(lbavet) + float(ldavet)
-    patave = float(pavet) + float(pbavet) + float(pdavet)
+    levelave = float(0)
+    pupave = float(0)
+    for i in trainitems:
+      title = i[0]
+      lkey = i[1]
+      lave = format_float(levels[lkey])
+      pave = format_float(pups[lkey])
+      levelave = float(levelave) + float(lave)
+      pupave = float(pupave) + float(pave)
+      msg.append(self._format_row(title,
+                                  lave or 0, pave or 0))
 
     msg.append(self._format_row("Ave Overall",
-                latave or "", patave or ""))
+                                levelave or 0, pupave or 0))
     msg.append(self._format_row("Total Pracs",
-                levels['totalpracs'], ""))
+                                levels['totalpracs'], ""))
 
     if levels['avetime']:
-      lavetime = self.api.get('utils.formattime')(levels['avetime'])
+      lavetime = self.api('utils.formattime')(levels['avetime'])
     else:
       lavetime = ""
 
     if pups['avetime']:
-      pavetime = self.api.get('utils.formattime')(pups['avetime'])
+      pavetime = self.api('utils.formattime')(pups['avetime'])
     else:
       pavetime = ""
 
@@ -1332,12 +1481,13 @@ class Plugin(AardwolfBasePlugin):
     if int(count) > 0:
       lastitems = self.statdb.getlast('levels', int(count))
 
-      if len(lastitems) > 0:
+      if len(lastitems) > 0: # pylint: disable=len-as-condition
         msg.append('')
-        msg.append("@G%-6s %-3s %2s %2s %-2s %-2s %-2s" \
-                  " %-2s %-1s %-1s %-1s %-1s %-1s %-1s   %s" % ("ID", "Lvl",
-                  "TR", "BT", "PR", "HP", "MN", "MV", "S",
-                  "I", "W", "C",  "D", "L", "Time"))
+        msg.append("@G%-6s %-3s %2s %2s %2s %-2s %-2s %-2s" \
+                     " %-2s %-1s %-1s %-1s %-1s %-1s %-1s   %s" % \
+                       ("ID", "Lvl", "T",
+                        "TR", "BT", "PR", "HP", "MN", "MV", "S",
+                        "I", "W", "C", "D", "L", "Time"))
         msg.append(div)
 
         for item in lastitems:
@@ -1347,21 +1497,25 @@ class Plugin(AardwolfBasePlugin):
           if int(item['blessingtrains']) > 0:
             bonus = bonus + int(item['blessingtrains'])
 
-          leveld = self.api.get('aardu.convertlevel')(item['level'])
+          leveld = self.api('aardu.convertlevel')(item['level'])
 
           if item['finishtime'] != '-1' and item['starttime'] != '-1':
-            ttime = self.api.get('utils.formattime')(item['finishtime'] - \
+            ttime = self.api('utils.formattime')(item['finishtime'] - \
                                                       item['starttime'])
           else:
             ttime = ''
 
-          msg.append("%-6s %-3s %2s %2s %-2s %-2s %-2s" \
-                     " %-2s %-1s %-1s %-1s %-1s %-1s %-1s   %s" % (
-                     item['level_id'], leveld['level'], item['trains'],
-                     bonus, item['pracs'], item['hp'], item['mp'],
-                     item['mv'], item['str'], item['int'], item['wis'],
-                     item['con'], item['dex'], item['luc'], ttime))
+          if item['type'] == 'level':
+            ltype = 'L'
+          else:
+            ltype = 'P'
 
+          msg.append("%-6s %-3s %2s %2s %2s %-2s %-2s %-2s" \
+                     " %-2s %-1s %-1s %-1s %-1s %-1s %-1s   %s" % \
+                       (item['level_id'], leveld['level'], ltype, item['trains'],
+                        bonus, item['pracs'], item['hp'], item['mp'],
+                        item['mv'], item['str'], item['int'], item['wis'],
+                        item['con'], item['dex'], item['luc'], ttime))
 
     return True, msg
 
@@ -1382,21 +1536,19 @@ class Plugin(AardwolfBasePlugin):
       cpinfo = cpinfo[0]
 
     mobs = self.api('%s.select' % self.sname)(
-      "SELECT * FROM cpmobs WHERE cp_id = %s" % tid)
+        "SELECT * FROM cpmobs WHERE cp_id = %s" % tid)
 
-
-    msg.append("@G%-6s %-12s %-2s %-2s %-2s %-2s %-2s %6s" \
-                  " %-4s  %s" % ("ID", "Lvl",
-                  "QP", "BN", "TP", "TN", "PR", "Gold", "Mobs", "Time"))
+    msg.append("@G%-6s %-12s %-2s %-2s %-2s %-2s %-2s %6s %-4s  %s" % \
+                  ("ID", "Lvl", "QP", "BN",
+                   "TP", "TN", "PR", "Gold", "Mobs", "Time"))
     msg.append(div)
 
-
-    leveld = self.api.get('aardu.convertlevel')(cpinfo['level'])
+    leveld = self.api('aardu.convertlevel')(cpinfo['level'])
     levelstr = 'T%d R%d L%d' % (leveld['tier'], leveld['remort'],
-                        leveld['level'])
+                                leveld['level'])
 
     if cpinfo['finishtime'] != '-1' and cpinfo['starttime'] != '-1':
-      ttime = self.api.get('utils.formattime')(cpinfo['finishtime'] - \
+      ttime = self.api('utils.formattime')(cpinfo['finishtime'] - \
                                                 cpinfo['starttime'])
     else:
       ttime = ''
@@ -1404,11 +1556,10 @@ class Plugin(AardwolfBasePlugin):
     if int(cpinfo['failed']) == 1:
       ttime = 'Failed'
 
-    msg.append("%-6s %-12s %-2s %2s %2s %2s %2s %6s" \
-                "  %-3s  %s" % (
-                cpinfo['cp_id'], levelstr, cpinfo['qp'], cpinfo['bonusqp'],
-                cpinfo['tp'], cpinfo['trains'], cpinfo['pracs'], cpinfo['gold'],
-                len(mobs), ttime))
+    msg.append("%-6s %-12s %-2s %2s %2s %2s %2s %6s  %-3s  %s" % \
+                  (cpinfo['cp_id'], levelstr, cpinfo['qp'], cpinfo['bonusqp'],
+                   cpinfo['tp'], cpinfo['trains'], cpinfo['pracs'], cpinfo['gold'],
+                   len(mobs), ttime))
 
     msg.append(div)
     msg.append("@G%-30s %-30s" % ("Name", "Location"))
@@ -1416,13 +1567,13 @@ class Plugin(AardwolfBasePlugin):
 
     for i in mobs:
       msg.append("@G%-30s %-30s" % (i['name'],
-                                         i['location']))
+                                    i['location']))
 
     msg.append(div)
 
     return True, msg
 
-  def cmd_cps(self, args=None):
+  def cmd_cps(self, args=None): # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     """
     show cp stats
     """
@@ -1468,7 +1619,7 @@ class Plugin(AardwolfBasePlugin):
     stats.update(trow[0])
 
     trow = self.statdb.select(
-       "SELECT COUNT(*) as failedindb FROM campaigns where failed != 0")
+        "SELECT COUNT(*) as failedindb FROM campaigns where failed != 0")
     stats.update(trow[0])
 
     stats['indb'] = int(stats['cindb']) + int(stats['failedindb'])
@@ -1479,28 +1630,28 @@ class Plugin(AardwolfBasePlugin):
     msg.append(div)
 
     msg.append(self._format_row("Overall",
-                stats['totalcps'], stats['indb'] or 0))
+                                stats['totalcps'], stats['indb'] or 0))
     msg.append(self._format_row("Completed",
-                stats['campaignsdone'], stats['cindb'] or 0))
+                                stats['campaignsdone'], stats['cindb'] or 0))
     msg.append(self._format_row("Failed",
-                stats['campaignsfld'], stats['failedindb'] or 0))
+                                stats['campaignsfld'], stats['failedindb'] or 0))
 
     msg.append('')
     msg.append(self._format_row('CP Stats', 'Total', 'Average', '@G', '@G'))
     msg.append(div)
     msg.append(self._format_row("QP",
-                stats['totalqp'] or 0,
-                format_float(stats['aveqp'], "/CP")))
+                                stats['totalqp'] or 0,
+                                format_float(stats['aveqp'], "/CP")))
     if stats['totalgold']:
-      tempg = self.api.get('utils.readablenumber')(stats['totalgold'])
+      tempg = self.api('utils.readablenumber')(stats['totalgold'])
     else:
       tempg = 0
 
     msg.append(self._format_row("Gold",
-                tempg,
-                "%d/CP" % stats['avegold']))
+                                tempg,
+                                "%d/CP" % stats['avegold']))
     if stats['avetime']:
-      atime = self.api.get('utils.formattime')(stats['avetime'])
+      atime = self.api('utils.formattime')(stats['avetime'])
     else:
       atime = ""
 
@@ -1508,18 +1659,18 @@ class Plugin(AardwolfBasePlugin):
 
     msg.append('')
     msg.append(self._format_row("Bonus Rewards", "Total",
-                              "Average", '@G', '@G'))
+                                "Average", '@G', '@G'))
     msg.append(div)
     msg.append(self._format_row("TP",
-                stats['totaltp'] or 0,
-                format_float(stats['avetp'], "/CP")))
+                                stats['totaltp'] or 0,
+                                format_float(stats['avetp'], "/CP")))
     msg.append(self._format_row("Trains",
-                stats['totaltrains'] or 0,
-                format_float(stats['avetrains'], "/CP")))
+                                stats['totaltrains'] or 0,
+                                format_float(stats['avetrains'], "/CP")))
 
     msg.append(self._format_row("Pracs",
-                stats['totalpracs'] or 0,
-                format_float(stats['avepracs'], "/CP")))
+                                stats['totalpracs'] or 0,
+                                format_float(stats['avepracs'], "/CP")))
 
     if int(count) > 0:
       lastitems = self.statdb.getlast('campaigns', int(count))
@@ -1528,20 +1679,20 @@ class Plugin(AardwolfBasePlugin):
           'SELECT cp_id, count(*) as mobcount from cpmobs group by cp_id',
           'cp_id')
 
-      if len(lastitems) > 0:
+      if len(lastitems) > 0: # pylint: disable=len-as-condition
         msg.append('')
-        msg.append("@G%-6s %-12s %-2s %-2s %-2s %-2s %-2s %6s" \
-                  " %-4s  %s" % ("ID", "Lvl",
-                  "QP", "BN", "TP", "TN", "PR", "Gold", "Mobs", "Time"))
+        msg.append("@G%-6s %-12s %-2s %-2s %-2s %-2s %-2s %6s %-4s  %s" % \
+                    ("ID", "Lvl", "QP", "BN", "TP", "TN",
+                     "PR", "Gold", "Mobs", "Time"))
         msg.append(div)
 
         for item in lastitems:
-          leveld = self.api.get('aardu.convertlevel')(item['level'])
+          leveld = self.api('aardu.convertlevel')(item['level'])
           levelstr = 'T%d R%d L%d' % (leveld['tier'], leveld['remort'],
-                              leveld['level'])
+                                      leveld['level'])
 
           if item['finishtime'] != '-1' and item['starttime'] != '-1':
-            ttime = self.api.get('utils.formattime')(item['finishtime'] - \
+            ttime = self.api('utils.formattime')(item['finishtime'] - \
                                                       item['starttime'])
           else:
             ttime = ''
@@ -1549,11 +1700,10 @@ class Plugin(AardwolfBasePlugin):
           if int(item['failed']) == 1:
             ttime = 'Failed'
 
-          msg.append("%-6s %-12s %-2s %2s %2s %2s %2s %6s" \
-                     "  %-3s  %s" % (
-                     item['cp_id'], levelstr, item['qp'], item['bonusqp'],
-                     item['tp'], item['trains'], item['pracs'], item['gold'],
-                     mobc[item['cp_id']]['mobcount'], ttime))
+          msg.append("%-6s %-12s %-2s %2s %2s %2s %2s %6s  %-3s  %s" % \
+                      (item['cp_id'], levelstr, item['qp'], item['bonusqp'],
+                       item['tp'], item['trains'], item['pracs'], item['gold'],
+                       mobc[item['cp_id']]['mobcount'], ttime))
 
     return True, msg
 
@@ -1574,30 +1724,29 @@ class Plugin(AardwolfBasePlugin):
       gqinfo = gqinfo[0]
 
     mobs = self.api('%s.select' % self.sname)(
-      "SELECT * FROM gqmobs WHERE gq_id = %s" % tid)
+        "SELECT * FROM gqmobs WHERE gq_id = %s" % tid)
 
 
-    msg.append("@G%-6s %-12s %-2s %-2s %-2s %-2s %-2s %6s" \
-              " %-4s  %s" % ("ID", "Lvl",
-              "QP", "QM", "TP", "TN", "PR", "Gold", "Mobs", "Time"))
+    msg.append("@G%-6s %-12s %-2s %-2s %-2s %-2s %-2s %6s %-4s  %s" % \
+                ("ID", "Lvl", "QP", "QM", "TP",
+                 "TN", "PR", "Gold", "Mobs", "Time"))
     msg.append(div)
 
 
-    leveld = self.api.get('aardu.convertlevel')(gqinfo['level'])
+    leveld = self.api('aardu.convertlevel')(gqinfo['level'])
     levelstr = 'T%d R%d L%d' % (leveld['tier'], leveld['remort'],
-                        leveld['level'])
+                                leveld['level'])
 
     if gqinfo['finishtime'] != '-1' and gqinfo['starttime'] != '-1':
-      ttime = self.api.get('utils.formattime')(gqinfo['finishtime'] - \
+      ttime = self.api('utils.formattime')(gqinfo['finishtime'] - \
                                                 gqinfo['starttime'])
     else:
       ttime = ''
 
-    msg.append("%-6s %-12s %2s %2s %2s %2s %2s %6s" \
-                "  %-3s  %s" % (
-                gqinfo['gq_id'], levelstr, gqinfo['qp'], gqinfo['qpmobs'],
-                gqinfo['tp'], gqinfo['trains'], gqinfo['pracs'],
-                gqinfo['gold'], len(mobs), ttime))
+    msg.append("%-6s %-12s %2s %2s %2s %2s %2s %6s  %-3s  %s" % \
+                (gqinfo['gq_id'], levelstr, gqinfo['qp'], gqinfo['qpmobs'],
+                 gqinfo['tp'], gqinfo['trains'], gqinfo['pracs'],
+                 gqinfo['gold'], len(mobs), ttime))
 
     msg.append(div)
     msg.append("@G%-5s %-30s %-30s" % ("Num", "Name", "Location"))
@@ -1611,7 +1760,7 @@ class Plugin(AardwolfBasePlugin):
 
     return True, msg
 
-  def cmd_gqs(self, args=None):
+  def cmd_gqs(self, args=None): # pylint: disable=too-many-locals,too-many-statements
     """
     show gq stats
     """
@@ -1658,7 +1807,7 @@ class Plugin(AardwolfBasePlugin):
     stats.update(trow[0])
 
     trow = self.statdb.select(
-       """SELECT AVG(finishtime - starttime) as avetime,
+        """SELECT AVG(finishtime - starttime) as avetime,
                  SUM(qpmobs) as totalqp,
                  AVG(qpmobs) as aveqp,
                  COUNT(*) as indb
@@ -1666,7 +1815,7 @@ class Plugin(AardwolfBasePlugin):
     stats['lost'] = trow[0]
 
     trow = self.statdb.select(
-       """SELECT SUM(qpmobs + qp) as overallqp,
+        """SELECT SUM(qpmobs + qp) as overallqp,
                  AVG(qpmobs + qp) as aveoverallqp
                  FROM gquests""")
     stats.update(trow[0])
@@ -1677,52 +1826,52 @@ class Plugin(AardwolfBasePlugin):
     msg.append(self._format_row('GQ Stats', 'Total', 'In DB', '@G', '@G'))
     msg.append(div)
     msg.append(self._format_row("Won",
-                stats['gquestswon'], stats['won']['indb'] or 0))
+                                stats['gquestswon'], stats['won']['indb'] or 0))
     msg.append(self._format_row("Lost",
-                "", stats['lost']['indb'] or 0))
+                                "", stats['lost']['indb'] or 0))
     msg.append(self._format_row("Overall",
-                stats['overall'], stats['indb'] or 0))
+                                stats['overall'], stats['indb'] or 0))
     msg.append(self._format_row("QP",
-                stats['overallqp'],
-                format_float(stats['aveoverallqp'], "/GQ")))
+                                stats['overallqp'],
+                                format_float(stats['aveoverallqp'], "/GQ")))
 
     msg.append('')
     msg.append(self._format_row('GQ Won Stats', 'Total', 'Average',
                                 '@G', '@G'))
     msg.append(div)
     msg.append(self._format_row("GQ QP",
-                stats['won']['qp'],
-                format_float(stats['won']['qpave'], "/GQ")))
+                                stats['won']['qp'],
+                                format_float(stats['won']['qpave'], "/GQ")))
     msg.append(self._format_row("GQ MOB QP",
-                stats['won']['qpmobs'],
-                format_float(stats['won']['qpmobsave'], "/GQ")))
+                                stats['won']['qpmobs'],
+                                format_float(stats['won']['qpmobsave'], "/GQ")))
 
     if stats['won']['avetime']:
-      atime = self.api.get('utils.formattime')(stats['won']['avetime'])
+      atime = self.api('utils.formattime')(stats['won']['avetime'])
     else:
       atime = ""
 
     msg.append(self._format_row("Time", "", atime))
     msg.append(self._format_row("Gold",
-                self.api.get('utils.readablenumber')(stats['won']['gold']),
-                "%d/GQ" % stats['won']['avegold']))
+                                self.api('utils.readablenumber')(stats['won']['gold']),
+                                "%d/GQ" % stats['won']['avegold']))
     msg.append(self._format_row("TP",
-                stats['won']['tp'],
-                format_float(stats['won']['tpave'], "/GQ")))
+                                stats['won']['tp'],
+                                format_float(stats['won']['tpave'], "/GQ")))
     msg.append(self._format_row("Trains",
-                stats['won']['trains'],
-                format_float(stats['won']['trainsave'], "/GQ")))
+                                stats['won']['trains'],
+                                format_float(stats['won']['trainsave'], "/GQ")))
     msg.append(self._format_row("Pracs",
-                stats['won']['pracs'],
-                format_float(stats['won']['pracsave'], "/GQ")))
+                                stats['won']['pracs'],
+                                format_float(stats['won']['pracsave'], "/GQ")))
 
     msg.append('')
     msg.append(self._format_row('GQ Lost Stats', 'Total', 'Average',
                                 '@G', '@G'))
     msg.append(div)
     msg.append(self._format_row("GQ MOB QP",
-                stats['lost']['totalqp'],
-                format_float(stats['lost']['aveqp'], "/GQ")))
+                                stats['lost']['totalqp'],
+                                format_float(stats['lost']['aveqp'], "/GQ")))
 
     if int(count) > 0:
       lastitems = self.statdb.getlast('gquests', int(count))
@@ -1731,33 +1880,32 @@ class Plugin(AardwolfBasePlugin):
           'SELECT gq_id, SUM(num) as mobcount from gqmobs group by gq_id',
           'gq_id')
 
-      if len(lastitems) > 0:
+      if len(lastitems) > 0: # pylint: disable=len-as-condition
         msg.append('')
-        msg.append("@G%-6s %-12s %-2s %-2s %-2s %-2s %-2s %6s" \
-                  " %-4s  %s" % ("ID", "Lvl",
-                  "QP", "QM", "TP", "TN", "PR", "Gold", "Mobs", "Time"))
+        msg.append("@G%-6s %-12s %-2s %-2s %-2s %-2s %-2s %6s %-4s  %s" % \
+                    ("ID", "Lvl", "QP", "QM", "TP",
+                     "TN", "PR", "Gold", "Mobs", "Time"))
         msg.append(div)
 
         for item in lastitems:
-          leveld = self.api.get('aardu.convertlevel')(item['level'])
+          leveld = self.api('aardu.convertlevel')(item['level'])
           levelstr = 'T%d R%d L%d' % (leveld['tier'], leveld['remort'],
-                              leveld['level'])
+                                      leveld['level'])
 
           if item['finishtime'] != '-1' and item['starttime'] != '-1':
-            ttime = self.api.get('utils.formattime')(item['finishtime'] - \
+            ttime = self.api('utils.formattime')(item['finishtime'] - \
                                                       item['starttime'])
           else:
             ttime = ''
 
-          msg.append("%-6s %-12s %2s %2s %2s %2s %2s %6s" \
-                     "  %-3s  %s" % (
-                     item['gq_id'], levelstr, item['qp'], item['qpmobs'],
-                     item['tp'], item['trains'], item['pracs'], item['gold'],
-                     mobc[item['gq_id']]['mobcount'], ttime))
+          msg.append("%-6s %-12s %2s %2s %2s %2s %2s %6s  %-3s  %s" % \
+                      (item['gq_id'], levelstr, item['qp'], item['qpmobs'],
+                       item['tp'], item['trains'], item['pracs'], item['gold'],
+                       mobc[item['gq_id']]['mobcount'], ttime))
 
     return True, msg
 
-  def cmd_mobs(self, args=None):
+  def cmd_mobs(self, args=None): # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     """
     show mobs stats
     """
@@ -1803,19 +1951,19 @@ class Plugin(AardwolfBasePlugin):
     stats.update(trow[0])
 
     trow = self.statdb.select(
-       """SELECT AVG(bonusxp) as avebonusxp,
+        """SELECT AVG(bonusxp) as avebonusxp,
                  COUNT(*) as bonusmobsindb
                  FROM mobkills where bonusxp > 0""")
     stats.update(trow[0])
 
     trow = self.statdb.select(
-       """SELECT AVG(blessingxp) as aveblessxp,
+        """SELECT AVG(blessingxp) as aveblessxp,
                  COUNT(*) as blessmobsindb
                  FROM mobkills where blessingxp > 0""")
     stats.update(trow[0])
 
     trow = self.statdb.select(
-       """SELECT AVG(rarexp) as averarexp,
+        """SELECT AVG(rarexp) as averarexp,
                  COUNT(*) as raremobsindb
                  FROM mobkills where rarexp > 0""")
     stats.update(trow[0])
@@ -1823,75 +1971,77 @@ class Plugin(AardwolfBasePlugin):
     msg.append(self._format_row('DB Stats', 'Total', 'In DB', '@G', '@G'))
     msg.append(div)
     msg.append(self._format_row("Overall",
-                stats['monsterskilled'], stats['indb'] or 0))
+                                stats['monsterskilled'], stats['indb'] or 0))
     msg.append(self._format_row("Rare Mobs",
-                "", stats['raremobsindb'] or 0))
+                                "", stats['raremobsindb'] or 0))
     msg.append(self._format_row("Bonus Mobs",
-                "", stats['bonusmobsindb'] or 0))
+                                "", stats['bonusmobsindb'] or 0))
     msg.append(self._format_row("Blessing Mobs",
-                "", stats['blessmobsindb'] or 0))
+                                "", stats['blessmobsindb'] or 0))
 
     msg.append('')
     msg.append(self._format_row('Stats', 'Total', 'Average', '@G', '@G'))
     msg.append(div)
     msg.append(self._format_row("XP",
-                stats['xp'],
-                format_float(stats['avexp'], "/kill")))
+                                stats['xp'],
+                                format_float(stats['avexp'], "/kill")))
     msg.append(self._format_row("Rare XP",
-                stats['rarexp'],
-                format_float(stats['averarexp'], "/kill")))
+                                stats['rarexp'],
+                                format_float(stats['averarexp'], "/kill")))
     msg.append(self._format_row("Double XP",
-                stats['bonusxp'],
-                format_float(stats['avebonusxp'], "/kill")))
+                                stats['bonusxp'],
+                                format_float(stats['avebonusxp'], "/kill")))
     msg.append(self._format_row("Blessing XP",
-                stats['blessingxp'],
-                format_float(stats['aveblessxp'], "/kill")))
+                                stats['blessingxp'],
+                                format_float(stats['aveblessxp'], "/kill")))
     msg.append(self._format_row("Total XP",
-                stats['totalxp'],
-                format_float(stats['avetotalxp'], "/kill")))
+                                stats['totalxp'],
+                                format_float(stats['avetotalxp'], "/kill")))
     msg.append(self._format_row("Gold",
-                self.api.get('utils.readablenumber')(stats['gold']),
-                "%d/kill" % stats['avegold']))
+                                self.api('utils.readablenumber')(stats['gold']),
+                                "%d/kill" % stats['avegold']))
     msg.append(self._format_row("TP",
-                stats['tp'],
-                format_float(stats['tp'] / float(stats['indb']), "/kill")))
+                                stats['tp'],
+                                format_float(stats['tp'] / float(stats['indb']),
+                                             "/kill")))
 
     avetype = stats['vorpal'] / float(stats['indb'])
     msg.append(self._format_row("Vorpal",
-                stats['vorpal'],
-                format_float(avetype, "/kill") or ""))
+                                stats['vorpal'],
+                                format_float(avetype, "/kill") or ""))
     avetype = stats['assassinate'] / float(stats['indb'])
     msg.append(self._format_row("Assassinate",
-                stats['assassinate'],
-                format_float(avetype, "/kill") or ""))
+                                stats['assassinate'],
+                                format_float(avetype, "/kill") or ""))
     avetype = stats['slit'] / float(stats['indb'])
     msg.append(self._format_row("Slit",
-                stats['slit'],
-                format_float(avetype, "/kill") or ""))
+                                stats['slit'],
+                                format_float(avetype, "/kill") or ""))
     avetype = stats['banishment'] / float(stats['indb'])
     msg.append(self._format_row("Banishment",
-                stats['banishment'],
-                format_float(avetype, "/kill") or ""))
+                                stats['banishment'],
+                                format_float(avetype, "/kill") or ""))
     avetype = stats['deathblow'] / float(stats['indb'])
     msg.append(self._format_row("Deathblow",
-                stats['deathblow'],
-                format_float(avetype, "/kill") or ""))
+                                stats['deathblow'],
+                                format_float(avetype, "/kill") or ""))
     avetype = stats['disintegrate'] / float(stats['indb'])
     msg.append(self._format_row("Disintegrate",
-                stats['disintegrate'],
-                format_float(avetype, "/kill") or ""))
+                                stats['disintegrate'],
+                                format_float(avetype, "/kill") or ""))
 
     if int(count) > 0:
       lastitems = self.statdb.getlast('mobkills', int(count))
 
-      if len(lastitems) > 0:
+      if lastitems:
         msg.append('')
-        msg.append("@G%3s %-18s %-3s %-3s %-3s %-3s %2s %1s %s" % (
-                  "Lvl", "Mob", "TXP", "XP", "RXP", "OXP", "TP", "S", "Gold"))
+        msg.append("@G%3s %-18s %-3s %-3s %-3s %-3s %2s %1s %s" % \
+                      ("Lvl", "Mob", "TXP", "XP", "RXP",
+                       "OXP", "TP", "S", "Gold"))
         msg.append(div)
 
         for item in lastitems:
-          leveld = self.api.get('aardu.convertlevel')(item['level'])
+          leveld = self.api('aardu.convertlevel')(item['level'])
           levelstr = leveld['level']
 
           bonus = ''
@@ -1918,7 +2068,7 @@ class Plugin(AardwolfBasePlugin):
           if int(item['tp']) == 1:
             mtp = '1'
 
-          xp = item['xp']
+          xpd = item['xp']
           rarexp = item['rarexp']
 
           tline = "%3s %-18s %-3s %-3s %-3s %-3s %2s %1s %s"
@@ -1927,10 +2077,9 @@ class Plugin(AardwolfBasePlugin):
             tline = "%3s %-18s @R%-3s %-3s %-3s %-3s@w %2s %1s %s"
 
 
-          msg.append( tline
-                     % (levelstr, item['name'][0:18], item['totalxp'],
-                          xp, rarexp, bonus,
-                          mtp, spec, item['gold']))
+          msg.append(tline % (levelstr, item['name'][0:18], item['totalxp'],
+                              xpd, rarexp, bonus,
+                              mtp, spec, item['gold']))
     return True, msg
 
   def questevent(self, args):
@@ -1981,25 +2130,24 @@ class Plugin(AardwolfBasePlugin):
     """
     add a hero/super milestone
     """
-    tlist = self.api.get('aardu.convertlevel')(
-                            self.api.get('aardu.getactuallevel')())
+    tlist = self.api('aardu.convertlevel')(
+        self.api('aardu.getactuallevel')())
     if int(tlist['tier']) == 9:
       milestone = "t%s+%sr%sl%s" % (tlist['tier'], tlist['redos'],
                                     tlist['remort'], tlist['level'])
     else:
       milestone = "t%sr%sl%s" % (tlist['tier'],
-                                    tlist['remort'], tlist['level'])
+                                 tlist['remort'], tlist['level'])
 
     if args['eventname'] == 'aard_level_remort':
       if self.statdb:
-        self.statdb.setstat('remorts', self.api.get('GMCP.getv')(
-                                                      'char.base.remorts'))
-        self.statdb.setstat('tier', self.api.get('GMCP.getv')(
-                                                      'char.base.tier'))
-        alev = self.api.get('aardu.getactuallevel')()
+        self.statdb.setstat('remorts',
+                            self.api('GMCP.getv')('char.base.remorts'))
+        self.statdb.setstat('tier',
+                            self.api('GMCP.getv')('char.base.tier'))
+        alev = self.api('aardu.getactuallevel')()
         self.statdb.setstat('totallevels', alev)
         self.statdb.setstat('level', 1)
 
     if self.statdb:
       self.statdb.addmilestone(milestone)
-

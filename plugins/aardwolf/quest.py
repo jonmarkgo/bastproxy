@@ -33,7 +33,10 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.load(self)
 
-    self.api.get('events.register')('GMCP:comm.quest', self.quest)
+    self.api('events.register')('GMCP:comm.quest', self.quest)
+
+    self.api('events.register')('plugin_%s_savestate' % self.sname, self._savestate)
+
 
   def resetquest(self):
     """
@@ -42,22 +45,12 @@ class Plugin(AardwolfBasePlugin):
     self.queststuff.clear()
     self.queststuff['finishtime'] = -1
     self.queststuff['starttime'] = time.time()
+    self.queststuff['killedtime'] = -1
     self.queststuff['mobname'] = ''
     self.queststuff['mobarea'] = ''
     self.queststuff['mobroom'] = ''
-    self.queststuff['totqp'] = 0
-    self.queststuff['daily'] = 0
-    self.queststuff['double'] = 0
-    self.queststuff['qp'] = 0
-    self.queststuff['gold'] = 0
-    self.queststuff['tier'] = 0
-    self.queststuff['mccp'] = 0
-    self.queststuff['lucky'] = 0
-    self.queststuff['tp'] = 0
-    self.queststuff['level'] = self.api.get('aardu.getactuallevel')(
-                            self.api.get('GMCP.getv')('char.status.level'))
-    self.queststuff['trains'] = 0
-    self.queststuff['pracs'] = 0
+    self.queststuff['level'] = self.api('aardu.getactuallevel')(
+        self.api('GMCP.getv')('char.status.level'))
     self.queststuff['failed'] = 0
 
   def quest(self, args):
@@ -65,53 +58,40 @@ class Plugin(AardwolfBasePlugin):
     process the quest event
     """
     questi = args['data']
-    self.api.get('send.msg')('quest: %s' % questi)
+    self.api('send.msg')('quest: %s' % questi)
     if questi['action'] == 'ready':
-      self.api.get('events.eraise')('aard_quest_ready', {})
+      self.api('events.eraise')('aard_quest_ready', {})
     elif questi['action'] == 'start':
       self.resetquest()
       self.queststuff['mobname'] = questi['targ']
       self.queststuff['mobarea'] = questi['area']
       self.queststuff['mobroom'] = questi['room']
       self.queststuff['stimer'] = questi['timer']
-      self.api.get('events.eraise')('aard_quest_start', self.queststuff)
+      self.api('events.eraise')('aard_quest_start', self.queststuff)
     elif questi['action'] == 'killed':
       self.queststuff['killedtime'] = time.time()
-      self.api.get('events.eraise')('aard_quest_killed', self.queststuff)
+      self.api('events.eraise')('aard_quest_killed', self.queststuff)
     elif questi['action'] == 'comp':
       self.queststuff['finishtime'] = time.time()
-      self.queststuff['qp'] = questi['qp']
-      self.queststuff['tier'] = questi['tierqp']
-      self.queststuff['pracs'] = questi['pracs']
-      self.queststuff['trains'] = questi['trains']
-      self.queststuff['tp'] = questi['tp']
-      self.queststuff['mccp'] = questi['mccp']
-      self.queststuff['lucky'] = questi['lucky']
-      self.queststuff['daily'] = questi['daily']
-      self.queststuff['double'] = questi['double']
-      self.queststuff['totqp'] = questi['totqp']
-      self.queststuff['gold'] = questi['gold']
-      self.api.get('events.eraise')('aard_quest_comp',
-                                    copy.deepcopy(self.queststuff))
+      self.queststuff.update(questi)
+      self.api('events.eraise')('aard_quest_comp',
+                                copy.deepcopy(self.queststuff))
     elif questi['action'] == 'fail' or questi['action'] == 'timeout':
       self.queststuff['finishtime'] = time.time()
       self.queststuff['failed'] = 1
-      self.api.get('events.eraise')('aard_quest_failed',
-                              copy.deepcopy(self.queststuff))
+      self.api('events.eraise')('aard_quest_failed',
+                                copy.deepcopy(self.queststuff))
     elif questi['action'] == 'status':
-      self.api.get('events.eraise')('aard_quest_status', questi)
+      self.api('events.eraise')('aard_quest_status', questi)
     elif questi['action'] == 'reset':
       #reset the timer to 60 seconds
       #when_required = os.time() + (stuff.timer * 60)
       #update_timer()
-      self.api.get('events.eraise')('aard_quest_reset', {})
+      self.api('events.eraise')('aard_quest_reset', {})
     self.queststuff.sync()
 
-  def savestate(self):
+  def _savestate(self, _=None):
     """
     save states
     """
-    AardwolfBasePlugin.savestate(self)
     self.queststuff.sync()
-
-

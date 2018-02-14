@@ -6,7 +6,6 @@ import datetime
 import math
 import time
 import fnmatch
-import inspect
 from plugins._baseplugin import BasePlugin
 
 NAME = 'Utility functions'
@@ -18,8 +17,10 @@ PRIORITY = 12
 
 AUTOLOAD = True
 
-TIMELENGTH_REGEXP = re.compile(r"^(?P<days>\d+d)?:?(?P<hours>\d+h)" \
-                              r"?:?(?P<minutes>\d+m)?:?(?P<seconds>\d+s?)?$")
+TIMELENGTH_REGEXP = re.compile(r"^(?P<days>((\d*\.\d+)|\d+)+d)?" \
+                               r":?(?P<hours>((\d*\.\d+)|\d+)+h)?" \
+                               r":?(?P<minutes>((\d*\.\d+)|\d+)+m)?" \
+                               r":?(?P<seconds>\d+s)?$")
 
 
 class Plugin(BasePlugin):
@@ -32,21 +33,56 @@ class Plugin(BasePlugin):
     """
     BasePlugin.__init__(self, *args, **kwargs)
 
-    self.api.get('api.add')('timedeltatostring', self.api_timedeltatostring)
-    self.api.get('api.add')('readablenumber', self.api_readablenumber)
-    self.api.get('api.add')('secondstodhms', self.api_secondstodhms)
-    self.api.get('api.add')('formattime', self.api_formattime)
-    self.api.get('api.add')('center', self.api_center)
-    self.api.get('api.add')('checklistformatch', self.api_checklistformatch)
-    self.api.get('api.add')('timelengthtosecs', self.api_timelengthtosecs)
-    self.api.get('api.add')('verify', self.api_verify)
-    self.api.get('api.add')('funccallerplugin', self.api_callerplugin)
+    self.api('api.add')('timedeltatostring', self.api_timedeltatostring)
+    self.api('api.add')('readablenumber', self.api_readablenumber)
+    self.api('api.add')('secondstodhms', self.api_secondstodhms)
+    self.api('api.add')('formattime', self.api_formattime)
+    self.api('api.add')('center', self.api_center)
+    self.api('api.add')('checklistformatch', self.api_checklistformatch)
+    self.api('api.add')('timelengthtosecs', self.api_timelengthtosecs)
+    self.api('api.add')('verify', self.api_verify)
+    self.api('api.add')('listtocolumns', self.listtocolumns)
 
   def load(self):
     """
     load the plugins
     """
     BasePlugin.load(self)
+
+  @staticmethod
+  def listtocolumns(obj, cols=4, columnwise=True, gap=4):
+    """
+    Print the given list in evenly-spaced columns.
+
+    Parameters
+    ----------
+    obj : list
+        The list to be printed.
+    cols : int
+        The number of columns in which the list should be printed.
+    columnwise : bool, default=True
+        If True, the items in the list will be printed column-wise.
+        If False the items in the list will be printed row-wise.
+    gap : int
+        The number of spaces that should separate the longest column
+        item/s from the next column. This is the effective spacing
+        between columns based on the maximum len() of the list items.
+    """
+
+    sobj = [str(item) for item in obj]
+    if cols > len(sobj):
+      cols = len(sobj)
+    max_len = max([len(item) for item in sobj])
+    if columnwise:
+      cols = int(math.ceil(float(len(sobj)) / float(cols)))
+    plist = [sobj[i: i+cols] for i in range(0, len(sobj), cols)]
+    if columnwise:
+      if not len(plist[-1]) == cols:
+        plist[-1].extend(['']*(len(sobj) - len(plist[-1])))
+      plist = zip(*plist)
+    printer = '\n'.join(
+        [''.join([c.ljust(max_len + gap) for c in p]) for p in plist])
+    return printer
 
   # return the difference of two times
   def api_timedeltatostring(self, stime, etime, fmin=False, colorn='',
@@ -56,6 +92,10 @@ class Plugin(BasePlugin):
     take two times and return a string of the difference
     in the form ##d:##h:##m:##s
     """
+    if isinstance(stime, time.struct_time):
+      stime = time.mktime(stime)
+    if isinstance(etime, time.struct_time):
+      etime = time.mktime(etime)
     delay = datetime.timedelta(seconds=abs(etime - stime))
     if delay.days > 0:
       tstr = str(delay)
@@ -137,7 +177,7 @@ class Plugin(BasePlugin):
     format a length of time into a string
     """
     msg = []
-    dtime = self.api.get('utils.secondstodhms')(length)
+    dtime = self.api('utils.secondstodhms')(length)
     years = False
     days = False
     hours = False
@@ -160,7 +200,7 @@ class Plugin(BasePlugin):
         msg.append(':')
       mins = True
       msg.append('%02dm' % (dtime['mins'] or 0))
-    if (dtime['secs'] > 0 or len(msg) == 0) and not nosec:
+    if (dtime['secs'] > 0 or not msg) and not nosec:
       if years or days or hours or mins:
         msg.append(':')
       msg.append('%02ds' % (dtime['secs'] or 0))
@@ -191,7 +231,7 @@ class Plugin(BasePlugin):
     """
     verify an @ color
     """
-    if self.api.get('colors.iscolor')(val):
+    if self.api('colors.iscolor')(val):
       return val
 
     raise ValueError
@@ -219,7 +259,7 @@ class Plugin(BasePlugin):
     try:
       ttime = int(usertime)
     except ValueError:
-      ttime = self.api.get('utils.timelengthtosecs')(usertime)
+      ttime = self.api('utils.timelengthtosecs')(usertime)
 
     if ttime != 0 and not ttime:
       raise ValueError
@@ -239,16 +279,16 @@ class Plugin(BasePlugin):
 
     if vtype in vtab:
       return vtab[vtype](val)
-    else:
-      return vtype(val)
+
+    return vtype(val)
 
   # center a string with color codes
   def api_center(self, tstr, fillerc, length):
     """
     center a string with color codes
     """
-    convertcolors = self.api.get('colors.convertcolors')(tstr)
-    nocolor = self.api.get('colors.stripansi')(convertcolors)
+    convertcolors = self.api('colors.convertcolors')(tstr)
+    nocolor = self.api('colors.stripansi')(convertcolors)
 
     tlen = len(nocolor) + 4
     tdiff = length - tlen
@@ -288,10 +328,8 @@ class Plugin(BasePlugin):
 
     if tdict['front']:
       return tdict['front']
-    else:
-      return tdict['part']
 
-    return tdict
+    return tdict['part']
 
   # convert a time length to seconds
   def api_timelengthtosecs(self, timel):
@@ -316,19 +354,19 @@ class Plugin(BasePlugin):
     if not days:
       days = 0
     elif days.endswith("d"):
-      days = int(days[:-1])
+      days = float(days[:-1])
 
     hours = timem["hours"]
     if not hours:
       hours = 0
     elif hours.endswith("h"):
-      hours = int(hours[:-1])
+      hours = float(hours[:-1])
 
     minutes = timem["minutes"]
     if not minutes:
       minutes = 0
     elif minutes.endswith("m"):
-      minutes = int(minutes[:-1])
+      minutes = float(minutes[:-1])
 
     seconds = timem["seconds"]
     if not seconds:
@@ -337,24 +375,3 @@ class Plugin(BasePlugin):
       seconds = int(seconds[:-1])
 
     return days * 24 * 60 * 60 + hours * 60 * 60 + minutes * 60 + seconds
-
-  def api_callerplugin(self):
-    """
-    check to see if the caller is a plugin, if so return the plugin object
-
-    this is so plugins can figure out who gave them data and keep up with it.
-    """
-    stack = inspect.stack()
-
-    for ifr in stack[2:]:
-      parentframe = ifr[0]
-
-      if 'self' in parentframe.f_locals:
-        # I don't know any way to detect call from the object method
-        # TODO: there seems to be no way to detect static method call - it will
-        #      be just a function call
-        tcs = parentframe.f_locals['self']
-        if tcs != self and isinstance(tcs, BasePlugin):
-          return tcs.sname
-
-    return None

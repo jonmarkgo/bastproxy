@@ -24,22 +24,22 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.load(self)
 
-    itemtypes = self.api.get('itemu.objecttypes')()
+    itemtypes = self.api('itemu.objecttypes')()
 
     for i in itemtypes:
-      self.api.get('setting.add')(i, False, bool,
-                                    'autokeep %s' % i)
+      self.api('setting.add')(i, False, bool,
+                              'autokeep %s' % i)
 
-    self.api.get('events.register')('inventory_added', self.inventory_added)
+    self.api('events.register')('inventory_added', self.inventory_added)
 
   def inventory_added(self, args):
     """
     check an item added to inventory to autokeep
     """
     item = args['item']
-    itemtypesrev = self.api.get('itemu.objecttypes')()
+    itemtypesrev = self.api('itemu.objecttypes')()
     ntype = itemtypesrev[item.itype]
 
-    if self.api.get('setting.gets')(ntype):
-      if not ('K' in item.shortflags):
-        self.api.get('send.execute')('keep %s' % item.serial)
+    if self.api('setting.gets')(ntype):
+      if 'K' not in item.shortflags:
+        self.api('send.execute')('keep %s' % item.serial)

@@ -5,20 +5,19 @@ import smtplib
 import os
 import signal
 from datetime import datetime
+
 import libs.argp as argp
 from plugins._baseplugin import BasePlugin
 
-
 #these 5 are required
-NAME = 'Mail'
-SNAME = 'mail'
-PURPOSE = 'setup and send mail'
+NAME = 'gmail'
+SNAME = 'gmail'
+PURPOSE = 'setup and send mail through gmail'
 AUTHOR = 'Bast'
 VERSION = 1
 
 # This keeps the plugin from being autoloaded if set to False
 AUTOLOAD = False
-
 
 class Plugin(BasePlugin):
   """
@@ -45,7 +44,7 @@ class Plugin(BasePlugin):
     parser.add_argument('password',
                         help='the top level api to show (optional)',
                         default='', nargs='?')
-    self.api('commands.add')('password', self.cmd_pw,
+    self.api('commands.add')('password', self.cmd_pw, showinhistory=False,
                              parser=parser)
 
     parser = argp.ArgumentParser(add_help=False,
@@ -108,10 +107,25 @@ class Plugin(BasePlugin):
 
     this function returns no values"""
     if self.check():
-      senddate = datetime.strftime(datetime.now(), '%Y-%m-%d')
-      if not mailto:
-        mailto = self.api('setting.gets')('to')
-      mhead = """Date: %s
+      if self.api('setting.gets')('server') == 'smtp.gmail.com':
+        self.send_gmail(subject, msg, mailto)
+      else:
+        self.send_regular(subject, msg, mailto)
+
+  def send_gmail(self, subject, msg, mailto=None):
+    """
+    send an email through gmail
+    """
+    pass
+
+  def send_regular(self, subject, msg, mailto=None):
+    """
+    send email through a regular smtp server
+    """
+    senddate = datetime.strftime(datetime.now(), '%Y-%m-%d')
+    if not mailto:
+      mailto = self.api('setting.gets')('to')
+    mhead = """Date: %s
 From: %s
 To: %s
 Subject: %s
@@ -119,25 +133,12 @@ X-Mailer: My-Mail
 
 %s""" % (senddate,
          self.api('setting.gets')('from'), mailto, subject, msg)
+    oldchild = signal.getsignal(signal.SIGCHLD)
 
-      oldchild = signal.getsignal(signal.SIGCHLD)
-
-      try:
-        signal.signal(signal.SIGCHLD, signal.SIG_IGN)
-
-        pid = os.fork()
-        if pid == 0:
-          server = '%s:%s' % (self.api('setting.gets')('server'),
-                              self.api('setting.gets')('port'))
-          server = smtplib.SMTP(server)
-          if self.api('setting.gets')('ssl'):
-            server.starttls()
-          server.login(self.api('setting.gets')('username'), self.password)
-          server.sendmail(self.api('setting.gets')('from'), mailto, mhead)
-          server.quit()
-          os._exit(os.EX_OK) # pylint: disable=protected-access
-
-      except:
+    try:
+      signal.signal(signal.SIGCHLD, signal.SIG_IGN)
+      pid = os.fork()
+      if pid == 0:
         server = '%s:%s' % (self.api('setting.gets')('server'),
                             self.api('setting.gets')('port'))
         server = smtplib.SMTP(server)
@@ -146,6 +147,17 @@ X-Mailer: My-Mail
         server.login(self.api('setting.gets')('username'), self.password)
         server.sendmail(self.api('setting.gets')('from'), mailto, mhead)
         server.quit()
+        os._exit(os.EX_OK) # pylint: disable=protected-access
+
+    except:
+      server = '%s:%s' % (self.api('setting.gets')('server'),
+                          self.api('setting.gets')('port'))
+      server = smtplib.SMTP(server)
+      if self.api('setting.gets')('ssl'):
+        server.starttls()
+      server.login(self.api('setting.gets')('username'), self.password)
+      server.sendmail(self.api('setting.gets')('from'), mailto, mhead)
+      server.quit()
 
     if signal.getsignal(signal.SIGCHLD) != oldchild:
       signal.signal(signal.SIGCHLD, oldchild)
@@ -159,6 +171,7 @@ X-Mailer: My-Mail
         self.api('send.client')(
             '@CPlease set the email password for account: @M%s@w' \
                 % self.api('setting.gets')('username').replace('@', '@@'))
+        self.api('send.client')('#bp.mail.password "somepassword"')
 
   def cmd_pw(self, args):
     """

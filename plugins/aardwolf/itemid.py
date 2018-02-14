@@ -1,9 +1,9 @@
 """
 This plugin reads and parses id and invdetails from Aardwolf
 """
-import argparse
 import re
 import textwrap
+import libs.argp as argp
 from plugins.aardwolf._aardwolfbaseplugin import AardwolfBasePlugin
 
 NAME = 'Item Identification'
@@ -14,9 +14,10 @@ VERSION = 1
 
 AUTOLOAD = False
 
-DETAILS_RE = '^\{(?P<header>.*)\}(?P<data>.*)$'
+DETAILS_RE = r'^\{(?P<header>.*)\}(?P<data>.*)$'
 DETAILS_REC = re.compile(DETAILS_RE)
 
+# pylint: disable=too-many-public-methods
 class Plugin(AardwolfBasePlugin):
   """
   a plugin to handle equipment identification, id and invdetails
@@ -36,11 +37,11 @@ class Plugin(AardwolfBasePlugin):
 
     self.currentitem = {}
 
-    self.api.get('dependency.add')('aardwolf.itemu')
+    self.api('dependency.add')('aardwolf.itemu')
 
-    self.api.get('api.add')('identify', self.api_identify)
-    self.api.get('api.add')('format', self.api_formatitem)
-    self.api.get('api.add')('show', self.api_showitem)
+    self.api('api.add')('identify', self.api_identify)
+    self.api('api.add')('format', self.api_formatitem)
+    self.api('api.add')('show', self.api_showitem)
 
   def load(self):
     """
@@ -48,124 +49,126 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.load(self)
 
-    self.api.get('setting.add')('idcmd', True, str,
-                      'identify')
+    self.api('setting.add')('idcmd', True, str,
+                            'identify')
 
-    parser = argparse.ArgumentParser(add_help=False,
-                 description='id an item')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='id an item')
     parser.add_argument('serial', help='the item to id', default='', nargs='?')
-    self.api.get('commands.add')('id', self.cmd_id,
-                                parser=parser, format=False, preamble=False)
+    self.api('commands.add')('id', self.cmd_id,
+                             parser=parser, format=False, preamble=False)
 
-    self.api.get('triggers.add')('invdetailsstart',
-      "^\{invdetails\}$", group='invdetails',
-      enabled=False, omit=True)
+    self.api('triggers.add')('invdetailsstart',
+                             r"^\{invdetails\}$", group='invdetails',
+                             enabled=False, omit=True)
 
-    self.api.get('triggers.add')('invdetailsline',
-      "^\{(?!/*invdetails)(?P<header>.*)\}(?P<data>.*)$", group='invdetails',
-      enabled=False, omit=True)
+    self.api('triggers.add')('invdetailsline',
+                             r"^\{invdetails(?P<header>.*)\}(?P<data>.*)$",
+                             group='invdetails', enabled=False, omit=True)
 
-    self.api.get('triggers.add')('invdetailsend',
-      "^\{/invdetails\}$",
-      enabled=False, group='invdetails', omit=True)
+    self.api('triggers.add')('invdetailsend',
+                             r"^\{/invdetails\}$",
+                             enabled=False, group='invdetails', omit=True)
 
-    self.api.get('triggers.add')('identifyon',
-      "\+-*\+",
-      enabled=False, group='identify', omit=True)
+    self.api('triggers.add')('identifyon',
+                             r"\+-*\+",
+                             enabled=False, group='identify', omit=True)
 
-    self.api.get('triggers.add')('identify1',
-      '^\|\s*(?P<data>.*)\s*\|$', group='identify',
-      enabled=False, omit=True)
+    self.api('triggers.add')('identify1',
+                             r'^\|\s*(?P<data>.*)\s*\|$',
+                             group='identify', enabled=False, omit=True)
 
-    self.api.get('events.register')('trigger_invdetailsstart',
-                                      self.invdetailsstart)
-    self.api.get('events.register')('trigger_invdetailsend',
-                                      self.invdetailsend)
-    self.api.get('events.register')('trigger_invdetailsline',
-                                      self.invdetailsline)
-    self.api.get('events.register')('trigger_identifyon', self.identifyon)
-    self.api.get('events.register')('trigger_identify1', self.identifyline)
+    self.api('events.register')('trigger_invdetailsstart',
+                                self.invdetailsstart)
+    self.api('events.register')('trigger_invdetailsend',
+                                self.invdetailsend)
+    self.api('events.register')('trigger_invdetailsline',
+                                self.invdetailsline)
+    self.api('events.register')('trigger_identifyon', self.identifyon)
+    self.api('events.register')('trigger_identify1', self.identifyline)
 
   def sendcmd(self, cmd):
     """
     send a command
     """
-    self.api.get('send.msg')('sending cmd: %s' % cmd)
+    self.api('send.msg')('sending cmd: %s' % cmd)
     if 'invdetails' in cmd:
-      self.api.get('triggers.togglegroup')('invdetails', True)
+      self.api('triggers.togglegroup')('invdetails', True)
     elif 'identify' in cmd:
-      self.api.get('triggers.togglegroup')('identify', True)
-    self.api.get('send.execute')(cmd)
+      self.api('triggers.togglegroup')('identify', True)
+    self.api('send.execute')(cmd)
 
   def addmod(self, ltype, mod):
     """
     add a mod to an item (stat, skills, resist, etc)
     """
-    if not (ltype in self.currentitem):
+    if ltype not in self.currentitem:
       self.currentitem[ltype] = {}
 
     if ltype == 'tempmod':
-      if not (mod['type'] in self.currentitem[ltype]):
+      if mod['type'] not in self.currentitem[ltype]:
         self.currentitem[ltype][mod['type']] = []
       self.currentitem[ltype][mod['type']].append(mod)
     else:
       self.currentitem[ltype][mod['name']] = int(mod['value'])
 
-  def invdetailsstart(self, args):
+  def invdetailsstart(self, _=None):
     """
     start gathering the invdetails data
     """
     self.currentitem = {}
-    self.api.get('send.msg')('found {invdetails}')
+    self.api('send.msg')('found {invdetails}')
 
   def invdetailsline(self, args):
     """
     parse a line of invdetails
     """
-    self.api.get('send.msg')('invdetailsline args: %s' % args)
+    self.api('send.msg')('invdetailsline args: %s' % args)
     header = args['header']
     data = args['data']
-    self.api.get('send.msg')('match: %s - %s' % (header,
-                                                  data))
-    titem = self.api.get('itemu.dataparse')(data,
-                                            header)
+    self.api('send.msg')('match: %s - %s' % (header,
+                                             data))
+    titem = self.api('itemu.dataparse')(data,
+                                        header)
     if header == 'invheader':
       self.currentitem = titem
     elif header in ['statmod', 'resistmod', 'skillmod']:
       self.addmod(header, titem)
     else:
       self.currentitem[header] = titem
-    self.api.get('send.msg')('invdetails parsed item: %s' % titem)
+    self.api('send.msg')('invdetails parsed item: %s' % titem)
 
-  def invdetailsend(self, args):
+  def invdetailsend(self, _=None):
     """
     reset current when seeing an {/invdetails}
     """
-    self.api.get('send.msg')('found {/invdetails}')
-    self.api.get('triggers.togglegroup')('invdetails', False)
+    self.api('send.msg')('found {/invdetails}')
+    self.api('triggers.togglegroup')('invdetails', False)
 
-  def identifyon(self, args):
+  def identifyon(self, _=None):
     """
     start gathering the identify data, this is also triggered by an
     identify divider, the line with multiple ---- in it
     """
     self.dividercount = self.dividercount + 1
     if self.dividercount == 1:
-      self.api.get('send.msg')('found identify')
-      self.api.get('triggers.togglegroup')('identifydata', True)
-      self.api.get('events.register')('trigger_emptyline', self.identifyend)
+      self.api('send.msg')('found identify')
+      self.api('triggers.togglegroup')('identifydata', True)
+      self.api('events.register')('trigger_emptyline', self.identifyend)
     elif self.dividercount == 2:
       self.pastkeywords = True
     if self.affectmods:
       self.affectmods = False
     self.nonotes = False
 
-  def identifyline(self, args):
+  def identifyline(self, args): # pylint: disable=too-many-branches
     """
     parse an identify line, we only want a couple of things that don't
     appear in invdetails: Keywords, Found, Material, Leads, Affect Mods and
     any item notes
     """
+    nonotes = ['Portal', 'Capacity', 'Weapon Type', 'Spells',
+               'Food', 'Drink', 'Heal Rate', 'Temporary Effects']
     data = args['data']
     if 'Keywords' in data:
       item = data.split(' : ')[1]
@@ -189,7 +192,6 @@ class Plugin(AardwolfBasePlugin):
       self.currentitem['leadsto'] = item.strip()
     elif 'Affect Mods' in data:
       self.affectmods = True
-      print 'Affect Mods', data
       item = data.split(':')[1]
       item = item.replace('@W', '')
       item = item.replace('@w', '')
@@ -208,35 +210,33 @@ class Plugin(AardwolfBasePlugin):
       for i in tlist:
         if i:
           self.currentitem['affectmod'].append(i.strip())
-    elif 'Mods' in data or 'Portal' in data or 'Capacity' in data or \
-         'Weapon Type' in data or 'Spells' in data or \
-           'Food' in data or 'Drink' in data or 'Heal Rate' in data or \
-             'Temporary Effects' in data:
+    elif True in [i in data for i in nonotes]:
       self.nonotes = True
     elif self.pastkeywords and not self.nonotes:
       if args['line'][2] != ' ':
-        if not ('notes' in self.currentitem):
+        if 'notes' not in self.currentitem:
           self.currentitem['notes'] = []
         tdat = args['colorline'][1:-1]
         self.currentitem['notes'].append(tdat.strip())
 
-  def identifyend(self, args):
+  def identifyend(self, _=None):
     """
     stop gathering identify data
 
     this raise an itemid_<serial> event
     """
-    self.api.get('events.unregister')('trigger_emptyline', self.identifyend)
-    self.api.get('triggers.togglegroup')('identify', False)
+    self.api('events.unregister')('trigger_emptyline', self.identifyend)
+    self.api('triggers.togglegroup')('identify', False)
     self.pastkeywords = False
     self.dividercount = 0
     if self.currentitem['serial'] in self.waitingforid:
       del self.waitingforid[self.currentitem['serial']]
-    titem = self.api.get('eq.addidentify')(self.currentitem['serial'],
-                                          self.currentitem)
-    self.api.get('events.eraise')('itemid_%s' % self.currentitem['serial'],
-                            {'item':self.api.get('eq.getitem')(
-				      self.currentitem['serial'])})
+    self.api('events.eraise')('itemid_%s' % self.currentitem['serial'],
+                              {'item':self.api('eq.getitem')(
+				                              self.currentitem['serial'])})
+    self.api('events.eraise')('itemid_all' % self.currentitem['serial'],
+                              {'item':self.api('eq.getitem')(
+                                  self.currentitem['serial'])})
     ### Get the item from eq and update it
 
   # identify an item
@@ -246,17 +246,18 @@ class Plugin(AardwolfBasePlugin):
 
     this function returns None if the identify data has to gathered,
     or the item if is in the cache"""
-    titem = self.api.get('eq.getitem')(serial)
+    titem = self.api('eq.getitem')(serial)
     if titem.hasbeenided:
       return titem
     else:
       self.waitingforid[serial] = True
       if titem.curcontainer and titem.curcontainer.cid != 'Inventory':
-        self.api.get('eq.get')(serial)
+        self.api('eq.get')(serial)
       self.sendcmd('invdetails %s' % serial)
       self.sendcmd('identify %s' % serial)
-      self.api('events.register')('itemid_%s' % titem.serial, self.putincontainer,
-				  prio=40)
+      self.api('events.register')('itemid_%s' % titem.serial,
+                                  self.putincontainer,
+				                              prio=40)
       return None
 
   def putincontainer(self, args):
@@ -268,15 +269,15 @@ class Plugin(AardwolfBasePlugin):
     titem = args['item']
 
     if titem.origcontainer and titem.origcontainer.cid != 'Inventory':
-      self.api.get('eq.put')(titem.serial)
+      self.api('eq.put')(titem.serial)
 
   def event_showitem(self, args):
     """
     this function is for showing an item when using the id command,
     it registers with itemid_<serial>
     """
-    self.api.get('events.unregister')(args['eventname'], self.event_showitem)
-    self.api.get('itemid.show')(args['item'].serial)
+    self.api('events.unregister')(args['eventname'], self.event_showitem)
+    self.api('itemid.show')(args['item'].serial)
 
   def cmd_id(self, args):
     """
@@ -286,16 +287,16 @@ class Plugin(AardwolfBasePlugin):
     if args['serial']:
       #try:
       serial = int(args['serial'])
-      titem = self.api.get('eq.getitem')(serial)
+      titem = self.api('eq.getitem')(serial)
       if not titem:
         msg.append('Could not find %s' % serial)
       else:
         if titem.hasbeenided:
-          self.api.get('itemid.show')(serial)
+          self.api('itemid.show')(serial)
         else:
-          self.api.get('events.register')('itemid_%s' % serial,
-                                          self.event_showitem)
-          self.api.get('itemid.identify')(serial)
+          self.api('events.register')('itemid_%s' % serial,
+                                      self.event_showitem)
+          self.api('itemid.identify')(serial)
       #except ValueError:
         #msg.append('%s is not a serial number' % args['serial'])
     else:
@@ -315,13 +316,15 @@ class Plugin(AardwolfBasePlugin):
 
     printstring = '| %s%-11s@w: %s%s'
     ttext = printstring % (linecolour, linename, datacolor, data)
-    newnum = 66 - len(self.api.get('colors.stripcolor')(ttext))
+    newnum = 66 - len(self.api('colors.stripcolor')(ttext))
     tstring = "%" + str(newnum) + "s@w|"
     ttext = ttext + tstring % ""
 
     return ttext
 
-  def formatdoubleline(self, linename, linecolour, data, linename2, data2):
+
+  def formatdoubleline(self, linename, linecolour, data, # pylint: disable=too-many-arguments
+                       linename2, data2):
     """
     format a double data line
      | Worth      : 20                       Weight : 4                |
@@ -332,8 +335,8 @@ class Plugin(AardwolfBasePlugin):
     data = str(data)
     data2 = str(data2)
 
-    adddata = 24 + self.api.get('colors.lengthdiff')(data)
-    adddata2 = 17 + self.api.get('colors.lengthdiff')(data2)
+    adddata = 24 + self.api('colors.lengthdiff')(data)
+    adddata2 = 17 + self.api('colors.lengthdiff')(data2)
 
     printstring = '| %s%-11s@w: @W%-' + str(adddata) + 's %s%-7s@w: @W%-' + \
             str(adddata2) + 's@w|'
@@ -341,8 +344,8 @@ class Plugin(AardwolfBasePlugin):
     return printstring % (linecolour, linename, data,
                           linecolour, linename2, data2)
 
-  def formatspecialline(self, linename, linecolour, data,
-                                linename2='', data2=''):
+  def formatspecialline(self, linename, linecolour, data, # pylint: disable=too-many-arguments
+                        linename2='', data2=''):
     """
     format a special text line
      | Skill Mods : Modifies Dagger by +2                              |
@@ -353,34 +356,36 @@ class Plugin(AardwolfBasePlugin):
     data = str(data)
     data2 = str(data2)
 
-    adddata = 20 + self.api.get('colors.lengthdiff')(data)
+    adddata = 20 + self.api('colors.lengthdiff')(data)
 
     printstring = '| %s%-11s@w: @W%-' + str(adddata) + 's'
 
     ttext = printstring % (linecolour, linename, data)
 
     if linename2:
-      adddata2 = 14 + self.api.get('colors.lengthdiff')(data2)
+      adddata2 = 14 + self.api('colors.lengthdiff')(data2)
       printstring2 = ' %s%-13s:  @W%-' + str(adddata2) + 's@w|'
       ttext = ttext + printstring2 % (linecolour, linename2, data2)
     else:
-      newnum = 66 - len(self.api.get('colors.stripcolor')(ttext))
+      newnum = 66 - len(self.api('colors.stripcolor')(ttext))
       tstring = "%" + str(newnum) + "s@w|"
       ttext = ttext + tstring % ""
 
     return ttext
 
-  def formatstatsheader(self):
+  @staticmethod
+  def formatstatsheader():
     """
     format the stats header
      |     DR   HR    Str Int Wis Dex Con Luc   Sav   HP   MN   MV     |
     """
     return '|     @w%-4s %-4s  %-3s %-3s %-3s ' \
                   '%-3s %-3s %-3s   %-3s   %-4s %-4s %-4s   |' % (
-                            'DR', 'HR', 'Str', 'Int', 'Wis',
-                            'Dex', 'Con', 'Luc', 'Sav', 'HP', 'MN', 'MV')
+                      'DR', 'HR', 'Str', 'Int', 'Wis',
+                      'Dex', 'Con', 'Luc', 'Sav', 'HP', 'MN', 'MV')
 
-  def formatstats(self, stats):
+  @staticmethod
+  def formatstats(stats):
     """
     format all stats
      |     -    2     -   -   -   -   -   -     -     -    -    -      |
@@ -393,8 +398,8 @@ class Plugin(AardwolfBasePlugin):
         colors[i] = '@R'
 
     allstats = ['Damage roll', 'Hit roll', 'Strength', 'Intelligence',
-              'Wisdom', 'Dexterity', 'Constitution', 'Luck', 'Saves',
-              'Hit points', 'Mana', 'Moves']
+                'Wisdom', 'Dexterity', 'Constitution', 'Luck', 'Saves',
+                'Hit points', 'Mana', 'Moves']
 
     for i in allstats:
       if i in stats:
@@ -425,7 +430,8 @@ class Plugin(AardwolfBasePlugin):
                 colors['Mana'], stats['Mana'] or '-',
                 colors['Moves'], stats['Moves'] or '-')
 
-  def formatresist(self, resists, divider):
+  @staticmethod
+  def formatresist(resists, divider):
     """
     format resists
 
@@ -446,8 +452,8 @@ class Plugin(AardwolfBasePlugin):
                  'All magic', 'Disease', 'Poison']
 
     secondline = ['Acid', 'Air', 'Cold', 'Earth', 'Electric', 'Energy',
-              'Fire', 'Holy', 'Light', 'Magic', 'Mental', 'Negative', 'Shadow',
-              'Sonic', 'Water']
+                  'Fire', 'Holy', 'Light', 'Magic', 'Mental', 'Negative', 'Shadow',
+                  'Sonic', 'Water']
 
     allresists = firstline + secondline
 
@@ -470,26 +476,26 @@ class Plugin(AardwolfBasePlugin):
 
     if foundfirst:
       ttext.append('|%5s@w%-5s %-7s %-7s  %-8s  %-8s  %-5s %-5s %5s|' % (
-                              '', 'Bash', 'Pierce', 'Slash', 'All Phys',
-                              'All Mag', 'Diss', 'Poisn', ''))
+          '', 'Bash', 'Pierce', 'Slash', 'All Phys',
+          'All Mag', 'Diss', 'Poisn', ''))
       ttext.append(
-        '|%6s%s%-5s  %s%-7s %s%-7s   %s%-8s %s%-8s %s%-5s %s%-5s @w%4s|' % (
-                        '',
-                        colors['Bash'], resists['Bash'] or '-',
-                        colors['Pierce'], resists['Pierce'] or '-',
-                        colors['Slash'], resists['Slash'] or '-',
-                        colors['All physical'], resists['All physical'] or '-',
-                        colors['All magic'], resists['All magic'] or '-',
-                        colors['Disease'], resists['Disease'] or '-',
-                        colors['Poison'], resists['Poison'] or '-',
-                        ''))
+          '|%6s%s%-5s  %s%-7s %s%-7s   %s%-8s %s%-8s %s%-5s %s%-5s @w%4s|' % (
+              '',
+              colors['Bash'], resists['Bash'] or '-',
+              colors['Pierce'], resists['Pierce'] or '-',
+              colors['Slash'], resists['Slash'] or '-',
+              colors['All physical'], resists['All physical'] or '-',
+              colors['All magic'], resists['All magic'] or '-',
+              colors['Disease'], resists['Disease'] or '-',
+              colors['Poison'], resists['Poison'] or '-',
+              ''))
 
     if foundsecond:
       ttext.append(divider)
       ttext.append('|%5s%-5s  %-5s %-5s %-5s   %-5s   ' \
                     '%-5s   %-5s   %-5s@w %3s|' % (
-                            '', 'Acid', 'Air', 'Cold', 'Earth',
-                            'Eltrc', 'Enrgy', 'Fire', 'Holy', ''))
+                        '', 'Acid', 'Air', 'Cold', 'Earth',
+                        'Eltrc', 'Enrgy', 'Fire', 'Holy', ''))
 
       ttext.append('|%5s%s%-5s  %s%-5s %s%-5s %s%-5s   ' \
                         '%s%-5s   %s%-5s   %s%-5s   %s%-5s@w %3s|' % (
@@ -505,32 +511,36 @@ class Plugin(AardwolfBasePlugin):
                             ''))
 
       ttext.append(
-                '|%4s %-5s  %-5s %-5s %-5s   %-5s   %-5s   %-5s @w %10s|' % (
-                            '', 'Light', 'Magic', 'Mntl', 'Ngtv',
-                            'Shdw', 'Sonic', 'Water', ''))
+          '|%4s %-5s  %-5s %-5s %-5s   %-5s   %-5s   %-5s @w %10s|' % (
+              '', 'Light', 'Magic', 'Mntl', 'Ngtv',
+              'Shdw', 'Sonic', 'Water', ''))
 
       ttext.append('|%4s %s%-5s  %s%-5s %s%-5s %s%-5s   %s%-5s   ' \
                             '%s%-5s   %s%-5s@w %11s|' % (
-                            '',
-                            colors['Light'], resists['Light'] or '-',
-                            colors['Magic'], resists['Magic'] or '-',
-                            colors['Mental'], resists['Mental'] or '-',
-                            colors['Negative'], resists['Negative'] or '-',
-                            colors['Shadow'], resists['Shadow'] or '-',
-                            colors['Sonic'], resists['Sonic'] or '-',
-                            colors['Water'], resists['Water'] or '-',
-                            ''))
+                                '',
+                                colors['Light'], resists['Light'] or '-',
+                                colors['Magic'], resists['Magic'] or '-',
+                                colors['Mental'], resists['Mental'] or '-',
+                                colors['Negative'], resists['Negative'] or '-',
+                                colors['Shadow'], resists['Shadow'] or '-',
+                                colors['Sonic'], resists['Sonic'] or '-',
+                                colors['Water'], resists['Water'] or '-',
+                                ''))
 
     return ttext
 
-  def checkattr(self, item, attr):
+  @staticmethod
+  def checkattr(item, attr):
+    """
+    check for an attribute
+    """
     if hasattr(item, attr) and item.__dict__[attr]:
       return True
 
     return False
 
   # format an item
-  def api_formatitem(self, serial):
+  def api_formatitem(self, serial): # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     """  format an item
     @Yserial@w    = the serial # if the item to identify
 
@@ -539,7 +549,7 @@ class Plugin(AardwolfBasePlugin):
     linelen = 50
 
     serial = int(serial)
-    item = self.api.get('eq.getitem')(serial)
+    item = self.api('eq.getitem')(serial)
 
     iteml = [divider]
 
@@ -559,19 +569,18 @@ class Plugin(AardwolfBasePlugin):
 
     if item.checkattr('curcontainer'):
       if item.curcontainer.cid == 'Worn':
-        wearlocs = self.api.get('itemu.wearlocs')()
+        wearlocs = self.api('itemu.wearlocs')()
         iteml.append(self.formatsingleline('Location', '@R',
-                                         'Worn - %s' % wearlocs[item.wearslot]))
+                                           'Worn - %s' % wearlocs[item.wearslot]))
       else:
         iteml.append(self.formatsingleline('Location', '@R',
-                                         item.curcontainer.cid))
+                                           item.curcontainer.cid))
 
     if item.checkattr('itype') and item.checkattr('level'):
-      objtypes = self.api.get('itemu.objecttypes')()
       ntype = item.itype.capitalize()
       iteml.append(self.formatdoubleline('Type', '@c', ntype,
                                          'Level', item.level))
-    elif item.checkattr(level):
+    elif item.checkattr('level'):
       iteml.append(self.formatsingleline('Level', '@c', item.level))
 
     if item.checkattr('worth') and item.checkattr('weight'):
@@ -631,26 +640,27 @@ class Plugin(AardwolfBasePlugin):
     if item.checkattr('container'):
       iteml.append(divider)
       iteml.append(self.formatspecialline('Capacity', '@c',
-                          item.container['capacity'], 'Heaviest Item',
-                          item.container['heaviestitem']))
+                                          item.container['capacity'], 'Heaviest Item',
+                                          item.container['heaviestitem']))
       iteml.append(self.formatspecialline('Holding', '@c',
-                            item.container['holding'], 'Items Inside',
-                            item.container['itemsinside']))
+                                          item.container['holding'], 'Items Inside',
+                                          item.container['itemsinside']))
       iteml.append(self.formatspecialline('Tot Weight', '@c',
-                            item.container['totalweight'], 'Item Burden',
-                            item.container['itemburden']))
-      iteml.append(self.formatspecialline('', '@c',
-                  '@wItems inside weigh @Y%d@w%%@w of their usual weight' % \
-                          item.container['itemweightpercent']))
+                                          item.container['totalweight'], 'Item Burden',
+                                          item.container['itemburden']))
+      iteml.append(self.formatspecialline(
+          '', '@c',
+          '@wItems inside weigh @Y%d@w%%@w of their usual weight' % \
+          item.container['itemweightpercent']))
 
     if item.checkattr('weapon'):
       iteml.append(divider)
       iteml.append(self.formatspecialline('Weapon Type', '@c',
-                                  item.weapon['wtype'], 'Average Dam',
-                                  item.weapon['avedam']))
+                                          item.weapon['wtype'], 'Average Dam',
+                                          item.weapon['avedam']))
       iteml.append(self.formatspecialline('Inflicts', '@c',
-                                  item.weapon['inflicts'], 'Damage Type',
-                                  item.weapon['damtype']))
+                                          item.weapon['inflicts'], 'Damage Type',
+                                          item.weapon['damtype']))
       if 'special' in item.weapon and item.weapon['special']:
         iteml.append(self.formatspecialline('Specials', '@c',
                                             item.weapon['special']))
@@ -659,7 +669,8 @@ class Plugin(AardwolfBasePlugin):
       if item.checkattr('portal'):
         iteml.append(divider)
         iteml.append(self.formatsingleline('Portal', '@R',
-                  '@Y%s@w uses remaining.' % item.portal['uses']))
+                                           '@Y%s@w uses remaining.' % \
+                                              item.portal['uses']))
 
     if item.checkattr('statmod'):
       iteml.append(divider)
@@ -675,13 +686,14 @@ class Plugin(AardwolfBasePlugin):
       iteml.append(divider)
       header = 'Skill Mods'
       for i in item.skillmod:
-        spell = self.api.get('skills.gets')(i)
+        spell = self.api('skills.gets')(i)
         color = '@R'
         if int(item.skillmod[i]) > 0:
           color = '@G'
         iteml.append(self.formatspecialline(header, '@c',
-               'Modifies @g%s@w by %s%+d@w' % (str(spell['name']).capitalize(),
-               color, int(item.skillmod[i]))))
+                                            'Modifies @g%s@w by %s%+d@w' % \
+                                              (str(spell['name']).capitalize(),
+                                               color, int(item.skillmod[i]))))
         header = ''
 
     if item.checkattr('spells'):
@@ -691,42 +703,44 @@ class Plugin(AardwolfBasePlugin):
       for i in xrange(1, 5):
         key = 'sn%s' % i
         if item.spells[key] and item.spells[key] != 0:
-          spell = self.api.get('skills.gets')(item.spells[key])
+          spell = self.api('skills.gets')(item.spells[key])
           plural = ''
           if int(item.spells['uses']) > 1:
             plural = 's'
           iteml.append(self.formatspecialline(header, '@c',
-                    "%d use%s of level %d '@g%s@w'" % (
-                            item.spells['uses'], plural,
-                            item.spells['level'],
-                            spell['name'].lower())))
+                                              "%d use%s of level %d '@g%s@w'" % (
+                                                  item.spells['uses'], plural,
+                                                  item.spells['level'],
+                                                  spell['name'].lower())))
           header = ''
 
     if item.checkattr('food'):
       iteml.append(divider)
       header = 'Food'
       iteml.append(self.formatspecialline(header, '@c',
-          "Will replenish hunger by %d%%" % (item.food['percent'])))
+                                          "Will replenish hunger by %d%%" % \
+                                            (item.food['percent'])))
 
     if item.checkattr('drink'):
       iteml.append(divider)
       iteml.append(self.formatspecialline('Drink', '@c',
-                  "%d servings of %s. Max: %d" % (item.drink['servings'],
-                                    item.drink['liquid'],
-                                    item.drink['liquidmax']/20 or 1)))
+                                          "%d servings of %s. Max: %d" % \
+                                            (item.drink['servings'],
+                                             item.drink['liquid'],
+                                             item.drink['liquidmax']/20 or 1)))
       iteml.append(self.formatspecialline('', '@c',
-                  "Each serving replenishes thirst by %d%%" % \
-                    item.drink['thirstpercent']))
+                                          "Each serving replenishes thirst by %d%%" % \
+                                           item.drink['thirstpercent']))
       iteml.append(self.formatspecialline('', '@c',
-                  "Each serving replenishes hunger by %d%%" % \
-                    item.drink['hungerpercent']))
+                                          "Each serving replenishes hunger by %d%%" % \
+                                           item.drink['hungerpercent']))
 
     if item.checkattr('furniture'):
       iteml.append(divider)
       iteml.append(self.formatspecialline('Heal Rate', '@c',
-              "Health [@Y%d@w]    Magic [@Y%d@w]" % (
-                    item.furniture['hpregen'],
-                    item.furniture['manaregen'])))
+                                          "Health [@Y%d@w]    Magic [@Y%d@w]" % \
+                                           (item.furniture['hpregen'],
+                                            item.furniture['manaregen'])))
 
     iteml.append(divider)
 
@@ -741,11 +755,11 @@ class Plugin(AardwolfBasePlugin):
     command
 
     this function returns nothing"""
-    item = self.api.get('eq.getitem')(serial)
+    item = self.api('eq.getitem')(serial)
     if item:
       if item.hasbeenided:
-        tstuff = self.api.get('itemid.format')(serial)
+        tstuff = self.api('itemid.format')(serial)
 
-        self.api.get('send.client')('\n'.join(tstuff), preamble=False)
+        self.api('send.client')('\n'.join(tstuff), preamble=False)
       else:
-        self.api.get('send.execute')('#bp.itemid.id %s' % serial)
+        self.api('send.execute')('#bp.itemid.id %s' % serial)

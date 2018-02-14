@@ -20,7 +20,7 @@ This plugin handles colors
 
 """
 import re
-import argparse
+import libs.argp as argp
 from plugins._baseplugin import BasePlugin
 
 NAME = 'Ansi Colors'
@@ -158,12 +158,12 @@ def createspan(color, text):
     return '<span style="background-color:%(COLOR)s">%(TEXT)s</span>' % \
         {'COLOR':ncolor,
          'TEXT':text}
-  else:
-    return '<span style="color:%(COLOR)s">%(TEXT)s</span>' % \
-        {'COLOR':ncolor,
-         'TEXT':text}
 
-for colorc in CONVERTCOLORS.keys():
+  return '<span style="color:%(COLOR)s">%(TEXT)s</span>' % \
+      {'COLOR':ncolor,
+       'TEXT':text}
+
+for colorc in CONVERTCOLORS:
   CONVERTANSI[CONVERTCOLORS[colorc]] = colorc
 
 #xterm colors
@@ -215,14 +215,14 @@ class Plugin(BasePlugin):
   def __init__(self, *args, **kwargs):
     BasePlugin.__init__(self, *args, **kwargs)
 
-    self.api.get('api.add')('iscolor', self.api_iscolor)
-    self.api.get('api.add')('convertcolors', self.api_convertcolors)
-    self.api.get('api.add')('convertansi', self.api_convertansi)
-    self.api.get('api.add')('ansicode', self.api_ansicode)
-    self.api.get('api.add')('stripansi', self.api_stripansi)
-    self.api.get('api.add')('stripcolor', self.api_stripcolor)
-    self.api.get('api.add')('lengthdiff', self.api_getlengthdiff)
-    self.api.get('api.add')('colortohtml', self.api_colorcodestohtml)
+    self.api('api.add')('iscolor', self.api_iscolor)
+    self.api('api.add')('convertcolors', self.api_convertcolors)
+    self.api('api.add')('convertansi', self.api_convertansi)
+    self.api('api.add')('ansicode', self.api_ansicode)
+    self.api('api.add')('stripansi', self.api_stripansi)
+    self.api('api.add')('stripcolor', self.api_stripcolor)
+    self.api('api.add')('lengthdiff', self.api_getlengthdiff)
+    self.api('api.add')('colortohtml', self.api_colorcodestohtml)
 
   def load(self):
     """
@@ -230,16 +230,16 @@ class Plugin(BasePlugin):
     """
     BasePlugin.load(self)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='show colors')
-    self.api.get('commands.add')('show',
-                                 self.cmd_show,
-                                 parser=parser)
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='show color examples')
-    self.api.get('commands.add')('example',
-                                 self.cmd_example,
-                                 parser=parser)
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='show colors')
+    self.api('commands.add')('show',
+                             self.cmd_show,
+                             parser=parser)
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='show color examples')
+    self.api('commands.add')('example',
+                             self.cmd_example,
+                             parser=parser)
 
   # convert color codes to html
   def api_colorcodestohtml(self, sinput):
@@ -310,7 +310,7 @@ class Plugin(BasePlugin):
     """
     get the length difference of a colored string and its noncolor equivalent
     """
-    lennocolor = len(self.api.get('colors.stripcolor')(colorstring))
+    lennocolor = len(self.api('colors.stripcolor')(colorstring))
     lencolor = len(colorstring)
     return lencolor - lennocolor
 

@@ -5,8 +5,7 @@ This plugin is a mapper plugin
 """
 import copy
 import time
-import argparse
-from datetime import datetime
+import libs.argp as argp
 from plugins.aardwolf._aardwolfbaseplugin import AardwolfBasePlugin
 
 NAME = 'Aardwolf Mapper'
@@ -27,7 +26,7 @@ def dbcreate(sqldb, plugin, **kwargs):
     """
     a class to manage sqlite3 databases
     """
-    def __init__(self, plugin, dbname=None, dbdir=None):
+    def __init__(self, plugin, **kwargs):
       """
       initialize the class
       """
@@ -127,14 +126,14 @@ def dbcreate(sqldb, plugin, **kwargs):
       update an area
       """
       narea = copy.deepcopy(dict(areainfo))
-      if not ('texture' in narea):
+      if 'texture' not in narea:
         narea['texture'] = ''
       #for i in narea:
         #narea[i] = self.fixsql(str(narea[i]))
-      self.api.get('send.msg')('data: %s' % narea)
+      self.api('send.msg')('data: %s' % narea)
       cur = self.dbconn.cursor()
       stmt = self.converttoinsert('areas', replace=True)
-      self.api.get('send.msg')('stmt: %s' % stmt)
+      self.api('send.msg')('stmt: %s' % stmt)
       cur.execute(stmt, narea)
       self.dbconn.commit()
       cur.close()
@@ -202,8 +201,8 @@ def dbcreate(sqldb, plugin, **kwargs):
       if exact:
         tstr = "="
       stmt = "SELECT * FROM rooms WHERE name %s %s" % (
-                tstr,
-                self.fixsql(search, like=not(exact)))
+          tstr,
+          self.fixsql(search, like=not exact))
 
       if area:
         stmt = stmt + " AND area = %s" % self.fixsql(area)
@@ -215,13 +214,13 @@ def dbcreate(sqldb, plugin, **kwargs):
       save into the rooms table
       """
       #roomd['name'] = self.fixsql(roomd['name'])
-      if not ('notes' in roomd):
+      if 'notes' not in roomd:
         roomd['notes'] = ""
-      if not ('noportal' in roomd):
+      if not 'noportal' not in roomd:
         roomd['noportal'] = 0
-      if not ('norecall' in roomd):
+      if not 'norecall' not in roomd:
         roomd['norecall'] = 0
-      if not ('ignore_exits_mismatch' in roomd):
+      if not 'ignore_exits_mismatch' not in roomd:
         roomd['ignore_exits_mismatch'] = 0
 
       stmt = self.converttoinsert('rooms', replace=True)
@@ -282,7 +281,7 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.__init__(self, *args, **kwargs)
 
-    self.api.get('dependency.add')('sqldb')
+    self.api('dependency.add')('sqldb')
 
     self.mapperdb = None
     self.current_room = None
@@ -304,108 +303,109 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.load(self)
 
-    self.api.get('setting.add')('maxdepth', 300, int,
-                        'max depth to search')
+    self.api('setting.add')('maxdepth', 300, int,
+                            'max depth to search')
 
-    self.api.get('log.console')(self.sname)
-    self.api.get('log.client')(self.sname)
+    self.api('log.console')(self.sname)
+    self.api('log.client')(self.sname)
 
-    self.mapperdb = dbcreate(self.api.get('sqldb.baseclass')(), self,
-                           dbname='mapper', dbdir=self.savedir)
+    self.mapperdb = dbcreate(self.api('sqldb.baseclass')(), self,
+                             dbname='mapper', dbdir=self.savedir)
 
     self.api('send.msg')('mapperdb: %s' % self.mapperdb)
 
-    self.api.get('setting.add')('shownotes', True, bool,
-                      'show notes when entering a room')
+    self.api('setting.add')('shownotes', True, bool,
+                            'show notes when entering a room')
 
-    parser = argparse.ArgumentParser(add_help=False,
-                 description='show mapper information for a room')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='show mapper information for a room')
     parser.add_argument('room', help='the room number',
                         default=None, nargs='?', type=int)
-    self.api.get('commands.add')('showroom', self.cmd_showroom,
-                                parser=parser)
+    self.api('commands.add')('showroom', self.cmd_showroom,
+                             parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                 description='purge a room')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='purge a room')
     parser.add_argument('room', help='the room number',
                         default=None, nargs='?', type=int)
-    self.api.get('commands.add')('purgeroom', self.cmd_purgeroom,
-                                parser=parser)
+    self.api('commands.add')('purgeroom', self.cmd_purgeroom,
+                             parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                 description='lookup a room')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='lookup a room')
     parser.add_argument('room', help='a string',
                         default=None, nargs='?')
     parser.add_argument('-e', "--exact", help="the argument is the exact name",
-              action="store_true")
-    self.api.get('commands.add')('find', self.cmd_find,
-                                parser=parser)
+                        action="store_true")
+    self.api('commands.add')('find', self.cmd_find,
+                             parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                 description='lookup a room in a specific area')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='lookup a room in a specific area')
     parser.add_argument('room', help='a string',
                         default=None, nargs='?')
     parser.add_argument('area', help='a string',
                         default=None, nargs='?')
     parser.add_argument('-e', "--exact", help="the argument is the exact name",
-              action="store_true")
-    self.api.get('commands.add')('area', self.cmd_area,
-                                parser=parser)
+                        action="store_true")
+    self.api('commands.add')('area', self.cmd_area,
+                             parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                 description='goto the next room from the previous search result')
-    self.api.get('commands.add')('next', self.cmd_next,
-                                parser=parser)
+    parser = argp.ArgumentParser(
+        add_help=False,
+        description='goto the next room from the previous search result')
+    self.api('commands.add')('next', self.cmd_next,
+                             parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                 description='resume going to a room')
-    self.api.get('commands.add')('resume', self.cmd_resume,
-                                parser=parser)
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='resume going to a room')
+    self.api('commands.add')('resume', self.cmd_resume,
+                             parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                 description='goto a room')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='goto a room')
     parser.add_argument('room', help='the room number',
                         default=None, nargs='?', type=int)
-    self.api.get('commands.add')('goto', self.cmd_goto,
-                                parser=parser)
+    self.api('commands.add')('goto', self.cmd_goto,
+                             parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                 description='walk to room (no portals)')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='walk to room (no portals)')
     parser.add_argument('room', help='the room number',
                         default=None, nargs='?', type=int)
-    self.api.get('commands.add')('walk', self.cmd_walk,
-                                parser=parser)
+    self.api('commands.add')('walk', self.cmd_walk,
+                             parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                 description='get speedwalk for a path')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='get speedwalk for a path')
     parser.add_argument('start', help='the room number',
                         default=None, nargs='?', type=int)
     parser.add_argument('end', help='the room number',
                         default=None, nargs='?', type=int)
-    self.api.get('commands.add')('spw', self.cmd_speedwalk,
-                                parser=parser)
+    self.api('commands.add')('spw', self.cmd_speedwalk,
+                             parser=parser)
 
     self.api('triggers.add')('noportal',
-              "^Magic walls bounce you back\.$")
+                             r"^Magic walls bounce you back\.$")
     self.api('triggers.add')('norecall',
-              "^You cannot (recall|return home) from this room\.")
+                             r"^You cannot (recall|return home) from this room\.")
 
     ## backup the db every 4 hours
-    #self.api.get('timers.add')('mapper_backup', self.backupdb,
+    #self.api('timers.add')('mapper_backup', self.backupdb,
                                 #60*60*4, time='0000')
 
-    #self.api.get('setting.add')('backupstart', '0000', 'miltime',
+    #self.api('setting.add')('backupstart', '0000', 'miltime',
                       #'the time for a db backup, like 1200 or 2000')
-    #self.api.get('setting.add')('backupinterval', '4h', 'timelength',
+    #self.api('setting.add')('backupinterval', '4h', 'timelength',
                       #'the interval to backup the db, default every 4 hours')
-    #self.api.get('events.register')('map_backupstart', self.changetimer)
-    #self.api.get('events.register')('map_backupinternval', self.changetimer)
+    #self.api('events.register')('map_backupstart', self.changetimer)
+    #self.api('events.register')('map_backupinternval', self.changetimer)
 
-    self.api.get('events.register')('trigger_noportal', self.noportal)
-    self.api.get('events.register')('trigger_norecall', self.norecall)
+    self.api('events.register')('trigger_noportal', self.noportal)
+    self.api('events.register')('trigger_norecall', self.norecall)
 
-    self.api.get('events.register')('GMCP:room.area', self.updatearea)
-    self.api.get('events.register')('GMCP:room.info', self.updateroom)
+    self.api('events.register')('GMCP:room.area', self.updatearea)
+    self.api('events.register')('GMCP:room.info', self.updateroom)
 
   def comparerooms(self, room1, room2):
     """
@@ -433,11 +433,11 @@ class Plugin(AardwolfBasePlugin):
     """
     do something when the reportminutes changes
     """
-    self.api.get('timers.remove')('mapper_backup')
-    self.api.get('timers.add')('mapper_backup',
-                      self.backupdb,
-                      self.api.get('setting.gets')('backupinterval'),
-                      time=self.api.get('setting.gets')('backupstart'))
+    self.api('timers.remove')('mapper_backup')
+    self.api('timers.add')('mapper_backup',
+                           self.backupdb,
+                           self.api('setting.gets')('backupinterval'),
+                           time=self.api('setting.gets')('backupstart'))
 
   def backupdb(self):
     """
@@ -454,12 +454,13 @@ class Plugin(AardwolfBasePlugin):
     AardwolfBasePlugin.unload(self)
     self.mapperdb.close()
 
-  def noportal(self, args):
+  def noportal(self, _=None):
     """
     add a noportal flag to a room
     """
     if self.api('aflags.check')('blindness'):
-      self.api('send.client')("You are affected by blindness, room %s will not be set as noportal" % self.current_room)
+      self.api('send.client')("You are affected by blindness, " \
+                               "room %s will not be set as noportal" % self.current_room)
       return
     if self.current_room != None and self.current_room in self.rooms and \
         self.rooms[self.current_room] != None and \
@@ -468,12 +469,13 @@ class Plugin(AardwolfBasePlugin):
       self.cacheroom(self.current_room, force=True)
       self.api('send.client')('Marking room %s as noportal' % self.current_room)
 
-  def norecall(self, args):
+  def norecall(self, _=None):
     """
     add a norecall flag to a room
     """
     if self.api('aflags.check')('blindness'):
-      self.api('send.client')("You are affected by blindness, room %s will not be set as noportal" % self.current_room)
+      self.api('send.client')("You are affected by blindness, " \
+                               "room %s will not be set as noportal" % self.current_room)
       return
     if self.current_room != None and self.current_room in self.rooms and \
         self.rooms[self.current_room] != None and \
@@ -498,7 +500,7 @@ class Plugin(AardwolfBasePlugin):
     add a room to the cache if it is in the database
     """
     roomnum = str(roomnum)
-    if (not (roomnum in self.rooms)) or force:
+    if roomnum not in self.rooms or force:
       room = self.mapperdb.getroom(roomnum)
       if room:
         self.rooms[roomnum] = room
@@ -555,14 +557,16 @@ class Plugin(AardwolfBasePlugin):
     except KeyError:
       self.api('send.traceback')('Did not cache room: %s' % dbroom['uid'])
 
-    if not cachedroom['ignore_exits_mismatch'] and not (self.comparerooms(dbroom, cachedroom)):
+    if not cachedroom['ignore_exits_mismatch'] and \
+       not self.comparerooms(dbroom, cachedroom):
       self.api('send.msg')('cachedroom: %s' % cachedroom)
       self.api('send.msg')('dbroom: %s' % dbroom)
       msg = []
       msg.append('@r---------------------------@w')
       if dbroom['area'] != cachedroom['area']:
         msg.append('@RThis room has changed areas@w')
-        msg.append('@Rpurge area %s with purgearea if this area has been replaced@w' % cachedroom['area'])
+        msg.append('@Rpurge area %s with purgearea if this area has been replaced@w' % \
+                      cachedroom['area'])
         msg.append('@ROtherwise, purge this room with purgeroom@w')
       else:
         msg.append('@RThis room has changed@w')
@@ -599,7 +603,7 @@ class Plugin(AardwolfBasePlugin):
 
     roomnum = str(roomnum)
 
-    if not (roomnum in self.rooms):
+    if roomnum not in self.rooms:
       self.rooms[roomnum] = self.mapperdb.getroom(roomnum)
 
     room = self.rooms[roomnum]
@@ -646,7 +650,7 @@ class Plugin(AardwolfBasePlugin):
     roomnum = str(roomnum)
 
     self.mapperdb.purgeroom(roomnum)
-    del(self.rooms[roomnum])
+    del self.rooms[roomnum]
 
     return True, ["Room %s was purged from the database" % roomnum]
 
@@ -696,7 +700,7 @@ class Plugin(AardwolfBasePlugin):
 
     return True, msg
 
-  def cmd_next(self, args):
+  def cmd_next(self, _=None):
     """
     go to the next room in the search list
     """
@@ -711,7 +715,7 @@ class Plugin(AardwolfBasePlugin):
 
     return True, msg
 
-  def cmd_resume(self, args):
+  def cmd_resume(self, _=None):
     """
     resume moving to the last room
     """
@@ -719,8 +723,8 @@ class Plugin(AardwolfBasePlugin):
       self.gotoroom(self.lastdest['uid'])
 
       return True, []
-    else:
-      return True, ['This is not destination to resume']
+
+    return True, ['There is not a destination to resume']
 
   def cmd_goto(self, args):
     """
@@ -756,9 +760,6 @@ class Plugin(AardwolfBasePlugin):
     if not end:
       return False, ['Please specify an end room']
 
-    print 'spw start: %s' % start
-    print 'spw end: %s' % end
-
     path, reason, depth = self.findpath(str(start), str(end))
 
     if path:
@@ -779,17 +780,17 @@ class Plugin(AardwolfBasePlugin):
 
     uid = str(uid)
 
-    if not(uid in self.rooms):
+    if uid not in self.rooms:
       self.cacheroom(uid)
 
-    if not(uid in self.rooms):
+    if uid not in self.rooms:
       self.api('send.client')('gotoroom: %s is not in the database' % uid)
       return
 
     room = self.rooms[uid]
 
     self.api('send.client')('Going to room %s (%s)' % (
-                                  room['name'], room['uid']))
+        room['name'], room['uid']))
 
     if self.currentspeedwalk:
       self.api('send.client')(
@@ -824,9 +825,9 @@ class Plugin(AardwolfBasePlugin):
     if not start or start == 'None':
       start = self.api('GMCP.getv')('room.info.num')
 
-    if not(start in self.rooms):
-      if not(self.cacheroom(start)):
-        self.api('send.msg')('findpath: start: %s is not in the database' % uid)
+    if start not in self.rooms:
+      if not self.cacheroom(start):
+        self.api('send.msg')('findpath: start: %s is not in the database' % start)
         return {}, 'start room not in database', 0
 
     #if not(end in self.rooms):
@@ -840,9 +841,8 @@ class Plugin(AardwolfBasePlugin):
       dest = self.rooms[start]['exits'][direction]
       levellock = self.rooms[start]['exitlocks'][direction]
       if str(dest) == str(end) and levellock <= charlevel and \
-            ((walkone == None) or (len(direction) > len(walkone))):
+            ((walkone is None) or (len(direction) > len(walkone))):
         # if one room away, walk there (don't portal), but prefer a cexit
-        print 'found walkone'
         walkone = direction
 
     if walkone != None:
@@ -855,23 +855,16 @@ class Plugin(AardwolfBasePlugin):
     rooms_list = []
     found = False
     ftd = {}
-    f = ""
+    somevar = ""
     next_room = 0
-
-    #if type(src) ~= "number" then
-        #src = string.match(src, "^(nomap_.+)$") or tonumber(src)
-    #end
-    #if type(dst) ~= "number" then
-        #dst = string.match(dst, "^(nomap_.+)$") or tonumber(dst)
-    #end
 
     if start == end:
       return {}, 'start == end', 0
 
-    if not(start):
+    if not start:
       return {}, 'no start room', 0
 
-    if not(end):
+    if not end:
       return {}, 'no end room', 0
 
     rooms_list.append(self.mapperdb.fixsql(end))
@@ -895,42 +888,42 @@ class Plugin(AardwolfBasePlugin):
 
         for i in ftd:
           fromuid = self.mapperdb.fixsql(ftd[i]['fromuid'])
-          if not (fromuid in rooms_list):
+          if fromuid not in rooms_list:
             rooms_list.append(fromuid)
 
       # prune the search space
       for i in rooms_list:
-        if not (i in visited):
+        if i not in visited:
           visited.append(i)
 
       # get all exits to any room in the previous set
       # ordering by length(dir) ensures that custom exits (always longer than 1 char) get
       # used preferentially to normal ones (1 char)
-      q = "select fromuid, touid, dir from exits where touid in (%s) " \
+      sqlstr = "select fromuid, touid, dir from exits where touid in (%s) " \
           "and fromuid not in (%s) and ((fromuid not in ('*','**') and " \
           "level <= %s) or (fromuid in ('*','**') and level <= %s)) "\
           "order by length(dir) asc" % \
             (",".join(rooms_list),
-              ",".join(visited),
-              charlevel,
-              charlevel + (chartier * 10))
+             ",".join(visited),
+             charlevel,
+             charlevel + (chartier * 10))
 
       if depth < 10:
-        print q
+        print sqlstr
 
       dcount = 0
       room_sets[depth] = {}
 
-      for row in self.mapperdb.select(q):
+      for row in self.mapperdb.select(sqlstr):
 
         dcount = dcount + 1
 
         room_sets[depth][row['fromuid']] = {'fromuid':row['fromuid'],
-                                    'touid':row['touid'], 'dir':row['dir']}
+                                            'touid':row['touid'], 'dir':row['dir']}
         #if row['fromuid'] == "*" or (row['fromuid'] == "**" and f != "*" \
               #and f != start) or row['fromuid'] == start:
         if row['fromuid'] == start:
-          f = row['fromuid']
+          final = row['fromuid']
           found = True
           found_depth = len(room_sets)
 
@@ -949,47 +942,47 @@ class Plugin(AardwolfBasePlugin):
     print 'found_depth: %s' % found_depth
     print 'room_sets: %s' % room_sets
 
-    ftd = room_sets[found_depth][f]
+    ftd = room_sets[found_depth][final]
 
-    if (f == "*" and self.rooms[start]['noportal'] == 1) or \
-          (f == "**" and self.rooms[start]['norecall'] == 1):
+    if (final == "*" and self.rooms[start]['noportal'] == 1) or \
+          (final == "**" and self.rooms[start]['norecall'] == 1):
       if self.rooms[start].norecall != 1 and self.bounce_recall != None:
         path.append(self.bounce_recall)
-        if end == self.bounce_recall['uid']:
+        if end == self.bounce_recall:
           return path, 'bouncerecall path found', found_depth
 
-      elif self.rooms[src]['noportal'] != 1 and self.bounce_portal != None:
+      elif self.rooms[start]['noportal'] != 1 and self.bounce_portal != None:
         path.append(self.bounce_portal)
-        if end == self.bounce_portal['uid']:
+        if end == self.bounce_portal:
           return path, 'bounceportal path found', found_depth
 
       else:
-        jump_room, path_type = self.findNearestJumpRoom(start, end, f)
+        jump_room, path_type = self.findNearestJumpRoom(start, end, somevar)
         if not jump_room:
           return {}, 'jump no paths', 0
 
         # this could be optimized away by building the path in
         #findNearestJumpRoom, but the gain would be negligible
-        path, code, first_depth = findpath(start, jump_room, True, True)
+        path, code, first_depth = self.findpath(start, jump_room, True, True)
         if bit.band(path_type, 1) != 0:
           # path_type 1 means just walk to the destination
           return path, 'path found', first_depth
-        else:
-          second_path, code, second_depth = findpath(jump_room, end)
-          for i in second_path:
-            path.append(second_path[i]) # bug on this line if path is nil?
 
-          return path, 'second found path', first_depth + second_depth
+        second_path, code, second_depth = self.findpath(jump_room, end)
+        for i in second_path:
+          path.append(second_path[i]) # bug on this line if path is nil?
+
+        return path, 'second found path', first_depth + second_depth
 
     print 'ftd: %s' % ftd
     path.append({'dir':ftd['dir'], 'uid':ftd['touid']})
 
     next_room = ftd['touid']
     while depth > 1:
-        depth = depth - 1
-        ftd = room_sets[depth][next_room]
-        next_room = ftd['touid']
-        path.append({'dir':ftd['dir'], 'uid':ftd['touid']})
+      depth = depth - 1
+      ftd = room_sets[depth][next_room]
+      next_room = ftd['touid']
+      path.append({'dir':ftd['dir'], 'uid':ftd['touid']})
 
     return path, 'path found', found_depth
 
@@ -1047,23 +1040,26 @@ class Plugin(AardwolfBasePlugin):
       depth = depth + 1
 
       for i in rooms_list:
-        if not (i in visited):
+        if i not in visited:
           visited.append(i)
 
-      q = string.format ("select fromuid, touid, dir, norecall, noportal " \
-                        "from exits,rooms where rooms.uid = exits.touid " \
-                        "and exits.fromuid in (%s) and exits.touid " \
-                        "not in (%s) and exits.level <= %s " \
-                        "order by length(exits.dir) asc",
-                          ",",join(rooms_list), visited, charlevel)
+      sqlstr = "select fromuid, touid, dir, norecall, noportal " \
+            "from exits,rooms where rooms.uid = exits.touid " \
+            "and exits.fromuid in (%s) and exits.touid " \
+            "not in (%s) and exits.level <= %s " \
+            "order by length(exits.dir) asc" % \
+                  (",".join(rooms_list), visited, charlevel)
       dcount = 0
-      for row in self.mapperdb.select(q):
+      for row in self.mapperdb.select(sqlstr):
         dcount = dcount + 1
         rooms_list.append(self.mapperdb.fixsql(row['touid']))
-        if ((self.bounce_portal != None or target_type == "*") and row['noportal'] != 1) \
-            or ((self.bounce_recall != None or target_type == "**") and row['norecall'] != 1) \
+        if ((self.bounce_portal != None or target_type == "*") \
+            and row['noportal'] != 1) \
+            or ((self.bounce_recall != None \
+            or target_type == "**") \
+            and row['norecall'] != 1) \
             or row['touid'] == dst:
-          path_type = ((row['touid'] == dst) & 1) | ( (((row['noportal'] == 1) & 2) | 0) + (((row['norecall'] == 1) & 4) | 0) )
+          path_type = ((row['touid'] == dst) & 1)|( (((row['noportal'] == 1) & 2)|0) + (((row['norecall'] == 1) & 4)|0) )
           # path_type 1 means walking to the destination is closer than bouncing
           # path_type 2 means the bounce room allows recalling but not portalling
           # path_type 4 means the bounce room allows portalling but not recalling

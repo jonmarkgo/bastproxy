@@ -42,9 +42,9 @@ import os
 import shutil
 import time
 import zipfile
-import argparse
 import copy
 
+import libs.argp as argp
 from plugins._baseplugin import BasePlugin
 
 NAME = 'SQL DB base class'
@@ -184,17 +184,17 @@ class Sqldb(object):
     if tstr:
       if like:
         return "'%" + tstr.replace("'", "''") + "%'"
-      else:
-        return "'" + tstr.replace("'", "''") + "'"
-    else:
-      return 'NULL'
+
+      return "'" + tstr.replace("'", "''") + "'"
+
+    return 'NULL'
 
   def addcmds(self):
     """
     add commands to the plugin to use the database
     """
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='backup the database')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='backup the database')
     parser.add_argument('name',
                         help='the name to backup to',
                         default='',
@@ -204,21 +204,21 @@ class Sqldb(object):
                              parser=parser,
                              group='DB')
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='close the database')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='close the database')
     self.api('commands.add')('dbclose',
                              self.cmd_close,
                              parser=parser,
                              group='DB')
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='vacuum the database')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='vacuum the database')
     self.api('commands.add')('dbvac',
                              self.cmd_vac,
                              parser=parser,
                              group='DB')
 
-    parser = argparse.ArgumentParser(
+    parser = argp.ArgumentParser(
         add_help=False,
         description='run a sql statement against the database')
     parser.add_argument('stmt',
@@ -230,7 +230,7 @@ class Sqldb(object):
                              parser=parser,
                              group='DB')
 
-    parser = argparse.ArgumentParser(
+    parser = argp.ArgumentParser(
         add_help=False,
         description='run a sql update/insert against the database')
     parser.add_argument('stmt',
@@ -242,7 +242,7 @@ class Sqldb(object):
                              parser=parser,
                              group='DB')
 
-    parser = argparse.ArgumentParser(
+    parser = argp.ArgumentParser(
         add_help=False,
         description='remove a row from a table')
     parser.add_argument('table',
@@ -297,7 +297,7 @@ class Sqldb(object):
 
   def cmd_close(self, _):
     """
-    backup the database
+    close the database
     """
     msg = []
     self.close()
@@ -307,7 +307,7 @@ class Sqldb(object):
 
   def cmd_remove(self, args):
     """
-    backup the database
+    remove a table from the database
     """
     msg = []
     if not args['table'] or args['table'] not in self.tables:
@@ -382,9 +382,10 @@ class Sqldb(object):
     args['createsql'] = sql
 
     self.tables[tablename] = args
-    col, colbykeys = self.getcolumnsfromsql(tablename)
+    col, colbykeys, defcolvals = self.getcolumnsfromsql(tablename)
     self.tables[tablename]['columns'] = col
     self.tables[tablename]['columnsbykeys'] = colbykeys
+    self.tables[tablename]['defcolvals'] = defcolvals
 
   def remove(self, table, rownumber):
     """
@@ -395,8 +396,8 @@ class Sqldb(object):
       sql = "DELETE FROM %s where %s=%s;" % (table, keyfield, rownumber)
       self.api('%s.modify' % self.plugin.sname)(sql)
       return True, '%s was removed from table %s' % (rownumber, table)
-    else:
-      return False, '%s is not a table' % table
+
+    return False, '%s is not a table' % table
 
   def getcolumnsfromsql(self, tablename):
     """
@@ -404,6 +405,7 @@ class Sqldb(object):
     """
     columns = []
     columnsbykeys = {}
+    columndefaults = {}
     if self.tables[tablename]:
       tlist = self.tables[tablename]['createsql'].split('\n')
       for i in tlist:
@@ -411,10 +413,28 @@ class Sqldb(object):
         if i and i[0:2] != '--':
           if 'CREATE' not in i and ')' not in i:
             ilist = i.split(' ')
-            columns.append(ilist[0])
-            columnsbykeys[ilist[0]] = True
+            col = ilist[0]
+            columns.append(col)
+            columnsbykeys[col] = True
+            if 'default' in ilist or 'Default' in ilist:
+              columndefaults[col] = ilist[-1].strip(',')
+            else:
+              columndefaults[col] = None
 
-    return columns, columnsbykeys
+
+    return columns, columnsbykeys, columndefaults
+
+  def checkdictforcolumns(self, tablename, tdict):
+    """
+    check that a dictionary has the correct columns
+    """
+    columns = self.tables[tablename]['columns']
+    columndefaults = self.tables[tablename]['defcolvals']
+    for col in columns:
+      if col not in tdict:
+        tdict[col] = columndefaults[col]
+
+    return tdict
 
   def converttoinsert(self, tablename, keynull=False, replace=False):
     """
@@ -553,7 +573,7 @@ class Sqldb(object):
       for row in cur.execute(stmt):
         result.append(row)
     except Exception: # pylint: disable=broad-except
-      self.api.get('send.traceback')('could not run sql statement : %s' % \
+      self.api('send.traceback')('could not run sql statement : %s' % \
                             stmt)
     cur.close()
     return result
@@ -573,7 +593,7 @@ class Sqldb(object):
       rowid = cur.lastrowid
       result = self.dbconn.commit()
     except Exception: # pylint: disable=broad-except
-      self.api.get('send.traceback')('could not run sql statement : %s' % \
+      self.api('send.traceback')('could not run sql statement : %s' % \
                             stmt)
 
     return rowid, result
@@ -674,7 +694,7 @@ class Sqldb(object):
     colid = self.tables[ttable]['keyfield']
     rows = self.api('%s.select' % self.plugin.sname)(
         "SELECT MAX(%s) AS MAX FROM %s" % (colid, ttable))
-    if len(rows) > 0:
+    if rows:
       last = rows[0]['MAX']
 
     return last
@@ -715,7 +735,7 @@ class Sqldb(object):
 
     try:
       with zipfile.ZipFile(backupzipfile, 'w', zipfile.ZIP_DEFLATED) as myzip:
-        myzip.write(backupfile)
+        myzip.write(backupfile, arcname=os.path.basename(backupfile))
       os.remove(backupfile)
       success = True
       self.api('send.msg')('%s was backed up to %s' % (self.dbfile,

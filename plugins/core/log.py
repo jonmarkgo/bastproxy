@@ -6,8 +6,8 @@ import sys
 import time
 import os
 import zipfile
-import argparse
 
+import libs.argp as argp
 from libs.persistentdict import PersistentDict
 from plugins._baseplugin import BasePlugin
 
@@ -52,10 +52,10 @@ class Plugin(BasePlugin):
     self.sendtofile = PersistentDict(
         os.path.join(self.savedir, 'sendtofile.txt'),
         'c')
-    self.openlogs = {}
     self.currentlogs = {}
     self.colors = {}
 
+    self.filenametemplate = '%a-%b-%d-%Y.log'
     #self.sendtofile['default'] = {
                                 #'logdir':os.path.join(self.logdir, 'default'),
                                 #'file':'%a-%b-%d-%Y.log', 'timestamp':True
@@ -63,24 +63,67 @@ class Plugin(BasePlugin):
 
     self.colors['error'] = '@x136'
 
-    self.api.get('api.add')('msg', self.api_msg)
-    self.api.get('api.add')('adddtype', self.api_adddtype)
-    self.api.get('api.add')('console', self.api_toggletoconsole)
-    self.api.get('api.add')('file', self.api_toggletofile)
-    self.api.get('api.add')('client', self.api_toggletoclient)
+    self.api('api.add')('msg', self.api_msg)
+    self.api('api.add')('adddtype', self.api_adddtype)
+    self.api('api.add')('console', self.api_toggletoconsole)
+    self.api('api.add')('file', self.api_toggletofile)
+    self.api('api.add')('client', self.api_toggletoclient)
+    self.api('api.add')('writefile', self.api_writefile)
 
-    self.api.get('log.adddtype')('default')
-    self.api.get('log.adddtype')('frommud')
-    self.api.get('log.adddtype')('startup')
-    self.api.get('log.adddtype')('error')
+    # add some default datatypes
+    self.api('log.adddtype')('default')
+    self.api('log.adddtype')('frommud')
+    self.api('log.adddtype')('startup')
+    self.api('log.adddtype')('shutdown')
+    self.api('log.adddtype')('error')
 
-    self.api.get('log.client')('error')
-    self.api.get('log.console')('error')
-    self.api.get('log.console')('default')
-    self.api.get('log.console')('startup')
+    # log some datatypes by default
+    self.api('log.client')('error')
+    self.api('log.console')('error')
+    self.api('log.console')('default')
+    self.api('log.console')('startup')
+    self.api('log.console')('shutdown')
 
-    #self.api.get('log.file')('default')
+  def api_writefile(self, dtype, data, stripcolor=False):
+    """
+    write directly to a file
+    """
+    if dtype not in self.sendtofile:
+      self.api('%s.file' % self.sname)(dtype)
 
+    if stripcolor and self.api('api.has')('colors.stripansi'):
+      data = self.api('colors.stripansi')(data)
+
+    tfile = os.path.join(self.logdir, dtype,
+                          time.strftime(self.sendtofile[dtype]['file'],
+                                        time.localtime()))
+    if not os.path.exists(os.path.join(self.logdir, dtype)):
+      os.makedirs(os.path.join(self.logdir, dtype, 'archive'))
+    if (dtype not in self.currentlogs) or \
+      (dtype in self.currentlogs and not self.currentlogs[dtype]):
+      self.currentlogs[dtype] = {}
+      self.currentlogs[dtype]['filename'] = tfile
+      self.currentlogs[dtype]['fhandle'] = None
+    elif tfile != self.currentlogs[dtype]['filename']:
+      self.archivelog(dtype)
+      self.currentlogs[dtype]['filename'] = tfile
+
+    if not self.currentlogs[dtype]['fhandle']:
+      self.currentlogs[dtype]['fhandle'] = \
+                      open(self.currentlogs[dtype]['filename'], 'a')
+
+    if self.sendtofile[dtype]['timestamp']:
+      tstring = '%s : ' % \
+            (time.strftime(self.api.timestring, time.localtime()))
+      data = tstring + data
+
+    if self.api('api.has')('colors.stripansi'):
+      self.currentlogs[dtype]['fhandle'].write(
+          self.api('colors.stripansi')(data) + '\n')
+    else:
+      self.currentlogs[dtype]['fhandle'].write(data + '\n')
+    self.currentlogs[dtype]['fhandle'].flush()
+    return True
 
   # add a datatype to the log
   def api_adddtype(self, datatype):
@@ -93,69 +136,50 @@ class Plugin(BasePlugin):
       self.sendtoclient[datatype] = False
       self.sendtoconsole[datatype] = False
 
-  def process_msg(self, msg, dtype, priority='primary'):
-    """
-    process a message
-    """
-    tstring = '%s - %-10s : ' % (
-        time.strftime('%a %b %d %Y %H:%M:%S', time.localtime()),
-        dtype)
-    if self.api.get('api.has')('colors.convertcolors') and \
-        dtype in self.colors:
-      tstring = self.api.get('colors.convertcolors')(self.colors[dtype] + tstring)
-    tmsg = [tstring]
-    tmsg.append(msg)
-
-    timestampmsg = ''.join(tmsg)
-    nontimestamp = msg
-
-    if dtype in self.sendtoclient and self.sendtoclient[dtype]:
-      self.api.get('send.client')(timestampmsg)
-
-    if dtype in self.sendtoconsole and self.sendtoconsole[dtype]:
-      print(timestampmsg, file=sys.stderr)
-
-    if priority == 'primary':
-      if dtype in self.sendtofile and self.sendtofile[dtype]['file']:
-        if self.api.get('api.has')('colors.stripansi'):
-          self.logtofile(self.api.get('colors.stripansi')(nontimestamp), dtype)
-        else:
-          self.logtofile(nontimestamp, dtype)
-
-      if 'default' in self.sendtofile:
-        self.logtofile(timestampmsg, 'default')
-
   # process a message, use send.msg instead for the api
-  def api_msg(self, args, dtypedict=None):
+  def api_msg(self, msg, tags=None):
     """  send a message
     @Ymsg@w        = This message to send
     @Ydatatype@w   = the type to toggle
 
     this function returns no values"""
+    senttoconsole = False
+    senttoclient = False
 
-    if not dtypedict:
-      dtypedict = {'primary':'default'}
+    ttime = time.strftime(self.api.timestring, time.localtime())
 
-    dtype = dtypedict['primary']
-    if 'primary' in args:
-      dtype = args['primary']
+    self.logtofile(msg, 'default')
 
-    self.process_msg(args['msg'], dtype)
+    for dtag in tags:
+      if dtag and dtag != 'None' \
+            and dtag != 'default':
 
-    if 'secondary' in dtypedict:
-      for i in dtypedict['secondary']:
-        if i and i != 'None' \
-            and i != 'default':
-          self.process_msg(args['msg'], i,
-                           priority='secondary')
+        tstring = '%s - %-10s : ' % (ttime, dtag)
+        timestampmsg = tstring + msg
+
+        self.logtofile(msg, dtag)
+
+        if self.api('api.has')('colors.convertcolors') and \
+            dtag in self.colors:
+          timestampmsg = self.api('colors.convertcolors')(
+              self.colors[dtag] + timestampmsg)
+
+        if dtag in self.sendtoclient and self.sendtoclient[dtag] and not senttoclient:
+          self.api('send.client')(timestampmsg)
+          senttoclient = True
+
+        if dtag in self.sendtoconsole and self.sendtoconsole[dtag] and not senttoconsole:
+          print(timestampmsg, file=sys.stderr)
+          senttoconsole = True
 
   # archive a log fle
   def archivelog(self, dtype):
     """
     archive the previous log
     """
-    tfile = os.path.split(self.currentlogs[dtype])[-1]
-    self.openlogs[self.currentlogs[dtype]].close()
+    tfile = os.path.split(self.currentlogs[dtype]['filename'])[-1]
+    self.currentlogs[dtype]['fhandle'].close()
+    self.currentlogs[dtype]['fhandle'] = None
 
     backupfile = os.path.join(self.logdir, dtype,
                               tfile)
@@ -163,42 +187,19 @@ class Plugin(BasePlugin):
                                  tfile + '.zip')
     with zipfile.ZipFile(backupzipfile, 'w', zipfile.ZIP_DEFLATED,
                          allowZip64=True) as myzip:
-      myzip.write(backupfile, arcname=self.currentlogs[dtype])
+      myzip.write(backupfile, arcname=self.currentlogs[dtype]['filename'])
     os.remove(backupfile)
-    del self.openlogs[self.currentlogs[dtype]]
 
   # log something to a file
-  def logtofile(self, msg, dtype):
+  def logtofile(self, msg, dtype, stripcolor=True):
     """
     send a message to a log file
     """
     #print('logging', dtype)
-    tfile = os.path.join(self.logdir, dtype,
-                         time.strftime(self.sendtofile[dtype]['file'],
-                                       time.localtime()))
-    if not os.path.exists(os.path.join(self.logdir, dtype)):
-      os.makedirs(os.path.join(self.logdir, dtype, 'archive'))
-    if (dtype not in self.currentlogs) or \
-       (dtype in self.currentlogs and not self.currentlogs[dtype]):
-      self.currentlogs[dtype] = tfile
-    elif tfile != self.currentlogs[dtype]:
-      self.archivelog(dtype)
-      self.currentlogs[dtype] = tfile
-    if self.currentlogs[dtype] not in self.openlogs:
-      self.openlogs[self.currentlogs[dtype]] = \
-                      open(self.currentlogs[dtype], 'a')
-    #print('logging to %s' % tfile)
-    if self.sendtofile[dtype]['timestamp']:
-      tstring = '%s : ' % \
-            (time.strftime(self.api.timestring, time.localtime()))
-      msg = tstring + msg
+    if dtype in self.sendtofile and self.sendtofile[dtype]['file']:
+      return self.api('%s.writefile'% self.sname)(dtype, msg, stripcolor)
 
-    if self.api.get('api.has')('colors.stripansi'):
-      self.openlogs[self.currentlogs[dtype]].write(
-          self.api.get('colors.stripansi')(msg) + '\n')
-    else:
-      self.openlogs[self.currentlogs[dtype]].write(msg + '\n')
-    self.openlogs[self.currentlogs[dtype]].flush()
+    return False
 
   # toggle logging a datatype to the clients
   def api_toggletoclient(self, datatype, flag=True):
@@ -210,7 +211,7 @@ class Plugin(BasePlugin):
     if datatype in self.sendtoclient and datatype != 'frommud':
       self.sendtoclient[datatype] = flag
 
-    self.api.get('send.msg')('setting %s to log to client' % \
+    self.api('send.msg')('setting %s to log to client' % \
                       datatype)
 
     self.sendtoclient.sync()
@@ -221,7 +222,7 @@ class Plugin(BasePlugin):
     toggle datatypes shown to client
     """
     tmsg = []
-    if len(args['datatype']) > 0:
+    if args['datatype']:
       for i in args['datatype']:
         if i in self.sendtoclient and i != 'frommud':
           self.sendtoclient[i] = not self.sendtoclient[i]
@@ -234,12 +235,12 @@ class Plugin(BasePlugin):
           tmsg.append('Type %s does not exist' % i)
       self.sendtoclient.sync()
       return True, tmsg
-    else:
-      tmsg.append('Current types going to client')
-      for i in self.sendtoclient:
-        if self.sendtoclient[i]:
-          tmsg.append(i)
-      return True, tmsg
+
+    tmsg.append('Current types going to client')
+    for i in self.sendtoclient:
+      if self.sendtoclient[i]:
+        tmsg.append(i)
+    return True, tmsg
 
   # toggle logging a datatype to the console
   def api_toggletoconsole(self, datatype, flag=True):
@@ -251,7 +252,7 @@ class Plugin(BasePlugin):
     if datatype in self.sendtoconsole and datatype != 'frommud':
       self.sendtoconsole[datatype] = flag
 
-    self.api.get('send.msg')('setting %s to log to console' % \
+    self.api('send.msg')('setting %s to log to console' % \
                       datatype, self.sname)
 
     self.sendtoconsole.sync()
@@ -262,7 +263,7 @@ class Plugin(BasePlugin):
     log datatypes to the console
     """
     tmsg = []
-    if len(args['datatype']) > 0:
+    if args['datatype']:
       for i in args['datatype']:
         if i in self.sendtoconsole and i != 'frommud':
           self.sendtoconsole[i] = not self.sendtoconsole[i]
@@ -275,12 +276,12 @@ class Plugin(BasePlugin):
           tmsg.append('Type %s does not exist' % i)
       self.sendtoconsole.sync()
       return True, tmsg
-    else:
-      tmsg.append('Current types going to console')
-      for i in self.sendtoconsole:
-        if self.sendtoconsole[i]:
-          tmsg.append(i)
-      return True, tmsg
+
+    tmsg.append('Current types going to console')
+    for i in self.sendtoconsole:
+      if self.sendtoconsole[i]:
+        tmsg.append(i)
+    return True, tmsg
 
   # toggle logging a datatype to a file
   def api_toggletofile(self, datatype, timestamp=True):
@@ -290,16 +291,17 @@ class Plugin(BasePlugin):
 
     this function returns no values"""
     if datatype in self.sendtofile:
+      if self.currentlogs[datatype]['fhandle']:
+        self.currentlogs[datatype]['fhandle'].close()
+        self.currentlogs[datatype]['fhandle'] = None
       del self.sendtofile[datatype]
     else:
-      tfile = '%a-%b-%d-%Y.log'
-
-      self.sendtofile[datatype] = {'file':tfile,
+      self.sendtofile[datatype] = {'file':self.filenametemplate,
                                    'timestamp':timestamp}
-      self.api.get('send.msg')('setting %s to log to %s' % \
+      self.api('send.msg')('setting %s to log to %s' % \
                       (datatype, self.sendtofile[datatype]['file']),
-                               self.sname)
-      self.sendtofile.sync()
+                           self.sname)
+    self.sendtofile.sync()
 
   # toggle a datatype to log to a file
   def cmd_file(self, args):
@@ -313,12 +315,13 @@ class Plugin(BasePlugin):
       timestamp = args['notimestamp']
 
       if dtype in self.sendtofile:
+        if dtype in self.currentlogs:
+          self.currentlogs[dtype]['fhandle'].close()
+          self.currentlogs[dtype]['fhandle'] = None
         del self.sendtofile[dtype]
         tmsg.append('removing %s from logging' % dtype)
       else:
-        tfile = '%a-%b-%d-%Y.log'
-
-        self.sendtofile[dtype] = {'file':tfile,
+        self.sendtofile[dtype] = {'file':self.filenametemplate,
                                   'logdir':os.path.join(self.logdir, dtype),
                                   'timestamp':timestamp}
         tmsg.append('setting %s to log to %s' % \
@@ -339,16 +342,16 @@ class Plugin(BasePlugin):
     archive a datatype
     """
     tmsg = []
-    if len(args) > 0:
+    if args:
       for i in args:
         if i in self.dtypes:
           self.archivelog(i)
         else:
           tmsg.append('%s does not exist' % i)
       return True, tmsg
-    else:
-      tmsg = ['Please specifiy a datatype to archive']
-      return False, tmsg
+
+    tmsg = ['Please specifiy a datatype to archive']
+    return False, tmsg
 
   # show all types
   def cmd_types(self, args):
@@ -375,7 +378,7 @@ class Plugin(BasePlugin):
         data = args['noansi']
       elif args['eventname'] == 'to_mud_event':
         data = 'tomud: ' + args['data'].strip()
-      self.logtofile(data, 'frommud')
+      self.logtofile(data, 'frommud', stripcolor=False)
     return args
 
   def load(self):
@@ -387,11 +390,12 @@ class Plugin(BasePlugin):
     #print('log api before adding', self.api.api)
 
     #print('log api after adding', self.api.api)
-    self.api.get('events.register')('from_mud_event', self.logmud)
-    self.api.get('events.register')('to_mud_event', self.logmud)
+    self.api('events.register')('from_mud_event', self.logmud)
+    self.api('events.register')('to_mud_event', self.logmud)
+    self.api('events.register')('plugin_%s_savestate' % self.sname, self._savestate)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description="""\
+    parser = argp.ArgumentParser(add_help=False,
+                                 description="""\
       toggle datatypes to clients
 
       if no arguments, data types that are currenty sent to clients will be listed""")
@@ -399,13 +403,13 @@ class Plugin(BasePlugin):
                         help='a list of datatypes to toggle',
                         default=[],
                         nargs='*')
-    self.api.get('commands.add')('client',
-                                 self.cmd_client,
-                                 lname='Logger',
-                                 parser=parser)
+    self.api('commands.add')('client',
+                             self.cmd_client,
+                             lname='Logger',
+                             parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description="""\
+    parser = argp.ArgumentParser(add_help=False,
+                                 description="""\
       toggle datatype to log to a file
 
       the file will be located in the data/logs/<dtype> directory
@@ -422,13 +426,13 @@ class Plugin(BasePlugin):
                         "--notimestamp",
                         help="do not log to file with a timestamp",
                         action="store_false")
-    self.api.get('commands.add')('file',
-                                 self.cmd_file,
-                                 lname='Logger',
-                                 parser=parser)
+    self.api('commands.add')('file',
+                             self.cmd_file,
+                             lname='Logger',
+                             parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description="""\
+    parser = argp.ArgumentParser(add_help=False,
+                                 description="""\
       toggle datatypes to the console
 
       if no arguments, data types that are currenty sent to the console will be listed""")
@@ -436,21 +440,28 @@ class Plugin(BasePlugin):
                         help='a list of datatypes to toggle',
                         default=[],
                         nargs='*')
-    self.api.get('commands.add')('console',
-                                 self.cmd_console,
-                                 lname='Logger',
-                                 parser=parser)
+    self.api('commands.add')('console',
+                             self.cmd_console,
+                             lname='Logger',
+                             parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description="list all datatypes")
+    parser = argp.ArgumentParser(add_help=False,
+                                 description="list all datatypes")
     parser.add_argument('match',
                         help='only list datatypes that have this argument in their name',
                         default='',
                         nargs='?')
-    self.api.get('commands.add')('types',
-                                 self.cmd_types,
-                                 lname='Logger',
-                                 parser=parser)
+    self.api('commands.add')('types',
+                             self.cmd_types,
+                             lname='Logger',
+                             parser=parser)
 
     #print('log loaded')
 
+  def _savestate(self, _=None):
+    """
+    save items not covered by baseplugin class
+    """
+    self.sendtoclient.sync()
+    self.sendtofile.sync()
+    self.sendtoconsole.sync()

@@ -28,13 +28,14 @@ class Plugin(BasePlugin):
     """
     BasePlugin.__init__(self, *args, **kwargs)
 
-    self.api.get('dependency.add')('ssc')
+    self.api('dependency.add')('ssc')
 
     self.proxypw = None
     self.proxyvpw = None
     self.mudpw = None
 
-    self.api.get('api.add')('restart', self.api_restart)
+    self.api('api.add')('restart', self.api_restart)
+    self.api('api.add')('shutdown', self.api_shutdown)
 
   def load(self):
     """
@@ -53,30 +54,30 @@ class Plugin(BasePlugin):
     self.api('setting.add')('linelen', 79, int,
                             'the line length for data')
 
-    self.api.get('commands.add')('clients',
-                                 self.cmd_clients,
-                                 shelp='list clients that are connected')
+    self.api('commands.add')('info',
+                             self.cmd_info,
+                             shelp='list proxy info')
 
-    self.api.get('commands.add')('disconnect',
-                                 self.cmd_disconnect,
-                                 shelp='disconnect from the mud')
+    self.api('commands.add')('disconnect',
+                             self.cmd_disconnect,
+                             shelp='disconnect from the mud')
 
-    self.api.get('commands.add')('connect',
-                                 self.cmd_connect,
-                                 shelp='connect to the mud')
+    self.api('commands.add')('connect',
+                             self.cmd_connect,
+                             shelp='connect to the mud')
 
-    self.api.get('commands.add')('restart',
-                                 self.cmd_restart,
-                                 shelp='restart the proxy',
-                                 format=False)
+    self.api('commands.add')('restart',
+                             self.cmd_restart,
+                             shelp='restart the proxy',
+                             format=False)
 
-    self.api.get('commands.add')('shutdown',
-                                 self.cmd_shutdown,
-                                 shelp='shutdown the proxy')
+    self.api('commands.add')('shutdown',
+                             self.cmd_shutdown,
+                             shelp='shutdown the proxy')
 
     self.api('events.register')('client_connected', self.client_connected)
     self.api('events.register')('mudconnect', self.sendusernameandpw)
-    self.api('events.register')('var_net_listenport', self.listenportchange)
+    self.api('events.register')('var_%s_listenport' % self.sname, self.listenportchange)
 
     ssc = self.api('ssc.baseclass')()
     self.proxypw = ssc('proxypw', self, desc='Proxy Password',
@@ -86,8 +87,7 @@ class Plugin(BasePlugin):
     self.mudpw = ssc('mudpw', self, desc='Mud Password')
 
 
-  def sendusernameandpw(self, args):
-    # pylint: disable=unused-argument
+  def sendusernameandpw(self, args): # pylint: disable=unused-argument
     """
     if username and password are set, then send them when the proxy
     connects to the mud
@@ -100,92 +100,106 @@ class Plugin(BasePlugin):
       self.api('send.mud')('\n')
       self.api('send.mud')('\n')
 
-  def cmd_clients(self, args):
-    # pylint: disable=unused-argument
+  def cmd_info(self, _):
     """
-    show all clients
+    show info about the proxy
     """
-    proxy = self.api.get('managers.getm')('proxy')
-    clientformat = '%-6s %-17s %-7s %-17s %-s'
+    template = "%-15s : %s"
+    mud = self.api('managers.getm')('mud')
     tmsg = ['']
-    if proxy:
-      tmsg.append('Host: %s' % proxy.host)
-      tmsg.append('Port: %s' % proxy.port)
-      if proxy.connectedtime:
-        tmsg.append('PROXY: connected for %s' % \
-            self.api.get('utils.timedeltatostring')(proxy.connectedtime,
-                                                    time.mktime(time.localtime())))
+    started = time.strftime(self.api.timestring, self.api.starttime)
+    uptime = self.api('utils.timedeltatostring')(
+        self.api.starttime,
+        time.localtime())
+
+    tmsg.append('@B-------------------  Proxy ------------------@w')
+    tmsg.append(template % ('Started', started))
+    tmsg.append(template % ('Uptime', uptime))
+    tmsg.append('')
+    tmsg.append('@B-------------------   Mud  ------------------@w')
+    if mud:
+      if mud.connectedtime:
+        tmsg.append(template % ('Connected',
+                                time.strftime(self.api.timestring,
+                                              mud.connectedtime)))
+        tmsg.append(template % ('Uptime', self.api('utils.timedeltatostring')(
+            mud.connectedtime,
+            time.localtime())))
+        tmsg.append(template % ('Host', mud.host))
+        tmsg.append(template % ('Port', mud.port))
       else:
-        tmsg.append('PROXY: disconnected')
+        tmsg.append(template % ('Mud', 'disconnected'))
 
-      tmsg.append('')
-      tmsg.append(clientformat % ('Type', 'Host', 'Port',
-                                  'Client', 'Connected'))
-      tmsg.append('@B' + 60 * '-')
-      for i in proxy.clients:
-        ttime = self.api.get('utils.timedeltatostring')(i.connectedtime,
-                                                        time.mktime(time.localtime()))
+    clients = self.api('clients.getall')()
 
-        tmsg.append(clientformat % ('Active', i.host[:17], i.port,
-                                    i.ttype[:17], ttime))
-      for i in proxy.vclients:
-        ttime = self.api.get('utils.timedeltatostring')(i.connectedtime,
-                                                        time.mktime(time.localtime()))
-        tmsg.append(clientformat % ('View', i.host[:17], i.port,
-                                    i.ttype[:17], ttime))
+    aclients = clients['active']
+    vclients = clients['view']
 
+    tmsg.append('')
+    tmsg.append('@B-----------------   Clients  ----------------@w')
+    tmsg.append(template % ('Clients', len(aclients)))
+    tmsg.append(template % ('View Clients', len(vclients)))
+    tmsg.append('-------------------------')
+
+    _, nmsg = self.api('commands.run')('clients', 'show', '')
+
+    del nmsg[0]
+    del nmsg[0]
+    tmsg.extend(nmsg)
     return True, tmsg
 
-  def cmd_disconnect(self, args=None):
-    # pylint: disable=unused-argument
+  def cmd_disconnect(self, args=None): # pylint: disable=unused-argument
     """
     disconnect from the mud
     """
-    proxy = self.api.get('managers.getm')('proxy')
-    proxy.handle_close()
+    mud = self.api('managers.getm')('mud')
+    mud.handle_close()
 
     return True, ['Attempted to close the connection to the mud']
 
-  def cmd_connect(self, args=None):
-    # pylint: disable=unused-argument
+  def cmd_connect(self, args=None): # pylint: disable=unused-argument
     """
     disconnect from the mud
     """
-    proxy = self.api.get('managers.getm')('proxy')
-    if proxy.connected:
-      return True, ['The proxy is currently connected']
-    else:
-      proxy.connectmud(self.api.get('setting.gets')('mudhost'),
-                       self.api.get('setting.gets')('mudport'))
+    mud = self.api('managers.getm')('mud')
+    if mud.connected:
+      return True, ['The proxy is currently connected to the mud']
 
-      return True, ['Connecting to the mud']
+    mud.connectmud(self.api('setting.gets')('mudhost'),
+                   self.api('setting.gets')('mudport'))
 
-  def cmd_shutdown(self, args):
-    # pylint: disable=unused-argument
+    return True, ['Connecting to the mud']
+
+  def api_shutdown(self):
     """
     shutdown the proxy
     """
-    proxy = self.api('managers.getm')('proxy')
-    self.api('plugins.savestate')()
+    self.api.shutdown = True
+    self.api('send.msg')('Proxy: shutdown started', secondary='shutdown')
     self.api('send.client')('Shutting down bastproxy')
-    proxy.shutdown()
+    self.api('events.eraise')('proxy_shutdown')
+    self.api('send.msg')('Proxy: shutdown finished', secondary='shutdown')
 
-  def cmd_restart(self, args):
-    # pylint: disable=unused-argument
+  def cmd_shutdown(self, args=None): # pylint: disable=unused-argument,no-self-use
+    """
+    shutdown the proxy
+    """
+    raise KeyboardInterrupt
+
+  def cmd_restart(self, args): # pylint: disable=unused-argument
     """
     restart the proxy
     """
     self.api('proxy.restart')()
 
-  def client_connected(self, args):
-    # pylint: disable=unused-argument
+  def client_connected(self, args): # pylint: disable=unused-argument
     """
     check for mud settings
     """
-    proxy = self.api.get('managers.getm')('proxy')
+    mud = self.api('managers.getm')('mud')
     tmsg = []
     divider = '@R------------------------------------------------@w'
-    if not proxy.connected:
+    if not mud.connected:
       if not self.api('setting.gets')('mudhost'):
         tmsg.append(divider)
         tmsg.append('Please set the mudhost through the net plugin.')
@@ -214,7 +228,7 @@ class Plugin(BasePlugin):
       tmsg.insert(0, divider)
 
     if tmsg:
-      self.api('send.client')(tmsg)
+      self.api('send.client')(tmsg, client=args['client'])
 
     return True
 
@@ -228,7 +242,7 @@ class Plugin(BasePlugin):
     self.api('send.client')("Respawning bastproxy on port: %s in 10 seconds" \
                                               % listen_port)
 
-    self.api.get('timers.add')('restart', self.timer_restart, 5, onetime=True)
+    self.api('timers.add')('restart', self.timer_restart, 5, onetime=True)
 
   def timer_restart(self):
     """
@@ -243,18 +257,15 @@ class Plugin(BasePlugin):
 
     plistener = self.api('managers.getm')('listener')
     plistener.close()
-    proxy = self.api('managers.getm')('proxy')
-    proxy.shutdown()
+    self.api('proxy.shutdown')()
 
     time.sleep(5)
 
     os.execv(executable, args)
 
-  def listenportchange(self, args):
-    # pylint: disable=unused-argument
+  def listenportchange(self, args): # pylint: disable=unused-argument
     """
     restart when the listen port changes
     """
     if not self.api.loading:
       self.api('proxy.restart')()
-

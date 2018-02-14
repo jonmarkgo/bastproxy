@@ -1,3 +1,4 @@
+# pylint: disable=line-too-long
 """
 This plugin includes a combat tracker for aardwolf
 
@@ -16,6 +17,7 @@ This plugin includes a combat tracker for aardwolf
     @x033------------------------------------------------------------------------@w
 
 """
+# pylint: enable=line-too-long
 from plugins.aardwolf._aardwolfbaseplugin import AardwolfBasePlugin
 
 NAME = 'CombatTracker'
@@ -38,7 +40,7 @@ class Plugin(AardwolfBasePlugin):
 
     self.msgs = []
 
-    self.api.get('dependency.add')('aardwolf.mobk')
+    self.api('dependency.add')('aardwolf.mobk')
 
   def load(self):
     """
@@ -46,40 +48,39 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.load(self)
 
-    self.api.get('setting.add')('statcolor', '@W', 'color', 'the stat color')
-    self.api.get('setting.add')('infocolor', '@x33', 'color', 'the info color')
+    self.api('setting.add')('statcolor', '@W', 'color', 'the stat color')
+    self.api('setting.add')('infocolor', '@x33', 'color', 'the info color')
 
-    self.api.get('events.register')('aard_mobkill', self.mobkill)
+    self.api('events.register')('aard_mobkill', self.mobkill)
 
-  def mobkill(self, args=None):
+  def mobkill(self, args=None): # pylint: disable=too-many-locals
     """
     handle a mob kill
     """
     linelen = 72
     msg = []
-    infocolor = self.api.get('setting.gets')('infocolor')
-    statcolor = self.api.get('setting.gets')('statcolor')
+    infocolor = self.api('setting.gets')('infocolor')
+    statcolor = self.api('setting.gets')('statcolor')
     msg.append(infocolor + '-' * linelen)
     timestr = ''
     damages = args['damage']
     totald = sum(damages[d]['damage'] for d in damages)
     if args['finishtime'] and args['starttime']:
-      timestr = '%s' % self.api.get('utils.timedeltatostring')(
-              args['starttime'],
-              args['finishtime'],
-              colorn=statcolor,
-              colors=infocolor)
+      timestr = '%s' % self.api('utils.timedeltatostring')(
+          args['starttime'],
+          args['finishtime'],
+          colorn=statcolor,
+          colors=infocolor)
 
     xpstr = '%s%s%sxp' % (statcolor, args['totalxp'], infocolor)
 
     namestr = "{statcolor}{name}{infocolor} : {time}{infocolor} - {xp}".format(
-            infocolor = infocolor,
-            statcolor = statcolor,
-            name = args['name'],
-            time=timestr,
-            xp=xpstr
-            )
-    tstr = infocolor + self.api.get('utils.center')(namestr, '-', linelen)
+        infocolor=infocolor,
+        statcolor=statcolor,
+        name=args['name'],
+        time=timestr,
+        xp=xpstr)
+    tstr = infocolor + self.api('utils.center')(namestr, '-', linelen)
 
     msg.append(tstr)
     msg.append(infocolor + '-' * linelen)
@@ -88,16 +89,15 @@ class Plugin(AardwolfBasePlugin):
                 "{damage:^10} ({percent:4.0%}) {misses:^10} {average:^10}"
 
     msg.append(bstringt.format(
-           statcolor=infocolor,
-           infocolor=infocolor,
-           dtype='Dam Type',
-           hits='Hits',
-           percent=0,
-           damage='Damage',
-           misses='Misses',
-           average='Average'))
+        statcolor=infocolor,
+        infocolor=infocolor,
+        dtype='Dam Type',
+        hits='Hits',
+        percent=0,
+        damage='Damage',
+        misses='Misses',
+        average='Average'))
     msg.append(infocolor + '-' * linelen)
-    #totald = 0
     totalm = 0
     totalh = 0
     tkeys = damages.keys()
@@ -105,7 +105,6 @@ class Plugin(AardwolfBasePlugin):
     for i in tkeys:
       if i != 'enemy' and i != 'starttime' and i != 'finishtime':
         vdict = args['damage'][i]
-        #totald = totald + vdict['damage']
         totalm = totalm + vdict['misses']
         totalh = totalh + vdict['hits']
         damt = i
@@ -113,7 +112,7 @@ class Plugin(AardwolfBasePlugin):
           damt = i + " (in)"
 
         if vdict['hits'] == 0:
-          avedamage =  0
+          avedamage = 0
         else:
           avedamage = vdict['damage'] / vdict['hits']
 
@@ -124,25 +123,25 @@ class Plugin(AardwolfBasePlugin):
           tperc = 0
 
         msg.append(bstringt.format(
-           statcolor=statcolor,
-           infocolor=infocolor,
-           dtype=damt,
-           hits=vdict['hits'],
-           percent=tperc,
-           damage=vdict['damage'],
-           misses=vdict['misses'],
-           average=avedamage))
+            statcolor=statcolor,
+            infocolor=infocolor,
+            dtype=damt,
+            hits=vdict['hits'],
+            percent=tperc,
+            damage=vdict['damage'],
+            misses=vdict['misses'],
+            average=avedamage))
 
     msg.append(infocolor + '-' * linelen)
     msg.append(bstringt.format(
-           statcolor=statcolor,
-           infocolor=infocolor,
-           dtype='Total',
-           hits=totalh,
-           percent=1,
-           damage=totald,
-           misses=totalm,
-           average=totald/(totalh or 1)))
+        statcolor=statcolor,
+        infocolor=infocolor,
+        dtype='Total',
+        hits=totalh,
+        percent=1,
+        damage=totald,
+        misses=totalm,
+        average=totald/(totalh or 1)))
     msg.append(infocolor + '-' * linelen)
     self.addmessage('\n'.join(msg))
 
@@ -152,17 +151,14 @@ class Plugin(AardwolfBasePlugin):
     """
     self.msgs.append(msg)
 
-    self.api.get('events.register')('trigger_emptyline', self.showmessages)
+    self.api('events.register')('trigger_emptyline', self.showmessages)
 
   def showmessages(self, _=None):
     """
     show a message
     """
-
-    self.api.get('events.unregister')('trigger_emptyline', self.showmessages)
+    self.api('events.unregister')('trigger_emptyline', self.showmessages)
     for i in self.msgs:
-      self.api.get('send.client')(i, preamble=False)
+      self.api('send.client')(i, preamble=False)
 
     self.msgs = []
-
-

@@ -6,10 +6,13 @@ This plugin sends messages through the pushbullet api
  * Enter your api key with the apikey command
 
 """
-import argparse
+try:
+  import pushbullet
+except ImportError:
+  pushbullet = None
 
+import libs.argp as argp
 from plugins._baseplugin import BasePlugin
-
 
 #these 5 are required
 NAME = 'Pushbullet'
@@ -21,8 +24,6 @@ VERSION = 1
 # This keeps the plugin from being autoloaded if set to False
 AUTOLOAD = False
 
-PUSHBULLET = None
-
 class Plugin(BasePlugin):
   """
   a plugin to send email
@@ -32,7 +33,7 @@ class Plugin(BasePlugin):
     initialize the instance
     """
     BasePlugin.__init__(self, *args, **kwargs)
-    self.api.get('dependency.add')('ssc')
+    self.api('dependency.add')('ssc')
 
     self.apikey = None
 
@@ -48,8 +49,8 @@ class Plugin(BasePlugin):
     self.api('setting.add')('channel', '', str,
                             'the channel to send to')
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='send a note')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='send a note')
     parser.add_argument('title',
                         help='the title of the note',
                         default='Pushbullet note from bastproxy',
@@ -64,8 +65,8 @@ class Plugin(BasePlugin):
     self.api('commands.add')('note', self.cmd_note,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='send a link')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='send a link')
     parser.add_argument('title',
                         help='the title of the link',
                         default='Pushbullet link from bastproxy',
@@ -80,18 +81,30 @@ class Plugin(BasePlugin):
     self.api('commands.add')('link', self.cmd_link,
                              parser=parser)
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     description='show channels associated with pb')
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='show channels associated with pb')
     self.api('commands.add')('channels', self.cmd_channels,
                              parser=parser)
 
     ssc = self.api('ssc.baseclass')()
     self.apikey = ssc('apikey', self, desc='Pushbullet API key')
 
-    if not PUSHBULLET:
-      global PUSHBULLET
-      from pushbullet import Pushbullet as PUSHBULLET
+    self.import_pushbullet()
 
+  def import_pushbullet(self):
+    """
+    import pushbullet module
+    """
+    global pushbullet # pylint: disable=global-statement,invalid-name
+    if not pushbullet:
+      try:
+        import pushbullet # pylint: disable=redefined-outer-name
+      except ImportError:
+        self.api('send.error')(
+            'Please install pushbullet.py with "pip(2) install pushbullet.py"')
+        return False
+
+    return True
 
   # send a note through pushbullet
   def api_note(self, title, body, channel=None):
@@ -105,13 +118,18 @@ class Plugin(BasePlugin):
     apikey = self.api('%s.apikey' % self.sname)()
 
     if not apikey:
+      self.api('send.error')('pushbullet apikey not set')
       return False
 
-    pbc = PUSHBULLET(apikey)
+    if not pushbullet:
+      if not self.import_pushbullet():
+        return False
+
+    pbc = pushbullet.Pushbullet(apikey)
 
     rval = {}
     found = False
-    nchannel = channel or self.api.get('setting.gets')('channel')
+    nchannel = channel or self.api('setting.gets')('channel')
     if nchannel:
       for i in pbc.channels:
         if str(i.channel_tag) == nchannel:
@@ -126,14 +144,14 @@ class Plugin(BasePlugin):
     else:
       rval = pbc.push_note(title, body)
 
-    pbc._session.close()
+    pbc._session.close() # pylint: disable=protected-access
 
     if 'error' in rval:
       self.api('send.error')('Pushbullet send failed with %s' % rval)
       return False
-    else:
-      self.api('send.msg')('pb returned %s' % rval)
-      return True
+
+    self.api('send.msg')('pb returned %s' % rval)
+    return True
 
   # send a url through pushbullet
   def api_link(self, title, url, channel=None):
@@ -147,12 +165,17 @@ class Plugin(BasePlugin):
     apikey = self.api('%s.apikey' % self.sname)()
 
     if not apikey:
+      self.api('send.error')('pushbullet apikey not set')
       return False
 
-    pbc = PUSHBULLET(apikey)
+    if not pushbullet:
+      if not self.import_pushbullet():
+        return False
+
+    pbc = pushbullet.Pushbullet(apikey)
 
     rval = {}
-    nchannel = channel or self.api.get('setting.gets')('channel')
+    nchannel = channel or self.api('setting.gets')('channel')
     if nchannel:
       for i in pbc.channels:
         if str(i.channel_tag) == nchannel:
@@ -167,16 +190,16 @@ class Plugin(BasePlugin):
     else:
       rval = pbc.push_link(title, url)
 
-    pbc._session.close()
+    pbc._session.close() # pylint: disable=protected-access
 
     if 'error' in rval:
       self.api('send.error')('Pushbullet send failed with %s' % rval)
       return False
-    else:
-      self.api('send.msg')('pb returned %s' % rval)
-      return True
 
-  def cmd_channels(self, args):
+    self.api('send.msg')('pb returned %s' % rval)
+    return True
+
+  def cmd_channels(self, _):
     """
     list the channels
     """
@@ -184,9 +207,14 @@ class Plugin(BasePlugin):
     apikey = self.api('%s.apikey' % self.sname)()
 
     if not apikey:
+      self.api('send.error')('pushbullet apikey not set')
       return False
 
-    pbc = PUSHBULLET(apikey)
+    if not pushbullet:
+      if not self.import_pushbullet():
+        return False
+
+    pbc = pushbullet.Pushbullet(apikey)
 
     for i in pbc.channels:
       tmsg.append(str(i.channel_tag))
@@ -207,8 +235,8 @@ class Plugin(BasePlugin):
     channel = args['channel']
     if self.api('pb.note')(title, body, channel):
       return True, ['Pushbullet note sent']
-    else:
-      return True, ['Attempt failed, please see error message']
+
+    return True, ['Attempt failed, please see error message']
 
   def cmd_link(self, args):
     """
@@ -224,5 +252,5 @@ class Plugin(BasePlugin):
     channel = args['channel']
     if self.api('pb.link')(title, body, channel):
       return True, ['Pushbullet link sent']
-    else:
-      return True, ['Attempt failed, please see error message']
+
+    return True, ['Attempt failed, please see error message']

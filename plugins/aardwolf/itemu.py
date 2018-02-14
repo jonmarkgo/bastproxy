@@ -20,71 +20,71 @@ VERSION = 1
 AUTOLOAD = False
 
 OBJECTTYPES = [
-  'none',
-  'light',
-  'scroll',
-  'wand',
-  'staff',
-  'weapon',
-  'treasure',
-  'armor',
-  'potion',
-  'furniture',
-  'trash',
-  'container',
-  'drink',
-  'key',
-  'food',
-  'boat',
-  'mobcorpse',
-  'corpse',
-  'fountain',
-  'pill',
-  'portal',
-  'beacon',
-  'giftcard',
-  'gold',
-  'raw material',
-  'campfire'
+    'none',
+    'light',
+    'scroll',
+    'wand',
+    'staff',
+    'weapon',
+    'treasure',
+    'armor',
+    'potion',
+    'furniture',
+    'trash',
+    'container',
+    'drink',
+    'key',
+    'food',
+    'boat',
+    'mobcorpse',
+    'corpse',
+    'fountain',
+    'pill',
+    'portal',
+    'beacon',
+    'giftcard',
+    'gold',
+    'raw material',
+    'campfire'
 ]
 OBJECTTYPESREV = {}
 for objectt in OBJECTTYPES:
   OBJECTTYPESREV[objectt] = OBJECTTYPES.index(objectt)
 
 WEARLOCS = [
- 'light',
- 'head',
- 'eyes',
- 'lear',
- 'rear',
- 'neck1',
- 'neck2',
- 'back',
- 'medal1',
- 'medal2',
- 'medal3',
- 'medal4',
- 'torso',
- 'body',
- 'waist',
- 'arms',
- 'lwrist',
- 'rwrist',
- 'hands',
- 'lfinger',
- 'rfinger',
- 'legs',
- 'feet',
- 'shield',
- 'wielded',
- 'second',
- 'hold',
- 'float',
- 'tattoo1',
- 'tattoo2',
- 'above',
- 'portal',
- 'sleeping',
+    'light',
+    'head',
+    'eyes',
+    'lear',
+    'rear',
+    'neck1',
+    'neck2',
+    'back',
+    'medal1',
+    'medal2',
+    'medal3',
+    'medal4',
+    'torso',
+    'body',
+    'waist',
+    'arms',
+    'lwrist',
+    'rwrist',
+    'hands',
+    'lfinger',
+    'rfinger',
+    'legs',
+    'feet',
+    'shield',
+    'wielded',
+    'second',
+    'hold',
+    'float',
+    'tattoo1',
+    'tattoo2',
+    'above',
+    'portal',
+    'sleeping',
 ]
 
 WEARLOCSREV = {}
@@ -94,19 +94,19 @@ for wearlocs in WEARLOCS:
 ITEMFLAGS = ['K', 'G', 'H', 'I', 'M']
 
 ITEMFLAGSCOLORS = {
- 'K':'R',
- 'M':'B',
- 'G':'W',
- 'H':'C',
- 'I':'w',
+    'K':'R',
+    'M':'B',
+    'G':'W',
+    'H':'C',
+    'I':'w',
 }
 
 ITEMFLAGSNAME = {
- 'K':'kept',
- 'M':'magic',
- 'G':'glow',
- 'H':'hum',
- 'I':'invis',
+    'K':'kept',
+    'M':'magic',
+    'G':'glow',
+    'H':'hum',
+    'I':'invis',
 }
 
 class Plugin(AardwolfBasePlugin):
@@ -116,34 +116,34 @@ class Plugin(AardwolfBasePlugin):
   def __init__(self, *args, **kwargs):
     AardwolfBasePlugin.__init__(self, *args, **kwargs)
 
-    self.api.get('api.add')('dataparse', self.api_dataparse)
-    self.api.get('api.add')('wearlocs', self.api_wearlocs)
-    self.api.get('api.add')('objecttypes', self.api_objecttypes)
-    self.api.get('api.add')('itemflags', self.api_itemflags)
-    self.api.get('api.add')('itemflagscolors', self.api_itemflagscolors)
-    self.api.get('api.add')('itemflagsname', self.api_itemflagsname)
+    self.api('api.add')('dataparse', self.api_dataparse)
+    self.api('api.add')('wearlocs', self.api_wearlocs)
+    self.api('api.add')('objecttypes', self.api_objecttypes)
+    self.api('api.add')('itemflags', self.api_itemflags)
+    self.api('api.add')('itemflagscolors', self.api_itemflagscolors)
+    self.api('api.add')('itemflagsname', self.api_itemflagsname)
 
     self.invlayout = {}
     self.invlayout['invheader'] = ["serial", "level", "itype", "worth",
-                                "weight", "wearable", "flags", "owner",
-                                "fromclan", "timer", "u1", "u2", "u3",
-                                "score"]
+                                   "weight", "wearable", "flags", "owner",
+                                   "fromclan", "timer", "u1", "u2", "u3",
+                                   "score"]
     self.invlayout['container'] = ["capacity", "heaviestitem", "holding",
-                                "itemsinside", "totalweight", "itemburden",
-                                "itemweightpercent"]
+                                   "itemsinside", "totalweight", "itemburden",
+                                   "itemweightpercent"]
     self.invlayout['statmod'] = ['name', 'value']
     self.invlayout['resistmod'] = ['name', 'value']
     self.invlayout['weapon'] = ["wtype", "avedam", "inflicts", "damtype",
-                             "special"]
+                                "special"]
     self.invlayout['skillmod'] = ['name', 'value']
     self.invlayout['spells'] = ["uses", "level", "sn1", "sn2", "sn3", "sn4",
-                             "u1"]
+                                "u1"]
     self.invlayout['food'] = ['percent']
     self.invlayout['drink'] = ["servings", "liquid", "liquidmax", "liquidleft",
-                            "thirstpercent", "hungerpercent", "u1"]
+                               "thirstpercent", "hungerpercent", "u1"]
     self.invlayout['furniture'] = ["hpregen", "manaregen", "u1"]
     self.invlayout['eqdata'] = ["serial", "shortflags", "cname", "level",
-                             "itype", "unique", "wearslot", "timer"]
+                                "itype", "unique", "wearslot", "timer"]
     self.invlayout['light'] = ['duration']
     self.invlayout['portal'] = ['uses']
     self.invlayout['tempmod'] = ['sn', 'u1', 'u2', 'statmod', 'duration']
@@ -154,43 +154,48 @@ class Plugin(AardwolfBasePlugin):
     """
     AardwolfBasePlugin.load(self)
 
+  @staticmethod
   # get the flags name table
-  def api_itemflagsname(self):
+  def api_itemflagsname():
     """  get the flags name table
     """
     return ITEMFLAGSNAME
 
+  @staticmethod
   # get the flags table
-  def api_itemflags(self):
+  def api_itemflags():
     """  get the flags table
     """
     return ITEMFLAGS
 
+  @staticmethod
   # get the flags color table
-  def api_itemflagscolors(self):
+  def api_itemflagscolors():
     """  get the flags color table
     """
     return ITEMFLAGSCOLORS
 
+  @staticmethod
   # get the wear locations table
-  def api_wearlocs(self, rev=False):
+  def api_wearlocs(rev=False):
     """  get the wear locations table
     @Yrev@w  = if True, return the reversed table
     """
     if rev:
       return WEARLOCSREV
-    else:
-      return WEARLOCS
 
+    return WEARLOCS
+
+  @staticmethod
   # get the object types table
-  def api_objecttypes(self, rev=False):
+  def api_objecttypes(rev=False):
     """  get the object types table
     @Yrev@w  = if True, return the reversed table
     """
     if rev:
       return OBJECTTYPESREV
-    else:
-      return OBJECTTYPES
+
+    return OBJECTTYPES
 
   # parse a line from invitem, invdata, eqdata, invdetails
   def api_dataparse(self, line, layoutname):
@@ -223,8 +228,8 @@ class Plugin(AardwolfBasePlugin):
         titem[name] = value
 
       if layoutname == 'eqdata':
-        titem['name'] = self.api.get('colors.stripcolor')(titem['cname'])
+        titem['name'] = self.api('colors.stripcolor')(titem['cname'])
 
       return titem
     else:
-      self.api.get('send.msg')('layout %s not found' % layoutname)
+      self.api('send.msg')('layout %s not found' % layoutname)
