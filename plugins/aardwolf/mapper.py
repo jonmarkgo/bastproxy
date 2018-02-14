@@ -909,7 +909,7 @@ class Plugin(AardwolfBasePlugin):
              charlevel + (chartier * 10))
 
       if depth < 10:
-        print sqlstr
+        print(sqlstr)
 
       dcount = 0
       room_sets[depth] = {}
@@ -928,7 +928,7 @@ class Plugin(AardwolfBasePlugin):
           found_depth = len(room_sets)
 
       if dcount == 0:
-        print 'found', found
+        print('found', found)
         return {}, 'dcount no paths', 0
 
     if depth == maxdepth and not found:
@@ -939,8 +939,8 @@ class Plugin(AardwolfBasePlugin):
 
     path = []
 
-    print 'found_depth: %s' % found_depth
-    print 'room_sets: %s' % room_sets
+    print('found_depth: %s' % found_depth)
+    print('room_sets: %s' % room_sets)
 
     ftd = room_sets[found_depth][final]
 
@@ -974,7 +974,7 @@ class Plugin(AardwolfBasePlugin):
 
         return path, 'second found path', first_depth + second_depth
 
-    print 'ftd: %s' % ftd
+    print('ftd: %s' % ftd)
     path.append({'dir':ftd['dir'], 'uid':ftd['touid']})
 
     next_room = ftd['touid']

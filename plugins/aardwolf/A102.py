@@ -226,7 +226,7 @@ class SERVER(BaseTelnetOption):
 
     elif command in [SB, SE]:
       if not self.telnetobj.options[ord(A102)]:
-        print '##BUG: Enabling A102, missed negotiation'
+        print('##BUG: Enabling A102, missed negotiation')
         self.telnetobj.options[ord(A102)] = True
         self.plugin.api('events.eraise')('A102:server-enabled', {})
 

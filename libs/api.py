@@ -11,7 +11,6 @@ same function to the api.
 
 See the BasePlugin class
 """
-from __future__ import print_function
 import inspect
 import sys
 import traceback

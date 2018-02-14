@@ -134,7 +134,7 @@ class Plugin(BasePlugin):
       plugin = self.api('api.callerplugin')()
 
     if not plugin:
-      print 'could not add a watch for watchname', watchname
+      print('could not add a watch for watchname', watchname)
       return
 
     if regex in self.regexlookup:

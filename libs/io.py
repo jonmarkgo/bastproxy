@@ -1,7 +1,6 @@
 """
 handle output and input functions, adds items under the send api
 """
-from __future__ import print_function
 import time
 import sys
 import traceback

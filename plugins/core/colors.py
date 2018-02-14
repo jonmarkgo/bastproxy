@@ -363,7 +363,7 @@ class Plugin(BasePlugin):
       if tstr2:
         tstr = tstr2 + "%c[0m" % chr(27)
       if test:
-        print 'After:', tstr
+        print('After:', tstr)
     else:
       pass
     tstr = re.sub("\0", "@", tstr)    # put @ back in
@@ -391,7 +391,7 @@ class Plugin(BasePlugin):
       try:
         return '@%s' % CONVERTANSI[tstr]
       except KeyError:
-        print 'could not lookup color %s for text %s' % (tstr, repr(text))
+        print('could not lookup color %s for text %s' % (tstr, repr(text)))
 
     return ANSI_COLOR_REGEX.sub(single_sub, text)
 

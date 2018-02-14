@@ -542,7 +542,7 @@ class Worn(EqContainer):
     try:
       sitem.append("@G%3s@w" % item.level)
     except Exception: #pylint: disable=broad-except
-      print item
+      print(item)
     sitem.append(') ')
 
     if args['serial']:
