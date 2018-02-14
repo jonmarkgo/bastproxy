@@ -384,7 +384,7 @@ class Dumper:
                 return val
         else:
             # _ + attr doesn't exist at all
-            raise AttributeError, attr
+            raise AttributeError as attr
 
 
     def __setattr__ (self, attr, val):

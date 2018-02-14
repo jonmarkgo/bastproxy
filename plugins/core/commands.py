@@ -249,7 +249,7 @@ class Plugin(BasePlugin):
 
     try:
       args, dummy = cmd['parser'].parse_known_args(targs)
-    except argp.ArgumentError, exc:
+    except argp.ArgumentError as exc:
       tmsg = []
       tmsg.append('Error: %s' % exc.errormsg) # pylint: disable=no-member
       tmsg.extend(cmd['parser'].format_help().split('\n'))
