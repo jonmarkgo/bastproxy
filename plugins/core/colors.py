@@ -167,16 +167,16 @@ for colorc in CONVERTCOLORS:
   CONVERTANSI[CONVERTCOLORS[colorc]] = colorc
 
 #xterm colors
-for xtn in xrange(0, 256):
+for xtn in range(0, 256):
   CONVERTANSI['38;5;%d' % xtn] = 'x%d' % xtn
   CONVERTANSI['48;5;%d' % xtn] = 'z%d' % xtn
 
 #backgrounds
-for acn in xrange(40, 48):
+for acn in range(40, 48):
   CONVERTANSI['%s' % acn] = CONVERTANSI['48;5;%d' % (acn - 40)]
 
 #foregrounds
-for abn in xrange(30, 38):
+for abn in range(30, 38):
   CONVERTANSI['%s' % abn] = CONVERTANSI['0;%d' % abn]
 
 def genrepl(match):
@@ -267,7 +267,7 @@ class Plugin(BasePlugin):
       tstart = 0
       tend = 0
 
-      for i in xrange(0, len(tlist)):
+      for i in range(0, len(tlist)):
         #print 'checking %s, i = %s' % (tlist[i], i)
         if tlist[i]:
           if tlist[i][0] == '@' and tlist[i][1] in 'xzcmyrgbwCMYRGBWD':
