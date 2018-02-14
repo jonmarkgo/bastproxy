@@ -145,7 +145,7 @@ class Listener(asyncore.dispatcher):
     """
     API('send.traceback')("Forwarder error:")
 
-  def handle_accept(self):
+  def handle_accepted(self, sock, addr):
     """
     accept a new client
     """
@@ -155,7 +155,8 @@ class Listener(asyncore.dispatcher):
       # do proxy stuff here
       self.mud = Mud()
 
-    client_connection, source_addr = self.accept()
+    client_connection = sock
+    source_addr = addr
 
     try:
       ipaddress = source_addr[0]
