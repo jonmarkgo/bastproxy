@@ -289,7 +289,7 @@ class Plugin(BasePlugin):
 
     thalf = tdiff / 2
     tstr = "{filler}  {lstring}  {filler}".format(
-        filler=fillerc * thalf,
+        filler=fillerc * int(thalf),
         lstring=tstr)
 
     newl = (thalf * 2) + tlen
