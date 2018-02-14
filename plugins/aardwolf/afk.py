@@ -31,7 +31,7 @@ class Plugin(AardwolfBasePlugin):
     """
     initialize the instance
     """
-    AardwolfBasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
 
     self.temptitle = ''
 
@@ -39,7 +39,7 @@ class Plugin(AardwolfBasePlugin):
     """
     load the plugins
     """
-    AardwolfBasePlugin.load(self)
+    super().load()
 
     self.api('setting.add')('afktitle', 'is AFK.', str,
                             'the title when afk mode is enabled')
@@ -89,7 +89,7 @@ class Plugin(AardwolfBasePlugin):
     """
     set the title when we first connect
     """
-    AardwolfBasePlugin.afterfirstactive(self)
+    super().afterfirstactive()
     if self.api('setting.gets')('lasttitle'):
       title = self.api('setting.gets')('lasttitle')
       self.api('send.execute')('title %s' % title)

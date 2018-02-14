@@ -430,7 +430,7 @@ class Plugin(AardwolfBasePlugin):
     """
     initialize the instance
     """
-    AardwolfBasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
 
     self.skills = None
     self.slistcmd = None
@@ -454,7 +454,7 @@ class Plugin(AardwolfBasePlugin):
     """
     load the plugins
     """
-    AardwolfBasePlugin.load(self)
+    super().load()
 
     self.skills = Skills(self)
     self.slistcmd = SListCmd(self)
@@ -518,7 +518,7 @@ class Plugin(AardwolfBasePlugin):
     """
     do something on connect
     """
-    AardwolfBasePlugin.afterfirstactive(self)
+    super().afterfirstactive()
     self.checkskills()
 
   # check if the spells/skills list is up to date

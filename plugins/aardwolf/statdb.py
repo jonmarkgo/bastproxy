@@ -783,7 +783,7 @@ class Plugin(AardwolfBasePlugin): # pylint: disable=too-many-public-methods
     """
     initialize the instance
     """
-    AardwolfBasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
 
     self.api('dependency.add')('sqldb')
     self.api('dependency.add')('aardwolf.whois')
@@ -801,7 +801,7 @@ class Plugin(AardwolfBasePlugin): # pylint: disable=too-many-public-methods
     """
     load the plugins
     """
-    AardwolfBasePlugin.load(self)
+    super().load()
 
     self.statdb = dbcreate(self.api('sqldb.baseclass')(), self,
                            dbname='stats', dbdir=self.savedir)
@@ -2123,7 +2123,7 @@ class Plugin(AardwolfBasePlugin): # pylint: disable=too-many-public-methods
     """
     handle unloading
     """
-    AardwolfBasePlugin.unload(self)
+    super().unload()
     self.statdb.close()
 
   def heroevent(self, args):

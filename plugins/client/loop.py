@@ -29,14 +29,14 @@ class Plugin(BasePlugin):
     """
     initialize the instance
     """
-    BasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
 
 
   def load(self):
     """
     load the plugins
     """
-    BasePlugin.load(self)
+    super().load()
 
     parser = argp.ArgumentParser(add_help=False,
                                  description='loop a command')

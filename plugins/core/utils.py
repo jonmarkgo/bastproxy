@@ -31,7 +31,7 @@ class Plugin(BasePlugin):
     """
     initialize the plugin
     """
-    BasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
 
     self.api('api.add')('timedeltatostring', self.api_timedeltatostring)
     self.api('api.add')('readablenumber', self.api_readablenumber)
@@ -42,12 +42,6 @@ class Plugin(BasePlugin):
     self.api('api.add')('timelengthtosecs', self.api_timelengthtosecs)
     self.api('api.add')('verify', self.api_verify)
     self.api('api.add')('listtocolumns', self.listtocolumns)
-
-  def load(self):
-    """
-    load the plugins
-    """
-    BasePlugin.load(self)
 
   @staticmethod
   def listtocolumns(obj, cols=4, columnwise=True, gap=4):

@@ -52,7 +52,7 @@ class Plugin(AardwolfBasePlugin): # pylint: disable=too-many-public-methods
     """
     initialize the instance
     """
-    AardwolfBasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
     self.kill_info = {}
     self.reset_kill()
     self.mobdamcache = {}
@@ -61,7 +61,7 @@ class Plugin(AardwolfBasePlugin): # pylint: disable=too-many-public-methods
     """
     load the plugins
     """
-    AardwolfBasePlugin.load(self)
+    super().load()
 
     self.api('setting.add')('instatext', '@x0', 'color',
                             'the text color for an instakill')

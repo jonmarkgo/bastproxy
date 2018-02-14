@@ -19,7 +19,7 @@ class Plugin(AardwolfBasePlugin):
     """
     initialize the instance
     """
-    AardwolfBasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
 
     self.api('dependency.add')('aardwolf.quest')
     self.api('dependency.add')('aardwolf.cp')
@@ -31,7 +31,7 @@ class Plugin(AardwolfBasePlugin):
     """
     load the plugins
     """
-    AardwolfBasePlugin.load(self)
+    super().load()
 
     self.api('setting.add')('cpbackcolor', '@z14', 'color',
                             'the background color for cp mobs')

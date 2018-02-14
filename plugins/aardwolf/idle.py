@@ -19,13 +19,13 @@ class Plugin(AardwolfBasePlugin):
     """
     initialize the instance
     """
-    AardwolfBasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
 
   def load(self):
     """
     load the plugins
     """
-    AardwolfBasePlugin.load(self)
+    super().load()
 
     self.api('triggers.add')('glaze',
                              "^Your eyes glaze over.$")

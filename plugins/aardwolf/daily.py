@@ -21,7 +21,7 @@ class Plugin(AardwolfBasePlugin):
     """
     initialize the instance
     """
-    AardwolfBasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
 
     self.seconds = -1
     self.nextdaily = -1
@@ -30,7 +30,7 @@ class Plugin(AardwolfBasePlugin):
     """
     load the plugins
     """
-    AardwolfBasePlugin.load(self)
+    super().load()
 
     self.api('triggers.add')(
         'daily1',
@@ -133,7 +133,7 @@ class Plugin(AardwolfBasePlugin):
     """
     do something on connect
     """
-    AardwolfBasePlugin.afterfirstactive(self)
+    super().afterfirstactive()
 
     self.checkdaily()
 

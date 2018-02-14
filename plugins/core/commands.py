@@ -58,7 +58,7 @@ class Plugin(BasePlugin):
     """
     init the class
     """
-    BasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
 
     self.canreload = False
 
@@ -84,7 +84,7 @@ class Plugin(BasePlugin):
     """
     load external stuff
     """
-    BasePlugin.load(self)
+    super().load()
     self.api('log.adddtype')(self.sname)
     #self.api('log.console')(self.sname)
 

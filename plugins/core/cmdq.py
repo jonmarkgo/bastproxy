@@ -20,7 +20,7 @@ class Plugin(BasePlugin):
   a plugin to handle the base sqldb
   """
   def __init__(self, *args, **kwargs):
-    BasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
 
     self.queue = []
     self.cmds = {}
@@ -40,7 +40,7 @@ class Plugin(BasePlugin):
     """
     load the plugins
     """
-    BasePlugin.load(self)
+    super().load()
 
     self.api('events.register')('plugin_unloaded', self.pluginunloaded)
 

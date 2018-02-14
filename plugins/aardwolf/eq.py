@@ -758,7 +758,7 @@ class Plugin(AardwolfBasePlugin): #pylint: disable=too-many-public-methods
     """
     initialize the instance
     """
-    AardwolfBasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
 
     self.itemcache = {}
     self.containers = {}
@@ -794,7 +794,7 @@ class Plugin(AardwolfBasePlugin): #pylint: disable=too-many-public-methods
     """
     load the plugin
     """
-    AardwolfBasePlugin.load(self)
+    super().load()
 
     parser = argp.ArgumentParser(add_help=False,
                                  description='show equipment worn')
@@ -1092,7 +1092,7 @@ class Plugin(AardwolfBasePlugin): #pylint: disable=too-many-public-methods
     """
     do something on connect
     """
-    AardwolfBasePlugin.afterfirstactive(self)
+    super().afterfirstactive()
     for container in self.containers:
       self.containers[container].refresh()
 

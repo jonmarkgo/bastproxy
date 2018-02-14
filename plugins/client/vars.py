@@ -31,7 +31,7 @@ class Plugin(BasePlugin):
     """
     initialize the instance
     """
-    BasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
 
     self.variablefile = os.path.join(self.savedir, 'variables.txt')
     self._variables = PersistentDict(self.variablefile, 'c')
@@ -43,7 +43,7 @@ class Plugin(BasePlugin):
     """
     load the plugin
     """
-    BasePlugin.load(self)
+    super().load()
 
     parser = argp.ArgumentParser(add_help=False,
                                  description='add a variable')
@@ -218,7 +218,7 @@ class Plugin(BasePlugin):
     """
     reset the plugin
     """
-    BasePlugin.reset(self)
+    super().reset()
     self.clearvariables()
 
   def _savestate(self, _=None):

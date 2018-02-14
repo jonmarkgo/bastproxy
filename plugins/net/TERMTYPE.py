@@ -23,17 +23,17 @@ class Plugin(BasePlugin):
   """
   the plugin to handle the Terminal Type telnet option
   """
-  def __init__(self, tname, tsname, filename, directory, importloc):
+  def __init__(self, *args, **kwargs):
     # pylint: disable=too-many-arguments
     """
     Iniitilaize the class
     """
-    BasePlugin.__init__(self, tname, tsname, filename, directory, importloc)
+    super().__init__(*args, **kwargs)
 
     self.canreload = False
 
   def load(self):
-    BasePlugin.load(self)
+    super().load()
 
     self.api('options.addserveroption')(self.sname, SERVER)
     self.api('options.addclientoption')(self.sname, CLIENT)

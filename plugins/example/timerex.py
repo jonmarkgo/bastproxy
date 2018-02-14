@@ -15,17 +15,11 @@ class Plugin(BasePlugin):
   """
   a plugin to show how to use timers
   """
-  def __init__(self, *args, **kwargs):
-    """
-    initialize the instance
-    """
-    BasePlugin.__init__(self, *args, **kwargs)
-
   def load(self):
     """
     load the plugins
     """
-    BasePlugin.load(self)
+    super().load()
 
     self.api('timers.add')('test_timer', self.test,
                            600, onetime=False)

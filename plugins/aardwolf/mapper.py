@@ -30,7 +30,7 @@ def dbcreate(sqldb, plugin, **kwargs):
       """
       initialize the class
       """
-      sqldb.__init__(self, plugin, **kwargs)
+      super().__init__(plugin, **kwargs)
 
       self.version = 11
 
@@ -111,7 +111,7 @@ def dbcreate(sqldb, plugin, **kwargs):
       """
       this is run after the __init__ function
       """
-      sqldb.postinit(self)
+      super().postinit()
 
       self.dbconn.executescript("""
         BEGIN TRANSACTION;
@@ -279,7 +279,7 @@ class Plugin(AardwolfBasePlugin):
     """
     initialize the instance
     """
-    AardwolfBasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
 
     self.api('dependency.add')('sqldb')
 
@@ -301,7 +301,7 @@ class Plugin(AardwolfBasePlugin):
     """
     load the plugins
     """
-    AardwolfBasePlugin.load(self)
+    super().load()
 
     self.api('setting.add')('maxdepth', 300, int,
                             'max depth to search')
@@ -451,7 +451,7 @@ class Plugin(AardwolfBasePlugin):
     """
     handle unloading
     """
-    AardwolfBasePlugin.unload(self)
+    super().unload()
     self.mapperdb.close()
 
   def noportal(self, _=None):

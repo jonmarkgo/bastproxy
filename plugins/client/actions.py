@@ -32,7 +32,7 @@ class Plugin(BasePlugin):
     """
     initialize the instance
     """
-    BasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
 
     self.canreload = True
 
@@ -48,7 +48,7 @@ class Plugin(BasePlugin):
     """
     load the plugin
     """
-    BasePlugin.load(self)
+    super().load()
 
     self.api('setting.add')('nextnum', 0, int,
                             'the number of the next action added',
@@ -457,7 +457,7 @@ class Plugin(BasePlugin):
     """
     reset the plugin
     """
-    BasePlugin.reset(self)
+    super().reset()
     self.clearactions()
 
   def _savestate(self, _=None):

@@ -28,7 +28,7 @@ class Plugin(BasePlugin):
     """
     init the class
     """
-    BasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
 
     self.canreload = False
 
@@ -385,7 +385,7 @@ class Plugin(BasePlugin):
     """
     load external stuff
     """
-    BasePlugin.load(self)
+    super().load()
 
     #print('log api before adding', self.api.api)
 

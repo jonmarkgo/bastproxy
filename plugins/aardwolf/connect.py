@@ -19,7 +19,7 @@ class Plugin(BasePlugin):
   a plugin to handle aardwolf cp events
   """
   def __init__(self, *args, **kwargs):
-    BasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
 
     self.firstactive = False
     self.connected = False
@@ -35,7 +35,7 @@ class Plugin(BasePlugin):
     """
     load the plugins
     """
-    BasePlugin.load(self)
+    super().load()
 
     self.api('triggers.add')('connect_return',
                              r"\[ Press Return to continue \]")

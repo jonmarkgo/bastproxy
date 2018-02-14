@@ -28,7 +28,7 @@ class Plugin(AardwolfBasePlugin):
     """
     initialize the instance
     """
-    AardwolfBasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
     self.api('dependency.add')('utils.pb')
     self.api('dependency.add')('aardwolf.gq')
     self.api('dependency.add')('aardwolf.quest')
@@ -56,7 +56,7 @@ class Plugin(AardwolfBasePlugin):
     """
     load the plugins
     """
-    AardwolfBasePlugin.load(self)
+    super().load()
 
     for tevent in self.evmap:
       self.api('setting.add')(tevent, True, bool,

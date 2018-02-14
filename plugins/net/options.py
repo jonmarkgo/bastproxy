@@ -22,7 +22,7 @@ class Plugin(BasePlugin):
     """
     initialize the instance
     """
-    BasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
 
     self.canreload = False
 
@@ -68,7 +68,7 @@ class Plugin(BasePlugin):
     """
     load the module
     """
-    BasePlugin.load(self)
+    super().load()
     self.api('log.console')(self.sname)
 
   def plugin_loaded(self, args):

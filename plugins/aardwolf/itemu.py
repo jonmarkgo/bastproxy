@@ -114,7 +114,7 @@ class Plugin(AardwolfBasePlugin):
   a plugin to handle aardwolf cp events
   """
   def __init__(self, *args, **kwargs):
-    AardwolfBasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
 
     self.api('api.add')('dataparse', self.api_dataparse)
     self.api('api.add')('wearlocs', self.api_wearlocs)
@@ -147,12 +147,6 @@ class Plugin(AardwolfBasePlugin):
     self.invlayout['light'] = ['duration']
     self.invlayout['portal'] = ['uses']
     self.invlayout['tempmod'] = ['sn', 'u1', 'u2', 'statmod', 'duration']
-
-  def load(self):
-    """
-    load the plugins
-    """
-    AardwolfBasePlugin.load(self)
 
   @staticmethod
   # get the flags name table

@@ -15,14 +15,11 @@ class Plugin(AardwolfBasePlugin):
   """
   a plugin to handle aardwolf cp events
   """
-  def __init__(self, *args, **kwargs):
-    AardwolfBasePlugin.__init__(self, *args, **kwargs)
-
   def load(self):
     """
     load the plugins
     """
-    AardwolfBasePlugin.load(self)
+    super().load()
 
     itemtypes = self.api('itemu.objecttypes')()
 

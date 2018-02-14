@@ -751,7 +751,7 @@ class Plugin(BasePlugin):
   a plugin to handle the base sqldb
   """
   def __init__(self, *args, **kwargs):
-    BasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
 
     self.reloaddependents = True
 
@@ -761,7 +761,7 @@ class Plugin(BasePlugin):
     """
     load the plugins
     """
-    BasePlugin.load(self)
+    super().load()
 
   # return the sql baseclass
   def api_baseclass(self):

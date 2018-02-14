@@ -22,7 +22,7 @@ class Plugin(AardwolfBasePlugin):
     """
     initialize the instance
     """
-    AardwolfBasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
     self.savewhoisfile = os.path.join(self.savedir, 'whois.txt')
     self.whois = PersistentDict(self.savewhoisfile, 'c')
 
@@ -30,7 +30,7 @@ class Plugin(AardwolfBasePlugin):
     """
     load the plugins
     """
-    AardwolfBasePlugin.load(self)
+    super().load()
 
     self.api('watch.add')('whois', '^(whoi|whois)$')
 

@@ -213,7 +213,7 @@ class Plugin(BasePlugin):
   a plugin to handle ansi colors
   """
   def __init__(self, *args, **kwargs):
-    BasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
 
     self.api('api.add')('iscolor', self.api_iscolor)
     self.api('api.add')('convertcolors', self.api_convertcolors)
@@ -228,7 +228,7 @@ class Plugin(BasePlugin):
     """
     load the plugins
     """
-    BasePlugin.load(self)
+    super().load()
 
     parser = argp.ArgumentParser(add_help=False,
                                  description='show colors')

@@ -21,17 +21,11 @@ class Plugin(BasePlugin):
   """
   a plugin to show how to use triggers
   """
-  def __init__(self, *args, **kwargs):
-    """
-    initialize the instance
-    """
-    BasePlugin.__init__(self, *args, **kwargs)
-
   def load(self):
     """
     load the plugins
     """
-    BasePlugin.load(self)
+    super().load()
 
     self.api('triggers.add')(
         'example_trigger',

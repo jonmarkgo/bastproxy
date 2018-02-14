@@ -189,7 +189,7 @@ class Plugin(AardwolfBasePlugin):
     """
     initialize the instance
     """
-    AardwolfBasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
 
     self.api('dependency.add')('aardwolf.skills')
 
@@ -205,7 +205,7 @@ class Plugin(AardwolfBasePlugin):
     """
     load the plugins
     """
-    AardwolfBasePlugin.load(self)
+    super().load()
 
     self.cmdaflags = AFlagsCmd(self)
     self.aflags = AFlags(self)
@@ -246,7 +246,7 @@ class Plugin(AardwolfBasePlugin):
     """
     do something on connect
     """
-    AardwolfBasePlugin.afterfirstactive(self)
+    super().afterfirstactive()
     self.refreshflags()
 
   # check if affected by a flag

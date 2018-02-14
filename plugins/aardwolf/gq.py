@@ -23,7 +23,7 @@ class Plugin(AardwolfBasePlugin):
     """
     initialize the instance
     """
-    AardwolfBasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
     self.savegqfile = os.path.join(self.savedir, 'gq.txt')
     self.gqinfo = PersistentDict(self.savegqfile, 'c')
     self._gqsdeclared = {}
@@ -37,7 +37,7 @@ class Plugin(AardwolfBasePlugin):
     """
     load the plugins
     """
-    AardwolfBasePlugin.load(self)
+    super().load()
     self.api('watch.add')('gq_check',
                           r'^(gq|gqu|gque|gques|gquest) (c|ch|che|chec|check)$')
 

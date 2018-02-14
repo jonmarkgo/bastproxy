@@ -23,7 +23,7 @@ class Plugin(AardwolfBasePlugin):
     """
     initialize the instance
     """
-    AardwolfBasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
     self.spellupfile = os.path.join(self.savedir, 'spellups.txt')
     self.spellups = PersistentDict(self.spellupfile, 'c')
 
@@ -39,7 +39,7 @@ class Plugin(AardwolfBasePlugin):
     """
     load the plugins
     """
-    AardwolfBasePlugin.load(self)
+    super().load()
 
     self.api('setting.add')('enabled', True, bool,
                             'auto spellup is enabled')
@@ -548,7 +548,7 @@ class Plugin(AardwolfBasePlugin):
     """
     reset all spellups
     """
-    AardwolfBasePlugin.reset(self)
+    super().reset()
     self.spellups.clear()
     self.initspellups()
     self.spellups.sync()

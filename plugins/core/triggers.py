@@ -31,7 +31,7 @@ class Plugin(BasePlugin):
     """
     initialize the instance
     """
-    BasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
 
     self.canreload = False
 
@@ -57,7 +57,7 @@ class Plugin(BasePlugin):
     """
     load the plugins
     """
-    BasePlugin.load(self)
+    super().load()
 
     self.api('setting.add')('enabled', 'True', bool,
                             'enable triggers')
@@ -495,7 +495,7 @@ class Plugin(BasePlugin):
     """
     return stats for this plugin
     """
-    stats = BasePlugin.getstats(self)
+    stats = super().getstats()
 
     totalhits = 0
     totalenabled = 0

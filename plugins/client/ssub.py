@@ -27,7 +27,7 @@ class Plugin(BasePlugin):
     """
     initialize the instance
     """
-    BasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
     self.savesubfile = os.path.join(self.savedir, 'subs.txt')
     self._substitutes = PersistentDict(self.savesubfile, 'c')
 
@@ -35,7 +35,7 @@ class Plugin(BasePlugin):
     """
     load the plugins
     """
-    BasePlugin.load(self)
+    super().load()
 
     parser = argp.ArgumentParser(add_help=False,
                                  description='add a simple substitute')
@@ -193,7 +193,7 @@ class Plugin(BasePlugin):
     """
     reset the plugin
     """
-    BasePlugin.reset(self)
+    super().reset()
     self.clearsubs()
 
   def _savestate(self, _=None):

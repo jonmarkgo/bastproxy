@@ -32,7 +32,7 @@ class Plugin(BasePlugin):
     """
     initialize the instance
     """
-    BasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
     self.api('dependency.add')('ssc')
 
     self.apikey = None
@@ -44,7 +44,7 @@ class Plugin(BasePlugin):
     """
     load the plugin
     """
-    BasePlugin.load(self)
+    super().load()
 
     self.api('setting.add')('channel', '', str,
                             'the channel to send to')

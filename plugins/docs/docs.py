@@ -43,19 +43,18 @@ class Plugin(BasePlugin):
     """
     self.themelist = ""
 
-    BasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
 
   def load(self):
     """
     load the plugins
     """
-    BasePlugin.load(self)
+    super().load()
 
     parser = argp.ArgumentParser(add_help=False,
                                  description='create documentation')
     self.api('commands.add')('build', self.cmd_build,
                              parser=parser, group='Documentation')
-
 
   def import_markdown2(self):
     """

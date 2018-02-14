@@ -60,13 +60,12 @@ class PluginMgr(BasePlugin):
 
 
     #name, sname, modpath, basepath, fullimploc
-    BasePlugin.__init__(self,
-                        'Plugin Manager', #name,
-                        'plugins', #sname,
-                        "/__init__.py", #modpath
-                        "$basepath$", # basepath
-                        "plugins.__init__", # fullimploc
-                       )
+    super().__init__('Plugin Manager', #name,
+                     'plugins', #sname,
+                     "/__init__.py", #modpath
+                     "$basepath$", # basepath
+                     "plugins.__init__", # fullimploc
+                    )
 
     self.canreload = False
 
@@ -830,7 +829,7 @@ class PluginMgr(BasePlugin):
     """
     self._loadmodules("*.py")
 
-    BasePlugin._loadcommands(self)
+    super()._loadcommands()
 
     parser = argp.ArgumentParser(add_help=False,
                                  description="list plugins")

@@ -69,7 +69,7 @@ class Plugin(BasePlugin):
                             that were enabled by the client before
                              connected to the server
     """
-    BasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
 
     self.canreload = False
 
@@ -85,7 +85,7 @@ class Plugin(BasePlugin):
     """
     load the plugins
     """
-    BasePlugin.load(self)
+    super().load()
 
     self.api('events.register')('A102_from_server', self.a102fromserver)
     self.api('events.register')('A102_from_client', self.a102fromclient)

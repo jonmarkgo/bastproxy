@@ -34,14 +34,14 @@ class Plugin(AardwolfBasePlugin):
     """
     initialize the instance
     """
-    AardwolfBasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
     self.msgs = []
 
   def load(self):
     """
     load the plugins
     """
-    AardwolfBasePlugin.load(self)
+    super().load()
 
     self.api('events.register')('aard_quest_comp', self.compquest)
     self.api('events.register')('aard_cp_comp', self.compcp)

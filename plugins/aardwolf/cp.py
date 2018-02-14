@@ -25,7 +25,7 @@ class Plugin(AardwolfBasePlugin):
     """
     initialize the instance
     """
-    AardwolfBasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
     self.savecpfile = os.path.join(self.savedir, 'cp.txt')
     self.cpinfo = PersistentDict(self.savecpfile, 'c')
     self.mobsleft = []
@@ -38,7 +38,7 @@ class Plugin(AardwolfBasePlugin):
     """
     load the plugins
     """
-    AardwolfBasePlugin.load(self)
+    super().load()
 
     self.api('cmdq.addcmdtype')('cpcheck', 'campaign check', "^campaign check$",
                                 beforef=self.cpcheckbefore, afterf=self.cpcheckafter)
@@ -178,7 +178,7 @@ class Plugin(AardwolfBasePlugin):
     """
     do something on connect
     """
-    AardwolfBasePlugin.afterfirstactive(self)
+    super().afterfirstactive()
     self.api('cmdq.addtoqueue')('cpcheck', '')
 
   def _cpreset(self):

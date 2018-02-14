@@ -210,7 +210,7 @@ class Plugin(BasePlugin):
   """
   def __init__(self, *args, **kwargs):
 
-    BasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
 
     self.canreload = False
 
@@ -232,7 +232,7 @@ class Plugin(BasePlugin):
     """
     load the module
     """
-    BasePlugin.load(self)
+    super().load()
     self.api('events.register')('log_plugin_loaded', self.logloaded)
     self.api('events.eraise')('event_plugin_loaded', {})
 
@@ -437,7 +437,7 @@ class Plugin(BasePlugin):
     """
     return stats for events
     """
-    stats = BasePlugin.getstats(self)
+    stats = super().getstats()
     stats['Events'] = {}
     stats['Events']['showorder'] = ['Total', 'Raised']
     stats['Events']['Total'] = len(self.events)

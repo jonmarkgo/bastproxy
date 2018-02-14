@@ -20,7 +20,7 @@ class Plugin(AardwolfBasePlugin):
     """
     initialize the instance
     """
-    AardwolfBasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
 
     self.lastroom = {}
 
@@ -28,7 +28,7 @@ class Plugin(AardwolfBasePlugin):
     """
     load the plugins
     """
-    AardwolfBasePlugin.load(self)
+    super().load()
 
     self.api('events.register')('GMCP:room.info', self._roominfo)
 
@@ -56,7 +56,7 @@ class Plugin(AardwolfBasePlugin):
     """
     do something on connect
     """
-    AardwolfBasePlugin.afterfirstactive(self)
+    super().afterfirstactive()
 
     self.api('send.msg')('requesting room')
     self.api('GMCP.sendmud')('request room')

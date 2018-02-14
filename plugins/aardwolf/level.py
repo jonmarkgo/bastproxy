@@ -24,7 +24,7 @@ class Plugin(AardwolfBasePlugin):
     """
     initialize the instance
     """
-    AardwolfBasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
     self.savelevelfile = os.path.join(self.savedir, 'level.txt')
     self.levelinfo = PersistentDict(self.savelevelfile, 'c')
 
@@ -32,7 +32,7 @@ class Plugin(AardwolfBasePlugin):
     """
     load the plugins
     """
-    AardwolfBasePlugin.load(self)
+    super().load()
 
     self.api('setting.add')('preremort', False, bool,
                             'flag for pre remort')

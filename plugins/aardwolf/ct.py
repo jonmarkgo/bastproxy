@@ -36,7 +36,7 @@ class Plugin(AardwolfBasePlugin):
     """
     initialize the instance
     """
-    AardwolfBasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
 
     self.msgs = []
 
@@ -46,7 +46,7 @@ class Plugin(AardwolfBasePlugin):
     """
     load the plugins
     """
-    AardwolfBasePlugin.load(self)
+    super().load()
 
     self.api('setting.add')('statcolor', '@W', 'color', 'the stat color')
     self.api('setting.add')('infocolor', '@x33', 'color', 'the info color')

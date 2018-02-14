@@ -19,17 +19,11 @@ class Plugin(BasePlugin):
   """
   a plugin to show connection information
   """
-  def __init__(self, *args, **kwargs):
-    """
-    initialize the instance
-    """
-    BasePlugin.__init__(self, *args, **kwargs)
-
   def load(self):
     """
     load the plugins
     """
-    BasePlugin.load(self)
+    super().load()
 
     parser = argp.ArgumentParser(add_help=False,
                                  description='list functions in the api')

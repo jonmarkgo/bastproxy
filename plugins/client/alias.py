@@ -37,7 +37,7 @@ class Plugin(BasePlugin):
     """
     initialize the instance
     """
-    BasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
 
     self.aliasfile = os.path.join(self.savedir, 'aliases.txt')
     self._aliases = PersistentDict(self.aliasfile, 'c')
@@ -48,7 +48,7 @@ class Plugin(BasePlugin):
     """
     load the plugin
     """
-    BasePlugin.load(self)
+    super().load()
 
     self.api('setting.add')('nextnum', 0, int,
                             'the number of the next alias added',
@@ -406,7 +406,7 @@ class Plugin(BasePlugin):
     """
     reset the plugin
     """
-    BasePlugin.reset(self)
+    super().reset()
     self.clearaliases()
 
   def _savestate(self, _=None):

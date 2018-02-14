@@ -117,7 +117,7 @@ class Plugin(AardwolfBasePlugin):
   a plugin to handle aardwolf cp events
   """
   def __init__(self, *args, **kwargs):
-    AardwolfBasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
 
     self.api('api.add')('getactuallevel', self.api_getactuallevel)
     self.api('api.add')('convertlevel', self.api_convertlevel)
@@ -129,7 +129,7 @@ class Plugin(AardwolfBasePlugin):
     """
     load the plugins
     """
-    AardwolfBasePlugin.load(self)
+    super().load()
 
     self.api('triggers.add')('dead',
                              r"^You die.$",

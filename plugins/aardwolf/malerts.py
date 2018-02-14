@@ -27,7 +27,7 @@ class Plugin(AardwolfBasePlugin):
     """
     initialize the instance
     """
-    AardwolfBasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
     self.api('dependency.add')('aardwolf.gq')
     self.api('dependency.add')('aardwolf.quest')
     self.api('dependency.add')('aardwolf.iceage')
@@ -36,7 +36,7 @@ class Plugin(AardwolfBasePlugin):
     """
     load the plugins
     """
-    AardwolfBasePlugin.load(self)
+    super().load()
 
     self.api('setting.add')('email', '', str,
                             'the email to send the alerts', nocolor=True)

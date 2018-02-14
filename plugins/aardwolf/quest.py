@@ -23,7 +23,7 @@ class Plugin(AardwolfBasePlugin):
     """
     initialize the instance
     """
-    AardwolfBasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
     self.savequestfile = os.path.join(self.savedir, 'quest.txt')
     self.queststuff = PersistentDict(self.savequestfile, 'c')
 
@@ -31,7 +31,7 @@ class Plugin(AardwolfBasePlugin):
     """
     load the plugins
     """
-    AardwolfBasePlugin.load(self)
+    super().load()
 
     self.api('events.register')('GMCP:comm.quest', self.quest)
 

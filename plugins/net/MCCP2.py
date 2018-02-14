@@ -28,12 +28,12 @@ class Plugin(BasePlugin):
     """
     Iniitilaize the class
     """
-    BasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
 
     self.canreload = False
 
   def load(self):
-    BasePlugin.load(self)
+    super().load()
 
     self.api('options.addserveroption')(self.sname, SERVER)
     self.api('options.addclientoption')(self.sname, CLIENT)

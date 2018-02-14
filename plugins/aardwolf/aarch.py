@@ -77,7 +77,7 @@ class Plugin(AardwolfBasePlugin):
   a plugin to show which aarcheology items are needed
   """
   def __init__(self, *args, **kwargs):
-    AardwolfBasePlugin.__init__(self, *args, **kwargs)
+    super().__init__(*args, **kwargs)
 
     self.api('dependency.add')('aardwolf.eq')
 
@@ -85,7 +85,7 @@ class Plugin(AardwolfBasePlugin):
     """
     load the plugin
     """
-    AardwolfBasePlugin.load(self)
+    super().load()
 
     parser = argp.ArgumentParser(add_help=False,
                                  description='show needed aarch items')
