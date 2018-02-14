@@ -1,7 +1,6 @@
 """
 This plugin handles internal triggers for the proxy
 """
-from __future__ import print_function
 import sys
 try:
   import regex as re

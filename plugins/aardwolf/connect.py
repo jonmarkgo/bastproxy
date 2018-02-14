@@ -3,7 +3,6 @@ This plugin is a utility plugin for aardwolf functions
 
 It adds functions to the api as well as takes care of the firstactive flag
 """
-from __future__ import print_function
 from plugins._baseplugin import BasePlugin
 
 NAME = 'Aardwolf Connect'

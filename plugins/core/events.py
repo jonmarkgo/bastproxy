@@ -12,7 +12,6 @@ This plugin handles events.
 ### Raising an event
  * ```self.api('events.eraise')(eventname, argdictionary)```
 """
-from __future__ import print_function
 import libs.argp as argp
 from plugins._baseplugin import BasePlugin
 

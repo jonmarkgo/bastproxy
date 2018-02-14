@@ -1,7 +1,6 @@
 """
 This plugin holds a afk plugin
 """
-from __future__ import print_function
 import time
 import re
 import copy

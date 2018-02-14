@@ -4,9 +4,6 @@ TELNET client class.
 Based on RFC 854: TELNET Protocol Specification, by J. Postel and
 J. Reynolds
 """
-
-from __future__ import print_function
-
 import asyncore
 import socket
 
