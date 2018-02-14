@@ -100,8 +100,7 @@ class Plugin(AardwolfBasePlugin):
     msg.append(infocolor + '-' * linelen)
     totalm = 0
     totalh = 0
-    tkeys = damages.keys()
-    tkeys.sort()
+    tkeys = sorted(damages.keys())
     for i in tkeys:
       if i != 'enemy' and i != 'starttime' and i != 'finishtime':
         vdict = args['damage'][i]

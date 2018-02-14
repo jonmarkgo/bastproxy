@@ -361,8 +361,7 @@ class Plugin(BasePlugin):
     tmsg.append('Data Types')
     tmsg.append('-' *  30)
     match = args['match']
-    tkeys = self.dtypes.keys()
-    tkeys.sort()
+    tkeys = sorted(self.dtypes.keys())
     for i in tkeys:
       if not match or match in i:
         tmsg.append(i)

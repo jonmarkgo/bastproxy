@@ -373,8 +373,7 @@ class Plugin(BasePlugin):
     return a table of strings that list aliases
     """
     tmsg = []
-    for alias in sorted(self._aliases.iteritems(),
-                        key=lambda (x, y): y['num']):
+    for alias in sorted(self._aliases.items(), key=itemgetter('num')):
       item = alias[0]
       if not match or match in item:
         lalias = self.api('colors.stripansi')(self._aliases[item]['alias'])

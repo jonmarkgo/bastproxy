@@ -161,8 +161,7 @@ class EventContainer(object):
                                         'function name'))
     tmsg.append('@B' + '-' * 60)
     funcmsg = []
-    tkeys = self.priod.keys()
-    tkeys.sort()
+    tkeys = sorted(self.priod.keys())
     for prio in tkeys:
       for eventfunc in self.priod[prio]:
         funcmsg.append('%-4s : %-15s - %-s' % (prio,
@@ -189,8 +188,7 @@ class EventContainer(object):
                            secondary=calledfrom)
     keys = self.priod.keys()
     if keys:
-      keys.sort()
-      for prio in keys:
+      for prio in sorted(keys):
         for eventfunc in self.priod[prio][:]:
           try:
             tnargs = eventfunc.execute(nargs)

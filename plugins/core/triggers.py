@@ -475,8 +475,7 @@ class Plugin(BasePlugin):
       @CUsage@w: list
     """
     tmsg = []
-    tkeys = self.triggers.keys()
-    tkeys.sort()
+    tkeys = sorted(self.triggers.keys())
     match = args['match']
 
     tmsg.append('%-25s : %-13s %-9s %s' % ('Name', 'Defined in',

@@ -81,8 +81,7 @@ class Plugin(BasePlugin):
     list watches
     """
     tmsg = []
-    tkeys = self.watchcmds.keys()
-    tkeys.sort()
+    tkeys = sorted(self.watchcmds.keys())
     match = args['match']
 
     tmsg.append('%-25s : %-13s %s' % ('Name', 'Defined in',

@@ -448,9 +448,7 @@ class Dumper:
     def dump_dict (self, dict, depth, indent, shallow_attrs=()):
         if not shallow_attrs and '_dump_shallow_attrs' in dict:
           shallow_attrs = dict['_dump_shallow_attrs']
-        keys = dict.keys()
-        if type(keys) is ListType:
-            keys.sort()
+        keys = sorted(dict.keys())
 
         for k in keys:
             val = dict[k]

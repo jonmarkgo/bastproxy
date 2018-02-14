@@ -713,8 +713,7 @@ class Plugin(BasePlugin):
         tmsg.append('There is no category %s' % category)
     else:
       tmsg.append('Categories:')
-      tkeys = self.cmds.keys()
-      tkeys.sort()
+      tkeys = sorted(self.cmds.keys())
       tmsg.append(self.api('utils.listtocolumns')(tkeys, cols=3, columnwise=False, gap=6))
     return True, tmsg
 

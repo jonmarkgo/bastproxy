@@ -430,8 +430,7 @@ class API(object):
     else:
       apilist = self.getapilist()
 
-    tkeys = apilist.keys()
-    tkeys.sort()
+    tkeys = sorted(apilist.keys())
     toplevels = []
     for i in tkeys:
       toplevel, therest = i.split('.', 1)
