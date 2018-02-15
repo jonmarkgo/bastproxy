@@ -154,7 +154,7 @@ class Plugin(BasePlugin):
         if matchd:
           self.api('send.msg')('matched input on %s' % mem)
           tlistn = [data]
-          for i in xrange(1, len(matchd.groups()) + 1):
+          for i in range(1, len(matchd.groups()) + 1):
             tlistn.append(matchd.group(i))
           self.api('send.msg')('args: %s' % tlistn)
           try:

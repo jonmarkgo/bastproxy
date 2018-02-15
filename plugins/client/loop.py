@@ -65,7 +65,7 @@ class Plugin(BasePlugin):
 
     if args['cmd']:
       templ = Template(args['cmd'])
-      for i in xrange(1, count + 1):
+      for i in range(1, count + 1):
         datan = templ.safe_substitute({'num':i, 'count':i})
         self.api('send.msg')('sending cmd: %s' % datan)
         self.api('send.execute')(datan)

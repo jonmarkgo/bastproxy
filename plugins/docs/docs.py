@@ -116,7 +116,7 @@ class Plugin(BasePlugin):
     tocn = {}
     topparent = tocn
     secparent = {}
-    for i in xrange(0, len(toc)):
+    for i in range(0, len(toc)):
       level = toc[i][0]
       tid = toc[i][1]
       text = toc[i][2]

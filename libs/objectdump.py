@@ -351,7 +351,7 @@ TYPE_NAMES = {
     TypeType: 'type',
     UnboundMethodType: 'instance method',
     UnicodeType: 'unicode',
-    XRangeType: 'xrange',
+    XRangeType: 'range',
     }
 
 def get_type_name (type):

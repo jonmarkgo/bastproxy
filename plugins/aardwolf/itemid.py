@@ -700,7 +700,7 @@ class Plugin(AardwolfBasePlugin):
       iteml.append(divider)
 
       header = 'Spells'
-      for i in xrange(1, 5):
+      for i in range(1, 5):
         key = 'sn%s' % i
         if item.spells[key] and item.spells[key] != 0:
           spell = self.api('skills.gets')(item.spells[key])

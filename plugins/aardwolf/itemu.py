@@ -205,7 +205,7 @@ class Plugin(AardwolfBasePlugin):
       tlist = line.split('|')
     titem = {}
     if layoutname in self.invlayout:
-      for i in xrange(len(self.invlayout[layoutname])):
+      for i in range(len(self.invlayout[layoutname])):
         name = self.invlayout[layoutname][i]
         value = tlist[i]
         try:

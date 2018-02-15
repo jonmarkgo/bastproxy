@@ -428,7 +428,7 @@ class Worn(EqContainer):
     """
     wearlocs = self.api('itemu.wearlocs')()
     self.items = []
-    for dummy in xrange(0, len(wearlocs)):
+    for dummy in range(0, len(wearlocs)):
       self.items.append(-1)
 
   def get(self, serial):
@@ -611,7 +611,7 @@ class Worn(EqContainer):
 
     msg.append('@B' + '-' * 80)
 
-    for i in xrange(0, len(wearlocs)):
+    for i in range(0, len(wearlocs)):
       if self.items[i] != -1:
         serial = self.items[i]
         item = self.itemcache[serial]
