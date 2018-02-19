@@ -389,8 +389,14 @@ class Plugin(BasePlugin):
                         {'line':'', 'triggername':'emptyline'},
                         args)
     else:
-      colormatch = self.regex['color'].match(colordata)
-      noncolormatch = self.regex['noncolor'].match(data)
+      if self.regex['color']:
+        colormatch = self.regex['color'].match(colordata)
+      else:
+        colormatch = None
+      if self.regex['noncolor']:
+        noncolormatch = self.regex['noncolor'].match(data)
+      else:
+        noncolormatch = None
       if colormatch or noncolormatch:
         matches = []
         triggers = sorted(self.uniquelookup,
