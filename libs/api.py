@@ -272,8 +272,17 @@ class API(object):
     @Ytoplevel@w  = the toplevel of the api to remove
 
     this function returns no values"""
-    if toplevel in self.__class__.api:
-      del self.__class__.api[toplevel]
+    testfor = toplevel + "."
+
+    tkeys = sorted(self.__class__.api.keys())
+    for i in tkeys:
+      if testfor in i:
+        del self.__class__.api[i]
+
+    tkeys = sorted(self.overloadedapi.keys())
+    for i in tkeys:
+      if testfor in i:
+        del self.overloadedapi[i]
 
   def get(self, apiname, nooverload=False):
     """
@@ -300,11 +309,17 @@ class API(object):
     return a list of apis in a toplevel api
     """
     apilist = []
-    if toplevel in self.api:
-      apilist.extend(self.api[toplevel].keys())
+    testfor = toplevel + "."
 
-    if toplevel in self.overloadedapi:
-      apilist.extend(self.overloadedapi[toplevel].keys())
+    tkeys = sorted(self.__class__.api.keys())
+    for fullapi in tkeys:
+      if testfor in fullapi:
+        apilist.append(".".join(fullapi.split('.')[1:]))
+
+    tkeys = sorted(self.overloadedapi.keys())
+    for fullapi in tkeys:
+      if testfor in fullapi:
+        apilist.append(".".join(fullapi.split('.')[1:]))
 
     return list(set(apilist))
 
