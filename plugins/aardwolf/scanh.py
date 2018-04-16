@@ -87,8 +87,9 @@ class Plugin(AardwolfBasePlugin):
       return
     line = args['line'].lower().strip()
     self.api('send.msg')('scanline: %s' % line)
-    if 'cp' in self.mobs:
-      for i in self.mobs['cp']:
+    if self.api('cp.oncp')():
+      mobs = self.api('cp.mobsleft')()
+      for i in mobs:
         if line[len(line) - len(i['nocolorname']):].strip() \
                       == i['nocolorname'].lower():
           args['newline'] = cptextcolor + \
