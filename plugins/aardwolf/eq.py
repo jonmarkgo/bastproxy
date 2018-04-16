@@ -187,21 +187,6 @@ class EqContainer(object):
     self.api('events.register')('trigger_dataline', self.dataline,
                                 plugin=self.plugin.sname)
 
-  def dataafter(self):
-    """
-    this will be called after the command
-    """
-    self.api('send.msg')('disabling %sdata triggers' % self.cid)
-    self.api('triggers.togglegroup')('%sdata' % self.cid, False)
-    self.api('events.unregister')('trigger_dataline', self.dataline)
-    self.api('triggers.remove')('dataline')
-
-    self.api('events.unregister')('trigger_%sstart' % self.cid, self.datastart)
-    self.api('events.unregister')('trigger_%send' % self.cid, self.dataend)
-
-    self.api('triggers.remove')('%sstart' % self.cid)
-    self.api('triggers.remove')('%send' % self.cid)
-
   def datastart(self, args):
     """
     found beginning of data for this container
@@ -234,9 +219,25 @@ class EqContainer(object):
   def dataend(self, args):
     #pylint: disable=unused-argument
     """
-    found end of data for this container
+    found end of data for this container, clean up triggers and events
     """
+    self.api('send.msg')('disabling %sdata triggers' % self.cid)
+    self.api('triggers.togglegroup')('%sdata' % self.cid, False)
+    self.api('events.unregister')('trigger_dataline', self.dataline)
+    self.api('triggers.remove')('dataline')
+
+    self.api('events.unregister')('trigger_%sstart' % self.cid, self.datastart)
+    self.api('events.unregister')('trigger_%send' % self.cid, self.dataend)
+
+    self.api('triggers.remove')('%sstart' % self.cid)
+    self.api('triggers.remove')('%send' % self.cid)
+
     self.api('cmdq.cmdfinish')(self.cid)
+
+  def dataafter(self):
+    """
+    this will be called after the command
+    """
     self.needsrefresh = False
 
   def build_header(self, args):
