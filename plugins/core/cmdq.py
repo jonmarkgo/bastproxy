@@ -146,6 +146,7 @@ class Plugin(BasePlugin):
         self.cmds[cmdtype]['afterf']()
 
       self.api('timep.finish')('cmd_%s' % self.currentcmd['ctype'])
+      self.api('events.eraise')('cmd_%s_finished' % self.currentcmd['ctype'])
       self.currentcmd = {}
       self.sendnext()
 
