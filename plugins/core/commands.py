@@ -234,6 +234,8 @@ class Plugin(BasePlugin):
 
       return cmd['func'](args)
 
+    return None
+
   def runcmd(self, cmd, targs, fullargs, data):
     """
     run a command that has an ArgParser
@@ -343,7 +345,7 @@ class Plugin(BasePlugin):
     commanddata['data'] = data
 
     if commanddata['orig'] == '':
-      return
+      return None
 
     if commanddata['orig'][0:3].lower() == self.api('setting.gets')('cmdprefix'):
       targs = shlex.split(commanddata['orig'].strip())
