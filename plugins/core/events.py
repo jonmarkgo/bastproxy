@@ -257,6 +257,16 @@ class Plugin(BasePlugin):
                              self.cmd_list,
                              parser=parser)
 
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='raise an event')
+    parser.add_argument('event',
+                        help='the event to raise',
+                        default='',
+                        nargs='?')
+    self.api('commands.add')('raise',
+                             self.cmd_raise,
+                             parser=parser)
+
     self.api('events.register')('plugin_unloaded', self.pluginunloaded, prio=10)
 
   def pluginunloaded(self, args):
@@ -384,6 +394,23 @@ class Plugin(BasePlugin):
     else:
       tmsg.append('Event %s does not exist' % eventname)
     return tmsg
+
+  def cmd_raise(self, args):
+    """
+    @G%(name)s@w - @B%(cmdname)s@w
+      raise an event - only works for events with no arguments
+      @CUsage@w: raise @Y<eventname>@w
+        @Yeventname@w  = the eventname to raise
+    """
+    tmsg = []
+    event = self.api('%s.gete' % self.sname)(args['event'])
+    if event:
+      self.api('%s.eraise' % self.sname)(args['event'])
+      tmsg.append('raised event: %s' % args['event'])
+    else:
+      tmsg.append('event does not exist: %s' % args['event'])
+
+    return True, tmsg
 
   def cmd_detail(self, args):
     """
