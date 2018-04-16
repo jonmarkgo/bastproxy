@@ -1,5 +1,7 @@
 """
 This plugin highlights cp/gq/quest mobs in scan
+
+#TODO: intelligently figure out which spells add which flags
 """
 import copy
 import libs.argp as argp
@@ -139,7 +141,7 @@ class AFlagsCmd(object):
       if i:
         self.plugin.aflags.addflag(i)
     self.api('events.register')('trigger_beall', self.aflagsotherline)
-    self.api('events.register')('trigger_emptyline', self.aflagsdone)
+    self.api('events.register')('trigger_emptyline', self.aflagsend)
     args['omit'] = True
     return args
 
@@ -159,13 +161,22 @@ class AFlagsCmd(object):
 
     return args
 
-  def aflagsdone(self, _=None):
+  def aflagsend(self, _=None):
     """
-    finished aflags when seeing an emptyline
+    finished aflags when seeing an emptyline, mainly clean up triggers
+    and events
     """
     self.api('events.unregister')('trigger_beall', self.aflagsotherline)
-    self.api('events.unregister')('trigger_emptyline', self.aflagsdone)
+    self.api('events.unregister')('trigger_emptyline', self.aflagsend)
+
+    self.api('triggers.togglegroup')('cmd_%s' % self.cmd, False)
+
     self.api('cmdq.cmdfinish')('aflags')
+
+  def aflagsafter(self):
+    """
+    stuff to do after doing aflags command
+    """
     self.plugin.aflags.snapshot('Before')
     removed = set(self.plugin.aflags.snapshots['Before']) - \
                 set(self.plugin.aflags.currentflags)
@@ -174,12 +185,6 @@ class AFlagsCmd(object):
     self.plugin.api('events.eraise')('affect_diff',
                                      args={'added':added,
                                            'removed':removed})
-
-  def aflagsafter(self):
-    """
-    stuff to do after doing aflags command
-    """
-    self.api('triggers.togglegroup')('cmd_%s' % self.cmd, False)
 
 class Plugin(AardwolfBasePlugin):
   """
@@ -192,6 +197,7 @@ class Plugin(AardwolfBasePlugin):
     AardwolfBasePlugin.__init__(self, *args, **kwargs)
 
     self.api('dependency.add')('aardwolf.skills')
+    self.api('dependency.add')('cmdq')
 
     self.api('api.add')('check', self.api_checkflag)
 
