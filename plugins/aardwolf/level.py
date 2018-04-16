@@ -28,7 +28,7 @@ class Plugin(AardwolfBasePlugin):
     self.savelevelfile = os.path.join(self.savedir, 'level.txt')
     self.levelinfo = PersistentDict(self.savelevelfile, 'c')
 
-  def load(self):
+  def load(self): # pylint: disable=too-many-statements
     """
     load the plugins
     """

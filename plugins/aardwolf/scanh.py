@@ -84,7 +84,7 @@ class Plugin(AardwolfBasePlugin):
     questtextcolor = self.api('setting.gets')('questtextcolor')
     questbackcolor = self.api('setting.gets')('questbackcolor')
     if not args['line'] or args['line'][0] != ' ':
-      return
+      return None
     line = args['line'].lower().strip()
     self.api('send.msg')('scanline: %s' % line)
     if self.api('cp.oncp')():

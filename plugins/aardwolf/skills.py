@@ -86,7 +86,7 @@ class Skills(object):
     refresh all data
     """
     self.api('send.msg')(
-        "refreshing skills with 'slist noprompt' and 'slist leanred noprompt'")
+        "refreshing skills with 'slist noprompt' and 'slist learned noprompt'")
     self.api('cmdq.addtoqueue')('slist', 'noprompt')
     self.api('cmdq.addtoqueue')('slist', 'spellup noprompt')
 
@@ -510,7 +510,7 @@ class Plugin(AardwolfBasePlugin):
 
     self.api('events.register')('muddisconnect', self.skillsdisconnect)
 
-  def skillsdisconnect(self, args=None):
+  def skillsdisconnect(self, args=None): # pylint: disable=unused-argument
     """
     set the isuptodate flag to False and clear skills
     """

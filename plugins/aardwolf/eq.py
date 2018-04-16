@@ -1050,7 +1050,7 @@ class Plugin(AardwolfBasePlugin): #pylint: disable=too-many-public-methods
       item = None
 
     if not item:
-      return
+      return False, ''
 
     if not container:
       if serial in self.itemcache:

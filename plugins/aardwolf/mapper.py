@@ -1,7 +1,5 @@
 """
 This plugin is a mapper plugin
-
-# don't care about terrains and environment since I ain't graphical
 """
 import copy
 import time

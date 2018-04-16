@@ -1,3 +1,4 @@
+# pylint: disable=too-many-lines
 """
 This plugin holds a stat database and collects the following:
 
@@ -302,6 +303,9 @@ def dbcreate(sqldb, plugin, **kwargs):
         stmt = "UPDATE stats SET %s = %s + %s WHERE milestone = 'current'" \
             % (stat, stat, add)
         self.api('%s.modify' % self.plugin.sname)(stmt)
+        return True
+
+      return False
 
     def savewhois(self, whoisinfo):
       """
@@ -335,7 +339,7 @@ def dbcreate(sqldb, plugin, **kwargs):
       add a milestone
       """
       if not milestone:
-        return
+        return -1
 
       trows = self.api('%s.select' % self.plugin.sname)(
           'SELECT * FROM stats WHERE milestone = "%s"' \
@@ -1277,7 +1281,7 @@ class Plugin(AardwolfBasePlugin): # pylint: disable=too-many-public-methods
 
     return True, msg
 
-  def show_level(self, args): # pylint: disable=too-many-locals,too-many-statements
+  def show_level(self, args): # pylint: disable=too-many-locals,too-many-statements,too-many-branches
     """
     show info for a specific level in the database
     """
