@@ -147,6 +147,7 @@ class Plugin(AardwolfBasePlugin):
     self.invlayout['light'] = ['duration']
     self.invlayout['portal'] = ['uses']
     self.invlayout['tempmod'] = ['sn', 'u1', 'u2', 'statmod', 'duration']
+    self.invlayout['enchant'] = ['spell', 'etype', 'stat', 'mod', 'char', 'removable']
 
   def load(self):
     """
@@ -205,27 +206,30 @@ class Plugin(AardwolfBasePlugin):
 
     this function returns a dictionary"""
     tlist = [line]
-    if layoutname == 'eqdata' or layoutname == 'tempmod':
+    if layoutname == 'eqdata' or layoutname == 'tempmod' or layoutname == 'enchant':
       tlist = line.split(',')
     else:
       tlist = line.split('|')
     titem = {}
     if layoutname in self.invlayout:
-      for i in xrange(len(self.invlayout[layoutname])):
-        name = self.invlayout[layoutname][i]
-        value = tlist[i]
-        try:
-          value = int(value)
-        except ValueError:
-          pass
-
-        if layoutname == 'invheader' and name == 'type':
+      try:
+        for i in xrange(len(self.invlayout[layoutname])):
+          name = self.invlayout[layoutname][i]
+          value = tlist[i]
           try:
-            value = value.lower()
-          except AttributeError:
+            value = int(value)
+          except ValueError:
             pass
 
-        titem[name] = value
+          if layoutname == 'invheader' and name == 'type':
+            try:
+              value = value.lower()
+            except AttributeError:
+              pass
+
+          titem[name] = value
+      except:  # pylint: disable=broad-except,bare-except
+        self.api('send.traceback')('dataparse error: %s' % line)
 
       if layoutname == 'eqdata':
         titem['name'] = self.api('colors.stripcolor')(titem['cname'])
@@ -233,3 +237,5 @@ class Plugin(AardwolfBasePlugin):
       return titem
     else:
       self.api('send.msg')('layout %s not found' % layoutname)
+
+    return None
