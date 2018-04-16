@@ -390,18 +390,10 @@ class SListCmd(object):
 
   def dataend(self, args): #pylint: disable=unused-argument
     """
-    found end of data for the slist command
+    found end of data for the slist command, clean up events and triggers
     """
     self.api('send.msg')('CMD - %s: found end %s' % (self.cid, self.endregex))
-    self.api('cmdq.cmdfinish')(self.cid)
-    if self.current == 'spellup' and not self.plugin.skills.isuptodatef:
-      self.plugin.skills.setuptodate()
-    self.current = None
 
-  def dataafter(self):
-    """
-    this will be called after the command
-    """
     self.api('events.unregister')('trigger_cmd_%s_start' % self.cid, self.datastart)
     self.api('events.unregister')('trigger_cmd_%s_end' % self.cid, self.dataend)
 
@@ -421,6 +413,16 @@ class SListCmd(object):
     self.api('triggers.togglegroup')('cmd_%s' % self.cid, False)
     self.api('triggers.togglegroup')('cmd_%s_spells' % self.cid, False)
     self.api('triggers.togglegroup')('cmd_%s_recoveries' % self.cid, False)
+
+    self.api('cmdq.cmdfinish')(self.cid)
+
+  def dataafter(self):
+    """
+    this will be called after the command has completed
+    """
+    if self.current == 'spellup' and not self.plugin.skills.isuptodatef:
+      self.plugin.skills.setuptodate()
+    self.current = None
 
 class Plugin(AardwolfBasePlugin):
   """
