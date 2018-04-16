@@ -33,6 +33,8 @@ class Plugin(AardwolfBasePlugin):
     self.nextdeath = False
 
     self.api('dependency.add')('cmdq')
+    self.api('api.add')('oncp', self.api_oncp)
+    self.api('api.add')('mobsleft', self.api_cpmobsleft)
 
   def load(self):
     """
@@ -125,6 +127,18 @@ class Plugin(AardwolfBasePlugin):
     self.api('events.register')('trigger_cpcompdone', self._cpcompdone)
 
     self.api('events.register')('plugin_%s_savestate' % self.sname, self._savestate)
+
+  def api_oncp(self):
+    """
+    return if we are on a cp
+    """
+    return self.cpinfo['oncp']
+
+  def api_cpmobsleft(self):
+    """
+    return the list of cp mobs left
+    """
+    return copy.copy(self.mobsleft)
 
   def cmd_show(self, _=None):
     """
