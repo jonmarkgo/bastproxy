@@ -1344,6 +1344,22 @@ class Plugin(AardwolfBasePlugin): # pylint: disable=too-many-public-methods
     count = tst[0]['count']
     ave = tst[0]['average']
 
+    if levelinfo['starttime'] or levelinfo['finishtime']:
+      msg.append(div)
+
+      if levelinfo['starttime']:
+        msg.append('Started  : %s' % time.strftime(
+            "%a, %d %b %Y %H:%M:%S +0000",
+            time.localtime(levelinfo['starttime'])))
+
+      if levelinfo['finishtime']:
+        if levelinfo['finishtime'] == -1:
+          fstr = 'Current'
+        else:
+          fstr = time.strftime("%a, %d %b %Y %H:%M:%S +0000",
+                               time.localtime(levelinfo['finishtime']))
+        msg.append('Finished : %s' % fstr)
+
     if count > 0 and ave > 0:
       msg.append(div)
       length = levelinfo['finishtime'] - levelinfo['starttime']
