@@ -54,7 +54,7 @@ class Item(object):
     """
     check for an attribute
     """
-    if hasattr(self, attr) and self.__dict__[attr]:
+    if hasattr(self, attr) and self.__dict__[attr] != '':
       return True
 
     return False
