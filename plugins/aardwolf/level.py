@@ -54,9 +54,12 @@ class Plugin(AardwolfBasePlugin):
     self.api('triggers.add')('lvllevel',
                              r"^You raise a level! You are now level (?P<level>\d*).$",
                              argtypes={'level':int})
+    self.api('triggers.add')('lvlshloud',
+                             r"^Congratulations! You are now a superhero!" \
+                             r" You receive (?P<trains>) trains for superhero loud.$",
+                             argtypes={'trains':int})
     self.api('triggers.add')('lvlsh',
-                             r"^Congratulations! You are now a superhero!$",
-                             argtypes={'level':int})
+                             r"^Congratulations! You are now a superhero!")
     self.api('triggers.add')('lvlbless',
                              r"^You gain a level - you are now level (?P<level>\d*).$",
                              argtypes={'level':int})
@@ -103,6 +106,12 @@ class Plugin(AardwolfBasePlugin):
     self.api('triggers.add')('lvlshnoqp',
                              r"^You must have at least 1000 quest points.$",
                              enabled=False, group='superhero')
+    self.api('triggers.add')('lvlshnodbl',
+                             r"^You cannot superhero loud until double exp is over.$",
+                             enabled=False, group='superhero')
+    self.api('triggers.add')('lvlshnot200',
+                             r"^You have to be level 200 to superhero.$",
+                             enabled=False, group='superhero')
 
     self.api('triggers.add')('lvlpreremort',
                              r"^You are now flagged as remorting.$",
@@ -114,10 +123,12 @@ class Plugin(AardwolfBasePlugin):
                              r"^## You have already remorted the max number of times.$",
                              enabled=True, group='remort')
 
+
     self.api('events.register')('trigger_lvlpup', self._lvl)
     self.api('events.register')('trigger_lvlpupbless', self._lvl)
     self.api('events.register')('trigger_lvllevel', self._lvl)
     self.api('events.register')('trigger_lvlbless', self._lvl)
+    #self.api('events.register')('trigger_lvlsh', self._lvl)
     self.api('events.register')('trigger_lvlgains', self._lvlgains)
     self.api('events.register')('trigger_lvlpupgains', self._lvlgains)
     self.api('events.register')('trigger_lvlblesstrain',
@@ -135,6 +146,8 @@ class Plugin(AardwolfBasePlugin):
     self.api('events.register')('trigger_lvlshnogold',
                                 self._superherobad)
     self.api('events.register')('trigger_lvlshnoqp', self._superherobad)
+    self.api('events.register')('trigger_lvlshnodbl', self._superherobad)
+    self.api('events.register')('trigger_lvlshnot200', self._superherobad)
 
     self.api('events.register')('watch_shloud', self.cmd_superhero)
     self.api('events.register')('watch_shsilent', self.cmd_superhero)
