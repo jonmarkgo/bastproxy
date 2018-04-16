@@ -1,7 +1,6 @@
 """
 This plugin reads and parses id and invdetails from Aardwolf
 """
-import re
 import textwrap
 import libs.argp as argp
 from plugins.aardwolf._aardwolfbaseplugin import AardwolfBasePlugin
@@ -14,110 +13,64 @@ VERSION = 1
 
 AUTOLOAD = False
 
-DETAILS_RE = r'^\{(?P<header>.*)\}(?P<data>.*)$'
-DETAILS_REC = re.compile(DETAILS_RE)
-
-# pylint: disable=too-many-public-methods
-class Plugin(AardwolfBasePlugin):
+class InvdetailsCmd(object):
   """
-  a plugin to handle equipment identification, id and invdetails
+  a class to manipulate containers
   """
-  def __init__(self, *args, **kwargs):
+  def __init__(self, plugin):
     """
-    initialize the instance
+    init the class
     """
-    AardwolfBasePlugin.__init__(self, *args, **kwargs)
-
-    self.waitingforid = {}
-    self.showid = {}
-    self.pastkeywords = False
-    self.dividercount = 0
-    self.affectmods = False
-    self.nonotes = False
-
+    ## cmd = command to send to get data
+    ## cmdregex = regex that matches command
+    ## startregex = the line to match to start collecting data
+    ## endregex = the line to match to end collecting data
+    self.cid = "invdetails"
+    self.cmd = "invdetails"
+    self.cmdregex = r"^invdetails (?P<item>.*)$"
+    self.startregex = r"^\{invdetails\}$"
+    self.endregex = r"^\{/invdetails\}$"
+    self.plugin = plugin
+    self.api = self.plugin.api
     self.currentitem = {}
 
-    self.api('dependency.add')('aardwolf.itemu')
+    self._dump_shallow_attrs = ['plugin', 'api']
 
-    self.api('api.add')('identify', self.api_identify)
-    self.api('api.add')('format', self.api_formatitem)
-    self.api('api.add')('show', self.api_showitem)
+    self.api('cmdq.addcmdtype')(self.cid, self.cmd, self.cmdregex,
+                                beforef=self.databefore, afterf=self.dataafter)
 
-  def load(self):
+    self.api('triggers.add')('cmd_%s_start' % self.cid,
+                             self.startregex,
+                             enabled=False, group='cmd_%s' % self.cid,
+                             omit=True)
+
+    self.api('triggers.add')('cmd_%s_end' % self.cid,
+                             self.endregex,
+                             enabled=False, group='cmd_%s' % self.cid,
+                             omit=True)
+
+    self.api('triggers.add')('cmd_%s_line' % self.cid,
+                             r"^\{(?P<header>.*)\}(?P<data>.+)$",
+                             group='cmd_%s' % self.cid, enabled=False, omit=True)
+
+  def databefore(self):
     """
-    load the plugins
+    this will be called before the command
     """
-    AardwolfBasePlugin.load(self)
+    self.api('events.register')('trigger_cmd_%s_start' % self.cid, self.datastart)
 
-    self.api('setting.add')('idcmd', True, str,
-                            'identify')
-
-    parser = argp.ArgumentParser(add_help=False,
-                                 description='id an item')
-    parser.add_argument('serial', help='the item to id', default='', nargs='?')
-    self.api('commands.add')('id', self.cmd_id,
-                             parser=parser, format=False, preamble=False)
-
-    self.api('triggers.add')('invdetailsstart',
-                             r"^\{invdetails\}$", group='invdetails',
-                             enabled=False, omit=True)
-
-    self.api('triggers.add')('invdetailsline',
-                             r"^\{invdetails(?P<header>.*)\}(?P<data>.*)$",
-                             group='invdetails', enabled=False, omit=True)
-
-    self.api('triggers.add')('invdetailsend',
-                             r"^\{/invdetails\}$",
-                             enabled=False, group='invdetails', omit=True)
-
-    self.api('triggers.add')('identifyon',
-                             r"\+-*\+",
-                             enabled=False, group='identify', omit=True)
-
-    self.api('triggers.add')('identify1',
-                             r'^\|\s*(?P<data>.*)\s*\|$',
-                             group='identify', enabled=False, omit=True)
-
-    self.api('events.register')('trigger_invdetailsstart',
-                                self.invdetailsstart)
-    self.api('events.register')('trigger_invdetailsend',
-                                self.invdetailsend)
-    self.api('events.register')('trigger_invdetailsline',
+    self.api('events.register')('trigger_cmd_%s_line' % self.cid,
                                 self.invdetailsline)
-    self.api('events.register')('trigger_identifyon', self.identifyon)
-    self.api('events.register')('trigger_identify1', self.identifyline)
 
-  def sendcmd(self, cmd):
-    """
-    send a command
-    """
-    self.api('send.msg')('sending cmd: %s' % cmd)
-    if 'invdetails' in cmd:
-      self.api('triggers.togglegroup')('invdetails', True)
-    elif 'identify' in cmd:
-      self.api('triggers.togglegroup')('identify', True)
-    self.api('send.execute')(cmd)
+    self.api('triggers.togglegroup')('cmd_%s' % self.cid, True)
 
-  def addmod(self, ltype, mod):
+  def datastart(self, args=None): # pylint: disable=unused-argument
     """
-    add a mod to an item (stat, skills, resist, etc)
+    found beginning of data for slist
     """
-    if ltype not in self.currentitem:
-      self.currentitem[ltype] = {}
-
-    if ltype == 'tempmod':
-      if mod['type'] not in self.currentitem[ltype]:
-        self.currentitem[ltype][mod['type']] = []
-      self.currentitem[ltype][mod['type']].append(mod)
-    else:
-      self.currentitem[ltype][mod['name']] = int(mod['value'])
-
-  def invdetailsstart(self, _=None):
-    """
-    start gathering the invdetails data
-    """
-    self.currentitem = {}
-    self.api('send.msg')('found {invdetails}')
+    self.api('send.msg')('CMD - %s: found start %s' % (self.cid, self.startregex))
+    self.api('cmdq.cmdstart')(self.cid)
+    self.api('events.register')('trigger_cmd_%s_end' % self.cid, self.dataend)
 
   def invdetailsline(self, args):
     """
@@ -134,127 +87,272 @@ class Plugin(AardwolfBasePlugin):
       self.currentitem = titem
     elif header in ['statmod', 'resistmod', 'skillmod']:
       self.addmod(header, titem)
+    elif header == 'enchant':
+      if 'enchant' not in self.currentitem:
+        self.currentitem['enchant'] = []
+      self.currentitem['enchant'].append(titem)
     else:
       self.currentitem[header] = titem
     self.api('send.msg')('invdetails parsed item: %s' % titem)
 
-  def invdetailsend(self, _=None):
+  def dataend(self, args): #pylint: disable=unused-argument
     """
-    reset current when seeing an {/invdetails}
+    found end of data for the slist command
     """
-    self.api('send.msg')('found {/invdetails}')
-    self.api('triggers.togglegroup')('invdetails', False)
+    self.api('send.msg')('CMD - %s: found end %s' % (self.cid, self.endregex))
 
-  def identifyon(self, _=None):
+    self.api('events.unregister')('trigger_cmd_%s_start' % self.cid, self.datastart)
+    self.api('events.unregister')('trigger_cmd_%s_end' % self.cid, self.dataend)
+
+    self.api('events.unregister')('trigger_cmd_%s_line' % self.cid,
+                                  self.invdetailsline)
+
+    self.api('triggers.togglegroup')('cmd_%s' % self.cid, False)
+
+    self.api('cmdq.cmdfinish')(self.cid)
+
+  def dataafter(self):
     """
-    start gathering the identify data, this is also triggered by an
-    identify divider, the line with multiple ---- in it
+    this will be called after the command
     """
+    self.plugin.currentitem = self.currentitem
+
+  def addmod(self, ltype, mod):
+    """
+    add a mod to an item (stat, skills, resist, etc)
+    """
+    if ltype not in self.currentitem:
+      self.currentitem[ltype] = {}
+
+    if ltype == 'tempmod':
+      if mod['type'] not in self.currentitem[ltype]:
+        self.currentitem[ltype][mod['type']] = []
+      self.currentitem[ltype][mod['type']].append(mod)
+    else:
+      self.currentitem[ltype][mod['name']] = int(mod['value'])
+
+class IdentifyCmd(object):
+  """
+  a class to manipulate containers
+  """
+  def __init__(self, plugin):
+    """
+    init the class
+    """
+    ## cmd = command to send to get data
+    ## cmdregex = regex that matches command
+    ## startregex = the line to match to start collecting data
+    ## endregex = the line to match to end collecting data
+    self.cid = "identify"
+    self.cmd = "identify"
+    self.cmdregex = r"^identify (?P<item>.*)$"
+    self.startregex = r"\+-*\+"
+    self.endregex = r""
+    self.plugin = plugin
+    self.api = self.plugin.api
+
+    self._dump_shallow_attrs = ['plugin', 'api']
+
+    self.api('cmdq.addcmdtype')(self.cid, self.cmd, self.cmdregex,
+                                beforef=self.databefore, afterf=self.dataafter)
+
+    self.currentitem = None
+
+    self.dividercount = 0
+    self.pastkeywords = False
+    self.currentidsection = ''
+
+    self.idinfoneeded = ['keywords', 'foundat', 'material', 'leadsto',
+                         'affectmods', 'reward']
+    self.idinfoskip = ['name', 'id', 'itype', 'worth', 'wearable', 'score',
+                       'flags', 'ownedby', 'statmods', 'resistmods',
+                       'weapontype', 'inflicts', 'specials', 'capacity',
+                       'holding', 'totweight', 'clanitem', 'spells', 'healrate',
+                       'duration', 'serial']
+
+    self.api('triggers.add')('cmd_%s_divider' % self.cid,
+                             r"\+-*\+",
+                             enabled=False, group='cmd_%s' % self.cid,
+                             omit=True)
+
+    self.api('triggers.add')('cmd_%s_line' % self.cid,
+                             r'^\|(?P<data>.*)\|$',
+                             enabled=False, group='cmd_%s' % self.cid,
+                             omit=True)
+
+  def databefore(self):
+    """
+    this will be called before the command
+    """
+    self.currentitem = self.plugin.currentitem
+    self.api('events.register')('trigger_cmd_%s_divider' % self.cid, self.datadivider)
+
+    self.api('events.register')('trigger_cmd_%s_line' % self.cid,
+                                self.dataline)
+
+    self.api('triggers.togglegroup')('cmd_%s' % self.cid, True)
+
+  def datadivider(self, args=None): # pylint: disable=unused-argument
+    """
+    found a divider for identify
+    """
+    self.api('send.msg')('CMD - %s: found start %s' % (self.cid, self.startregex))
+    self.api('cmdq.cmdstart')(self.cid)
+
     self.dividercount = self.dividercount + 1
     if self.dividercount == 1:
       self.api('send.msg')('found identify')
-      self.api('triggers.togglegroup')('identifydata', True)
-      self.api('events.register')('trigger_emptyline', self.identifyend)
+      self.api('triggers.togglegroup')('cmd_%s' % self.cid, True)
+      self.api('events.register')('trigger_emptyline', self.dataend)
     elif self.dividercount == 2:
       self.pastkeywords = True
-    if self.affectmods:
-      self.affectmods = False
-    self.nonotes = False
+    self.currentidsection = ''
 
-  def identifyline(self, args): # pylint: disable=too-many-branches
+  def dataline(self, args): # pylint: disable=too-many-branches
     """
     parse an identify line, we only want a couple of things that don't
-    appear in invdetails: Keywords, Found, Material, Leads, Affect Mods and
+    appear in invdetails: Keywords, Found, Material, Leads to, Affect Mods and
     any item notes
     """
-    nonotes = ['Portal', 'Capacity', 'Weapon Type', 'Spells',
-               'Food', 'Drink', 'Heal Rate', 'Temporary Effects']
     data = args['data']
-    if 'Keywords' in data:
-      item = data.split(' : ')[1]
-      item = item.replace('@W', '')
-      item = item.replace('@w', '')
-      self.currentitem['keywords'] = item.strip()
-    elif 'Found at' in data:
-      item = data.split(' : ')[1]
-      item = item.replace('@W', '')
-      item = item.replace('@w', '')
-      self.currentitem['foundat'] = item.strip()
-    elif 'Material' in data:
-      item = data.split(' : ')[1]
-      item = item.replace('@W', '')
-      item = item.replace('@w', '')
-      self.currentitem['material'] = item.strip()
-    elif 'Leads to' in data:
-      item = data.split(' : ')[1]
-      item = item.replace('@W', '')
-      item = item.replace('@w', '')
-      self.currentitem['leadsto'] = item.strip()
-    elif 'Affect Mods' in data:
-      self.affectmods = True
-      item = data.split(':')[1]
-      item = item.replace('@W', '')
-      item = item.replace('@w', '')
-      item = item.strip()
-      tlist = item.split(',')
-      self.currentitem['affectmod'] = []
-      for i in tlist:
-        if i:
-          self.currentitem['affectmod'].append(i.strip())
-    elif self.affectmods:
-      item = data.split(':')[1]
-      item = item.replace('@W', '')
-      item = item.replace('@w', '')
-      item = item.strip()
-      tlist = item.split(',')
-      for i in tlist:
-        if i:
-          self.currentitem['affectmod'].append(i.strip())
-    elif True in [i in data for i in nonotes]:
-      self.nonotes = True
-    elif self.pastkeywords and not self.nonotes:
-      if args['line'][2] != ' ':
-        if 'notes' not in self.currentitem:
-          self.currentitem['notes'] = []
-        tdat = args['colorline'][1:-1]
-        self.currentitem['notes'].append(tdat.strip())
 
-  def identifyend(self, _=None):
-    """
-    stop gathering identify data
+    # Find the current id section
+    if ':' in data and data[1] != ' ':
+      tdata = data.replace('|', '')
+      section = tdata.split(':')[0].strip().lower().replace(' ', '')
+      if section == 'reward.....':
+        section = 'reward'
+      if section == 'type':
+        section = 'itype'
+      if section == 'id':
+        section = 'serial'
+      if section:
+        self.currentidsection = section
 
-    this raise an itemid_<serial> event
+    if self.currentidsection not in self.idinfoneeded \
+        and self.currentidsection not in self.currentitem \
+        and self.currentidsection not in self.idinfoskip:
+      self.api('send.msg')('found unknown data in identify: %s' % \
+                                self.currentidsection)
+
+    # Save the info if we can't get it from invdetails
+    if self.currentidsection in self.idinfoneeded:
+      item = data.split(': ')[1]
+      item = item.replace('@W', '')
+      item = item.replace('@w', '')
+      if self.currentidsection in self.idinfoneeded and \
+        self.currentidsection not in self.currentitem:
+        self.currentitem[self.currentidsection] = item
+      else:
+        self.currentitem[self.currentidsection] = \
+          self.currentitem[self.currentidsection] + ' ' + item.strip()
+      return
+
+    # Anything that doesn't have a section is Notes
+    if not self.currentidsection:
+      if 'notes' not in self.currentitem:
+        self.currentitem['notes'] = []
+      tdat = args['colorline'][1:-1]
+      self.currentitem['notes'].append(tdat.strip())
+
+  def dataend(self, _=None):
     """
-    self.api('events.unregister')('trigger_emptyline', self.identifyend)
-    self.api('triggers.togglegroup')('identify', False)
+    found end of identify data, clean up triggers and events
+    """
+    self.api('send.msg')('CMD - %s: found end' % (self.cid))
+    self.api('events.unregister')('trigger_cmd_%s_divider' % self.cid, self.datadivider)
+    self.api('events.unregister')('trigger_cmd_%s_line' % self.cid,
+                                  self.dataline)
+    self.api('events.unregister')('trigger_emptyline', self.dataend)
+    self.api('triggers.togglegroup')('cmd_%s' % self.cid, False)
+    self.api('cmdq.cmdfinish')(self.cid)
+
+  def dataafter(self):
+    """
+    this will be called after the command
+    """
     self.pastkeywords = False
     self.dividercount = 0
-    if self.currentitem['serial'] in self.waitingforid:
-      del self.waitingforid[self.currentitem['serial']]
+    self.currentidsection = ''
+
+    self.api('send.msg')('identify item' % self.currentitem)
+
+    # split the keywords
+    keyw = self.currentitem['keywords']
+    newkey = keyw.split(' ')
+    self.currentitem['keywords'] = newkey
+
+    if self.currentitem['serial'] in self.plugin.waitingforid:
+      del self.plugin.waitingforid[int(self.currentitem['serial'])]
+      self.api('eq.addidentify')(self.currentitem['serial'], self.currentitem)
     self.api('events.eraise')('itemid_%s' % self.currentitem['serial'],
                               {'item':self.api('eq.getitem')(
 				                              self.currentitem['serial'])})
-    self.api('events.eraise')('itemid_all' % self.currentitem['serial'],
+    self.api('events.eraise')('itemid_all',
                               {'item':self.api('eq.getitem')(
                                   self.currentitem['serial'])})
-    ### Get the item from eq and update it
+
+class Plugin(AardwolfBasePlugin): # pylint: disable=too-many-public-methods
+  """
+  a plugin to handle equipment identification, id and invdetails
+  """
+  def __init__(self, *args, **kwargs):
+    """
+    initialize the instance
+    """
+    AardwolfBasePlugin.__init__(self, *args, **kwargs)
+
+    self.invdetailscmd = None
+    self.identifycmd = None
+
+    self.waitingforid = {}
+    self.showid = {}
+    self.fulllinelength = 68
+    self.linelength = 64
+
+    self.currentitem = {}
+
+    self.api('dependency.add')('aardwolf.itemu')
+    self.api('dependency.add')('cmdq')
+
+    self.api('api.add')('identify', self.api_identify)
+    self.api('api.add')('format', self.api_formatitem)
+    self.api('api.add')('show', self.api_showitem)
+
+  def load(self):
+    """
+    load the plugins
+    """
+    AardwolfBasePlugin.load(self)
+
+    self.invdetailscmd = InvdetailsCmd(self)
+    self.identifycmd = IdentifyCmd(self)
+
+    self.api('setting.add')('idcmd', True, str,
+                            'identify')
+
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='id an item')
+    parser.add_argument('serial', help='the item to id', default='', nargs='?')
+    self.api('commands.add')('id', self.cmd_id,
+                             parser=parser, format=False, preamble=False)
 
   # identify an item
-  def api_identify(self, serial):
+  def api_identify(self, serial, force=False):
     """  identify an item
     @Yserial@w    = the serial # if the item to identify
 
     this function returns None if the identify data has to gathered,
     or the item if is in the cache"""
     titem = self.api('eq.getitem')(serial)
-    if titem.hasbeenided:
+    if titem.hasbeenided and not force:
       return titem
     else:
       self.waitingforid[serial] = True
       if titem.curcontainer and titem.curcontainer.cid != 'Inventory':
         self.api('eq.get')(serial)
-      self.sendcmd('invdetails %s' % serial)
-      self.sendcmd('identify %s' % serial)
+      self.api('cmdq.addtoqueue')('invdetails', serial)
+      self.api('cmdq.addtoqueue')('identify', serial)
       self.api('events.register')('itemid_%s' % titem.serial,
                                   self.putincontainer,
 				                              prio=40)
@@ -461,7 +559,7 @@ class Plugin(AardwolfBasePlugin):
       if i in resists:
         if not foundfirst and i in firstline:
           foundfirst = True
-        if not foundsecond and i in secondline:
+        if not foundsecond and i in secondline and resists[i] > 0:
           foundsecond = True
 
         if int(resists[i]) > 0:
@@ -549,12 +647,16 @@ class Plugin(AardwolfBasePlugin):
     linelen = 50
 
     serial = int(serial)
+    #item = self.currentitem
     item = self.api('eq.getitem')(serial)
 
     iteml = [divider]
 
+    self.api('send.msg')('formatting item: %s' % item)
+
     if item.checkattr('keywords'):
-      tstuff = textwrap.wrap(item.keywords, linelen)
+      keywordline = " ".join(item.keywords)
+      tstuff = textwrap.wrap(keywordline, linelen, break_on_hyphens=False)
       header = 'Keywords'
       for i in tstuff:
         iteml.append(self.formatsingleline(header, '@R', i))
@@ -565,7 +667,7 @@ class Plugin(AardwolfBasePlugin):
     if item.checkattr('cname'):
       iteml.append(self.formatsingleline('Name', '@R', '@w' + item.cname))
 
-    iteml.append(self.formatsingleline('Id', '@R', item.serial))
+    iteml.append(self.formatsingleline('Id', '@R', '@w%s' % item.serial))
 
     if item.checkattr('curcontainer'):
       if item.curcontainer.cid == 'Worn':
@@ -584,8 +686,16 @@ class Plugin(AardwolfBasePlugin):
       iteml.append(self.formatsingleline('Level', '@c', item.level))
 
     if item.checkattr('worth') and item.checkattr('weight'):
-      iteml.append(self.formatdoubleline('Worth', '@c', item.worth,
+      iteml.append(self.formatdoubleline('Worth', '@c', "{:,}".format(item.worth),
                                          'Weight', item.weight))
+
+    if item.itype == 'Light' and not item.checkattr('light'):
+      iteml.append(self.formatsingleline('Duration', '@c',
+                                         'permanent'))
+
+    if item.checkattr('light'):
+      iteml.append(self.formatsingleline('Duration', '@c',
+                                         '%s minutes' % item.light['duration']))
 
     if item.checkattr('wearable'):
       iteml.append(self.formatsingleline('Wearable', '@c',
@@ -599,10 +709,11 @@ class Plugin(AardwolfBasePlugin):
       iteml.append(self.formatsingleline('Material', '@c', item.material))
 
     if item.checkattr('flags'):
-      tlist = textwrap.wrap(item.flags, linelen)
+      tlist = textwrap.wrap(item.flags, linelen, break_on_hyphens=False)
       header = 'Flags'
       for i in tlist:
         i = i.replace('precious', '@Yprecious@w')
+        i = i.replace('noshare', '@Rnoshare@w')
         iteml.append(self.formatsingleline(header, '@c', i.rstrip()))
         header = ''
 
@@ -665,7 +776,7 @@ class Plugin(AardwolfBasePlugin):
         iteml.append(self.formatspecialline('Specials', '@c',
                                             item.weapon['special']))
 
-    if item.itype == 20:
+    if item.itype == 'Portal':
       if item.checkattr('portal'):
         iteml.append(divider)
         iteml.append(self.formatsingleline('Portal', '@R',
@@ -679,8 +790,9 @@ class Plugin(AardwolfBasePlugin):
 
     if item.checkattr('resistmod'):
       iteml.append(divider)
-      for i in self.formatresist(item.resistmod, divider):
-        iteml.append(i)
+      if item.resistmod:
+        for i in self.formatresist(item.resistmod, divider):
+          iteml.append(i)
 
     if item.checkattr('skillmod'):
       iteml.append(divider)
@@ -695,6 +807,19 @@ class Plugin(AardwolfBasePlugin):
                                               (str(spell['name']).capitalize(),
                                                color, int(item.skillmod[i]))))
         header = ''
+
+    if item.checkattr('enchant'):
+      if item.enchant:
+        iteml.append(divider)
+        iteml.append(self.formatspecialline('Enchants', '@c', ''))
+        for enchant in item.enchant:
+          lline = '@W%s @G%+d@w' % (enchant['stat'], enchant['mod'])
+          if enchant['removable'] == 'E':
+            tline = "%-26s     (removable by enchanter)" % lline
+          else:
+            tline = lline
+          iteml.append(self.formatsingleline(enchant['spell'], '@g',
+                                             tline))
 
     if item.checkattr('spells'):
       iteml.append(divider)
@@ -721,18 +846,24 @@ class Plugin(AardwolfBasePlugin):
                                           "Will replenish hunger by %d%%" % \
                                             (item.food['percent'])))
 
+    if item.checkattr('reward'):
+      iteml.append(divider)
+      header = 'Reward'
+      iteml.append(self.formatspecialline(header, '@Y',
+                                          item.reward))
+
     if item.checkattr('drink'):
       iteml.append(divider)
       iteml.append(self.formatspecialline('Drink', '@c',
-                                          "%d servings of %s. Max: %d" % \
+                                          "@w%d servings of %s. Max: %d" % \
                                             (item.drink['servings'],
                                              item.drink['liquid'],
                                              item.drink['liquidmax']/20 or 1)))
       iteml.append(self.formatspecialline('', '@c',
-                                          "Each serving replenishes thirst by %d%%" % \
+                                          "@wEach serving replenishes thirst by %d%%" % \
                                            item.drink['thirstpercent']))
       iteml.append(self.formatspecialline('', '@c',
-                                          "Each serving replenishes hunger by %d%%" % \
+                                          "@wEach serving replenishes hunger by %d%%" % \
                                            item.drink['hungerpercent']))
 
     if item.checkattr('furniture'):
@@ -759,7 +890,6 @@ class Plugin(AardwolfBasePlugin):
     if item:
       if item.hasbeenided:
         tstuff = self.api('itemid.format')(serial)
-
         self.api('send.client')('\n'.join(tstuff), preamble=False)
       else:
         self.api('send.execute')('#bp.itemid.id %s' % serial)
