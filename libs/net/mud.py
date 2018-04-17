@@ -22,6 +22,7 @@ class Mud(Telnet):
                                 prio=99)
     self.api('options.prepareserver')(self)
     self.api('managers.add')('mud', self)
+    self.api('log.adddtype')('rawmud')
 
   def handle_read(self):
     """
@@ -161,3 +162,14 @@ class Mud(Telnet):
                                  'plugin':'proxy',
                                  'callstack':self.api('api.callstack')()})
       Telnet.addtooutbuffer(self, datastr, raw)
+
+  def fill_rawq(self):
+    """
+    Fill raw queue from exactly one recv() system call.
+
+    Block if no data is immediately available.  Set self.eof when
+    connection is closed.
+    """
+    buf = Telnet.fill_rawq(self)
+    self.api('log.writefile')('rawmud', buf)
+    return buf
