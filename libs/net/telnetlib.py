@@ -233,9 +233,12 @@ class Telnet(asyncore.dispatcher):
     """
     read 1024 bytes from the socket
     """
-    buf = self.recv(1024)
-    self.msg("recv %r" % buf)
-    return buf
+    try:
+      buf = self.recv(1024)
+      self.msg("recv %r" % buf)
+      return buf
+    except:  # pylint: disable=broad-except
+      return None
 
   def __del__(self):
     """
@@ -532,3 +535,4 @@ class Telnet(asyncore.dispatcher):
     self.eof = (not buf)
     self.rawq = "".join([self.rawq, buf])
     self.msg('rawq: %s' % self.rawq)
+    return buf
