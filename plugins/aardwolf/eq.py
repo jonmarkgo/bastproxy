@@ -782,6 +782,7 @@ class Plugin(AardwolfBasePlugin): #pylint: disable=too-many-public-methods
 
     self.api('api.add')('getitem', self.api_getitem)
     self.api('api.add')('getcontainer', self.api_getcontainer)
+    self.api('api.add')('itemclass', self.api_itemclass)
     self.api('api.add')('get', self.api_putininventory)
     self.api('api.add')('put', self.api_putincontainer)
     self.api('api.add')('findname', self.api_findname)
@@ -936,6 +937,13 @@ class Plugin(AardwolfBasePlugin): #pylint: disable=too-many-public-methods
     self.containers['Worn'] = Worn(self)
     self.containers['Keyring'] = Keyring(self)
     self.containers['Vault'] = Vault(self)
+
+  @staticmethod
+  def api_itemclass():
+    """
+    return the item class
+    """
+    return Item
 
   # add identify information to an item
   def api_addidentify(self, serial, attributes):
