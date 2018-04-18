@@ -226,6 +226,8 @@ class IdentifyCmd(object):
         section = 'itype'
       if section == 'id':
         section = 'serial'
+      if section == 'affectmods':
+        section = 'affectmod'
       if section:
         self.currentidsection = section
 
@@ -242,7 +244,7 @@ class IdentifyCmd(object):
       item = item.replace('@w', '')
       if self.currentidsection in self.idinfoneeded and \
         self.currentidsection not in self.currentitem:
-        self.currentitem[self.currentidsection] = item
+        self.currentitem[self.currentidsection] = item.strip()
       else:
         self.currentitem[self.currentidsection] = \
           self.currentitem[self.currentidsection] + ' ' + item.strip()
@@ -278,13 +280,32 @@ class IdentifyCmd(object):
     self.api('send.msg')('identify item' % self.currentitem)
 
     # split the keywords
-    keyw = self.currentitem['keywords']
+    keyw = self.currentitem['keywords'].strip()
     newkey = keyw.split(' ')
     self.currentitem['keywords'] = newkey
 
+    # split the flags
+    flagw = self.currentitem['flags'].strip()
+    newflag = flagw.split(', ')
+    self.currentitem['flags'] = newflag
+
+    # fix reward
+    if 'reward'in self.currentitem:
+      self.currentitem['reward'] = {'rtext':self.currentitem['reward']}
+
+    # fix notes
+    if 'notes'in self.currentitem:
+      self.currentitem['notes'] = {'ntext':" ".join(self.currentitem['notes'])}
+
+    # split affectmods
+    if 'affectmods' in self.currentitem:
+      affw = self.currentitem['affectmods'].strip()
+      newflag = affw.split(', ')
+      self.currentitem['affectmods'] = newflag
+
     if self.currentitem['serial'] in self.plugin.waitingforid:
       del self.plugin.waitingforid[int(self.currentitem['serial'])]
-      self.api('eq.addidentify')(self.currentitem['serial'], self.currentitem)
+    self.api('eq.addidentify')(self.currentitem['serial'], self.currentitem)
     self.api('events.eraise')('itemid_%s' % self.currentitem['serial'],
                               {'item':self.api('eq.getitem')(
 				                              self.currentitem['serial'])})
@@ -334,8 +355,16 @@ class Plugin(AardwolfBasePlugin): # pylint: disable=too-many-public-methods
     parser = argp.ArgumentParser(add_help=False,
                                  description='id an item')
     parser.add_argument('serial', help='the item to id', default='', nargs='?')
+    parser.add_argument('-f', "--force",
+                        help="force an id of the item",
+                        action="store_true",
+                        default=False)
+    parser.add_argument('-d', "--database",
+                        help="get the item from the database",
+                        action="store_true",
+                        default=False)
     self.api('commands.add')('id', self.cmd_id,
-                             parser=parser, format=False, preamble=False)
+                             parser=parser)
 
   # identify an item
   def api_identify(self, serial, force=False):
@@ -375,7 +404,7 @@ class Plugin(AardwolfBasePlugin): # pylint: disable=too-many-public-methods
     it registers with itemid_<serial>
     """
     self.api('events.unregister')(args['eventname'], self.event_showitem)
-    self.api('itemid.show')(args['item'].serial)
+    self.api('%s.show' % self.sname)(args['item'].serial)
 
   def cmd_id(self, args):
     """
@@ -389,18 +418,45 @@ class Plugin(AardwolfBasePlugin): # pylint: disable=too-many-public-methods
       if not titem:
         msg.append('Could not find %s' % serial)
       else:
-        if titem.hasbeenided:
-          self.api('itemid.show')(serial)
-        else:
+        if titem.hasbeenided and not args['force'] and not args['database']:
+          self.api('send.msg')('cmd_id item.hasbeenided')
+          self.api('%s.show' % self.sname)(serial)
+        elif args['database']:
+          self.api('send.msg')('getting %s from the database' % serial)
+          self.api('%s.show' % self.sname)(serial, database=True)
+        elif not titem.hasbeenided or args['force']:
+          self.api('send.msg')('identifying %s' % serial)
           self.api('events.register')('itemid_%s' % serial,
                                       self.event_showitem)
-          self.api('itemid.identify')(serial)
+          self.api('%s.identify' % self.sname)(serial, force=args['force'])
       #except ValueError:
         #msg.append('%s is not a serial number' % args['serial'])
     else:
       msg.append('Please supply a serial #')
 
     return True, msg
+
+  # show an item to the client
+  def api_showitem(self, serial, database=False):
+    """  show an item to the client
+    @Yserial@w    = the serial # of the item to show
+
+    if the serial isn't in the cache, then it is identified through the id
+    command
+
+    this function returns nothing"""
+    if database:
+      itemc = self.api('eq.itemclass')()
+      item = itemc(serial, self, loadfromdb=True)
+    else:
+      item = self.api('eq.getitem')(serial)
+    if item:
+      if item.hasbeenided:
+        self.api('send.msg')('api_showitem item.hasbeenided')
+        tstuff = self.api('%s.format' % self.sname)(item)
+        self.api('send.msg')('\n'.join(tstuff), preamble=False)
+      else:
+        self.api('send.execute')('#bp.itemid.id %s' % serial)
 
   def formatsingleline(self, linename, linecolour, data, datacolor=None):
     """
@@ -573,17 +629,17 @@ class Plugin(AardwolfBasePlugin): # pylint: disable=too-many-public-methods
         colors[i] = '@w'
 
     if foundfirst:
-      ttext.append('|%5s@w%-5s %-7s %-7s  %-8s  %-8s  %-5s %-5s %5s|' % (
-          '', 'Bash', 'Pierce', 'Slash', 'All Phys',
-          'All Mag', 'Diss', 'Poisn', ''))
+      ttext.append('|%5s@w%-8s  %-8s  %-5s %-7s %-7s  %-5s %-5s %5s|' % (
+          '', 'All Phys', 'All Mag', 'Bash', 'Pierce', 'Slash',
+          'Diss', 'Poisn', ''))
       ttext.append(
-          '|%6s%s%-5s  %s%-7s %s%-7s   %s%-8s %s%-8s %s%-5s %s%-5s @w%4s|' % (
+          '|%6s %s%-8s  %s%-8s  %s%-5s %s%-7s %s%-7s  %s%-5s %s%-5s@w%4s|' % (
               '',
+              colors['All physical'], resists['All physical'] or '-',
+              colors['All magic'], resists['All magic'] or '-',
               colors['Bash'], resists['Bash'] or '-',
               colors['Pierce'], resists['Pierce'] or '-',
               colors['Slash'], resists['Slash'] or '-',
-              colors['All physical'], resists['All physical'] or '-',
-              colors['All magic'], resists['All magic'] or '-',
               colors['Disease'], resists['Disease'] or '-',
               colors['Poison'], resists['Poison'] or '-',
               ''))
@@ -627,28 +683,14 @@ class Plugin(AardwolfBasePlugin): # pylint: disable=too-many-public-methods
 
     return ttext
 
-  @staticmethod
-  def checkattr(item, attr):
-    """
-    check for an attribute
-    """
-    if hasattr(item, attr) and item.__dict__[attr]:
-      return True
-
-    return False
-
   # format an item
-  def api_formatitem(self, serial): # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+  def api_formatitem(self, item): # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     """  format an item
     @Yserial@w    = the serial # if the item to identify
 
     this function returns a list of strings that are the formatted item"""
     divider = '+' + '-' * 65 + '+'
     linelen = 50
-
-    serial = int(serial)
-    #item = self.currentitem
-    item = self.api('eq.getitem')(serial)
 
     iteml = [divider]
 
@@ -669,7 +711,7 @@ class Plugin(AardwolfBasePlugin): # pylint: disable=too-many-public-methods
 
     iteml.append(self.formatsingleline('Id', '@R', '@w%s' % item.serial))
 
-    if item.checkattr('curcontainer'):
+    if item.checkattr('curcontainer') and item.curcontainer:
       if item.curcontainer.cid == 'Worn':
         wearlocs = self.api('itemu.wearlocs')()
         iteml.append(self.formatsingleline('Location', '@R',
@@ -709,7 +751,8 @@ class Plugin(AardwolfBasePlugin): # pylint: disable=too-many-public-methods
       iteml.append(self.formatsingleline('Material', '@c', item.material))
 
     if item.checkattr('flags'):
-      tlist = textwrap.wrap(item.flags, linelen, break_on_hyphens=False)
+      flags = ", ".join(item.flags)
+      tlist = textwrap.wrap(flags, linelen, break_on_hyphens=False)
       header = 'Flags'
       for i in tlist:
         i = i.replace('precious', '@Yprecious@w')
@@ -734,7 +777,7 @@ class Plugin(AardwolfBasePlugin): # pylint: disable=too-many-public-methods
 
     if item.checkattr('notes'):
       iteml.append(divider)
-      tlist = textwrap.wrap(' '.join(item.notes), linelen)
+      tlist = textwrap.wrap(item.notes['ntext'], linelen)
       header = 'Notes'
       for i in tlist:
         iteml.append(self.formatsingleline(header, '@W', i, '@w'))
@@ -850,7 +893,7 @@ class Plugin(AardwolfBasePlugin): # pylint: disable=too-many-public-methods
       iteml.append(divider)
       header = 'Reward'
       iteml.append(self.formatspecialline(header, '@Y',
-                                          item.reward))
+                                          item.reward['rtext']))
 
     if item.checkattr('drink'):
       iteml.append(divider)
@@ -869,27 +912,10 @@ class Plugin(AardwolfBasePlugin): # pylint: disable=too-many-public-methods
     if item.checkattr('furniture'):
       iteml.append(divider)
       iteml.append(self.formatspecialline('Heal Rate', '@c',
-                                          "Health [@Y%d@w]    Magic [@Y%d@w]" % \
+                                          "Health @w[@Y%d@w]    @WMagic @w[@Y%d@w]" % \
                                            (item.furniture['hpregen'],
                                             item.furniture['manaregen'])))
 
     iteml.append(divider)
 
     return iteml
-
-  # show an item to the client
-  def api_showitem(self, serial):
-    """  show an item to the client
-    @Yserial@w    = the serial # of the item to show
-
-    if the serial isn't in the cache, then it is identified through the id
-    command
-
-    this function returns nothing"""
-    item = self.api('eq.getitem')(serial)
-    if item:
-      if item.hasbeenided:
-        tstuff = self.api('itemid.format')(serial)
-        self.api('send.client')('\n'.join(tstuff), preamble=False)
-      else:
-        self.api('send.execute')('#bp.itemid.id %s' % serial)
