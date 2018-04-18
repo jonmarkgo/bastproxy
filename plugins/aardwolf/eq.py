@@ -30,18 +30,29 @@ class Item(object):
     self.score = 'Unkn'
     self.wearslot = None
     self.plugin = plugin
+    self.serial = serial
     self.api = self.plugin.api
 
-    self.upditem(attributes)
+    if attributes:
+      self.upditem(attributes)
 
     self.curcontainer = None
     self.origcontainer = None
     self.hasbeenided = False
 
-    if self.api('plugins.isloaded')('eqdb') and loadfromdb:
+    if loadfromdb:
+      self.updfromdb()
+
+  def updfromdb(self):
+    """
+    update from the database
+    """
+    if self.api('plugins.isloaded')('eqdb'):
+      self.api('send.msg')('getting %s from db' % self.serial)
       dbdata = self.api('eqdb.getitem')(self.serial)
       if dbdata:
         self.upditem(dbdata)
+        self.hasbeenided = True
 
   def upditem(self, attributes):
     """
@@ -953,6 +964,9 @@ class Plugin(AardwolfBasePlugin): #pylint: disable=too-many-public-methods
     if serial in self.itemcache:
       self.itemcache[serial].upditem(attributes)
       self.itemcache[serial].hasbeenided = True
+      if self.api('plugins.isloaded')('eqdb'):
+        self.api('eqdb.saveitem')(self.itemcache[serial])
+
 
   # return the item worn at a specified location
   def api_getworn(self, location):
