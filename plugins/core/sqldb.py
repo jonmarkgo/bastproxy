@@ -658,7 +658,7 @@ class Sqldb(object):
     results = {}
     if ttable not in self.tables:
       self.api('send.msg')('table %s does not exist in getlast' % ttable)
-      return
+      return {}
 
     colid = self.tables[ttable]['keyfield']
     tstring = ''
@@ -679,7 +679,7 @@ class Sqldb(object):
     """
     if ttable not in self.tables:
       self.api('send.msg')('table %s does not exist in getrow' % ttable)
-      return
+      return {}
 
     colid = self.tables[ttable]['keyfield']
 
@@ -718,7 +718,7 @@ class Sqldb(object):
 
     if not integrity:
       self.api('send.msg')('Integrity check failed, aborting backup')
-      return
+      return success
     self.close()
     try:
       os.makedirs(os.path.join(self.dbdir, 'archive'))
