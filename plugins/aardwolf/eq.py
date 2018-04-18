@@ -20,7 +20,7 @@ class Item(object):
   """
   a class to represent an item
   """
-  def __init__(self, attributes, plugin, loadfromdb=True):
+  def __init__(self, serial, plugin, attributes=None, loadfromdb=False):
     """
     init the class, if eqdb is loaded, update from the db
     """
@@ -204,7 +204,7 @@ class EqContainer(object):
       #self.api('send.msg')('invdata args: %s' % args)
       try:
         attributes = self.api('itemu.dataparse')(line, 'eqdata')
-        titem = Item(attributes, self.plugin)
+        titem = Item(attributes['serial'], self.plugin, attributes)
         self.itemcache[titem.serial] = titem
         #self.api('send.msg')('invdata parsed item: %s' % titem)
         self.add(titem.serial)
@@ -484,7 +484,7 @@ class Worn(EqContainer):
       #self.api('send.msg')('invdata args: %s' % args)
       try:
         attributes = self.api('itemu.dataparse')(line, 'eqdata')
-        titem = Item(attributes, plugin=self.plugin)
+        titem = Item(attributes['serial'], self.plugin, attributes)
         self.itemcache[titem.serial] = titem
         #self.api('send.msg')('invdata parsed item: %s' % titem)
         self.add(titem.serial, titem.wearslot)
@@ -564,8 +564,8 @@ class Worn(EqContainer):
     """
     build the output of a container
     """
-    emptyitem = Item({'cname':"@r< empty >@w", 'shortflags':"", 'level':'',
-                      'serial':''}, plugin=self.plugin, loadfromdb=False)
+    emptyitem = Item('', self, {'cname':"@r< empty >@w", 'shortflags':"", 'level':'',
+                                'serial':''})
 
     wearlocs = self.api('itemu.wearlocs')()
     self.api('send.msg')('build_worn args: %s' % args)
@@ -1225,7 +1225,7 @@ class Plugin(AardwolfBasePlugin): #pylint: disable=too-many-public-methods
       self.itemcache[data['serial']].upditem(data)
       self.api('send.msg')('invitem: item %s updated' % data['serial'])
     else:
-      titem = Item(data, plugin=self)
+      titem = Item(data['serial'], self, data)
       self.itemcache[titem.serial] = titem
       self.api('send.msg')('invitem: item %s added' % titem)
 
