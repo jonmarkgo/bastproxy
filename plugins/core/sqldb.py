@@ -426,15 +426,18 @@ class Sqldb(object):
 
   def checkdictforcolumns(self, tablename, tdict):
     """
-    check that a dictionary has the correct columns
+    check that a dictionary has the correct columns and return
+    a new dictionary
     """
+    newdict = {}
     columns = self.tables[tablename]['columns']
     columndefaults = self.tables[tablename]['defcolvals']
     for col in columns:
       if col not in tdict:
-        tdict[col] = columndefaults[col]
-
-    return tdict
+        newdict[col] = columndefaults[col]
+      else:
+        newdict[col] = tdict[col]
+    return newdict
 
   def converttoinsert(self, tablename, keynull=False, replace=False):
     """
