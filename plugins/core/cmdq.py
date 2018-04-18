@@ -63,7 +63,8 @@ class Plugin(BasePlugin):
     this function returns no values"""
     self.api('send.msg')('removing data for plugin %s' % plugin,
                          secondary=plugin)
-    for i in self.cmds.keys():
+    tkeys = self.cmds.keys()
+    for i in tkeys: # iterate keys since we are deleting things
       if self.cmds[i]['plugin'] == plugin:
         self.api('%s.rmvcmdtype' % self.sname)(i)
 
