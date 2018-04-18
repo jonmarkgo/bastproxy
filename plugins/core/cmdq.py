@@ -4,7 +4,7 @@ this plugin creates a command queue
 see the aardwolf eq plugin for examples of how to use it
 """
 import re
-
+import libs.argp as argp
 from plugins._baseplugin import BasePlugin
 
 NAME = 'Command Queue'
@@ -41,6 +41,11 @@ class Plugin(BasePlugin):
     load the plugins
     """
     BasePlugin.load(self)
+
+    parser = argp.ArgumentParser(add_help=False,
+                                 description='drop the last command')
+    self.api('commands.add')('fixqueue', self.cmd_fixqueue,
+                             parser=parser)
 
     self.api('events.register')('plugin_unloaded', self.pluginunloaded)
 
@@ -172,3 +177,14 @@ class Plugin(BasePlugin):
     reset the queue
     """
     self.queue = []
+
+  def cmd_fixqueue(self, args): # pylint: disable=unused-argument
+    """
+    finish the last command
+    """
+    if self.currentcmd:
+      self.api('timep.finish')('cmd_%s' % self.currentcmd['ctype'])
+      self.currentcmd = {}
+      self.sendnext()
+
+    return True, ['finished the currentcmd']
