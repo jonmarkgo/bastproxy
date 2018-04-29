@@ -1312,7 +1312,7 @@ class Plugin(AardwolfBasePlugin): #pylint: disable=too-many-public-methods
           #    del self.itemcache[item]
             del self.containers[serial]
         self.containers['Inventory'].remove(serial)
-        self.api('events.eraise')('inventory_removed', {'item':titem})
+        self.api('events.eraise')('eq_inventory_removed', {'item':titem})
         del self.itemcache[serial]
       else:
         self.containers['Inventory'].refresh()
@@ -1324,9 +1324,10 @@ class Plugin(AardwolfBasePlugin): #pylint: disable=too-many-public-methods
         if titem.itype == 11:
           if serial not in self.containers:
             self.containers[serial] = EqContainer(self, serial, refresh=True)
-        self.api('events.eraise')('inventory_added', {'item':titem})
+        self.api('events.eraise')('eq_inventory_added', {'item':titem})
       else:
         self.containers['Inventory'].refresh()
+      self.api('events.eraise')('eq_put_Inventory_%s' % (serial))
     elif action == 5:
       # Taken out of container
       try:
@@ -1335,6 +1336,7 @@ class Plugin(AardwolfBasePlugin): #pylint: disable=too-many-public-methods
       except KeyError:
         self.containers[container].refresh()
         self.containers['Inventory'].refresh()
+      self.api('events.eraise')('eq_remove_%s_%s' % (self.containers[container].cid, serial))
     elif action == 6:
       # Put into container
       try:
@@ -1343,9 +1345,11 @@ class Plugin(AardwolfBasePlugin): #pylint: disable=too-many-public-methods
       except KeyError:
         self.containers['Inventory'].refresh()
         self.containers[container].refresh()
+      self.api('events.eraise')('eq_put_%s_%s' % (serial, self.containers[container].cid))
     elif action == 9:
       # put into vault
       self.containers['Vault'].add(serial)
+      self.api('events.eraise')('eq_put_%s_Vault' % (serial))
     elif action == 10:
       # take from vault
       self.containers['Vault'].remove(serial)
@@ -1357,6 +1361,7 @@ class Plugin(AardwolfBasePlugin): #pylint: disable=too-many-public-methods
       except KeyError:
         self.containers['Inventory'].refresh()
         self.containers['Keyring'].refresh()
+      self.api('events.eraise')('eq_put_%s_Keyring' % (serial))
     elif action == 12:
       # take from keyring
       try:
