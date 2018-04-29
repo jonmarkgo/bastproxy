@@ -13,34 +13,8 @@ import fnmatch
 import libs.argp as argp
 from libs.persistentdict import PersistentDict
 from libs.api import API
+import libs.imputils as imputils
 from plugins._baseplugin import BasePlugin
-
-def find_files(directory, filematch):
-  """
-  find files in a directory that match a filter
-  """
-  matches = []
-  if os.sep in filematch:
-    tstuff = filematch.split(os.sep)
-    directory = os.path.join(directory, tstuff[0])
-    filematch = tstuff[-1]
-  for root, _, filenames in os.walk(directory, followlinks=True):
-    for filename in fnmatch.filter(filenames, filematch):
-      matches.append(os.path.join(root, filename))
-
-  return matches
-
-def get_module_name(modpath):
-  """
-  get a module name
-  """
-  tpath = os.path.split(modpath)
-  base = os.path.basename(tpath[0])
-  mod = os.path.splitext(tpath[1])[0]
-  if not base:
-    return '.'.join([mod]), mod
-
-  return '.'.join([base, mod]), mod
 
 class PluginMgr(BasePlugin):
   """
@@ -106,27 +80,6 @@ class PluginMgr(BasePlugin):
     """
     return self.allplugininfo
 
-  def _findplugin(self, name):
-    """
-    find a plugin file
-    """
-    if '.' in name:
-      tlist = name.split('.')
-      name = tlist[-1]
-      del tlist[-1]
-      npath = os.sep.join(tlist)
-
-    _module_list = find_files(self.basepath, name + ".py")
-
-    if len(_module_list) == 1:
-      return _module_list[0], self.basepath
-    else:
-      for i in _module_list:
-        if npath in i:
-          return i, self.basepath
-
-    return '', ''
-
   def findloadedplugin(self, plugin):
     """
     find a plugin
@@ -187,10 +140,10 @@ class PluginMgr(BasePlugin):
       self.api('send.msg')('%s: loading dependency %s' % (pluginname, i),
                            pluginname)
 
-      name, path = self._findplugin(i)
+      name, path = imputils.findmodule(self.basepath, i)
       if name:
         modpath = name.replace(path, '')
-        self._loadmodule(modpath, path, force=True)
+        self._loadplugin(modpath, path, force=True)
 
   # get all not loaded plugins
   def _getnotloadedplugins(self):
@@ -364,7 +317,7 @@ class PluginMgr(BasePlugin):
     if plugin:
 
       fname = plugin.replace('.', os.sep)
-      _module_list = find_files(self.basepath, fname + ".py")
+      _module_list = imputils.find_files(self.basepath, fname + ".py")
 
       if len(_module_list) > 1:
         tmsg.append('There is more than one module that matches: %s' % \
@@ -373,11 +326,11 @@ class PluginMgr(BasePlugin):
         tmsg.append('There are no modules that match: %s' % plugin)
       else:
         modpath = _module_list[0].replace(self.basepath, '')
-        sname, reason = self._loadmodule(modpath, self.basepath, True)
+        sname, reason = self._loadplugin(modpath, self.basepath, True)
         plugin = self.api('plugins.getp')(sname)
         if sname:
           if reason == 'already':
-            tmsg.append('Module %s is already loaded' % sname)
+            tmsg.append('Plugin %s is already loaded' % sname)
           else:
             tmsg.append('Load complete: %s - %s' % \
                                           (sname, plugin.name))
@@ -405,7 +358,7 @@ class PluginMgr(BasePlugin):
 
     if plugin:
       if plugin.canreload:
-        if self._unloadmodule(plugin.fullimploc):
+        if self._unloadplugin(plugin.fullimploc):
           tmsg.append("Unloaded: %s" % plugin.fullimploc)
         else:
           tmsg.append("Could not unload:: %s" % plugin.fullimploc)
@@ -436,7 +389,7 @@ class PluginMgr(BasePlugin):
 
     if plugin:
       if plugin.canreload:
-        tret, _ = self._reloadmodule(plugin.modpath, True)
+        tret, _ = self._reloadplugin(plugin.modpath, True)
         if tret and tret != True:
           plugin = self.findloadedplugin(plugina)
           tmsg.append("Reload complete: %s" % plugin.fullimploc)
@@ -450,12 +403,12 @@ class PluginMgr(BasePlugin):
 
     return False, tmsg
 
-  # load all plugin modules
-  def _loadmodules(self, tfilter):
+  # load all plugins
+  def _loadplugins(self, tfilter):
     """
-    load modules in all directories under plugins
+    load plugins in all directories under the plugin directory
     """
-    _module_list = find_files(self.basepath, tfilter)
+    _module_list = imputils.find_files(self.basepath, tfilter)
     _module_list.sort()
 
     load = False
@@ -465,7 +418,7 @@ class PluginMgr(BasePlugin):
       force = False
       if modpath in self.loadedplugins:
         force = True
-      modname, dummy = self._loadmodule(modpath, self.basepath,
+      modname, dummy = self._loadplugin(modpath, self.basepath,
                                         force=force, runload=load)
 
       if modname == 'log':
@@ -480,28 +433,28 @@ class PluginMgr(BasePlugin):
       for i in testsort:
         try:
           #check dependencies here
-          self._loadplugin(i)
+          self.loadplugin(i)
         except Exception: # pylint: disable=broad-except
           self.api('send.traceback')(
               "load: had problems running the load method for %s." \
                           % i.fullimploc)
-          del sys.modules[i.fullimploc]
+          imputils.deletemodule(i.fullimploc)
 
   # update all plugin info
   def _updateallplugininfo(self):
     """
     find plugins that are not in self.allplugininfo
     """
-    _module_list = find_files(self.basepath, '*.py')
-    _module_list.sort()
+    _plugin_list = imputils.find_files(self.basepath, '*.py')
+    _plugin_list.sort()
 
     self.allplugininfo = {}
     badplugins = []
 
-    for fullpath in _module_list:
+    for fullpath in _plugin_list:
       modpath = fullpath.replace(self.basepath, '')
 
-      imploc, modname = get_module_name(modpath)
+      imploc, modname = imputils.get_module_name(modpath)
 
       if not modname.startswith("_"):
         fullimploc = "plugins" + '.' + imploc
@@ -530,88 +483,70 @@ class PluginMgr(BasePlugin):
             self.allplugininfo[modpath]['modpath'] = modpath
             self.allplugininfo[modpath]['fullimploc'] = fullimploc
 
-            del sys.modules[fullimploc]
+            imputils.deletemodule(fullimploc)
 
           except Exception: # pylint: disable=broad-except
             badplugins.append(fullimploc)
 
     return badplugins
 
-  # load a module
-  def _loadmodule(self, modpath, basepath, force=False, runload=True):
-    # pylint: disable=too-many-branches
+  # load a plugin
+  def _loadplugin(self, modpath, basepath, force=False, runload=True):
     """
-    load a single module
+    load a single plugin
     """
-    if basepath in modpath:
-      modpath = modpath.replace(basepath, '')
+    success, msg, module, fullimploc = imputils.importmodule(modpath, basepath,
+                                                             self, 'plugins')
 
-    imploc, modname = get_module_name(modpath)
+    if success and msg == 'import':
 
-    if modname.startswith("_"):
-      return False, 'dev'
-
-    try:
-      fullimploc = "plugins" + '.' + imploc
-      if fullimploc in sys.modules:
-        return sys.modules[fullimploc].SNAME, 'already'
-
-      self.api('send.msg')('importing %s' % fullimploc, primary='plugins')
-      _module = __import__(fullimploc)
-      _module = sys.modules[fullimploc]
-      self.api('send.msg')('imported %s' % fullimploc, primary='plugins')
       load = True
 
-      if 'AUTOLOAD' in _module.__dict__ and not force:
-        if not _module.AUTOLOAD:
+      if 'AUTOLOAD' in module.__dict__ and not force:
+        if not module.AUTOLOAD:
           load = False
-      elif 'AUTOLOAD' not in _module.__dict__:
+      elif 'AUTOLOAD' not in module.__dict__:
         load = False
 
       if modpath not in self.allplugininfo:
         self.allplugininfo[modpath] = {}
-        self.allplugininfo[modpath]['sname'] = _module.SNAME
-        self.allplugininfo[modpath]['name'] = _module.NAME
-        self.allplugininfo[modpath]['purpose'] = _module.PURPOSE
-        self.allplugininfo[modpath]['author'] = _module.AUTHOR
-        self.allplugininfo[modpath]['version'] = _module.VERSION
+        self.allplugininfo[modpath]['sname'] = module.SNAME
+        self.allplugininfo[modpath]['name'] = module.NAME
+        self.allplugininfo[modpath]['purpose'] = module.PURPOSE
+        self.allplugininfo[modpath]['author'] = module.AUTHOR
+        self.allplugininfo[modpath]['version'] = module.VERSION
         self.allplugininfo[modpath]['modpath'] = modpath
         self.allplugininfo[modpath]['fullimploc'] = fullimploc
 
       if load:
-        if "Plugin" in _module.__dict__:
-          self._addplugin(_module, modpath, basepath, fullimploc, runload)
+        if "Plugin" in module.__dict__:
+          self._addplugin(module, modpath, basepath, fullimploc, runload)
 
         else:
           self.api('send.msg')('Module %s has no Plugin class' % \
-                                              _module.NAME)
+                                              module.NAME)
 
-        _module.__dict__["proxy_import"] = 1
+        module.__dict__["proxy_import"] = 1
 
-        return _module.SNAME, 'Loaded'
+        return module.SNAME, 'Loaded'
       else:
-        if fullimploc in sys.modules:
-          del sys.modules[fullimploc]
+        imputils.deletemodule(fullimploc)
         self.api('send.msg')(
             'Not loading %s (%s) because autoload is False' % \
-                                    (_module.NAME, fullimploc), primary='plugins')
+                                    (module.NAME, fullimploc), primary='plugins')
       return True, 'not autoloaded'
-    except Exception: # pylint: disable=broad-except
-      if fullimploc in sys.modules:
-        del sys.modules[fullimploc]
 
-      self.api('send.traceback')(
-          "Module '%s' refuses to import/load." % fullimploc)
-      return False, 'error'
+    return success, msg
 
   # unload a module
-  def _unloadmodule(self, fullimploc):
+  def _unloadplugin(self, fullimploc):
     """
     unload a module
     """
     if fullimploc in sys.modules:
 
       _module = sys.modules[fullimploc]
+      success = True
       try:
         if "proxy_import" in _module.__dict__:
           self.api('send.client')(
@@ -620,27 +555,30 @@ class PluginMgr(BasePlugin):
             try:
               _module.unload()
             except Exception: # pylint: disable=broad-except
+              success = False
               self.api('send.traceback')(
                   "unload: module %s didn't unload properly." % fullimploc)
 
           if not self._removeplugin(_module.SNAME):
             self.api('send.client')(
                 'could not remove plugin %s' % fullimploc)
-
-        del sys.modules[fullimploc]
-        self.api('send.client')("unload: unloaded %s." % fullimploc)
+            success = False
 
       except Exception: # pylint: disable=broad-except
         self.api('send.traceback')(
             "unload: had problems unloading %s." % fullimploc)
-        return False
+        success = False
 
-    return True
+      if success:
+        imputils.deletemodule(fullimploc)
+        self.api('send.client')("unload: unloaded %s." % fullimploc)
 
-  # reload a module
-  def _reloadmodule(self, modpath, force=False):
+    return success
+
+  # reload a plugin
+  def _reloadplugin(self, modpath, force=False):
     """
-    reload a module
+    reload a plugin
     """
     if modpath in self.loadedpluginsd:
       plugin = self.api.get('plugins.getp')(modpath)
@@ -653,11 +591,11 @@ class PluginMgr(BasePlugin):
       except Exception: # pylint: disable=broad-except
         reloaddependents = False
       plugin = None
-      if not self._unloadmodule(fullimploc):
+      if not self._unloadplugin(fullimploc):
         return False, ''
 
       if modpath and basepath:
-        retval = self._loadmodule(modpath, basepath, force)
+        retval = self._loadplugin(modpath, basepath, force)
         if retval and reloaddependents:
           self._reloadalldependents(sname)
         return retval
@@ -678,10 +616,10 @@ class PluginMgr(BasePlugin):
           self.api('send.msg')('reloading dependent %s of %s' % \
                       (plugin.sname, reloadedplugin), plugin.sname)
           plugin.savestate()
-          self._reloadmodule(plugin.modpath, True)
+          self._reloadplugin(plugin.modpath, True)
 
   # load a plugin
-  def _loadplugin(self, plugin):
+  def loadplugin(self, plugin):
     """
     check dependencies and run the load function
     """
@@ -706,7 +644,13 @@ class PluginMgr(BasePlugin):
     """
     add a plugin to be managed
     """
-    module.__dict__["lyntin_import"] = 1
+    pluginn = self.api('plugins.getp')(module.NAME)
+    plugins = self.api('plugins.getp')(module.SNAME)
+    if plugins or pluginn:
+      self.api('send.msg')('Plugin %s already exists' % plugin.name,
+                           secondary=plugin.sname)
+      return False
+
     plugin = module.Plugin(module.NAME, module.SNAME,
                            modpath, basepath, fullimploc)
     plugin.author = module.AUTHOR
@@ -716,22 +660,16 @@ class PluginMgr(BasePlugin):
       plugin.priority = module.PRIORITY
     except AttributeError:
       pass
-    pluginn = self.api('plugins.getp')(plugin.name)
-    plugins = self.api('plugins.getp')(plugin.sname)
-    if plugins or pluginn:
-      self.api('send.msg')('Plugin %s already exists' % plugin.name,
-                           secondary=plugin.sname)
-      return False
 
     if load:
       try:
         #check dependencies here
-        self._loadplugin(plugin)
+        self.loadplugin(plugin)
       except Exception: # pylint: disable=broad-except
         self.api('send.traceback')(
             "load: had problems running the load method for %s." \
                                                 % fullimploc)
-        del sys.modules[fullimploc]
+        imputils.deletemodule(fullimploc)
         return False
 
     self.loadedpluginsd[modpath] = {}
@@ -828,7 +766,7 @@ class PluginMgr(BasePlugin):
     """
     load various things
     """
-    self._loadmodules("*.py")
+    self._loadplugins("*.py")
 
     BasePlugin._loadcommands(self)
 
