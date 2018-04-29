@@ -30,7 +30,7 @@ class Plugin(AardwolfBasePlugin):
       self.api('setting.add')(i, False, bool,
                               'autokeep %s' % i)
 
-    self.api('events.register')('inventory_added', self.inventory_added)
+    self.api('events.register')('eq_inventory_added', self.inventory_added)
 
   def inventory_added(self, args):
     """
