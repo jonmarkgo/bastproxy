@@ -61,7 +61,7 @@ class Plugin(BasePlugin):
     @Yplugin@w   = The plugin name
 
     this function returns no values"""
-    self.api('send.msg')('removing data for plugin %s' % plugin,
+    self.api('send.msg')('removing cmdq data for plugin %s' % plugin,
                          secondary=plugin)
     tkeys = self.cmds.keys()
     for i in tkeys: # iterate keys since we are deleting things
@@ -83,8 +83,9 @@ class Plugin(BasePlugin):
     tell the queue a command has started
     """
     if self.currentcmd and cmdtype != self.currentcmd['ctype']:
-      self.api('send.error')("got command start for %s and it's not the current cmd: %s" \
+      self.api('send.msg')("got command start for %s and it's not the current cmd: %s" \
                                 % (cmdtype, self.currentcmd['ctype']))
+      return
     self.api('timep.start')('cmd_%s' % cmdtype)
 
   def _api_addcmdtype(self, cmdtype, cmd, regex, **kwargs):
