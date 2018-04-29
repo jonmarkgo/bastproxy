@@ -161,9 +161,10 @@ class IdentifyCmd(object):
     self.dividercount = 0
     self.pastkeywords = False
     self.currentidsection = ''
+    self.putevent = ''
 
     self.idinfoneeded = ['keywords', 'foundat', 'material', 'leadsto',
-                         'affectmods', 'reward']
+                         'affectmod', 'reward']
     self.idinfoskip = ['name', 'id', 'itype', 'worth', 'wearable', 'score',
                        'flags', 'ownedby', 'statmods', 'resistmods',
                        'weapontype', 'inflicts', 'specials', 'capacity',
@@ -298,20 +299,44 @@ class IdentifyCmd(object):
       self.currentitem['notes'] = {'ntext':" ".join(self.currentitem['notes'])}
 
     # split affectmods
-    if 'affectmods' in self.currentitem:
-      affw = self.currentitem['affectmods'].strip()
+    if 'affectmod' in self.currentitem:
+      affw = self.currentitem['affectmod'].strip()
       newflag = affw.split(', ')
-      self.currentitem['affectmods'] = newflag
+      self.currentitem['affectmod'] = newflag
+
 
     if self.currentitem['serial'] in self.plugin.waitingforid:
       del self.plugin.waitingforid[int(self.currentitem['serial'])]
     self.api('eq.addidentify')(self.currentitem['serial'], self.currentitem)
-    self.api('events.eraise')('itemid_%s' % self.currentitem['serial'],
-                              {'item':self.api('eq.getitem')(
-				                              self.currentitem['serial'])})
-    self.api('events.eraise')('itemid_all',
-                              {'item':self.api('eq.getitem')(
-                                  self.currentitem['serial'])})
+
+    titem = self.api('eq.getitem')(self.currentitem['serial'])
+
+    if titem.origcontainer and titem.origcontainer.cid != 'Inventory':
+      self.api('eq.put')(titem.serial)
+      self.putevent = 'eq_put_%s_%s' % (self.currentitem['serial'],
+                                        titem.origcontainer.cid)
+      self.api('send.msg')('waiting for event: %s' % self.putevent)
+      self.api('events.register')(self.putevent, self.event_put)
+    else:
+      self.raiseid()
+
+  def event_put(self, args):
+    """
+    wait for the put event
+    """
+    self.api('send.msg')('identify got put event')
+    self.api('events.unregister')(args['eventname'], self.event_put)
+    self.raiseid()
+
+  def raiseid(self):
+    """
+    raise an event for id finished
+    """
+    titem = self.api('eq.getitem')(self.currentitem['serial'])
+    self.api('send.client')('raiseid item: %s' % titem)
+    self.api('send.msg')('raising id event for %s' % titem.serial)
+    self.api('events.eraise')('itemid_%s' % titem.serial, {'item':titem})
+    self.api('events.eraise')('itemid_all', {'item':titem})
 
 class Plugin(AardwolfBasePlugin): # pylint: disable=too-many-public-methods
   """
@@ -382,21 +407,7 @@ class Plugin(AardwolfBasePlugin): # pylint: disable=too-many-public-methods
         self.api('eq.get')(serial)
       self.api('cmdq.addtoqueue')('invdetails', serial)
       self.api('cmdq.addtoqueue')('identify', serial)
-      self.api('events.register')('itemid_%s' % titem.serial,
-                                  self.putincontainer,
-				                              prio=40)
       return None
-
-  def putincontainer(self, args):
-    """
-    after identification, put an item into its original container
-    """
-    self.api('events.unregister')(args['eventname'], self.putincontainer)
-
-    titem = args['item']
-
-    if titem.origcontainer and titem.origcontainer.cid != 'Inventory':
-      self.api('eq.put')(titem.serial)
 
   def event_showitem(self, args):
     """
@@ -454,7 +465,7 @@ class Plugin(AardwolfBasePlugin): # pylint: disable=too-many-public-methods
       if item.hasbeenided:
         self.api('send.msg')('api_showitem item.hasbeenided')
         tstuff = self.api('%s.format' % self.sname)(item)
-        self.api('send.msg')('\n'.join(tstuff), preamble=False)
+        self.api('send.client')('\n'.join(tstuff))
       else:
         self.api('send.execute')('#bp.itemid.id %s' % serial)
 
