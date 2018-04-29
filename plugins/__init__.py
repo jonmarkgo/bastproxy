@@ -538,7 +538,7 @@ class PluginMgr(BasePlugin):
 
     return success, msg
 
-  # unload a module
+  # unload a plugin
   def _unloadplugin(self, fullimploc):
     """
     unload a module
@@ -647,8 +647,8 @@ class PluginMgr(BasePlugin):
     pluginn = self.api('plugins.getp')(module.NAME)
     plugins = self.api('plugins.getp')(module.SNAME)
     if plugins or pluginn:
-      self.api('send.msg')('Plugin %s already exists' % plugin.name,
-                           secondary=plugin.sname)
+      self.api('send.msg')('Plugin %s already exists' % module.NAME,
+                           secondary=module.SNAME)
       return False
 
     plugin = module.Plugin(module.NAME, module.SNAME,
