@@ -433,7 +433,7 @@ def dbcreate(sqldb, plugin, **kwargs):
         data = []
         for mod in item.affectmod:
           data.append({'type':mod})
-        self.savemultipledetails('skillmod', item.serial, data)
+        self.savemultipledetails('affectmod', item.serial, data)
       if item.checkattr('enchant') and item.enchant:
         self.savemultipledetails('enchant', item.serial, item.enchant)
       if item.checkattr('notes'):
