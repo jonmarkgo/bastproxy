@@ -43,10 +43,12 @@ class Plugin(AardwolfBasePlugin):
     """
     raise an iceage event
     """
+    self.api('send.msg')('Ice Age imminent')
     self.api('events.eraise')('aard_iceage', {})
 
   def reboot(self, _=None):
     """
     raise a reboot event
     """
+    self.api('send.msg')('Reboot imminent')
     self.api('events.eraise')('aard_reboot', {})
