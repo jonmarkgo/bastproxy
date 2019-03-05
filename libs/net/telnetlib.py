@@ -237,8 +237,12 @@ class Telnet(asyncore.dispatcher):
       buf = self.recv(1024)
       self.msg("recv %r" % buf)
       return buf
-    except:  # pylint: disable=broad-except
-      return None
+    except socket.error as err:  # pylint: disable=broad-except
+      if err.args[0] == 110:
+        self.connected = False
+      self.handle_error()
+
+    return None
 
   def __del__(self):
     """
@@ -338,7 +342,8 @@ class Telnet(asyncore.dispatcher):
     """
     handle an error
     """
-    self.api('send.traceback')("Telnet error: %s" % self.ttype)
+    self.api('send.traceback')("Telnet error: %s - %s - %s" % (self.ttype,
+                                                               self.host, self.port))
 
   def handle_read(self):
     """
@@ -532,7 +537,13 @@ class Telnet(asyncore.dispatcher):
     connection is closed.
     """
     buf = self.readdatafromsocket()
-    self.eof = (not buf)
-    self.rawq = "".join([self.rawq, buf])
-    self.msg('rawq: %s' % self.rawq)
-    return buf
+    if buf is None:
+      self.eof = True
+    else:
+      self.eof = (not buf)
+    if not self.eof:
+      self.rawq = "".join([self.rawq, buf])
+      self.msg('rawq: %s' % self.rawq)
+      return buf
+
+    return ''

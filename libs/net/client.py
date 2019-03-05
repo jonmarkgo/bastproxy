@@ -9,6 +9,7 @@ from libs.net.telnetlib import Telnet
 
 PASSWORD = 0
 CONNECTED = 1
+CLOSING = 2
 
 class Client(Telnet):
   """
@@ -56,7 +57,7 @@ class Client(Telnet):
       dtype = 'fromproxy'
     if 'raw' in args:
       raw = args['raw']
-    if outbuffer != None:
+    if outbuffer is not None:
       if (dtype == 'fromproxy' or dtype == 'frommud') \
             and self.state == CONNECTED:
         outbuffer = "".join([outbuffer, '\r\n'])
@@ -135,12 +136,16 @@ class Client(Telnet):
     """
     handle a close
     """
-    self.api('send.client')("%s - %s: Client Disconnected" % \
-                                (self.host, self.port))
-    self.api('send.msg')("%s - %s: Client Disconnected" % \
-                                (self.host, self.port), primary='net')
-    self.api('events.eraise')('client_disconnected', {'client':self}, calledfrom="client")
-    self.api('events.unregister')('to_client_event', self.addtooutbufferevent)
-    while self.outbuffer:
-      self.handle_write()
-    Telnet.handle_close(self)
+    if self.state != CLOSING:
+      self.state = CLOSING
+      self.api('send.client')("%s - %s: Client Disconnected" % \
+                                  (self.host, self.port))
+      self.api('send.msg')("%s - %s: Client Disconnected" % \
+                                  (self.host, self.port), primary='net')
+      self.api('events.eraise')('client_disconnected', {'client':self},
+                                calledfrom="client")
+      self.api('events.unregister')('to_client_event', self.addtooutbufferevent)
+      if self.connected:
+        while self.outbuffer:
+          self.handle_write()
+        Telnet.handle_close(self)
