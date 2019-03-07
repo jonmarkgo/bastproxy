@@ -366,12 +366,13 @@ class Plugin(AardwolfBasePlugin): # pylint: disable=too-many-public-methods
     self.kill_info['room_id'] = self.api('GMCP.getv')('room.info.num')
     self.kill_info['level'] = self.api('aardu.getactuallevel')()
     self.kill_info['time'] = time.time()
-    wielded = self.api('eq.getworn')(24)
-    second = self.api('eq.getworn')(25)
-    if wielded:
-      self.kill_info['wielded_weapon'] = wielded.serial
-    if second:
-      self.kill_info['second_weapon'] = second.serial
+    if self.api('plugins.isloaded')('eq'):
+      wielded = self.api('eq.getworn')(24)
+      second = self.api('eq.getworn')(25)
+      if wielded:
+        self.kill_info['wielded_weapon'] = wielded.serial
+      if second:
+        self.kill_info['second_weapon'] = second.serial
 
     if not self.kill_info['raised']:
       if not self.kill_info['name']:
